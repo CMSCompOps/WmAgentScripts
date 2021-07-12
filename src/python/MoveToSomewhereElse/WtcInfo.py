@@ -97,7 +97,7 @@ class WtcInfo(MongoCollectionHandler):
                 "aborted-archived",
                 "rejected-archived",
             ]:
-                workflows.extend([reqMgrReader.getWorkflowsByStatus(status)])
+                workflows.extend(reqMgrReader.getWorkflowsByStatus(status))
 
             super()._clean(keyword={"$regex": "|".join(workflows)})
 

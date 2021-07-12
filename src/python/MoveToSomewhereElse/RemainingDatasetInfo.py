@@ -7,6 +7,7 @@ from pymongo.collection import Collection
 from typing import Collection, Optional
 
 from Utils.ConfigurationHandler import ConfigurationHandler
+from Services.EOS.EOSReader import EOSReader
 from Services.Mongo.MongoCollectionHandler import MongoCollectionHandler
 
 
@@ -18,7 +19,8 @@ class RemainingDatasetInfo(MongoCollectionHandler):
 
     def __init__(self, logger: Optional[Logger] = None) -> None:
         super().__init__(logger=logger)
-        self.monitorDirectory = os.getenv("UNIFIED_MON", ConfigurationHandler().get("monitor_dir"))
+        configurationHandler = ConfigurationHandler()
+        self.monitorEOSDirectory = configurationHandler.get("monitor_eos_dir")
 
     def __del__(self) -> None:
         self.purge(60)
@@ -58,12 +60,12 @@ class RemainingDatasetInfo(MongoCollectionHandler):
         """
         try:
             self.logger.info("Synching with all possible sites")
-            sites = [*{}.keys()]  #  TODO: impement eosRead
+            sites = [*EOSReader(f"{self.monitorEOSDirectory}/remaining.json", self.logger).read().keys()]
             if not sites:
-                for item in filter(
-                    None, os.popen(f"ls -1 {self.monitorDirectory}/remaining_*.json | sort").read().split("\n")
+                for file in filter(
+                    None, os.popen(f"ls -1 {self.monitorEOSDirectory}/remaining_*.json | sort").read().split("\n")
                 ):
-                    site = item.split("_", 1)[-1].split(".")[0]
+                    site = file.split("_", 1)[-1].split(".")[0]
                     if not any(site.endswith(suffix) for suffix in ["_MSS", "_Export"]):
                         sites.append(site)
 
@@ -81,7 +83,7 @@ class RemainingDatasetInfo(MongoCollectionHandler):
         """
         try:
             self.logger.info("Synching on site %s", site)
-            remainingReasons = {}  # TODO: impement eosRead
+            remainingReasons = EOSReader(f"{self.monitorEOSDirectory}/remaining_{site}.json", self.logger).read()
             self.set(site, remainingReasons)
 
         except Exception as error:

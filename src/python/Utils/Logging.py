@@ -16,3 +16,24 @@ def displayTime(seconds: int) -> str:
     except Exception as error:
         print(f"Failed to display time of {seconds} [s]")
         print(str(error))
+
+
+def displayNumber(n: int) -> str:
+    """
+    The function to display a number for logging
+    :param n: number
+    :return: number in K, M or B
+    """
+    try:
+        if not str(n).isdigit():
+            return str(n)
+
+        k, _ = divmod(n, 1000)
+        m, k = divmod(k, 1000)
+        b, m = divmod(m, 1000)
+
+        return f"{b}B" if b else f"{m}M" if m else f"{k}K" if k else str(n)
+
+    except Exception as error:
+        print(f"Failed to display number {n}")
+        print(str(error))
