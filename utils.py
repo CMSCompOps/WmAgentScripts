@@ -3903,6 +3903,12 @@ class workflowInfo:
                         print('EventStreams is ' + str(value['EventStreams']) + ' do not convert')
                         return False
 
+        threshold = self.UC.get("efficiency_threshold_for_stepchain")
+        isHighPriority = False
+        if self.request["RequestPriority"] >= self.UC.get("block1_priority"):
+            threshold = self.UC.get("stepchain_threshold_for_high_priority_requests")
+            isHighPriority = True
+
         all_same_arch = True
 
         ## efficiency 
@@ -3919,7 +3925,7 @@ class workflowInfo:
             if totalTimePerEvent > 0:
                 efficiency /= totalTimePerEvent * max_nCores
                 if debug: print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_nCores, efficiency * 100)
-                acceptable_efficiency = efficiency > self.UC.get("efficiency_threshold_for_stepchain")
+                acceptable_efficiency = efficiency > threshold
             else:
                 acceptable_efficiency = False
         except TypeError:
@@ -3959,6 +3965,18 @@ class workflowInfo:
         if not good and talk:
             print "cores",all_same_cores
             print "parentage",output_from_single_task
+
+
+        # Report
+        if good:
+            if isHighPriority:
+                print ("High priority workflow %s is converted to stepchain with efficiency %s" % (self.request['RequestName'], str(efficiency)) )
+            else:
+                print ("Low priority workflow %s is converted to stepchain with efficiency %s" % (
+                self.request['RequestName'], str(efficiency)))
+        else:
+            print("Workflow %s is not converted to stepchain with efficiency %s" % (
+                self.request['RequestName'], str(efficiency)))
         return good
 
 

@@ -413,6 +413,14 @@
    "description" : "Minimum efficiency threshold for step chain conversion",
    "value" : 0.90
   },
+  "stepchain_threshold_for_high_priority_requests":{
+   "description" : "Minimum efficiency threshold for step chain conversion of high priority requests",
+   "value" : 0.50
+  },
+  "block1_priority":{
+   "description" : "The value determines the priority of block1 requests",
+   "value" : 110000
+  },
   "sites_for_DQMHarvest": {
     "value" : ["T2_CH_CERN","T1_US_FNAL"],
     "description" : "The sites to assign DQM/DMQIO harvesting workflows"
