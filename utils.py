@@ -3976,9 +3976,9 @@ class workflowInfo:
         # Report
         if good:
             if isHighPriority:
-                print ("High priority workflow %s is converted to stepchain with efficiency %s" % (self.request['RequestName'], str(efficiency)) )
+                print ("High priority workflow %s is okay to be converted to stepchain with efficiency %s" % (self.request['RequestName'], str(efficiency)) )
             else:
-                print ("Low priority workflow %s is converted to stepchain with efficiency %s" % (
+                print ("Low priority workflow %s is is okay to be converted to stepchain with efficiency %s" % (
                 self.request['RequestName'], str(efficiency)))
         else:
             print("Workflow %s is not converted to stepchain with efficiency %s" % (
