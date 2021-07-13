@@ -3910,13 +3910,12 @@ class workflowInfo:
             isHighPriority = True
 
         all_same_arch = True
-
+        efficiency = 0
         ## efficiency 
         try:
             time_info = self.getTimeInfoForChain()
             if debug: print time_info
             totalTimePerEvent = 0
-            efficiency = 0
             max_nCores = self.UC.get("max_nCores_for_stepchain")
             for i,info in time_info.items():
                 totalTimePerEvent += info['tpe']
