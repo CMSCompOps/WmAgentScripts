@@ -3895,6 +3895,13 @@ class workflowInfo:
         # Conversion is supported only from TaskChain to StepChain
         if self.request['RequestType'] != 'TaskChain': return False
 
+        # Do not convert if there is only 1 task
+        if 'TaskChain' in self.request:
+            if self.request['TaskChain'] <= 1:
+                print("Workflow %s is not converted to stepchain: it has 0 or 1 task" % (
+                    self.request['RequestName']))
+                return False
+
         # Conversion is not supported if there is a task whose EventStreams is nonzero 
         for key,value in self.request.items():
             if key.startswith('Task') and type(value) is dict: 
