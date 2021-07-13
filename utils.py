@@ -3898,7 +3898,7 @@ class workflowInfo:
         # Do not convert if there is only 1 task
         if 'TaskChain' in self.request:
             if self.request['TaskChain'] <= 1:
-                print("Workflow %s is not converted to stepchain: it has 0 or 1 task" % (
+                print("Workflow %s is not converted to stepchain: it has 1 task" % (
                     self.request['RequestName']))
                 return False
 
