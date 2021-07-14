@@ -118,8 +118,8 @@ class DBSReaderTest(unittest.TestCase):
         isFound = block == self.validDataset.get("block_name")
         self.assertTrue(isFound)
 
-    @patch("Services.Mongo.CacheInfo.CacheInfo.get")
-    @patch("Services.Mongo.CacheInfo.CacheInfo.store")
+    @patch("Cache.CacheManager.CacheManager.get")
+    @patch("Cache.CacheManager.CacheManager.set")
     def testGetDatasetFiles(self, mock_store, mock_get):
         """getDatasetFiles gets files of a dataset"""
         # Test when details is False and validFileOnly is False
@@ -318,8 +318,8 @@ class DBSReaderTest(unittest.TestCase):
         isFound = name == self.validDataset.get("logical_file_name_base")
         self.assertTrue(isFound)
 
-    @patch("Services.Mongo.CacheInfo.CacheInfo.get")
-    @patch("Services.Mongo.CacheInfo.CacheInfo.store")
+    @patch("Cache.CacheManager.CacheManager.get")
+    @patch("Cache.CacheManager.CacheManager.set")
     def testGetDatasetLumisAndFiles(self, mock_store, mock_get):
         """getDatasetLumisAndFiles gets lumi sections and files of a dataset"""
         mock_store.return_value = True
