@@ -332,10 +332,10 @@ class DBSReaderTest(unittest.TestCase):
         self.assertTrue(isDict)
 
         # Test first output value
-        isKeyInt = all(isinstance(k, int) for k in results[0].keys()[:5])
+        isKeyInt = all(isinstance(k, int) for k in list(results[0].keys())[:5])
         self.assertTrue(isKeyInt)
 
-        isValueList = all(isinstance(v, list) for v in results[0].values()[:5])
+        isValueList = all(isinstance(v, list) for v in list(results[0].values())[:5])
         self.assertTrue(isValueList)
 
         isFound = False
@@ -348,10 +348,10 @@ class DBSReaderTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test second output value
-        isKeyTuple = all(isinstance(k, tuple) for k in results[1].keys()[:5])
+        isKeyTuple = all(isinstance(k, tuple) for k in list(results[1].keys())[:5])
         self.assertTrue(isKeyTuple)
 
-        isValueList = all(isinstance(v, list) for v in results[1].values()[:5])
+        isValueList = all(isinstance(v, list) for v in list(results[1].values())[:5])
         self.assertTrue(isValueList)
 
         isFound = False
@@ -372,10 +372,10 @@ class DBSReaderTest(unittest.TestCase):
         self.assertTrue(isDict)
 
         # Test first output value
-        isKeyStr = all(isinstance(k, str) for k in results[0].keys()[:5])
+        isKeyStr = all(isinstance(k, str) for k in list(results[0].keys())[:5])
         self.assertTrue(isKeyStr)
 
-        isValueList = all(isinstance(v, list) for v in results[0].values()[:5])
+        isValueList = all(isinstance(v, list) for v in list(results[0].values())[:5])
         self.assertTrue(isValueList)
 
         isFound = False
@@ -388,10 +388,10 @@ class DBSReaderTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test second output value
-        isKeyStr = all(isinstance(k, str) for k in results[1].keys()[:5])
+        isKeyStr = all(isinstance(k, str) for k in list(results[1].keys())[:5])
         self.assertTrue(isKeyStr)
 
-        isValueList = all(isinstance(v, list) for v in results[1].values()[:5])
+        isValueList = all(isinstance(v, list) for v in list(results[1].values())[:5])
         self.assertTrue(isValueList)
 
         isFound = False

@@ -13,7 +13,7 @@ def runWithMultiThreading(f: Callable, maxThreads: int = 10) -> list:
     """
 
     @wraps(f)
-    def wrapper(lst: List[dict]) -> list:
+    def wrapper(self, lst: List[dict]) -> list:
         """
         The function that defines the wrapper to run a given function with multi threading
         :param lst: list of input params
@@ -25,7 +25,7 @@ def runWithMultiThreading(f: Callable, maxThreads: int = 10) -> list:
             max_workers=min(threadsParam["maxThreads"], len(lst)),
             thread_name_prefix=f.__name__,
         ) as threadPool:
-            threads = {threadPool.submit(f, **kwargs): kwargs for kwargs in lst}
+            threads = {threadPool.submit(f, self, **kwargs): kwargs for kwargs in lst}
             for thread in as_completed(threads):
                 threadResult = thread.result()
                 if threadResult is None:
