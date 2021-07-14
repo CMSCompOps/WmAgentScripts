@@ -1,10 +1,10 @@
 from collections import defaultdict
 from pymongo.collection import Collection
 
-from Services.Mongo.MongoCollectionHandler import MongoCollectionHandler
+from Services.Mongo.MongoClient import MongoClient
 
 
-class BatchInfo(MongoCollectionHandler):
+class BatchInfo(MongoClient):
     """
     __BatchInfo__
     General API for monitoring the batches info

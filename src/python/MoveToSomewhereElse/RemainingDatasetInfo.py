@@ -8,10 +8,10 @@ from typing import Collection, Optional
 
 from Utils.ConfigurationHandler import ConfigurationHandler
 from Services.EOS.EOSReader import EOSReader
-from Services.Mongo.MongoCollectionHandler import MongoCollectionHandler
+from Services.Mongo.MongoClient import MongoClient
 
 
-class RemainingDatasetInfo(MongoCollectionHandler):
+class RemainingDatasetInfo(MongoClient):
     """
     __RemainingDatasetInfo__
     General API for monitoring the remaining dataset info

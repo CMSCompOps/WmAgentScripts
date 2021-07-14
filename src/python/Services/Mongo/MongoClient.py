@@ -12,9 +12,9 @@ from typing import Optional, Union
 from Utils.ConfigurationHandler import ConfigurationHandler
 
 
-class MongoCollectionHandler(ABC):
+class MongoClient(ABC):
     """
-    __MongoCollectionHandler__
+    __MongoClient__
     General Abstract Base Class for APIs relying on a MongoDB collection
     """
 

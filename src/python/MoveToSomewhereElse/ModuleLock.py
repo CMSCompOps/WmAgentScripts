@@ -9,10 +9,10 @@ from time import struct_time, gmtime, mktime, asctime, sleep
 from typing import Optional
 
 from Utils.Logging import displayTime
-from Services.Mongo.MongoCollectionHandler import MongoCollectionHandler
+from Services.Mongo.MongoClient import MongoClient
 
 
-class ModuleLock(MongoCollectionHandler):
+class ModuleLock(MongoClient):
     """
     __ModuleLock__
     General API for managing the module locks

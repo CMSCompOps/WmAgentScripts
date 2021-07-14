@@ -8,10 +8,10 @@ from pymongo.collection import Collection
 from typing import Optional
 
 from Utils.ConfigurationHandler import ConfigurationHandler
-from Services.Mongo.MongoCollectionHandler import MongoCollectionHandler
+from Services.Mongo.MongoClient import MongoClient
 
 
-class CacheManager(MongoCollectionHandler):
+class CacheManager(MongoClient):
     """
     __CacheManager__
     General API for managing the cache info

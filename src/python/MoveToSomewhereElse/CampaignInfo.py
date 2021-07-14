@@ -4,10 +4,10 @@ from pymongo.collection import Collection
 
 from typing import Optional, Any
 
-from Services.Mongo.MongoCollectionHandler import MongoCollectionHandler
+from Services.Mongo.MongoClient import MongoClient
 
 
-class CampaignInfo(MongoCollectionHandler):
+class CampaignInfo(MongoClient):
     """
     __CampaignInfo__
     General API for monitoring the campaigns info

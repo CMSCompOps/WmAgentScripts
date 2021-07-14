@@ -4,10 +4,10 @@ from pymongo.collection import Collection
 from typing import Any
 
 from Utils.IteratorTools import mapKeys, mapValues
-from Services.Mongo.MongoCollectionHandler import MongoCollectionHandler
+from Services.Mongo.MongoClient import MongoClient
 
 
-class ReportInfo(MongoCollectionHandler):
+class ReportInfo(MongoClient):
     """
     __ReportInfo__
     General API for reporting worflows info

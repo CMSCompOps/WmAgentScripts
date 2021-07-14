@@ -3,10 +3,10 @@ from pymongo.collection import Collection
 
 from typing import Optional
 
-from Services.Mongo.MongoCollectionHandler import MongoCollectionHandler
+from Services.Mongo.MongoClient import MongoClient
 
 
-class StartStopInfo(MongoCollectionHandler):
+class StartStopInfo(MongoClient):
     """
     __StartStopInfo__
     General API for monitoring Unified modules running times

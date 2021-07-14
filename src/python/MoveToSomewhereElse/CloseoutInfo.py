@@ -11,10 +11,10 @@ from typing import List, Optional
 from Utils.Logging import displayNumber
 from Utils.ConfigurationHandler import ConfigurationHandler
 from Services.EOS.EOSWriter import EOSWriter
-from Services.Mongo.MongoCollectionHandler import MongoCollectionHandler
+from Services.Mongo.MongoClient import MongoClient
 
 
-class CloseoutInfo(MongoCollectionHandler):
+class CloseoutInfo(MongoClient):
     """
     __CloseoutInfo__
     General API for monitoring workflows closeout info

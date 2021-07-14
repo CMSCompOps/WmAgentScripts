@@ -1,10 +1,10 @@
 from time import struct_time, gmtime, mktime, asctime
 from pymongo.collection import Collection
 
-from Services.Mongo.MongoCollectionHandler import MongoCollectionHandler
+from Services.Mongo.MongoClient import MongoClient
 
 
-class StatusHistory(MongoCollectionHandler):
+class StatusHistory(MongoClient):
     """
     __StatusHistory__
     General API for monitoring the workflows status history

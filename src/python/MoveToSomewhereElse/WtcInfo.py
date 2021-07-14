@@ -5,11 +5,11 @@ from collections import defaultdict
 
 from typing import Optional
 
-from Services.Mongo.MongoCollectionHandler import MongoCollectionHandler
+from Services.Mongo.MongoClient import MongoClient
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 
 
-class WtcInfo(MongoCollectionHandler):
+class WtcInfo(MongoClient):
     """
     __WtcInfo__
     General API for controlling the workflow traffic
