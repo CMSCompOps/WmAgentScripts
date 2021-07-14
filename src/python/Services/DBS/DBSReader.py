@@ -10,9 +10,9 @@ from logging import Logger
 from collections import defaultdict
 from dbs.apis.dbsClient import DbsApi
 
-from Utils.ConfigurationHandler import ConfigurationHandler
-from Utils.IteratorTools import mapValues, mapKeys, filterKeys
-from Utils.Decorators import runWithMultiThreading
+from Utilities.ConfigurationHandler import ConfigurationHandler
+from Utilities.IteratorTools import mapValues, mapKeys, filterKeys
+from Utilities.Decorators import runWithMultiThreading
 from Cache.CacheManager import CacheManager
 
 from typing import Callable, Optional, List, Tuple

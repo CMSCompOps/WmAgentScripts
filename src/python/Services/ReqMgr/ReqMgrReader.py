@@ -6,8 +6,8 @@ Description: General API for reading data from ReqMgr
 
 import logging
 import os
-from Utils.WebTools import getResponse
-from Utils.ConfigurationHandler import ConfigurationHandler
+from Utilities.WebTools import getResponse
+from Utilities.ConfigurationHandler import ConfigurationHandler
 
 
 class ReqMgrReader(object):
@@ -20,7 +20,7 @@ class ReqMgrReader(object):
 
         try:
             configurationHandler = ConfigurationHandler()
-            self.reqmgrUrl = os.getenv('REQMGR_URL', configurationHandler.get('reqmgr_url'))
+            self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
         except Exception as e:
@@ -37,12 +37,13 @@ class ReqMgrReader(object):
         """
 
         try:
-            result = getResponse(url=self.reqmgrUrl,
-                                 endpoint='/reqmgr2/data/request/',
-                                 param={"campaign": campaign, "detail": str(details)})
+            result = getResponse(
+                url=self.reqmgrUrl,
+                endpoint="/reqmgr2/data/request/",
+                param={"campaign": campaign, "detail": str(details)},
+            )
 
-
-            data = result['result']
+            data = result["result"]
             if details:
                 ## list of dict
                 r = []
@@ -52,7 +53,6 @@ class ReqMgrReader(object):
             else:
                 return data
 
-
         except Exception as error:
-            self.logger.error('Failed to get workflows from reqmgr for campaign %s ' % campaign)
+            self.logger.error("Failed to get workflows from reqmgr for campaign %s " % campaign)
             self.logger.error(str(error))

@@ -7,7 +7,7 @@ Description: Module which takes care of all authentication to different services
 import os
 import http.client
 
-from Utils.ConfigurationHandler import ConfigurationHandler
+from Utilities.ConfigurationHandler import ConfigurationHandler
 
 # Get necessary parameters
 configurationHandler = ConfigurationHandler()

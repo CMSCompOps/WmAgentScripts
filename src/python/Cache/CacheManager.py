@@ -7,7 +7,7 @@ from logging import Logger
 
 from typing import Optional
 
-from Utils.ConfigurationHandler import ConfigurationHandler
+from Utilities.ConfigurationHandler import ConfigurationHandler
 
 
 class CacheManager:

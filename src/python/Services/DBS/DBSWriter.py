@@ -9,7 +9,7 @@ import os
 import logging
 from logging import Logger
 from dbs.apis.dbsClient import DbsApi
-from Utils.ConfigurationHandler import ConfigurationHandler
+from Utilities.ConfigurationHandler import ConfigurationHandler
 
 from typing import Optional, List
 
@@ -20,17 +20,13 @@ class DBSWriter(object):
     General API for writing data to DBS
     """
 
-    def __init__(
-        self, url: Optional[str] = None, logger: Optional[Logger] = None, **contact
-    ):
+    def __init__(self, url: Optional[str] = None, logger: Optional[Logger] = None, **contact):
         try:
             if url:
                 self.dbsURL = url.replace("cmsweb.cern.ch", "cmsweb-prod.cern.ch")
             else:
                 configurationHandler = ConfigurationHandler()
-                self.dbsURL = os.getenv(
-                    "DBS_WRITER_URL", configurationHandler.get("dbs_url_writer")
-                )
+                self.dbsURL = os.getenv("DBS_WRITER_URL", configurationHandler.get("dbs_url_writer"))
             self.dbs = DbsApi(self.dbsURL, **contact)
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
@@ -62,9 +58,7 @@ class DBSWriter(object):
             self.logger.error(str(error))
             return False
 
-    def setDatasetStatus(
-        self, dataset: str, actualStatus: str, newStatus: str, withFiles: bool = True
-    ) -> bool:
+    def setDatasetStatus(self, dataset: str, actualStatus: str, newStatus: str, withFiles: bool = True) -> bool:
         """
         The function to set dataset status to True or False
         :param dataset: dataset name
