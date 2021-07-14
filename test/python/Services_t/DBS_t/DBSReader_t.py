@@ -26,7 +26,7 @@ class DBSReaderTest(unittest.TestCase):
         "logical_file_name": "/store/mc/RunIIFall17MiniAODv2/TT_Mtt-1000toInf_TuneCP5_PSweights_13TeV-powheg-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14_ext1-v1/230000/F29916D2-2910-EB11-91DC-FEC1FD6C28DA.root",
         "logical_file_name_base": "/store/mc",
         "lumis": 4805,
-        "some_random_lumis": [31051, 22469, 38855, 54, 9736],
+        "some_random_lumis": [18559, 1867, 29466, 10, 11913],
     }
 
     # This dataset is a little bit bigger than the other ones
@@ -36,8 +36,8 @@ class DBSReaderTest(unittest.TestCase):
         "status": "VALID",
         "run": 315258,
         "lumis_by_run": {315258: [1]},
-        "block_name": "/MET/Run2018A-12Nov2019_UL2018-v3/MINIAOD#6db01322-9989-4364-84c9-7528fff2087e",
-        "logical_file_name": "/store/data/Run2018A/MET/MINIAOD/12Nov2019_UL2018-v3/120000/ABB4F10A-4950-9244-B3A3-4C896E9B45D6.root",
+        "block_name": "/MET/Run2018A-12Nov2019_UL2018-v3/MINIAOD#bf7e0e72-f9c5-443c-9ab9-a8e1bbc8c62d",
+        "logical_file_name": "/store/data/Run2018A/MET/MINIAOD/12Nov2019_UL2018-v3/230000/720A0B05-C8B4-0448-AF29-7F18F2440B5F.root",
         "parent": "/MET/Run2018A-v1/RAW",
     }
 
@@ -72,9 +72,7 @@ class DBSReaderTest(unittest.TestCase):
         """getFilesWithLumiInRun gets DBS files with lumi of a dataset and run"""
         # Test when run is 1
         dbsReader = DBSReader(self.url)
-        files = dbsReader.getFilesWithLumiInRun(
-            self.validDataset.get("dataset"), self.validDataset.get("run")
-        )
+        files = dbsReader.getFilesWithLumiInRun(self.validDataset.get("dataset"), self.validDataset.get("run"))
         isList = isinstance(files, list)
         self.assertTrue(isList)
 
@@ -100,10 +98,7 @@ class DBSReaderTest(unittest.TestCase):
 
         isFound = False
         for file in files:
-            if (
-                self.validDatasetNotRun1.get("logical_file_name")
-                == file["logical_file_name"]
-            ):
+            if self.validDatasetNotRun1.get("logical_file_name") == file["logical_file_name"]:
                 isFound = True
                 break
         self.assertTrue(isFound)
@@ -120,10 +115,10 @@ class DBSReaderTest(unittest.TestCase):
 
     @patch("Cache.CacheManager.CacheManager.get")
     @patch("Cache.CacheManager.CacheManager.set")
-    def testGetDatasetFiles(self, mock_store, mock_get):
+    def testGetDatasetFiles(self, mock_set, mock_get):
         """getDatasetFiles gets files of a dataset"""
         # Test when details is False and validFileOnly is False
-        mock_store.return_value = True
+        mock_set.return_value = True
         mock_get.return_value = None
         dbsReader = DBSReader(self.url)
         files = dbsReader.getDatasetFiles(self.invalidDataset.get("dataset"))
@@ -143,20 +138,15 @@ class DBSReaderTest(unittest.TestCase):
 
         isFound = False
         for file in files:
-            if (
-                self.invalidDataset.get("logical_file_name")
-                == file["logical_file_name"]
-            ):
+            if self.invalidDataset.get("logical_file_name") == file["logical_file_name"]:
                 isFound = True
                 break
         self.assertTrue(isFound)
 
         # Test when details is False and validFileOnly is True
-        mock_store.return_value = True
+        mock_set.return_value = True
         mock_get.return_value = None
-        files = dbsReader.getDatasetFiles(
-            self.invalidDataset.get("dataset"), validFileOnly=True
-        )
+        files = dbsReader.getDatasetFiles(self.invalidDataset.get("dataset"), validFileOnly=True)
         isList = isinstance(files, list)
         self.assertTrue(isList)
 
@@ -167,9 +157,7 @@ class DBSReaderTest(unittest.TestCase):
         """getDatasetBlockNamesByRuns gets the blocks names for a dataset filtered by runs"""
         # Test when run is 1
         dbsReader = DBSReader(self.url)
-        blocks = dbsReader.getDatasetBlockNamesByRuns(
-            self.validDataset.get("dataset"), [self.validDataset.get("run")]
-        )
+        blocks = dbsReader.getDatasetBlockNamesByRuns(self.validDataset.get("dataset"), [self.validDataset.get("run")])
         isList = isinstance(blocks, list)
         self.assertTrue(isList)
 
@@ -206,7 +194,7 @@ class DBSReaderTest(unittest.TestCase):
         dbsReader = DBSReader(self.url)
         blocks = dbsReader.getDatasetBlockNamesByLumis(
             self.validDatasetNotRun1.get("dataset"),
-            [self.validDatasetNotRun1.get("lumis_by_run")],
+            self.validDatasetNotRun1.get("lumis_by_run"),
         )
         isList = isinstance(blocks, list)
         self.assertTrue(isList)
@@ -248,9 +236,7 @@ class DBSReaderTest(unittest.TestCase):
     def testGetDatasetEventsAndLumis(self):
         """getDatasetEventsAndLumis gets number of events and lumis of a dataset"""
         dbsReader = DBSReader(self.url)
-        events, lumis = dbsReader.getDatasetEventsAndLumis(
-            self.validDataset.get("dataset")
-        )
+        events, lumis = dbsReader.getDatasetEventsAndLumis(self.validDataset.get("dataset"))
         for i in [events, lumis]:
             isInt = isinstance(i, int)
             self.assertTrue(isInt)
@@ -258,9 +244,7 @@ class DBSReaderTest(unittest.TestCase):
     def testGetBlocksEventsAndLumis(self):
         """getBlocksEventsAndLumis gets number of events and lumis of blocks"""
         dbsReader = DBSReader(self.url)
-        events, lumis = dbsReader.getBlocksEventsAndLumis(
-            [self.validDataset.get("block_name")]
-        )
+        events, lumis = dbsReader.getBlocksEventsAndLumis([self.validDataset.get("block_name")])
         for i in [events, lumis]:
             isInt = isinstance(i, int)
             self.assertTrue(isInt)
@@ -281,7 +265,7 @@ class DBSReaderTest(unittest.TestCase):
     def testGetDatasetParent(self):
         """getDatasetParent gets the parents of a dataset"""
         dbsReader = DBSReader(self.url)
-        parents = dbsReader.getDatasetRuns(self.validDatasetNotRun1.get("dataset"))
+        parents = dbsReader.getDatasetParent(self.validDatasetNotRun1.get("dataset"))
         isList = isinstance(parents, list)
         self.assertTrue(isList)
 
@@ -320,14 +304,12 @@ class DBSReaderTest(unittest.TestCase):
 
     @patch("Cache.CacheManager.CacheManager.get")
     @patch("Cache.CacheManager.CacheManager.set")
-    def testGetDatasetLumisAndFiles(self, mock_store, mock_get):
+    def testGetDatasetLumisAndFiles(self, mock_set, mock_get):
         """getDatasetLumisAndFiles gets lumi sections and files of a dataset"""
-        mock_store.return_value = True
+        mock_set.return_value = True
         mock_get.return_value = None
         dbsReader = DBSReader(self.url)
-        results = dbsReader.getDatasetLumisAndFiles(
-            self.validDataset.get("dataset"), withCache=False
-        )
+        results = dbsReader.getDatasetLumisAndFiles(self.validDataset.get("dataset"), withCache=False)
         isDict = all(isinstance(result, dict) for result in results)
         self.assertTrue(isDict)
 
@@ -341,9 +323,7 @@ class DBSReaderTest(unittest.TestCase):
         isFound = False
         for k, v in results[0].items():
             if k == self.validDataset.get("run"):
-                isFound = (
-                    lumis in v for lumis in self.validDataset.get("some_random_lumis")
-                )
+                isFound = all(lumis in v for lumis in self.validDataset.get("some_random_lumis"))
                 break
         self.assertTrue(isFound)
 
@@ -356,9 +336,7 @@ class DBSReaderTest(unittest.TestCase):
 
         isFound = False
         for k, v in results[1].items():
-            if k[0] == self.validDataset.get("run") and k[1] == self.validDataset.get(
-                "lumis"
-            ):
+            if k[0] == self.validDataset.get("run") and k[1] == self.validDataset.get("lumis"):
                 isFound = self.validDataset.get("logical_file_name") in v
                 break
         self.assertTrue(isFound)
@@ -381,9 +359,7 @@ class DBSReaderTest(unittest.TestCase):
         isFound = False
         for k, v in results[0].items():
             if int(k) == self.validDataset.get("run"):
-                isFound = (
-                    lumis in v for lumis in self.validDataset.get("some_random_lumis")
-                )
+                isFound = all(lumis in v for lumis in self.validDataset.get("some_random_lumis"))
                 break
         self.assertTrue(isFound)
 
@@ -396,9 +372,7 @@ class DBSReaderTest(unittest.TestCase):
 
         isFound = False
         for k, v in results[1].items():
-            if k == str(self.validDataset.get("run")) + ":" + str(
-                self.validDataset.get("lumis")
-            ):
+            if k == str(self.validDataset.get("run")) + ":" + str(self.validDataset.get("lumis")):
                 isFound = self.validDataset.get("logical_file_name") in v
                 break
         self.assertTrue(isFound)

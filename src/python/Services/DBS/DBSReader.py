@@ -184,7 +184,7 @@ class DBSReader(object):
             if validFileOnly:
                 files = [file for file in files if file["is_file_valid"]]
 
-            if not details:
+            if files and not details:
                 keysToKeep = ["logical_file_name", "is_file_valid"]
                 files = list(filterKeys(keysToKeep, *files))
 
