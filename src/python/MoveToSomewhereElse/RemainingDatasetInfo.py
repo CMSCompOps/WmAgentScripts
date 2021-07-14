@@ -6,7 +6,7 @@ from pymongo.collection import Collection
 
 from typing import Collection, Optional
 
-from Utils.ConfigurationHandler import ConfigurationHandler
+from Utilities.ConfigurationHandler import ConfigurationHandler
 from Services.EOS.EOSReader import EOSReader
 from Services.Mongo.MongoClient import MongoClient
 

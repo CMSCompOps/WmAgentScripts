@@ -8,8 +8,8 @@ from jinja2 import Template
 
 from typing import List, Optional
 
-from Utils.Logging import displayNumber
-from Utils.ConfigurationHandler import ConfigurationHandler
+from Utilities.Logging import displayNumber
+from Utilities.ConfigurationHandler import ConfigurationHandler
 from Services.EOS.EOSWriter import EOSWriter
 from Services.Mongo.MongoClient import MongoClient
 

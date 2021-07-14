@@ -4,8 +4,8 @@ from logging import Logger
 
 from typing import Optional
 
-from Utils.ConfigurationHandler import ConfigurationHandler
-from Utils.Decorators import runWithRetries
+from Utilities.ConfigurationHandler import ConfigurationHandler
+from Utilities.Decorators import runWithRetries
 
 
 class EOSWriter(object):

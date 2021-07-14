@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 
 from typing import Optional, Union
 
-from Utils.ConfigurationHandler import ConfigurationHandler
+from Utilities.ConfigurationHandler import ConfigurationHandler
 
 
 class MongoClient(ABC):

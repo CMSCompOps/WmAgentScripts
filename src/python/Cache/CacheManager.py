@@ -7,7 +7,7 @@ from pymongo.collection import Collection
 
 from typing import Optional
 
-from Utils.ConfigurationHandler import ConfigurationHandler
+from Utilities.ConfigurationHandler import ConfigurationHandler
 from Services.Mongo.MongoClient import MongoClient
 
 

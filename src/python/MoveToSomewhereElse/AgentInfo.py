@@ -7,8 +7,8 @@ from pymongo.collection import Collection
 
 from typing import Optional, List, Dict
 
-from Utils.Logging import displayTime
-from Utils.IteratorTools import filterKeys, mapValues
+from Utilities.Logging import displayTime
+from Utilities.IteratorTools import filterKeys, mapValues
 from Services.Mongo.MongoClient import MongoClient
 
 
@@ -358,8 +358,8 @@ class AgentInfo(MongoClient):
         :param agents: agents info
         """
         if self.silent:
-            return 
-            
+            return
+
         self.logger.info("Agent releases: %s", sorted(self.agentsByRelease.keys()))
         self.logger.info("Agent major releases: %s", sorted(self.agentsByMajorRelease.keys()))
         self.logger.info("Running lastest release: %s", self.releaseStatus["lastest"].get("running"))
