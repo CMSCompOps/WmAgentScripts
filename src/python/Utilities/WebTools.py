@@ -7,8 +7,8 @@ Description: Useful functions while interacting different services
 import os
 import http.client
 import json
-from Utils.ConfigurationHandler import ConfigurationHandler
-from Utils.Authenticate import getX509Conn
+from Utilities.ConfigurationHandler import ConfigurationHandler
+from Utilities.Authenticate import getX509Conn
 
 from typing import Union, Optional, Dict
 
