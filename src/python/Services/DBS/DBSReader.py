@@ -12,10 +12,10 @@ from dbs.apis.dbsClient import DbsApi
 
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.IteratorTools import mapValues, mapKeys, filterKeys
-from Utilities.Decorators import runWithMultiThreading
+from Utilities.Decorators import runWithMultiThreading, runWithRetries
 from Cache.CacheManager import CacheManager
 
-from typing import Callable, Optional, List, Tuple
+from typing import Optional, List, Tuple, Union
 
 
 class DBSReader(object):
@@ -62,47 +62,38 @@ class DBSReader(object):
             self.logger.error(str(error))
             return False
 
-    @runWithMultiThreading
-    def _getFileLumiArray(self, filenames: List[str], run: int) -> List[dict]:
-        # TODO: (for when the environment is deployed) test if it is working properly with mt
+    @runWithMultiThreading(mtParam="filenames")
+    @runWithRetries(default=[])
+    def _getFileLumiArray(self, filenames: Union[List[str], List[List[str]]], run: int) -> List[dict]:
         """
         The function to get the lumi section arrays for a given set of file names in given run
         :param filename: logical file names
         :param run: run number
         :return: a list of lumi section arrays
 
-        This function runs by default with multithreading and a list of
-        dicts, e. g. [{'filename': filename, 'run': run}], must be given as input.
+        This function runs by default with multithreading on the param filenames. The filenames can
+        be a list of str, or a list of lists of str for querying DBS for multiple filenames
+        at once.
         """
-        try:
-            return (
-                self.dbs.listFileLumiArray(logical_file_name=filenames, run_num=run)
-                if run != 1
-                else self.dbs.listFileLumiArray(logical_file_name=filenames)
-            )
+        return (
+            self.dbs.listFileLumiArray(logical_file_name=filenames, run_num=run)
+            if run != 1
+            else self.dbs.listFileLumiArray(logical_file_name=filenames)
+        )
 
-        except Exception as error:
-            self.logger.error("Failed to get lumi array files")
-            self.logger.error(str(error))
-
-    @runWithMultiThreading
-    def _getBlockFileLumis(self, block: str, validFileOnly: bool = True) -> List[dict]:
-        # TODO: (for when the environment is deployed) test if it is working properly with mt
+    @runWithMultiThreading(mtParam="blocks")
+    @runWithRetries(default=[])
+    def _getBlockFileLumis(self, blocks: List[str], validFileOnly: bool = True) -> List[dict]:
         """
         The function to get lumi section files from a given block
-        :param block: block name
+        :param blocks: blocks names
         :param validFileOnly: if True, keeps only valid files, keep all o/w
         :return: lumi sections files
 
-        This function runs by default with multithreading and a list of
-        dicts, e. g. [{'block': block}] must be given as input.
+        This function runs by default with multithreading on the param blocks, which is a
+        list of block names.
         """
-        try:
-            return self.dbs.listFileLumis(block_name=block, validFileOnly=int(validFileOnly))
-
-        except Exception as error:
-            self.logger.error("Failed to get files from DBS for block %s", block)
-            self.logger.error(str(error))
+        return self.dbs.listFileLumis(block_name=blocks, validFileOnly=int(validFileOnly))
 
     def getDBSStatus(self, dataset: str) -> str:
         """
@@ -139,10 +130,8 @@ class DBSReader(object):
             filenames = [file["logical_file_name"] for file in result]
 
             querySize = 100
-            queryFilesList = [
-                {"filenames": filenames[i : i + querySize], "run": run} for i in range(0, len(filenames), querySize)
-            ]
-            return self._getFileLumiArray(queryFilesList)
+            queryFilesList = [filenames[i : i + querySize] for i in range(0, len(filenames), querySize)]
+            return self._getFileLumiArray(filenames=queryFilesList, run=run)
 
         except Exception as error:
             self.logger.error("Failed to get files for dataset %s and run %s", dataset, run)
@@ -458,8 +447,8 @@ class DBSReader(object):
         try:
             filesByLumis, lumisByRun = defaultdict(set), defaultdict(set)
 
-            queryBlocksList = [{"block": block.get("block_name"), "validFileOnly": validFileOnly} for block in blocks]
-            files = self._getBlockFileLumis(queryBlocksList)
+            queryBlocksList = [block.get("block_name") for block in blocks]
+            files = self._getBlockFileLumis(blocks=queryBlocksList, validFileOnly=validFileOnly)
             for file in files:
                 runKey = str(file["run_num"])
                 lumisByRun[runKey].update(file["lumi_section_num"])

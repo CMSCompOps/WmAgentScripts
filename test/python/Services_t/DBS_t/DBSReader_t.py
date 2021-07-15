@@ -26,7 +26,7 @@ class DBSReaderTest(unittest.TestCase):
         "logical_file_name": "/store/mc/RunIIFall17MiniAODv2/TT_Mtt-1000toInf_TuneCP5_PSweights_13TeV-powheg-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14_ext1-v1/230000/F29916D2-2910-EB11-91DC-FEC1FD6C28DA.root",
         "logical_file_name_base": "/store/mc",
         "lumis": 4805,
-        "some_random_lumis": [18559, 1867, 29466, 10, 11913],
+        "some_random_lumis": [22772, 351, 23436, 22804, 12048],
     }
 
     # This dataset is a little bit bigger than the other ones

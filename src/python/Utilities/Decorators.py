@@ -1,39 +1,71 @@
+import time
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from typing import Callable, Optional, Any, List
+from typing import Callable, Optional, Any
 
 
-def runWithMultiThreading(f: Callable, maxThreads: int = 10) -> list:
+def runWithRetries(tries: int = 10, wait: int = 5, default: Optional[Any] = None) -> Any:
     """
-    The function that defines a decorator to run a given function with multi threading
-    :param f: function
+    The function to define a decorator to run a given function with retries
+    :param tries: number of tries
+    :param wait: wait time between tries
+    :param default: default value to return in case all the tries have failed, raise Exception o/w
+    :return: function output, default value o/w
+    """
+
+    def decorator(f: Callable) -> Any:
+        @wraps(f)
+        def wrapper(*args, **kwargs) -> Any:
+            params = {"tries": tries, "wait": wait}
+            for i in range(params["tries"]):
+                try:
+                    return f(*args, **kwargs)
+
+                except Exception as error:
+                    print(f"Failed running function {f.__name__} on try #{i+1} of {params['tries']}")
+                    print(str(error))
+                    time.sleep(params["wait"])
+
+            if default is not None:
+                return default
+            raise Exception("NoDefaultValue")
+
+        return wrapper
+
+    return decorator
+
+
+def runWithMultiThreading(mtParam: str, maxThreads: int = 10) -> list:
+    """
+    The function to define a decorator to run a given function with multi threading
+    :param mtParam: multi threaded param
     :param maxThreads: max number of threads
     :return: a list of function outputs
     """
 
-    @wraps(f)
-    def wrapper(self, lst: List[dict]) -> list:
-        """
-        The function that defines the wrapper to run a given function with multi threading
-        :param lst: list of input params
-        :return: a list of function outputs
-        """
-        threadsParam = {"maxThreads": maxThreads}
-        result = []
-        with ThreadPoolExecutor(
-            max_workers=min(threadsParam["maxThreads"], len(lst)),
-            thread_name_prefix=f.__name__,
-        ) as threadPool:
-            threads = {threadPool.submit(f, self, **kwargs): kwargs for kwargs in lst}
-            for thread in as_completed(threads):
-                threadResult = thread.result()
-                if threadResult is None:
-                    continue
-                if isinstance(threadResult, list):
-                    result.extend(threadResult)
-                else:
-                    result.append(threadResult)
-        return result
+    def decorator(f: Callable) -> list:
+        @wraps(f)
+        def wrapper(*args, **kwargs) -> list:
+            params = {"mtParam": mtParam, "maxThreads": maxThreads}
+            mtThreaded = kwargs.pop(params["mtParam"], [])
 
-    return wrapper
+            result = []
+            with ThreadPoolExecutor(
+                max_workers=min(params["maxThreads"], len(mtThreaded)),
+                thread_name_prefix=f.__name__,
+            ) as threadPool:
+                threads = {threadPool.submit(f, *args, **kwargs, **{params["mtParam"]: i}): i for i in mtThreaded}
+                for thread in as_completed(threads):
+                    threadResult = thread.result()
+                    if threadResult is None:
+                        continue
+                    if isinstance(threadResult, list):
+                        result.extend(threadResult)
+                    else:
+                        result.append(threadResult)
+            return result
+
+        return wrapper
+
+    return decorator
