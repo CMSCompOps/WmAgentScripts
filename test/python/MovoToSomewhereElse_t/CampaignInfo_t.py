@@ -126,3 +126,7 @@ class CampaignInfoTest(unittest.TestCase):
 
         isFound = self.campaignParam.get("secondaries") in result
         self.assertTrue(isFound)
+
+
+if __name__ == "__main__":
+    unittest.main()

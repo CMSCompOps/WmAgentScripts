@@ -85,3 +85,7 @@ class CacheManagerTest(unittest.TestCase):
 
         fromFile = result == mockFile
         self.assertTrue(fromFile)
+
+
+if __name__ == "__main__":
+    unittest.main()

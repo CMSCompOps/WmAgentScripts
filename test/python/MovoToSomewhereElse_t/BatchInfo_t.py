@@ -50,3 +50,6 @@ class BatchInfoTest(unittest.TestCase):
 
         isListOfStr = isinstance(result[0], str)
         self.assertTrue(isListOfStr)
+
+if __name__ == '__main__':
+    unittest.main()
