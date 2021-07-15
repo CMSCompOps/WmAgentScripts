@@ -17,9 +17,15 @@ class CacheManager(MongoClient):
     General API for managing the cache info
     """
 
-    def __init__(self, logger: Optional[Logger]) -> None:
-        super().__init__(logger=logger)
-        self.cacheDirectory = ConfigurationHandler().get("cache_dir")
+    def __init__(self, logger: Optional[Logger] = None) -> None:
+        try:
+            super().__init__(logger=logger)
+            self.cacheDirectory = ConfigurationHandler().get("cache_dir")
+
+        except Exception as e:
+            msg = "Error initializing CacheManager\n"
+            msg += str(e)
+            raise Exception(msg)
 
     def _setMongoCollection(self) -> Collection:
         return self.client.unified.cacheInfo

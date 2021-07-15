@@ -14,9 +14,15 @@ class CampaignInfo(MongoClient):
     """
 
     def __init__(self, logger: Optional[Logger] = None) -> None:
-        super().__init__(logger=logger)
-        self.allSites = []  # TODO: implement siteInfo().allSites
-        self.campaigns = self._setCampaigns()
+        try:
+            super().__init__(logger=logger)
+            self.allSites = []  # TODO: implement siteInfo().allSites
+            self.campaigns = self._setCampaigns()
+
+        except Exception as e:
+            msg = "Error initializing CampaignInfo\n"
+            msg += str(e)
+            raise Exception(msg)
 
     def _setMongoCollection(self) -> Collection:
         return self.client.unified.campaignsConfiguration
@@ -91,7 +97,7 @@ class CampaignInfo(MongoClient):
             self.logger.error("Failed to get campaign %s for %s", key, name)
             self.logger.error(str(error))
 
-    def getCampaignParams(self, name: str) -> dict:
+    def getCampaignParameters(self, name: str) -> dict:
         """
         The function to get the parameters for a given campaign
         :param name: campaign name
