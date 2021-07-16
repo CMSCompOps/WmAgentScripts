@@ -1,4 +1,3 @@
-import ssl
 from time import struct_time, gmtime, mktime
 import logging
 from logging import Logger
@@ -22,7 +21,7 @@ class MongoClient(ABC):
         try:
             configurationHandler = ConfigurationHandler()
             self.mongoUrl = configurationHandler.get("mongo_db_url")
-            self.client = pymongo.MongoClient(f"mongodb://{self.mongoUrl}/?ssl=true", ssl_cert_reqs=ssl.CERT_NONE)
+            self.client = pymongo.MongoClient(f"mongodb://{self.mongoUrl}/?ssl=true", tlsAllowInvalidCertificates=True)
             self.collection = self._setMongoCollection()
 
             logging.basicConfig(level=logging.INFO)

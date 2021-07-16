@@ -30,22 +30,29 @@ class CampaignInfoTest(unittest.TestCase):
         },
     }
 
+    def setUp(self) -> None:
+        self.campaignInfo = CampaignInfo()
+        super().setUp()
+        return
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        return
+
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        campaignInfo = CampaignInfo()
-        isCollection = isinstance(campaignInfo.collection, Collection)
+        isCollection = isinstance(self.campaignInfo.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = campaignInfo.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.campaignInfo.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = campaignInfo.collection.name == self.mongoSettings.get("collection")
+        rightName = self.campaignInfo.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the campaigns info"""
-        campaignInfo = CampaignInfo()
-        result = campaignInfo.get()
+        result = self.campaignInfo.get()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -62,8 +69,7 @@ class CampaignInfoTest(unittest.TestCase):
     def testGetCampaigns(self):
         """getCampaigns gets the campaigns names"""
         # Test when campaign type is empty
-        campaignInfo = CampaignInfo()
-        result = campaignInfo.getCampaigns()
+        result = self.campaignInfo.getCampaigns()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
@@ -74,7 +80,7 @@ class CampaignInfoTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when campaign type is given
-        result = campaignInfo.getCampaigns(self.campaignWithTypeParam.get("type"))
+        result = self.campaignInfo.getCampaigns(self.campaignWithTypeParam.get("type"))
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
@@ -87,8 +93,7 @@ class CampaignInfoTest(unittest.TestCase):
     def testGetCampaignValue(self):
         """getCampaignValue gets the value of a given campaign"""
         # Test when the key exists, will use resize in this case
-        campaignInfo = CampaignInfo()
-        result = campaignInfo.getCampaignValue(self.campaignParam.get("campaign"), "resize", "default")
+        result = self.campaignInfo.getCampaignValue(self.campaignParam.get("campaign"), "resize", "default")
         isStr = isinstance(result, str)
         self.assertTrue(isStr)
 
@@ -96,8 +101,7 @@ class CampaignInfoTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when key does not exists
-        campaignInfo = CampaignInfo()
-        result = campaignInfo.getCampaignValue(self.campaignParam.get("campaign"), "invalidKey", "default")
+        result = self.campaignInfo.getCampaignValue(self.campaignParam.get("campaign"), "invalidKey", "default")
         isStr = isinstance(result, str)
         self.assertTrue(isStr)
 
@@ -106,8 +110,7 @@ class CampaignInfoTest(unittest.TestCase):
 
     def testGetCampaignParameters(self):
         """getCampaignParameters gets the parameters of a given campaign"""
-        campaignInfo = CampaignInfo()
-        result = campaignInfo.getCampaignParameters(self.campaignWithTypeParam.get("campaign"))
+        result = self.campaignInfo.getCampaignParameters(self.campaignWithTypeParam.get("campaign"))
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -116,8 +119,7 @@ class CampaignInfoTest(unittest.TestCase):
 
     def testGetSecondaries(self):
         """getSecondaries gets the campaigns secondaries"""
-        campaignInfo = CampaignInfo()
-        result = campaignInfo.getSecondaries()
+        result = self.campaignInfo.getSecondaries()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 

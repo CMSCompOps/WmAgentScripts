@@ -1,7 +1,7 @@
 import os
 import socket
 from logging import Logger
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from time import gmtime, localtime, asctime
 from pymongo.collection import Collection
 from jinja2 import Template
@@ -21,20 +21,26 @@ class CloseoutInfo(MongoClient):
     """
 
     def __init__(self, logger: Optional[Logger] = None) -> None:
-        super().__init__(logger=logger)
-        configurationHandler = ConfigurationHandler()
-        self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
-        self.unifiedUrl = os.getenv("UNIFIED_URL", configurationHandler.get("unified_url"))
-        self.monitorEOSDirectory = configurationHandler.get("monitor_eos_dir")
-        self.templateDirectory = configurationHandler.get("template_dir")
+        try:
+            super().__init__(logger=logger)
+            configurationHandler = ConfigurationHandler()
+            self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
+            self.unifiedUrl = os.getenv("UNIFIED_URL", configurationHandler.get("unified_url"))
+            self.monitorEOSDirectory = configurationHandler.get("monitor_eos_dir")
+            self.templateDirectory = configurationHandler.get("template_dir")
 
-        self.template = {
-            "summary": self.templateDirectory + "/CloseoutInfo/Summary.jinja",
-            "assistance": self.templateDirectory + "/CloseoutInfo/Assistance.jinja",
-        }
+            self.template = {
+                "summary": self.templateDirectory + "/CloseoutInfo/Summary.jinja",
+                "assistance": self.templateDirectory + "/CloseoutInfo/Assistance.jinja",
+            }
 
-        self.removedKeys = set()
-        self.record = {}
+            self.removed = set()
+            self.record = {}
+
+        except Exception as e:
+            msg = "Error initializing CloseoutInfo\n"
+            msg += str(e)
+            raise Exception(msg)
 
     def _setMongoCollection(self) -> Collection:
         return self.client.unified.closeoutInfo
@@ -133,7 +139,7 @@ class CloseoutInfo(MongoClient):
                 wfsByStatus[wf["status"]].append(wf)
 
         assistanceStatus = []
-        for status, wfs in OrderedDict(sorted(wfsByStatus.items())):
+        for status, wfs in dict(sorted(wfsByStatus.items())).items():
             statusData = {}
             statusData["name"] = status
             statusData["wfs"] = []
@@ -214,7 +220,7 @@ class CloseoutInfo(MongoClient):
         """
         try:
             self.record.pop(wf, None)
-            self.removedKeys.add(wf)
+            self.removed.add(wf)
             super()._clean(name=wf)
 
         except Exception as error:

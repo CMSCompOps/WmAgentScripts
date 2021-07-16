@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 from pymongo.collection import Collection
 from time import struct_time, gmtime, mktime, asctime, sleep
 
-from typing import Optional
+from typing import Optional, List
 
 from Utilities.Logging import displayTime
 from Services.Mongo.MongoClient import MongoClient
@@ -19,22 +19,28 @@ class ModuleLock(MongoClient):
     """
 
     def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
-        super().__init__(logger=logger)
-        self.poll = 30
-        self.pid = os.getpid()
-        self.host = socket.gethostname()
+        try:
+            super().__init__(logger=logger)
+            self.poll = 30
+            self.pid = os.getpid()
+            self.host = socket.gethostname()
 
-        self.component = kwargs.get("component") or sys._getframe(1).f_code.co_name
-        self.wait = kwargs.get("wait") or False
-        self.maxWait = kwargs.get("maxWait") or 18000
-        self.silent = kwargs.get("silent") or False
-        self.locking = kwargs.get("locking") or True
+            self.component = kwargs.get("component") or sys._getframe(1).f_code.co_name
+            self.wait = kwargs.get("wait") or False
+            self.maxWait = kwargs.get("maxWait") or 18000
+            self.silent = kwargs.get("silent") or False
+            self.locking = kwargs.get("locking") or True
 
-        self.logMsg = {
-            "noGo": "There are %s instances running. Possible deadlock. Tried for %s [s]: %s",
-            "killPid": "Process %s on %s for module %s is running for %s: killing",
-            "popPid": "Process %s not present on %s",
-        }
+            self.logMsg = {
+                "noGo": "There are %s instances running. Possible deadlock. Tried for %s [s]: %s",
+                "killPid": "Process %s on %s for module %s is running for %s: killing",
+                "popPid": "Process %s not present on %s",
+            }
+        
+        except Exception as e:
+            msg = "Error initializing ModuleLock\n"
+            msg += str(e)
+            raise Exception(msg)
 
     def __call__(self) -> bool:
         self.logger.info("Module lock for component %s from MongoDB", self.component)
@@ -60,7 +66,7 @@ class ModuleLock(MongoClient):
 
     def set(self) -> None:
         """
-        The function to set module in the module lock
+        The function to set a module in the module lock
         """
         try:
             super()._set()
@@ -69,14 +75,14 @@ class ModuleLock(MongoClient):
             self.logger.error("Failed to set module lock")
             self.logger.error(str(error))
 
-    def get(self, **query) -> list:
+    def get(self, **query) -> List[dict]:
         """
         The function to get the module locks
         :param query: optional query params
         :return: module locks
         """
         try:
-            return list(sorted(super()._get("_id", details=True, **query).values()))
+            return list(super()._get("_id", details=True, **query).values())
 
         except Exception as error:
             self.logger.error("Failed to get the module locks")

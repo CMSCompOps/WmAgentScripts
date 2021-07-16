@@ -13,22 +13,29 @@ from MoveToSomewhereElse.BatchInfo import BatchInfo
 class BatchInfoTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "batchInfo"}
 
+    def setUp(self) -> None:
+        self.batchInfo = BatchInfo()
+        super().setUp()
+        return
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        return
+
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        batchInfo = BatchInfo()
-        isCollection = isinstance(batchInfo.collection, Collection)
+        isCollection = isinstance(self.batchInfo.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = batchInfo.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.batchInfo.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = batchInfo.collection.name == self.mongoSettings.get("collection")
+        rightName = self.batchInfo.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the batches names and ids"""
-        batchInfo = BatchInfo()
-        result = batchInfo.get()
+        result = self.batchInfo.get()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -43,13 +50,13 @@ class BatchInfoTest(unittest.TestCase):
 
     def testGetBatches(self):
         """getBatches gets the all the batches names"""
-        batchInfo = BatchInfo()
-        result = batchInfo.getBatches()
+        result = self.batchInfo.getBatches()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
         isListOfStr = isinstance(result[0], str)
         self.assertTrue(isListOfStr)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

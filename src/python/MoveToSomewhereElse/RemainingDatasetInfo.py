@@ -18,9 +18,15 @@ class RemainingDatasetInfo(MongoClient):
     """
 
     def __init__(self, logger: Optional[Logger] = None) -> None:
-        super().__init__(logger=logger)
-        configurationHandler = ConfigurationHandler()
-        self.monitorEOSDirectory = configurationHandler.get("monitor_eos_dir")
+        try:
+            super().__init__(logger=logger)
+            configurationHandler = ConfigurationHandler()
+            self.monitorEOSDirectory = configurationHandler.get("monitor_eos_dir")
+
+        except Exception as e:
+            msg = "Error initializing RemainingDatasetInfo\n"
+            msg += str(e)
+            raise Exception(msg)
 
     def __del__(self) -> None:
         self.purge(60)

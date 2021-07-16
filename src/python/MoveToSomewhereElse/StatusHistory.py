@@ -2,6 +2,7 @@ from time import struct_time, gmtime, mktime, asctime
 from pymongo.collection import Collection
 
 from Services.Mongo.MongoClient import MongoClient
+from Utilities.IteratorTools import mapKeys
 
 
 class StatusHistory(MongoClient):
@@ -14,7 +15,7 @@ class StatusHistory(MongoClient):
         return self.client.unified.statusHistory
 
     def _buildMongoDocument(self, data: dict, now: struct_time = gmtime()) -> dict:
-        data.update({"time": mktime(now), "date": asctime(now)})
+        data.update({"time": int(mktime(now)), "date": asctime(now)})
         return data
 
     def set(self, data: dict) -> None:
@@ -35,7 +36,7 @@ class StatusHistory(MongoClient):
         :return: status history
         """
         try:
-            return super()._get("time", details=True)
+            return mapKeys(int, super()._get("time", details=True))
 
         except Exception as error:
             self.logger.error("Failed to get the status history")

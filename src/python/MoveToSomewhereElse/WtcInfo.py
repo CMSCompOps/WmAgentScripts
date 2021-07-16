@@ -23,7 +23,7 @@ class WtcInfo(MongoClient):
             "user": user,
             "keyword": keyword,
             "action": action,
-            "time": mktime(now),
+            "time": int(mktime(now)),
             "date": asctime(now),
         }
 

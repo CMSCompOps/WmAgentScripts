@@ -17,12 +17,17 @@ class ReportInfo(MongoClient):
         return self.client.unified.reportInfo
 
     def _convertValues(self, value: Any) -> Any:
+        """
+        The function to convert Mongo document values to required types
+        :param value: value
+        :return: converted value
+        """
         return (
             list(value) if isinstance(value, set) else self._convertValues(value) if isinstance(value, dict) else value
         )
 
     def _buildMongoDocument(self, data: dict, now: struct_time = gmtime()) -> dict:
-        data.update({"time": mktime(now), "date": asctime(now)})
+        data.update({"time": int(mktime(now)), "date": asctime(now)})
         data = mapKeys(lambda x: x.replace(".", "__dot__"), data)
         data = mapValues(self._convertValues, data)
 

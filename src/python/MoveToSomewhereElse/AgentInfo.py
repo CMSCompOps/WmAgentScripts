@@ -5,7 +5,7 @@ from collections import defaultdict
 from time import sleep, struct_time, gmtime, mktime, asctime
 from pymongo.collection import Collection
 
-from typing import Optional, List, Dict
+from typing import Optional
 
 from Utilities.Logging import displayTime
 from Utilities.IteratorTools import filterKeys, mapValues
@@ -17,6 +17,8 @@ class AgentInfo(MongoClient):
     __AgentInfo__
     General API for managing the agents info
     """
+
+    # TODO: implement checkTrello using TrelloClient
 
     def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
         try:
@@ -50,8 +52,8 @@ class AgentInfo(MongoClient):
         return self.client.unified.agentInfo
 
     def _buildMongoDocument(self, name: str, data: dict, now: struct_time = gmtime()) -> dict:
-        document = self.getAgent(name) or {}
-        document.update({"name": name, "update": mktime(now), "date": asctime(now)})
+        document = self.get(name) or {}
+        document.update({"name": name, "update": int(mktime(now)), "date": asctime(now)})
         document.update(data)
         return document
 
@@ -68,7 +70,20 @@ class AgentInfo(MongoClient):
             self.logger.error("Failed to set agent info")
             self.logger.error(str(error))
 
-    def get(self, **query) -> List[str]:
+    def get(self, name: str) -> dict:
+        """
+        The function to get all info for a given agent
+        :param name: agent name
+        :return: agent info
+        """
+        try:
+            return super()._getOne(name=name) or {}
+
+        except Exception as error:
+            self.logger.error("Failed to get agent %s info", name)
+            self.logger.error(str(error))
+
+    def getAgents(self, **query) -> list:
         """
         The function to get all the agents names
         :param query: optional query params
@@ -79,19 +94,6 @@ class AgentInfo(MongoClient):
 
         except Exception as error:
             self.logger.error("Failed to get the agents names")
-            self.logger.error(str(error))
-
-    def getAgent(self, name: str) -> dict:
-        """
-        The function to get all info for a given agent
-        :param name: agent name
-        :return: agent info
-        """
-        try:
-            return super()._getOne(name=name)
-
-        except Exception as error:
-            self.logger.error("Failed to get agent %s info", name)
             self.logger.error(str(error))
 
     def sync(self) -> bool:
@@ -108,9 +110,9 @@ class AgentInfo(MongoClient):
                 name for name, agent in prodAgents.items() if agent.get("down_components")
             )
 
-            agentsNames = set(self.get() + prodAgents.keys())
+            agentsNames = set(self.getAgents() + prodAgents.keys())
             for name in sorted(agentsNames):
-                oldInfo = self.getAgent(name) or {}
+                oldInfo = self.get(name) or {}
                 lastestInfo = prodAgents.get(name, {})
 
                 release = lastestInfo.get("agent_version")
@@ -140,7 +142,7 @@ class AgentInfo(MongoClient):
             if not self.isSync:
                 raise Exception("Cannot poll the agents without fresh info about them")
 
-            agentsPool = {}  # TODO: implement dataCache
+            agentsPool = {}  # TODO: implement dataCache.get('gwmsmon_pool')
             if not agentsPool:
                 raise Exception("Agents pool is empty")
 
@@ -258,7 +260,7 @@ class AgentInfo(MongoClient):
         lastActionTimeout = 18000
         lastActionStatic = 72000
         for name in self.agentsByStatus.get(status, []):
-            lastUpdate = self.getAgent(name).get("update")
+            lastUpdate = self.get(name).get("update")
             timeSinceLastUpdate = mktime(now) - lastUpdate
 
             if timeSinceLastUpdate < lastActionStatic:
@@ -269,7 +271,7 @@ class AgentInfo(MongoClient):
                 if self.timeoutAgent[status] < timeout:
                     self.timeoutAgent[status] = timeout
 
-    def _countJobsAndCpus(self, status: str, agents: Dict[dict]) -> None:
+    def _countJobsAndCpus(self, status: str, agents: dict) -> None:
         """
         The function to count jobs and cpus being run by agents with a given status
         :param agents: agents data
@@ -279,7 +281,7 @@ class AgentInfo(MongoClient):
             self.jobs[status] += agent.get(f"Total{status.title()}Jobs", 0)
             self.cpus[status] += agent.get(f"Total{status.title()}Cpus", 0)
 
-    def _setCandidatesForWakingUp(self, agents: Dict[dict]) -> None:
+    def _setCandidatesForWakingUp(self, agents: dict) -> None:
         """
         The function to set agent candidates for waking up
         :param agents: agents info
@@ -293,7 +295,7 @@ class AgentInfo(MongoClient):
             if name not in self.agentsByRelease["oldest"] and not self._isStuffed(agent) and not self._isLight(agent):
                 self.candidates["wakeUp"].add(name)
 
-    def _setCandidatesForDraining(self, agents: Dict[dict]) -> None:
+    def _setCandidatesForDraining(self, agents: dict) -> None:
         """
         The function to set agent candidates for draining
         :param agents: agents info
@@ -305,7 +307,7 @@ class AgentInfo(MongoClient):
             if name not in self.agentsByRelease["lastest"] and name not in self.agentsByMajorRelease["lastest"]:
                 self.candidates["drain"].add(name)
 
-    def _setCandidatesForOpenDraining(self, agents: Dict[dict]) -> None:
+    def _setCandidatesForOpenDraining(self, agents: dict) -> None:
         """
         The function to set agent candidates for open draining
         :param agents: agents info
@@ -317,7 +319,7 @@ class AgentInfo(MongoClient):
                 if agent.get("TotalRunningJobs", 0) + agent.get("MaxJobsRunning", 0) <= self.openDrainingThreshold:
                     self.candidates["openDrain"].add(name)
 
-    def _setCandidatesForSpeedDraining(self, agents: Dict[dict]) -> None:
+    def _setCandidatesForSpeedDraining(self, agents: dict) -> None:
         """
         The function to set agent candidates for speed draining
         :param agents: agents info
@@ -334,7 +336,7 @@ class AgentInfo(MongoClient):
             ):
                 self.candidates["speedDrain"].add(name)
 
-    def _isStuffed(self, agent: Dict[dict]) -> bool:
+    def _isStuffed(self, agent: dict) -> bool:
         """
         The function to check if an agent is stuffed, i. e. running more jobs than it should
         :param agents: agents info
@@ -352,7 +354,7 @@ class AgentInfo(MongoClient):
         idleThreshold = agent.get("MaxJobsRunning", 0) * self.idleFraction
         return agent.get("TotalRunningJobs", 0) <= idleThreshold
 
-    def _tell(self, agents: Dict[dict]) -> None:
+    def _tell(self, agents: dict) -> None:
         """
         The function to print information about the agents
         :param agents: agents info
@@ -395,7 +397,7 @@ class AgentInfo(MongoClient):
                 displayTime(self.timeoutAgent["standby"]),
             )
 
-    def _sumRunningCapacity(self, agents: Dict[dict]) -> int:
+    def _sumRunningCapacity(self, agents: dict) -> int:
         """
         The function to get the running capacity of the given agents
         :param agents: agents info
@@ -405,7 +407,7 @@ class AgentInfo(MongoClient):
         running &= set(agents.keys())
         return sum([agent.get("MaxJobsRunning", 0) for agent in filterKeys(running, agents).values()])
 
-    def _areRunningOverThreshold(self, agents: Dict[dict]) -> bool:
+    def _areRunningOverThreshold(self, agents: dict) -> bool:
         """
         The function to check if the agents are running over the threshold
         :param agents: agents info
@@ -423,7 +425,7 @@ class AgentInfo(MongoClient):
             self.releaseStatus["lastest"].get(status, 0) > 1 for status in ["running", "standby"]
         ) and self.releaseStatus["oldest"].get("running", 0)
 
-    def _bootAgent(self, agents: Dict[dict]) -> None:
+    def _bootAgent(self, agents: dict) -> None:
         """
         The function to boot an agent from candidates
         :param agents: agents info
@@ -437,7 +439,7 @@ class AgentInfo(MongoClient):
             wakeUp = random.choice(candidates)
             self.candidates["speedDrain"].discard(wakeUp)
             self.candidates["openDrain"].discard(wakeUp)
-            if True:  # TODO implement ReqMgrWriter().setAgentConfig
+            if True:  # TODO implement ReqMgrWriter().setAgentConfig()
                 self.manipulated.add(wakeUp)
                 self.set(wakeUp, status="running")
                 if not self.silent:
@@ -472,20 +474,20 @@ class AgentInfo(MongoClient):
 
     def _setSpeedDrainPriority(self) -> None:
         """
-        The function to set speed drain priority of agents
+        The function to set the speed drain priority of agents
         """
-        priorityDrain = set(self.get(speeddrain=True))
+        priorityDrain = set(self.getAgents(speeddrain=True))
         if priorityDrain & set(self.candidates.get("speedDrain", [])):
             priorityDrain &= set(self.candidates.get("speedDrain", []))
         else:
             priorityDrain.update(random.shuffle(list(self.candidates.get("speedDrain", [])))[:1])
 
         priorityDrain.update(self.candidates.get("openDrain", []))
-        for name in self.get():
+        for name in self.getAgents():
             self.set(name, speeddrain=name in priorityDrain)
 
 
-def sortByWakeUpPriority(agents: Dict[dict]) -> list:
+def sortByWakeUpPriority(agents: dict) -> list:
     """
     The function to get the wake up priority list of the given agents sorted by the defined metric
     :param agents: agents info
