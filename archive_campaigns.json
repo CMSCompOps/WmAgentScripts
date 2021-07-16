@@ -1,5 +1,278 @@
-{ 
+{
 
+  "RunIISummer19UL18wmLHEGEN": {
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+    ],
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN",
+        "T1_US_FNAL"
+      ]
+    },
+    "resize": "auto",
+    "toDDM": [
+      "GEN"
+    ],
+    "tune": true
+  },
+  "RunIISummer19UL18RECO": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto",
+    "tune": true
+  },
+  "RunIISummer19UL18SIM": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "primary_AAA": true,
+    "resize": "auto",
+    "tune": true
+  },
+  "RunIISummer19UL18pLHE": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "tune": true
+  },
+  "RunIISummer19UL18pLHEGEN": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "tune": true
+  },
+  "RunIISummer19UL18GEN": {
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+    ],
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN",
+        "T1_US_FNAL"
+      ]
+    },
+    "resize": "auto",
+    "toDDM": [
+      "GEN"
+    ],
+    "tune": true
+  },
+  "RunIISummer19UL18HLT": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "overflow": {
+      "PU": {
+        "force": false,
+        "max": 0,
+        "pending": 0
+      }
+    },
+    "resize": "auto",
+    "tune": true
+  },
+  "RunIISummer19UL18DIGIPremix": {
+    "SecondaryLocation": [
+      "T1_US_FNAL_Disk",
+      "T1_FR_CCIN2P3_Disk"
+    ],
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+    ],
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "partial_copy": 0.95,
+    "resize": "auto",
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIISummer19ULPrePremix-UL18_106X_upgrade2018_realistic_v11_L1v1-v2/PREMIX": {}
+    },
+    "secondary_AAA": true,
+    "tune": true
+  },
+  "RunIISummer19UL18DIGI": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "partial_copy": 0.95,
+    "resize": "auto",
+    "secondaries": {
+      "/MinBias_TuneCP1_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v11_L1v1-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_FR_GRIF_IRFU"
+        ]
+      },
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v4-v1/SIM": {
+        "SiteWhitelist": [
+          "T1_UK_RAL_Disk",
+          "T2_US_Nebraska"
+        ]
+      }
+    },
+    "secondary_AAA": false,
+    "tune": true
+  },
+  "RunIISummer19UL17RECO": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+         ],
+    "resize": "auto",
+    "tune": true
+  },
+  "RunIISummer19UL17wmLHEGEN": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+         ],
+    "overflow": {
+      "PREMIX": {}
+    },
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN",
+        "T1_US_FNAL"
+      ]
+    },
+    "toDDM": [
+      "GEN"
+    ],
+    "tune": true
+  },
+ "RunIISummer19UL17SIM": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+        "T2_CH_CERN",
+        "T2_CH_CERN_HLT"
+            ],
+    "overflow": {
+      "PRIM": {}
+    },
+    "primary_AAA": true,
+    "resize": "auto",
+    "tune": true
+  },
+  "RunIISummer19UL17pLHE": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "tune": true
+  },
+  "RunIISummer19UL17pLHEGEN": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "tune": true
+  },
+  "RunIISummer19UL17HLT": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+        "T2_CH_CERN",
+        "T2_CH_CERN_HLT"
+            ],
+    "overflow": {
+      "PU": {
+        "force": false,
+        "max": 0,
+        "pending": 0
+      }
+    },
+    "resize": "auto",
+    "tune": true
+  },
+  "RunIISummer19UL17GEN": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN",
+        "T1_US_FNAL"
+      ]
+    },
+    "SiteBlacklist": [
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+           ],
+    "resize": "auto",
+    "toDDM": [
+      "GEN"
+    ],
+    "tune": true
+  },
+  "RunIISummer19UL17DIGIPremix": {
+    "SecondaryLocation": [
+      "T1_US_FNAL_Disk"
+    ],
+    "SiteBlacklist": [
+        "T2_CH_CERN",
+        "T2_CH_CERN_HLT"
+    ],
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "partial_copy": 0.95,
+    "resize": "auto",
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIISummer19ULPrePremix-UL17_106X_mc2017_realistic_v6-v1/PREMIX": {}
+    },
+    "secondary_AAA": true,
+    "tune": true
+  },
+  "RunIISummer19UL17DIGI": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "partial_copy": 0.95,
+    "resize": "auto",
+    "secondaries": {
+      "/MinBias_TuneCP1_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v6-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_FR_CCIN2P3_Disk"
+        ]
+      },
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v2/SIM": {
+        "SiteWhitelist": [
+          "T1_UK_RAL_Disk",
+          "T2_US_Nebraska",
+          "T1_US_FNAL_Disk"
+        ]
+      }
+    },
+    "secondary_AAA": false,
+    "tune": true
+  }, 
   "RunIISummer19UL16SIM": {
     "fractionpass": 0.95,
     "go": true,
