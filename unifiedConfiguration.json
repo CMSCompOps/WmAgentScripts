@@ -388,7 +388,7 @@
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : ["shundal","jinfeng","moanwar","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob"]
+   "value" : ["shundal","jinfeng","moanwar","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob","bbilin","kskovpen"]
   },
   "user_storeresults":{
    "description" : "The users from which we expect StoreResults requests",
