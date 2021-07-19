@@ -29,7 +29,7 @@ class EOSReader(object):
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as e:
-            msg = "Error in EOSReader\n"
+            msg = "Error initializing EOSReader\n"
             msg += f"{e}\n"
             raise Exception(msg)
 

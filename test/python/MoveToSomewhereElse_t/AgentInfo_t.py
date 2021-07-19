@@ -5,6 +5,7 @@ Unit test for AgentInfo helper class.
 """
 
 import unittest
+from unittest.mock import patch
 from pymongo.collection import Collection
 
 from MoveToSomewhereElse.AgentInfo import AgentInfo
@@ -15,7 +16,9 @@ class AgentInfoTest(unittest.TestCase):
 
     params = {"agent": "vocms0284.cern.ch", "docKeys": ["status", "version", "update", "date"]}
 
-    def setUp(self) -> None:
+    @patch("MoveToSomewhereElse.AgentInfo.AgentInfo.sync")
+    def setUp(self, mockSync) -> None:
+        mockSync.return_value = True
         self.agentInfo = AgentInfo()
         super().setUp()
         return

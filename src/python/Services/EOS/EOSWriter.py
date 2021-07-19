@@ -28,7 +28,7 @@ class EOSWriter(object):
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as e:
-            msg = "Error in EOSWriter\n"
+            msg = "Error initializing EOSWriter\n"
             msg += f"{e}\n"
             raise Exception(msg)
 
