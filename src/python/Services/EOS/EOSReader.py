@@ -45,7 +45,7 @@ class EOSReader(object):
             return json.loads(content)
 
         except Exception as error:
-            self.logger.error("Failed to read EOS file")
+            self.logger.error("Failed to read EOS file: %s", str(error))
             response = os.system(f"env EOS_MGM_URL=root://eoscms.cern.ch eos cp {self.filename} {self.cache}")
             if response == 0:
                 with open(self.cache, "r") as file:
