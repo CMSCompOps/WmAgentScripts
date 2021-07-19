@@ -2,23 +2,25 @@ import random
 
 from logging import Logger
 from collections import defaultdict
-from time import sleep, struct_time, gmtime, mktime, asctime
+from time import struct_time, gmtime, mktime, asctime
 from pymongo.collection import Collection
 
 from typing import Optional
 
 from Utilities.Logging import displayTime
 from Utilities.IteratorTools import filterKeys, mapValues
+from Cache.DataCacheLoader import DataCacheLoader
 from Services.Mongo.MongoClient import MongoClient
+from Services.Trello.TrelloClient import TrelloClient
+from Services.ReqMgr.ReqMgrReader import ReqMgrReader
+from Services.ReqMgr.ReqMgrWriter import ReqMgrWriter
 
 
-class AgentInfo(MongoClient):
+class AgentInfo(MongoClient, TrelloClient):
     """
     __AgentInfo__
     General API for managing the agents info
     """
-
-    # TODO: implement checkTrello using TrelloClient
 
     def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
         try:
@@ -31,11 +33,14 @@ class AgentInfo(MongoClient):
             self.wakeUpDraining = kwargs.get("wakeUpDraining") or False
             self.silent = kwargs.get("silent") or False
 
+            self.reqmgr = {"reader": ReqMgrReader(self.logger), "writer": ReqMgrWriter(self.logger)}
+            self.dataCache = DataCacheLoader()
+
             self.agentsByStatus = defaultdict(set)
             self.agentsByRelease = defaultdict(set)
             self.agentsByMajorRelease = defaultdict(set)
             self.agentsWithDownComponents = set()
-            self.isSync = self.sync()
+            self.isSync = self.syncToProduction()
 
             if not self.silent:
                 if not self.agentsByStatus.get("standby"):
@@ -96,7 +101,7 @@ class AgentInfo(MongoClient):
             self.logger.error("Failed to get the agents names")
             self.logger.error(str(error))
 
-    def sync(self) -> bool:
+    def syncToProduction(self) -> bool:
         """
         The function to sync the agent info with production
         :return: True if it is properly sync, False o/w
@@ -128,9 +133,73 @@ class AgentInfo(MongoClient):
             return True
 
         except Exception as error:
-            self.logger.error("Failed to sync agents info")
+            self.logger.error("Failed to sync agents info to production")
             self.logger.error(str(error))
             return False
+
+    def syncToTrello(self, acting: bool = False) -> None:
+        """
+        The function to sync the agent info with Trello board
+        :param acting: if True boot/drain/retire agent if needed, do nothing o/w
+        """
+        try:
+            for name in self.getAgents():
+                status = self.get(name).get("status")
+                trelloCard = self.getCard(name)
+                trelloListId = self.getListId(status)
+
+                if trelloListId and trelloCard.get("idList") and trelloListId != trelloCard.get("idList"):
+                    if not self.silent:
+                        self.logger.info("Mismatch for agent %s", name)
+
+                    drainAgent, newStatus = False, None
+                    if trelloCard.get("idList") == self.getListId("draining"):
+                        drainAgent, newStatus = True, "draining"
+                    elif trelloCard.get("idList") == self.getListId("running"):
+                        drainAgent, newStatus = False, "running"
+                    elif trelloCard.get("idList") == self.getListId("standby"):
+                        drainAgent, newStatus = True, "standby"
+                    elif trelloCard.get("idList") == self.getListId("offline"):
+                        drainAgent, newStatus = True, "offline"
+                    else:
+                        if not self.silent:
+                            self.logger.info("Cannot reconize Trello status %s", trelloCard.get("idList"))
+                        continue
+
+                    if acting:
+                        updateSucceeded = self._updateAgentConfig(name, {"UserDrainMode": drainAgent})
+                        if updateSucceeded:
+                            self.set(name, status=newStatus)
+                            if not self.silent:
+                                self.logger.critical("Putting agent %s in %s", name, newStatus)
+
+        except Exception as error:
+            self.logger.error("Failed to sync agents info to Trello")
+            self.logger.error(str(error))
+
+    def updateTrelloBoard(self, acting: bool = False) -> None:
+        """
+        The function to update the agent info in Trello board
+        :param acting: if True boot/drain/retire agent if needed, do nothing o/w
+        """
+        try:
+            for name in self.manipulated():
+                status = self.get(name).get("status")
+                trelloCard = self.getCard(name)
+                trelloListId = self.getListId(status)
+
+                if trelloListId and trelloCard.get("idList") and trelloListId != trelloCard.get("idList"):
+                    if not self.silent:
+                        self.logger.info("Mismatch for agent %s", name)
+
+                    if acting:
+                        if not self.silent:
+                            self.logger.info("Setting agent %s into list %s", name, status)
+                        self.setList(name, status)
+
+        except Exception as error:
+            self.logger.error("Failed to update agents info in Trello board")
+            self.logger.error(str(error))
 
     def poll(self, acting: bool = False) -> bool:
         """
@@ -142,7 +211,7 @@ class AgentInfo(MongoClient):
             if not self.isSync:
                 raise Exception("Cannot poll the agents without fresh info about them")
 
-            agentsPool = {}  # TODO: implement dataCache.get('gwmsmon_pool')
+            agentsPool = self.dataCache.get("gwmsmon_pool")
             if not agentsPool:
                 raise Exception("Agents pool is empty")
 
@@ -171,7 +240,9 @@ class AgentInfo(MongoClient):
                 self.logger.info("Everything is fine. No need to retire or add an agent")
             self._setSpeedDrainPriority()
 
-            self.sync()
+            self.updateTrelloBoard(acting)
+            self.syncToTrello(acting)
+            self.syncToProduction()
 
         except Exception as error:
             self.logger.error("Failed to poll agents")
@@ -439,7 +510,8 @@ class AgentInfo(MongoClient):
             wakeUp = random.choice(candidates)
             self.candidates["speedDrain"].discard(wakeUp)
             self.candidates["openDrain"].discard(wakeUp)
-            if True:  # TODO implement ReqMgrWriter().setAgentConfig()
+            bootSucceeded = self._updateAgentConfig(wakeUp, {"UserDrainMode": False})
+            if bootSucceeded:
                 self.manipulated.add(wakeUp)
                 self.set(wakeUp, status="running")
                 if not self.silent:
@@ -453,7 +525,8 @@ class AgentInfo(MongoClient):
         """
         if self.candidates["drain"]:
             sleepUp = random.choice(list(self.candidates.get("drain", [])))
-            if True:  # TODO implement ReqMgrWriter().setAgentConfig
+            drainSucceeded = self._updateAgentConfig(sleepUp, {"UserDrainMode": True})
+            if drainSucceeded:
                 self.manipulated.add(sleepUp)
                 self.set(sleepUp, status="draining")
                 if not self.silent:
@@ -466,11 +539,21 @@ class AgentInfo(MongoClient):
         The function to retire an agent from candidates
         """
         sleepUp = random.choice(list(self.agentsByStatus.get("running", [])))
-        if True:  # TODO implement ReqMgrWriter().setAgentConfig
+        retireSucceeded = self._updateAgentConfig(sleepUp, {"UserDrainMode": True})
+        if retireSucceeded:
             self.manipulated.add(sleepUp)
             self.set(sleepUp, status="standby")
             if not self.silent:
                 self.logger.critical("Putting agent %s in standby", sleepUp)
+
+    def _updateAgentConfig(self, agent: str, config: dict) -> bool:
+        """
+        The function to update an agent configuration when booting/draining/retiring the agent
+        :param agent: agent name
+        :param config: new agent config params
+        :return: True if succeeded, False o/w
+        """
+        return self.reqmgr["writer"].setAgentConfig(agent, {**self.reqmgr["reader"].getAgentConfig(agent), **config})
 
     def _setSpeedDrainPriority(self) -> None:
         """

@@ -19,6 +19,7 @@ class MongoClient(ABC):
 
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
+            super().__init__()
             configurationHandler = ConfigurationHandler()
             self.mongoUrl = configurationHandler.get("mongo_db_url")
             self.client = pymongo.MongoClient(f"mongodb://{self.mongoUrl}/?ssl=true", tlsAllowInvalidCertificates=True)

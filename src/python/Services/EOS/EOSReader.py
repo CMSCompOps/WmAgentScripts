@@ -17,6 +17,8 @@ class EOSReader(object):
 
     def __init__(self, filename: str, logger: Optional[Logger] = None) -> None:
         try:
+            super().__init__()
+            
             if not filename.replace("//", "/").startswith("/eos/"):
                 raise ValueError(f"{filename} is not an EOS path")
 
