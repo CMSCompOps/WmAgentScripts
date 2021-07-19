@@ -16,7 +16,7 @@ class AgentInfoTest(unittest.TestCase):
 
     params = {"agent": "vocms0284.cern.ch", "docKeys": ["status", "version", "update", "date"]}
 
-    @patch("MoveToSomewhereElse.AgentInfo.AgentInfo.sync")
+    @patch("MoveToSomewhereElse.AgentInfo.AgentInfo.syncToProduction")
     def setUp(self, mockSync) -> None:
         mockSync.return_value = True
         self.agentInfo = AgentInfo()
