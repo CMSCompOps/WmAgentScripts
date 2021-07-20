@@ -2873,6 +2873,14 @@
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
+    "SecondaryLocation": [
+       "T1_IT_CNAF_Disk",
+       "T1_US_FNAL_Disk"
+    ],
+    "SiteBlacklist": [
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+    ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/PREMIX": 
     },
@@ -2883,6 +2891,14 @@
     "go": false,
     "lumisize": -1,
     "maxcopies": 1,
+    "SecondaryLocation": [
+       "T1_IT_CNAF_Disk",
+       "T1_US_FNAL_Disk"
+    ],
+    "SiteBlacklist": [
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+    ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/PREMIX": 
     },
@@ -2893,6 +2909,14 @@
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
+    "SecondaryLocation": [
+       "T1_DE_KIT_Disk",
+       "T1_US_FNAL_Disk"
+     ],
+     "SiteBlacklist": [
+        "T2_CH_CERN",
+        "T2_CH_CERN_HLT"
+    ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17_106X_mc2017_realistic_v9-v1/PREMIX": 
     },
@@ -2903,6 +2927,14 @@
     "go": false,
     "lumisize": -1,
     "maxcopies": 1,
+    "SecondaryLocation": [
+       "T1_DE_KIT_Disk",
+       "T1_US_FNAL_Disk"
+    ],
+    "SiteBlacklist": [
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+     ],
     "secondaries": {
        "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17_106X_mc2017_realistic_v9-v1/PREMIX": 
     },
@@ -2913,6 +2945,14 @@
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
+    "SecondaryLocation": [
+       "T1_ES_PIC_Disk",
+       "T1_US_FNAL_Disk"
+    ],
+    "SiteBlacklist": [
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+    ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/PREMIX": 
     },
@@ -2923,27 +2963,17 @@
     "go": false,
     "lumisize": -1,
     "maxcopies": 1,
+    "SecondaryLocation": [
+       "T1_ES_PIC_Disk",
+       "T1_US_FNAL_Disk"
+    ],
+    "SiteBlacklist": [
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+    ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/PREMIX": 
     },
-    "secondary_AAA": true
-  },
-  "RunIISpring21UL16FSwmLHEGSPremixAPV": {
-    "fractionpass": 0.95,
-    "go": false,
-    "lumisize": -1,
-    "maxcopies": 1,
-    "secondaries": {
-      "/RelValFS_PREMIXUP15_PU25/CMSSW_10_6_22-PU_106X_mcRun2_asymptotic_v16_FastSim-v1/PREMIX": 
-      {
-          "SiteWhitelist": [
-              "T2_CH_CERN"
-          ]
-      }
-    },
-    "SecondaryLocation": [
-      "T2_CH_CERN"
-    ],
     "secondary_AAA": true
   },
   "RunIIFall17FSPrePremix": {
