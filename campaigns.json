@@ -2705,8 +2705,7 @@
         "T2_US_UCSD",
         "T2_US_Wisconsin"
       ]
-    },
-  },
+    }
   }, 
   "RunIIpp5Spring18pLHE": {
     "fractionpass": 0.95, 
@@ -2723,8 +2722,7 @@
         "T2_US_UCSD",
         "T2_US_Wisconsin"
       ]
-    },
-  }, 
+    } 
   }, 
   "RunIIpp5Spring18wmLHEGS": {
     "custodial": "T1_FR_CCIN2P3_MSS", 
@@ -2762,7 +2760,7 @@
           "T2_US_UCSD",
           "T2_US_Wisconsin"
         ]
-     },
+     }
   },
   "RunIISummer20UL17pp5TeVMiniAOD": {
     "fractionpass": 0.95,
@@ -2780,7 +2778,7 @@
           "T2_US_UCSD",
           "T2_US_Wisconsin"
         ]
-     },
+     }
   }, 
   "RunIISummer20UL17pp5TeVDR": {
     "fractionpass": 0.95,
@@ -2798,7 +2796,7 @@
           "T2_US_UCSD",
           "T2_US_Wisconsin"
         ]
-     },
+     }
   },
   "RunIISummer20UL17pp5TeVGS": {
     "fractionpass": 0.95,
@@ -2816,7 +2814,7 @@
           "T2_US_UCSD",
           "T2_US_Wisconsin"
         ]
-     },
+     }
   },
   "RunIISummer20UL17pp5TeVwmLHEGS": {
     "fractionpass": 0.95,
@@ -2834,7 +2832,7 @@
         "T2_US_UCSD",
         "T2_US_Wisconsin"
       ]
-    },
+    }
   },
   "SnowmassWinter21GEN": {
     "fractionpass": 0.95, 
