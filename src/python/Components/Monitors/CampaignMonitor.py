@@ -7,9 +7,9 @@ from typing import Optional, Any
 from Services.Mongo.MongoClient import MongoClient
 
 
-class CampaignInfo(MongoClient):
+class CampaignMonitor(MongoClient):
     """
-    __CampaignInfo__
+    __CampaignMonitor__
     General API for monitoring the campaigns info
     """
 
@@ -19,10 +19,8 @@ class CampaignInfo(MongoClient):
             self.allSites = []  # TODO: implement siteInfo().allSites
             self.campaigns = self._setCampaigns()
 
-        except Exception as e:
-            msg = "Error initializing CampaignInfo\n"
-            msg += str(e)
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing CampaignMonitor\n{str(error)}")
 
     def _setMongoCollection(self) -> Collection:
         return self.client.unified.campaignsConfiguration

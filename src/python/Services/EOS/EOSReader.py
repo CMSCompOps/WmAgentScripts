@@ -18,7 +18,7 @@ class EOSReader(object):
     def __init__(self, filename: str, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            
+
             if not filename.replace("//", "/").startswith("/eos/"):
                 raise ValueError(f"{filename} is not an EOS path")
 
@@ -30,10 +30,8 @@ class EOSReader(object):
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
-        except Exception as e:
-            msg = "Error initializing EOSReader\n"
-            msg += f"{e}\n"
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing EOSReader\n{str(error)}")
 
     @runWithRetries(tries=5, wait=2, default={})
     def read(self) -> dict:

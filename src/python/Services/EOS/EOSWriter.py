@@ -29,10 +29,8 @@ class EOSWriter(object):
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
-        except Exception as e:
-            msg = "Error initializing EOSWriter\n"
-            msg += f"{e}\n"
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing EOSWriter\n{str(error)}")
 
     def write(self, content: str) -> None:
         """
@@ -54,7 +52,7 @@ class EOSWriter(object):
         """
         self.logger.info("Moving %s to %s", self.cache, self.filename)
         response = os.system(f"env EOS_MGM_URL=root://eoscms.cern.ch eos cp {self.cache} {self.filename}")
-        if response == 0 or os.path.getsize(self.filename) > 0:
+        if response == 0 and os.path.getsize(self.filename) > 0:
             return True
 
         raise Exception(f"Not able to move {self.filename} to EOS, with code {response}")

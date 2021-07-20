@@ -14,9 +14,9 @@ from Services.EOS.EOSWriter import EOSWriter
 from Services.Mongo.MongoClient import MongoClient
 
 
-class CloseoutInfo(MongoClient):
+class WorkflowCloseoutMonitor(MongoClient):
     """
-    __CloseoutInfo__
+    __WorkflowCloseoutMonitor__
     General API for monitoring workflows closeout info
     """
 
@@ -30,17 +30,15 @@ class CloseoutInfo(MongoClient):
             self.templateDirectory = configurationHandler.get("template_dir")
 
             self.template = {
-                "summary": self.templateDirectory + "/CloseoutInfo/Summary.jinja",
-                "assistance": self.templateDirectory + "/CloseoutInfo/Assistance.jinja",
+                "summary": self.templateDirectory + "/WorkflowCloseoutMonitor/Summary.jinja",
+                "assistance": self.templateDirectory + "/WorkflowCloseoutMonitor/Assistance.jinja",
             }
 
             self.removed = set()
             self.record = {}
 
-        except Exception as e:
-            msg = "Error initializing CloseoutInfo\n"
-            msg += str(e)
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing WorkflowCloseoutMonitor\n{str(error)}")
 
     def _setMongoCollection(self) -> Collection:
         return self.client.unified.closeoutInfo

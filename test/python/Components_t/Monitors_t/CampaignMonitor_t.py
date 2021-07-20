@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """
-_CampaignInfo_t_
-Unit test for CampaignInfo helper class.
+_CampaignMonitor_t_
+Unit test for CampaignMonitor helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
-from MoveToSomewhereElse.CampaignInfo import CampaignInfo
+from Components.Monitors.CampaignMonitor import CampaignMonitor
 
 
-class CampaignInfoTest(unittest.TestCase):
+class CampaignMonitorTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "campaignsConfiguration"}
 
     # Some campaign params for testing
@@ -31,7 +31,7 @@ class CampaignInfoTest(unittest.TestCase):
     }
 
     def setUp(self) -> None:
-        self.campaignInfo = CampaignInfo()
+        self.campaignMonitor = CampaignMonitor()
         super().setUp()
         return
 
@@ -41,18 +41,18 @@ class CampaignInfoTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.campaignInfo.collection, Collection)
+        isCollection = isinstance(self.campaignMonitor.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.campaignInfo.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.campaignMonitor.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.campaignInfo.collection.name == self.mongoSettings.get("collection")
+        rightName = self.campaignMonitor.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the campaigns info"""
-        result = self.campaignInfo.get()
+        result = self.campaignMonitor.get()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -69,7 +69,7 @@ class CampaignInfoTest(unittest.TestCase):
     def testGetCampaigns(self):
         """getCampaigns gets the campaigns names"""
         # Test when campaign type is empty
-        result = self.campaignInfo.getCampaigns()
+        result = self.campaignMonitor.getCampaigns()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
@@ -80,7 +80,7 @@ class CampaignInfoTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when campaign type is given
-        result = self.campaignInfo.getCampaigns(self.campaignWithTypeParam.get("type"))
+        result = self.campaignMonitor.getCampaigns(self.campaignWithTypeParam.get("type"))
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
@@ -93,7 +93,7 @@ class CampaignInfoTest(unittest.TestCase):
     def testGetCampaignValue(self):
         """getCampaignValue gets the value of a given campaign"""
         # Test when the key exists, will use resize in this case
-        result = self.campaignInfo.getCampaignValue(self.campaignParam.get("campaign"), "resize", "default")
+        result = self.campaignMonitor.getCampaignValue(self.campaignParam.get("campaign"), "resize", "default")
         isStr = isinstance(result, str)
         self.assertTrue(isStr)
 
@@ -101,7 +101,7 @@ class CampaignInfoTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when key does not exists
-        result = self.campaignInfo.getCampaignValue(self.campaignParam.get("campaign"), "invalidKey", "default")
+        result = self.campaignMonitor.getCampaignValue(self.campaignParam.get("campaign"), "invalidKey", "default")
         isStr = isinstance(result, str)
         self.assertTrue(isStr)
 
@@ -110,7 +110,7 @@ class CampaignInfoTest(unittest.TestCase):
 
     def testGetCampaignParameters(self):
         """getCampaignParameters gets the parameters of a given campaign"""
-        result = self.campaignInfo.getCampaignParameters(self.campaignWithTypeParam.get("campaign"))
+        result = self.campaignMonitor.getCampaignParameters(self.campaignWithTypeParam.get("campaign"))
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -119,7 +119,7 @@ class CampaignInfoTest(unittest.TestCase):
 
     def testGetSecondaries(self):
         """getSecondaries gets the campaigns secondaries"""
-        result = self.campaignInfo.getSecondaries()
+        result = self.campaignMonitor.getSecondaries()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 

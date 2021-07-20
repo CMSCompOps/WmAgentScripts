@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 """
-_BatchInfo_t_
-Unit test for BatchInfo helper class.
+_BatchMonitor_t_
+Unit test for BatchMonitor helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
-from MoveToSomewhereElse.BatchInfo import BatchInfo
+from Components.Monitors.BatchMonitor import BatchMonitor
 
 
-class BatchInfoTest(unittest.TestCase):
+class BatchMonitorTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "batchInfo"}
 
     def setUp(self) -> None:
-        self.batchInfo = BatchInfo()
+        self.batchMonitor = BatchMonitor()
         super().setUp()
         return
 
@@ -24,18 +24,18 @@ class BatchInfoTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.batchInfo.collection, Collection)
+        isCollection = isinstance(self.batchMonitor.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.batchInfo.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.batchMonitor.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.batchInfo.collection.name == self.mongoSettings.get("collection")
+        rightName = self.batchMonitor.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the batches names and ids"""
-        result = self.batchInfo.get()
+        result = self.batchMonitor.get()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -50,7 +50,7 @@ class BatchInfoTest(unittest.TestCase):
 
     def testGetBatches(self):
         """getBatches gets the all the batches names"""
-        result = self.batchInfo.getBatches()
+        result = self.batchMonitor.getBatches()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 

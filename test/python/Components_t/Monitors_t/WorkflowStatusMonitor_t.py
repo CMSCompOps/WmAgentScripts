@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """
-_StatusHistory_t_
-Unit test for StatusHistory helper class.
+_WorkflowStatusMonitor_t_
+Unit test for WorkflowStatusMonitor helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
-from MoveToSomewhereElse.StatusHistory import StatusHistory
+from Components.Monitors.WorkflowStatusMonitor import WorkflowStatusMonitor
 
 
-class StatusHistoryTest(unittest.TestCase):
+class WorkflowStatusMonitorTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "statusHistory"}
 
     # StatusHistory is always changing
@@ -18,7 +18,7 @@ class StatusHistoryTest(unittest.TestCase):
     params = {"dateTimeKeys": ["time", "date"]}
 
     def setUp(self) -> None:
-        self.statusHistory = StatusHistory()
+        self.workflowStatusMonitor = WorkflowStatusMonitor()
         super().setUp()
         return
 
@@ -28,18 +28,18 @@ class StatusHistoryTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.statusHistory.collection, Collection)
+        isCollection = isinstance(self.workflowStatusMonitor.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.statusHistory.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.workflowStatusMonitor.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.statusHistory.collection.name == self.mongoSettings.get("collection")
+        rightName = self.workflowStatusMonitor.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the data in status history"""
-        result = self.statusHistory.get()
+        result = self.workflowStatusMonitor.get()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 

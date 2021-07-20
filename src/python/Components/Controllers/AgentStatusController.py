@@ -16,10 +16,10 @@ from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.ReqMgr.ReqMgrWriter import ReqMgrWriter
 
 
-class AgentInfo(MongoClient, TrelloClient):
+class AgentStatusController(MongoClient, TrelloClient):
     """
-    __AgentInfo__
-    General API for managing the agents info
+    __AgentStatusController__
+    General API for controlling the agents status
     """
 
     def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
@@ -48,10 +48,8 @@ class AgentInfo(MongoClient, TrelloClient):
                 if not self.isSync:
                     self.logger.warning("Failed to properly initialize the agent info")
 
-        except Exception as e:
-            msg = "Error initializing AgentInfo\n"
-            msg += str(e)
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing AgentStatusController\n{str(error)}")
 
     def _setMongoCollection(self) -> Collection:
         return self.client.unified.agentInfo

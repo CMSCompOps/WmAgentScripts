@@ -9,10 +9,10 @@ from Services.Mongo.MongoClient import MongoClient
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 
 
-class WtcInfo(MongoClient):
+class WorkflowTrafficMonitor(MongoClient):
     """
-    __WtcInfo__
-    General API for controlling the workflow traffic
+    __WorkflowTrafficMonitor__
+    General API for monitoring the workflow traffic controller
     """
 
     def _setMongoCollection(self) -> Collection:

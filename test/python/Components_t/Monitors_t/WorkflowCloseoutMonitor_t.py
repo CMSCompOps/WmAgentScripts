@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 """
-_CloseoutInfo_t_
-Unit test for ReportInfo helper class.
+_WorkflowCloseoutMonitor_t_
+Unit test for WorkflowCloseoutMonitor helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
 from Services.Mongo.MongoClient import MongoClient
-from MoveToSomewhereElse.CloseoutInfo import CloseoutInfo
+from Components.Monitors.WorkflowCloseoutMonitor import WorkflowCloseoutMonitor
 
 
 class MockMongoClient(MongoClient):
@@ -19,10 +19,10 @@ class MockMongoClient(MongoClient):
         pass
 
 
-class CloseoutInfoTest(unittest.TestCase):
+class WorkflowCloseoutMonitorTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "closeoutInfo"}
 
-    # The data in CloseoutInfo is always changing.
+    # CloseoutInfo is always changing.
     # For now, test the get method with a workflow got randomly from mongo.
     mockMongoClient = MockMongoClient()
     params = {
@@ -31,7 +31,7 @@ class CloseoutInfoTest(unittest.TestCase):
     }
 
     def setUp(self) -> None:
-        self.closeoutInfo = CloseoutInfo()
+        self.workflowCloseoutMonitor = WorkflowCloseoutMonitor()
         super().setUp()
         return
 
@@ -41,36 +41,36 @@ class CloseoutInfoTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.closeoutInfo.collection, Collection)
+        isCollection = isinstance(self.workflowCloseoutMonitor.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.closeoutInfo.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.workflowCloseoutMonitor.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.closeoutInfo.collection.name == self.mongoSettings.get("collection")
+        rightName = self.workflowCloseoutMonitor.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the closeout info for a given workflow"""
         # Test when workflow exists
-        result = self.closeoutInfo.get(self.params.get("workflow"))
+        result = self.workflowCloseoutMonitor.get(self.params.get("workflow"))
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
         noDropKeys = all(k not in result for k in self.params.get("dropKeys"))
         self.assertTrue(noDropKeys)
 
-        isRecorded = self.params.get("workflow") in self.closeoutInfo.record
+        isRecorded = self.params.get("workflow") in self.workflowCloseoutMonitor.record
         self.assertTrue(isRecorded)
 
         # Test when workflow does not exist
-        result = self.closeoutInfo.get("test")
+        result = self.workflowCloseoutMonitor.get("test")
         isNone = result is None
         self.assertTrue(isNone)
 
     def testGetWorkflows(self):
         """get gets all workflow names"""
-        result = self.closeoutInfo.getWorkflows()
+        result = self.workflowCloseoutMonitor.getWorkflows()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 

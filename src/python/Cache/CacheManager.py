@@ -22,10 +22,8 @@ class CacheManager(MongoClient):
             super().__init__(logger=logger)
             self.cacheDirectory = ConfigurationHandler().get("cache_dir")
 
-        except Exception as e:
-            msg = "Error initializing CacheManager\n"
-            msg += str(e)
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing CacheManager\n{str(error)}")
 
     def _setMongoCollection(self) -> Collection:
         return self.client.unified.cacheInfo

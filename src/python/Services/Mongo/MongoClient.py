@@ -28,10 +28,8 @@ class MongoClient(ABC):
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
-        except Exception as e:
-            msg = "Error initializing MongoClient\n"
-            msg += str(e)
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing MongoClient\n{str(error)}")
 
     @abstractmethod
     def _setMongoCollection(self) -> Collection:

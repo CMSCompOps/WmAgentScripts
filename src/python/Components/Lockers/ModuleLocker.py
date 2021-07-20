@@ -12,10 +12,10 @@ from Utilities.Logging import displayTime
 from Services.Mongo.MongoClient import MongoClient
 
 
-class ModuleLock(MongoClient):
+class ModuleLocker(MongoClient):
     """
-    __ModuleLock__
-    General API for managing the module locks
+    __ModuleLocker__
+    General API for locking (or not) a module
     """
 
     def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
@@ -36,11 +36,9 @@ class ModuleLock(MongoClient):
                 "killPid": "Process %s on %s for module %s is running for %s: killing",
                 "popPid": "Process %s not present on %s",
             }
-        
-        except Exception as e:
-            msg = "Error initializing ModuleLock\n"
-            msg += str(e)
-            raise Exception(msg)
+
+        except Exception as error:
+            raise Exception(f"Error initializing ModuleLock\n{str(error)}")
 
     def __call__(self) -> bool:
         self.logger.info("Module lock for component %s from MongoDB", self.component)

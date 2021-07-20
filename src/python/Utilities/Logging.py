@@ -14,8 +14,7 @@ def displayTime(seconds: int) -> str:
         return f"{days} [d] {hours} [h] {minutes} [m] {seconds} [s]"
 
     except Exception as error:
-        print(f"Failed to display time of {seconds} [s]")
-        print(str(error))
+        print(f"Failed to display time of {seconds} [s]\n{str(error)}")
 
 
 def displayNumber(n: int) -> str:
@@ -35,5 +34,4 @@ def displayNumber(n: int) -> str:
         return f"{b}B" if b else f"{m}M" if m else f"{k}K" if k else str(n)
 
     except Exception as error:
-        print(f"Failed to display number {n}")
-        print(str(error))
+        print(f"Failed to display number {n}\n{str(error)}")

@@ -5,9 +5,9 @@ from Services.Mongo.MongoClient import MongoClient
 from Utilities.IteratorTools import mapKeys
 
 
-class StatusHistory(MongoClient):
+class WorkflowStatusMonitor(MongoClient):
     """
-    __StatusHistory__
+    __WorkflowStatusMonitor__
     General API for monitoring the workflows status history
     """
 

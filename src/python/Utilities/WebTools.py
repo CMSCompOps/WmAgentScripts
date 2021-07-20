@@ -61,5 +61,4 @@ def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers:
         return data
 
     except Exception as error:
-        print(f"Failed to send response to {url + endpoint + param}")
-        print(str(error))
+        print(f"Failed to send response to {url + endpoint + param}\n{str(error)}")

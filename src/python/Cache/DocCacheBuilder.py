@@ -21,10 +21,8 @@ class DocCacheBuilder(ABC):
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
-        except Exception as e:
-            msg = "Error initializing DocCacheBuilder\n"
-            msg += str(e)
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing DocCacheBuilder\n{str(error)}")
 
     @abstractmethod
     def get(self) -> Any:

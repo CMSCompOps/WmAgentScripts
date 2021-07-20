@@ -11,9 +11,9 @@ from Services.EOS.EOSReader import EOSReader
 from Services.Mongo.MongoClient import MongoClient
 
 
-class RemainingDatasetInfo(MongoClient):
+class RemainingDatasetMonitor(MongoClient):
     """
-    __RemainingDatasetInfo__
+    __RemainingDatasetMonitor__
     General API for monitoring the remaining dataset info
     """
 
@@ -23,10 +23,8 @@ class RemainingDatasetInfo(MongoClient):
             configurationHandler = ConfigurationHandler()
             self.monitorEOSDirectory = configurationHandler.get("monitor_eos_dir")
 
-        except Exception as e:
-            msg = "Error initializing RemainingDatasetInfo\n"
-            msg += str(e)
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing RemainingDatasetMonitor\n{str(error)}")
 
     def __del__(self) -> None:
         self.purge(60)
@@ -40,7 +38,7 @@ class RemainingDatasetInfo(MongoClient):
             "dataset": dataset,
             "reasons": data.get("reasons", []),
             "size": data.get("size", 0),
-            "time": mktime(now),
+            "time": int(mktime(now)),
             "date": asctime(now),
         }
 

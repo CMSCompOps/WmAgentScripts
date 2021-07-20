@@ -27,10 +27,8 @@ class TrelloClient(object):
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
-        except Exception as e:
-            msg = "Error initializing TrelloClient\n"
-            msg += str(e)
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing TrelloClient\n{str(error)}")
 
     def _get(self, key: str, id: str, endpoint: str = "?") -> dict:
         """

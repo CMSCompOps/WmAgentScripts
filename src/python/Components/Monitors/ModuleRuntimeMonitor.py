@@ -6,10 +6,10 @@ from typing import Optional
 from Services.Mongo.MongoClient import MongoClient
 
 
-class StartStopInfo(MongoClient):
+class ModuleRuntimeMonitor(MongoClient):
     """
-    __StartStopInfo__
-    General API for monitoring Unified modules running times
+    __ModuleRuntimeMonitor__
+    General API for monitoring modules runtimes
     """
 
     def _setMongoCollection(self) -> Collection:

@@ -22,10 +22,8 @@ class DataCacheLoader(object):
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
-        except Exception as e:
-            msg = "Error initializing DataCacheLoader\n"
-            msg += str(e)
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing DataCacheLoader\n{str(error)}")
 
     def load(self, key: str) -> bool:
         """
