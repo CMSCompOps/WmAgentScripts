@@ -2694,6 +2694,10 @@
     "go": true, 
     "lumisize": -1, 
     "resize": "auto",
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",        
         "T2_US_Purdue",
         "T2_US_Caltech",
         "T2_US_Florida",
@@ -2708,6 +2712,10 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",        
         "T2_US_Purdue",
         "T2_US_Caltech",
         "T2_US_Florida",
