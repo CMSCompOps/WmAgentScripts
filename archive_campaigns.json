@@ -1,5 +1,47 @@
 {
 
+  "RunIISummer19ULPrePremix": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "parameters": {
+      "NonCustodialSites": [
+        "T2_CH_CERN",
+        "T1_US_FNAL"
+      ]
+    },
+    "partial_copy": 0.049,
+    "secondaries": {
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v3-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_UK_RAL_Disk",
+          "T1_US_FNAL_Disk"
+        ]
+      },
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v3-v1/SIM": {
+        "SiteWhitelist": [
+          "T1_UK_RAL_Disk"
+        ]
+      },
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL17SIM-106X_mc2017_realistic_v3-v2/SIM": {
+        "SiteWhitelist": [
+          "T1_UK_RAL_Disk"
+        ]
+      },
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL18SIM-106X_upgrade2018_realistic_v4-v1/SIM": {
+        "SiteWhitelist": [
+          "T1_UK_RAL_Disk",
+          "T2_US_Nebraska"
+        ]
+      },
+      "/MinBias_TuneCP5_14TeV-pythia8/PhaseIITDRSpring19GS-106X_upgrade2023_realistic_v2_ext1-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_US_Florida"
+        ]
+      }
+    },
+    "tune": true
+  },
   "RunIISummer19UL18wmLHEGEN": {
     "SiteBlacklist": [
       "T2_CH_CERN",
