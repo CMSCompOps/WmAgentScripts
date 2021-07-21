@@ -1,7 +1,7 @@
 from time import struct_time, gmtime, mktime, asctime
 from pymongo.collection import Collection
 
-from Services.Mongo.MongoClient import MongoClient
+from Databases.Mongo.MongoClient import MongoClient
 from Utilities.IteratorTools import mapKeys
 
 

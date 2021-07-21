@@ -4,7 +4,7 @@ from pymongo.collection import Collection
 from typing import Any
 
 from Utilities.IteratorTools import mapKeys, mapValues
-from Services.Mongo.MongoClient import MongoClient
+from Databases.Mongo.MongoClient import MongoClient
 
 
 class WorkflowReportMonitor(MongoClient):

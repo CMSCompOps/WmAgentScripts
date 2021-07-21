@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, Session
 
 from typing import Optional
 
-from Services.Oracle import OracleDB
+from Databases.Oracle import OracleDB
 
 
 class OracleClient(object):

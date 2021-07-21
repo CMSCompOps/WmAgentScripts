@@ -11,7 +11,7 @@ from pymongo.collection import Collection
 from typing import Optional
 
 from Cache.CacheManager import CacheManager
-from Services.Mongo.MongoClient import MongoClient
+from Databases.Mongo.MongoClient import MongoClient
 
 
 class MockMongoClient(MongoClient):
@@ -20,6 +20,7 @@ class MockMongoClient(MongoClient):
 
     def _buildMongoDocument(self) -> None:
         pass
+
 
 class CacheManagerTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "cacheInfo"}
@@ -66,7 +67,7 @@ class CacheManagerTest(unittest.TestCase):
         self.assertTrue(rightPath)
 
     @patch("Cache.CacheManager.CacheManager._getFromFile")
-    @patch("Services.Mongo.MongoClient.MongoClient._getOne")
+    @patch("Databases.Mongo.MongoClient.MongoClient._getOne")
     def testGet(self, mockGetOne, mockGetFromFile):
         """get gets the data in cache for a given key"""
         # Test when key does not exist

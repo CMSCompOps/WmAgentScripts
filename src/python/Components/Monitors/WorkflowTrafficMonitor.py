@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from typing import Optional
 
-from Services.Mongo.MongoClient import MongoClient
+from Databases.Mongo.MongoClient import MongoClient
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 
 

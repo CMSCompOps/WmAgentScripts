@@ -9,7 +9,7 @@ import json
 import unittest
 from unittest.mock import patch, mock_open
 
-from Services.EOS.EOSReader import EOSReader
+from Storage.EOS.EOSReader import EOSReader
 
 
 class EOSReaderTest(unittest.TestCase):
@@ -38,7 +38,6 @@ class EOSReaderTest(unittest.TestCase):
         isInitialized = self.eosReader.filename == self.params.get("validFile")
         self.assertTrue(isInitialized)
 
-    
     @patch("os.system")
     @patch("builtins.open", create=True)
     def testRead(self, mockOpen, mockSystem):

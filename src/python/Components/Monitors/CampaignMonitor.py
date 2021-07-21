@@ -4,7 +4,7 @@ from pymongo.collection import Collection
 
 from typing import Optional, Any
 
-from Services.Mongo.MongoClient import MongoClient
+from Databases.Mongo.MongoClient import MongoClient
 
 
 class CampaignMonitor(MongoClient):

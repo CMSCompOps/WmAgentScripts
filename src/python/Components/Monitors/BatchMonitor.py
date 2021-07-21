@@ -1,7 +1,7 @@
 from collections import defaultdict
 from pymongo.collection import Collection
 
-from Services.Mongo.MongoClient import MongoClient
+from Databases.Mongo.MongoClient import MongoClient
 
 
 class BatchMonitor(MongoClient):

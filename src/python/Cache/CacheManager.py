@@ -8,7 +8,7 @@ from pymongo.collection import Collection
 from typing import Optional
 
 from Utilities.ConfigurationHandler import ConfigurationHandler
-from Services.Mongo.MongoClient import MongoClient
+from Databases.Mongo.MongoClient import MongoClient
 
 
 class CacheManager(MongoClient):

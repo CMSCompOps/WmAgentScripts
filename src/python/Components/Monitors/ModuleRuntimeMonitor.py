@@ -3,7 +3,7 @@ from pymongo.collection import Collection
 
 from typing import Optional
 
-from Services.Mongo.MongoClient import MongoClient
+from Databases.Mongo.MongoClient import MongoClient
 
 
 class ModuleRuntimeMonitor(MongoClient):

@@ -10,8 +10,8 @@ from typing import Optional
 from Utilities.Logging import displayTime
 from Utilities.IteratorTools import filterKeys, mapValues
 from Cache.DataCacheLoader import DataCacheLoader
-from Services.Mongo.MongoClient import MongoClient
-from Services.Trello.TrelloClient import TrelloClient
+from Databases.Mongo.MongoClient import MongoClient
+from Operations.Trello.TrelloClient import TrelloClient
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.ReqMgr.ReqMgrWriter import ReqMgrWriter
 

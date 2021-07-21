@@ -7,8 +7,8 @@ from pymongo.collection import Collection
 from typing import Collection, Optional
 
 from Utilities.ConfigurationHandler import ConfigurationHandler
-from Services.EOS.EOSReader import EOSReader
-from Services.Mongo.MongoClient import MongoClient
+from Storage.EOS.EOSReader import EOSReader
+from Databases.Mongo.MongoClient import MongoClient
 
 
 class RemainingDatasetMonitor(MongoClient):

@@ -7,7 +7,7 @@ Unit test for WorkflowReportMonitor helper class.
 import unittest
 from pymongo.collection import Collection
 
-from Services.Mongo.MongoClient import MongoClient
+from Databases.Mongo.MongoClient import MongoClient
 from Components.Monitors.WorkflowReportMonitor import WorkflowReportMonitor
 
 
