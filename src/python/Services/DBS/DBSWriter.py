@@ -28,18 +28,18 @@ class DBSWriter(object):
                 configurationHandler = ConfigurationHandler()
                 self.dbsURL = os.getenv("DBS_WRITER_URL", configurationHandler.get("dbs_url_writer"))
             self.dbs = DbsApi(self.dbsURL, **contact)
+
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
-        except Exception as e:
-            msg = "Error in DBSWriter with DbsApi\n"
-            msg += f"{e}\n"
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing DBSWriter\n{str(error)}")
 
     def setFileStatus(self, files: List[dict], validate: bool = True) -> bool:
         """
-        The function to set files status to True or False
+        The function to set files validation status to True or False
         :param files: list of files
+        :param validate: True if to validate files, False o/w
         :return: True in case the all files status were updated, False o/w
         """
         try:

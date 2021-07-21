@@ -33,17 +33,17 @@ class DBSReader(object):
                 self.dbsUrl = os.getenv("DBS_READER_URL", configurationHandler.get("dbs_url"))
             self.dbs = DbsApi(self.dbsUrl, **contact)
             self.cache = CacheManager()
+
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
-        except Exception as e:
-            msg = "Error in DBSReader with DbsApi\n"
-            msg += f"{e}\n"
-            raise Exception(msg)
+        except Exception as error:
+            raise Exception(f"Error initializing DBSReader\n{str(error)}")
 
     def check(self) -> bool:
         """
-        The function to check dbs is responding
+        The function to check if dbs is responding
+        :return: True if it is responding, False o/w
         """
         try:
             if "testbed" in self.dbsUrl:
@@ -71,7 +71,7 @@ class DBSReader(object):
         :param run: run number
         :return: a list of lumi section arrays
 
-        This function runs by default with multithreading on the param filenames. The filenames can
+        This function runs by default with multithreading on the param "filenames". The filenames can
         be a list of str, or a list of lists of str for querying DBS for multiple filenames
         at once.
         """
@@ -108,10 +108,7 @@ class DBSReader(object):
             return dbsStatus
 
         except Exception as error:
-            self.logger.error(
-                "Exception while getting the status of following dataset on DBS: %s",
-                dataset,
-            )
+            self.logger.error("Exception while getting the status of following dataset on DBS: %s", dataset)
             self.logger.error(str(error))
 
     def getFilesWithLumiInRun(self, dataset: str, run: int) -> List[dict]:
@@ -373,7 +370,7 @@ class DBSReader(object):
             self.logger.error("Failed to get LFN base from DBS for dataset %s", dataset)
             self.logger.error(str(error))
 
-    def getRecoveryBlocks(self, filesAndLocations: dict) -> Tuple[list, dict]:
+    def getRecoveryBlocksAndLocations(self, filesAndLocations: dict) -> Tuple[list, dict]:
         """
         The function to get the blocks needed for the recovery of a workflow
         :param filesAndLocations: dict of file names and locations
@@ -462,82 +459,3 @@ class DBSReader(object):
         except Exception as error:
             self.logger.error("Failed to get lumi sections and files from DBS for given blocks")
             self.logger.error(str(error))
-
-
-# TODO: MOVE TO SOMEWHERE ELSE ?
-# Old workflowInfo.getRecoveryBlocks() is doing 4 different things, but only one step is direcly talking to DBS
-# It became then 4 functions:
-#    getRecoveryDocs() [NOTE: use workflow name (instead of collection name) when migrating this]
-#       -> getRecoveryFilesAndLocations()
-#          -> splitFilesAndLocationsInDBS()
-#          -> DBSReader.getRecoveryBlocks()
-def getRecoveryFilesAndLocations(recoveryDocs: List[dict], suffixTaskFilter: Optional[str] = None) -> dict:
-    """
-    The function to get the files and locations for given recovery docs
-    :param recoveryDocs: recovery docs
-    :param suffixTaskFilter: filter tasks ending with given suffix
-    :return: a dict of files and locations
-    """
-    filesAndLocations = defaultdict(set)
-    for doc in recoveryDocs:
-        task = doc.get("fileset_name", "")
-        if suffixTaskFilter and not task.endswith(suffixTaskFilter):
-            continue
-
-        for filename, data in doc["files"].items():
-            filesAndLocations[filename].update(data.get("locations", []))
-
-    filesAndLocations = mapValues(list, filesAndLocations)
-
-    print(f"{len(filesAndLocations)} files in recovery")
-    return filesAndLocations
-
-
-def splitFilesAndLocationsInDBS(filesAndLocations: dict) -> Tuple[dict, dict]:
-    """
-    The function to split the files in a subset of files in DBS and of files not in DBS
-    :param filesAndLocations: dict of files and locations
-    :return: two dicts of files and locations
-    """
-    filesInDBS, filesNotInDBS = set(), set()
-    for filename in filesAndLocations:
-        if any(filename.startswith(location) for location in ["/store/unmerged/", "MCFakeFile-"]):
-            filesNotInDBS.add(filename)
-        else:
-            filesInDBS.add(filename)
-
-    inDBS = mapValues(list, filterKeys(filesInDBS, filesAndLocations))
-    notInDBS = mapValues(list, filterKeys(filesNotInDBS, filesAndLocations))
-    return inDBS, notInDBS
-
-
-# TODO: MOVE TO SOMEWHERE ELSE ?
-# Old getDatasetLumisAndFiles() is filtering the files by run or lumi section after getting the files
-# It became then 3 functions:
-#     DBSReader.getDatasetLumisAndFiles()
-#         -> filterLumisAndFilesByRuns()
-#         -> filterLumisAndFilesByLumis()
-def filterLumisAndFilesByRuns(filesByLumis: dict, lumisByRun: dict, runs: list) -> Tuple[dict, dict]:
-    """
-    The function to get the lumi sections and files filtered by given runs
-    :param filesByLumis: a dict of format {run: [lumis]}
-    :param lumisByRun: a dict of format {(run:lumis): [files]}
-    :param runs: run numbers
-    :return: a dict of format {run: [lumis]} and a dict of format {(run:lumis): [files]}
-    """
-    return filterKeys(runs, lumisByRun, filesByLumis)
-
-
-def filterLumisAndFilesByLumis(filesByLumis: dict, lumisByRun: dict, lumis: dict) -> Tuple[dict, dict]:
-    """
-    The function to get the lumi sections and files filtered by given lumi sections
-    :param filesByLumis: a dict of format {run: [lumis]}
-    :param lumisByRun: a dict of format {(run:lumis): [files]}
-    :param lumis: a dict of format {run: [lumis]}
-    :return: a dict of format {run: [lumis]} and a dict of format {(run:lumis): [files]}
-    """
-    runs = map(int, lumis.keys())
-    lumis = set((k, vi) for k, v in lumis.items() for vi in v)
-    lumisByRun = filterKeys(runs, lumisByRun)
-    filesByLumis = filterKeys(lumis, filesByLumis)
-    return lumisByRun, filesByLumis
