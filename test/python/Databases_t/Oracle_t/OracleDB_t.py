@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-_OracleClient_t_
-Unit test for OracleClient helper class.
+_OracleDB_t_
+Unit test for OracleDB and OracleClient helper class.
 """
 
 import unittest
@@ -33,6 +33,7 @@ class OracleClientTest(unittest.TestCase):
                 "dsb_status",
                 "status",
                 "workfow_id",
+                "date",
             ],
             "name": "/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-scaledown-pythia8/RunIIWinter15GS-MCRUN2_71_V1-v1/GEN-SIM",
         },

@@ -86,7 +86,7 @@ class RemainingDatasetMonitorTest(unittest.TestCase):
         mockGet.return_value = self.params.get("doc")
         with self.assertLogs(self.remainingDatasetMonitor.logger, level="INFO") as result:
             self.remainingDatasetMonitor.tell(self.params.get("site"))
-        isFound = self.params.get("tell") in result
+        isFound = self.params.get("tell") in result.output
         self.assertTrue(isFound)
 
 

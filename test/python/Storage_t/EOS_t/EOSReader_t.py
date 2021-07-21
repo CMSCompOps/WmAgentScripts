@@ -42,7 +42,7 @@ class EOSReaderTest(unittest.TestCase):
     @patch("builtins.open", create=True)
     def testRead(self, mockOpen, mockSystem):
         """read gets the content of an EOS file"""
-        # Test when file is found locally
+        # Test behavior when file is found locally
         mockOpen.return_value = mock_open(read_data=json.dumps(self.params.get("content"))).return_value
         result = self.eosReader.read()
         isDict = isinstance(result, dict)
@@ -51,7 +51,7 @@ class EOSReaderTest(unittest.TestCase):
         isEqual = result == self.params.get("content")
         self.assertTrue(isEqual)
 
-        # Test when file is not found at all
+        # Test behavior when file is not found at all
         mockOpen.return_value = mock_open(read_data=None).return_value
         mockSystem.return_value = 99
         result = self.eosReader.read()
