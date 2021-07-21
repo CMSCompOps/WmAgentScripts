@@ -5,7 +5,7 @@ from logging import Logger
 from Utilities.WebTools import sendResponse
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
-from typing import List, Optional, Union
+from typing import Optional
 
 
 class ReqMgrWriter(object):

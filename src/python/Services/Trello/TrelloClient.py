@@ -9,7 +9,7 @@ from typing import Optional
 class TrelloClient(object):
     """
     __TrelloClient__
-    General API for connection to Trello board
+    General API for connecting to Trello board
     """
 
     def __init__(self, configFile: str = "Unified/secret_trello.txt", logger: Optional[Logger] = None) -> None:
@@ -45,7 +45,7 @@ class TrelloClient(object):
             return data
 
         except Exception as error:
-            self.logger.error("Failed to get %s with %s, %s", key, id, param)
+            self.logger.error("Failed to get %s with id %s", key, id)
             self.logger.error(str(error))
 
     def getAgents(self) -> dict:

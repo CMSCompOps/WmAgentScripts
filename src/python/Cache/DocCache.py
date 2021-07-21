@@ -12,7 +12,7 @@ class SSBProdStatusDocCache(DocCacheBuilder):
     """
 
     def get(self) -> dict:
-        return None  # TODO: implement get_dashbssb()
+        return None  # TODO: implement get_dashbssb() or drop this
 
 
 class SSBCoreMaxUsedDocCache(DocCacheBuilder):
@@ -22,7 +22,7 @@ class SSBCoreMaxUsedDocCache(DocCacheBuilder):
     """
 
     def get(self) -> list:
-        return None  # TODO: implement get_dashbssb()
+        return None  # TODO: implement get_dashbssb() or drop this
 
 
 class SSBCoreProductionDocCache(DocCacheBuilder):
@@ -32,7 +32,7 @@ class SSBCoreProductionDocCache(DocCacheBuilder):
     """
 
     def get(self) -> list:
-        return None  # TODO: implement get_dashbssb()
+        return None  # TODO: implement get_dashbssb() or drop this
 
 
 class SSBCoreCpuIntensiveDocCache(DocCacheBuilder):
@@ -42,7 +42,7 @@ class SSBCoreCpuIntensiveDocCache(DocCacheBuilder):
     """
 
     def get(self) -> list:
-        return None  # TODO: implement get_dashbssb()
+        return None  # TODO: implement get_dashbssb() or drop this
 
 
 class GWMSMONTotalsDocCache(DocCacheBuilder):
@@ -114,7 +114,7 @@ class SiteQueuesDocCache(DocCacheBuilder):
     """
 
     def get(self) -> dict:
-        return None  # TODO: implement getNodesQueue()
+        return None  # TODO: implement getNodesQueue() or drop this
 
 
 class SiteStorageDocCache(DocCacheBuilder):
@@ -124,7 +124,7 @@ class SiteStorageDocCache(DocCacheBuilder):
     """
 
     def get(self) -> dict:
-        return None  # TODO: implement getSiteStorage()
+        return None  # TODO: implement getSiteStorage() or drop this
 
 
 class FileInvalidationDocCache(DocCacheBuilder):
@@ -148,4 +148,4 @@ class WMStatsDocCache(DocCacheBuilder):
     """
 
     def get(self) -> dict:
-        return None  # TODO: implement getWMStats()
+        return None  # TODO: implement getWMStats() or drop this

@@ -1,5 +1,4 @@
 import os
-import socket
 from logging import Logger
 from collections import defaultdict
 from time import gmtime, localtime, asctime
@@ -12,9 +11,11 @@ from Utilities.Logging import displayNumber
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Services.EOS.EOSWriter import EOSWriter
 from Services.Mongo.MongoClient import MongoClient
+from Services.Oracle.OracleClient import OracleClient
+from Services.Oracle.OracleDB import Workflow
 
 
-class WorkflowCloseoutMonitor(MongoClient):
+class WorkflowCloseoutMonitor(MongoClient, OracleClient):
     """
     __WorkflowCloseoutMonitor__
     General API for monitoring workflows closeout info
@@ -93,25 +94,25 @@ class WorkflowCloseoutMonitor(MongoClient):
 
         return wfData
 
-    def _renderSummaryHtml(self, sessionWorkflows: List[dict]) -> str:
+    def _renderSummaryHtml(self) -> str:
         """
         The function to render the summary html from jinja template
-        :param sessionWorkflows: a list of workflows in the session
+        :return: summary html
         """
         workflows = []
         for i, wf in enumerate(sorted(self.getWorkflows())):
-            sessionWf = [sessionWf for sessionWf in sessionWorkflows if sessionWf["name"] == wf]
-            if not sessionWf:
+            wfData = self.session.query(Workflow).filter(Workflow.name == wf).first()
+            if not wfData:
                 continue
-            if sessionWf["status"] != "away" and not sessionWf["status"].startswaith("assistance"):
+            if wfData["status"] != "away" and not wfData["status"].startswith("assistance"):
                 self.logger.info("Taking %s out of the closeout info", wf)
                 self.clean(wf)
                 continue
 
-            wfData = self._buildHtmlRow(wf)
-            wfData["status"] = sessionWf["status"]
-            wfData["bgColor"] = "lightblue" if i % 2 else "white"
-            workflows.append(wfData)
+            workflow = self._buildHtmlRow(wf)
+            workflow["status"] = wfData["status"]
+            workflow["bgColor"] = "lightblue" if i % 2 else "white"
+            workflows.append(workflow)
 
         with open(self.template["summary"]) as tmpl:
             template = Template(tmpl.read())
@@ -125,16 +126,15 @@ class WorkflowCloseoutMonitor(MongoClient):
             cols=["percentage", "acdc", "events", "lumis", "dbsFiles", "dbsInvFiles", "phedexFiles"],
         )
 
-    def _renderAssistanceHtml(self, sessionWorkflows: List[dict], details: bool = False) -> str:
+    def _renderAssistanceHtml(self, details: bool = False) -> str:
         """
         The function to render the assistance html from jinja template
-        :param sessionWorkflows: a list of workflows in the session
         :param details: if True return html with detailed table, summary table o/w
+        :return: assistance html
         """
         wfsByStatus = defaultdict(list)
-        for wf in sessionWorkflows:
-            if wf["status"].startswith("assistance"):
-                wfsByStatus[wf["status"]].append(wf)
+        for wf in self.session.query(Workflow).filter(Workflow.status.startswith("assistance")).all():
+            wfsByStatus[wf["status"]].append(wf)
 
         assistanceStatus = []
         for status, wfs in dict(sorted(wfsByStatus.items())).items():
@@ -201,8 +201,7 @@ class WorkflowCloseoutMonitor(MongoClient):
     def getWorkflows(self) -> List[str]:
         """
         The function to get the workflows in closeout info
-        :param wf: workflow name
-        :return: workflows
+        :return: workflows names
         """
         try:
             return super()._get("name")
@@ -225,39 +224,37 @@ class WorkflowCloseoutMonitor(MongoClient):
             self.logger.error("Failed to clean closeout info for workflow %s", wf)
             self.logger.error(str(error))
 
-    def summary(self, sessionWorkflows: List[dict]) -> None:
+    def summary(self) -> None:
         """
         The function to write the closeout info summary in a html file and save it in EOS
-        :param sessionWorkflows: a list of workflows in the session
         """
         try:
             summaryFile = EOSWriter(f"{self.monitorEOSDirectory}/closeout.html", self.logger)
-            summaryFile.write(self._renderSummary(sessionWorkflows))
+            summaryFile.write(self._renderSummaryHtml())
             summaryFile.save()
 
         except Exception as error:
             self.logger.error("Failed to save summary closeout info")
             self.logger.error(str(error))
 
-    def assistance(self, sessionWorkflows: List[dict]) -> None:
+    def assistance(self) -> None:
         """
         The function to write the closeout info assistance in a html file and save it in EOS
-        :param sessionWorkflows: a list of workflows in the session
         """
         try:
             for filename, details in [("assistance.html", True), ("assistance_summary.html", False)]:
                 assistanceFile = EOSWriter(f"{self.monitorEOSDirectory}/{filename}", self.logger)
-                assistanceFile.write(self._renderSummaryHtml(sessionWorkflows, details=details))
+                assistanceFile.write(self._renderAssistanceHtml(details))
                 assistanceFile.save()
 
         except Exception as error:
             self.logger.error("Failed to save assistance closeout info")
             self.logger.error(str(error))
 
-    def html(self, sessionWorkflows: List[dict]) -> None:
+    def html(self) -> None:
         """
         The function to write the html closeout info and save it in EOS
-        :param sessionWorkflows: a list of workflows in the session
         """
-        self.summary(sessionWorkflows)
-        self.assistance(sessionWorkflows)
+
+        self.summary()
+        self.assistance()
