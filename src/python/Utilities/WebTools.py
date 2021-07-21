@@ -5,24 +5,21 @@ Description: Useful functions while interacting different services
 """
 
 import os
-import http.client
 import json
-from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.Authenticate import getX509Conn
 
-from typing import Union, Optional, Dict
-
-# Get necessary parameters
-configurationHandler = ConfigurationHandler()
-reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
+from typing import Union, Optional, Any
 
 
-def getResponse(
-    url: str,
-    endpoint: str,
-    param: Union[str, dict] = "",
-    headers: Optional[dict] = None,
-):
+def getResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None) -> Any:
+    """
+    The function to get the response for a given request
+    :param url: url
+    :param endpoint: endpoint
+    :param param: optional request params
+    :param headers: optional request headers
+    :return: request response
+    """
 
     if headers == None:
         headers = {"Accept": "application/json"}
@@ -38,11 +35,10 @@ def getResponse(
 
     try:
         conn = getX509Conn(url)
-        request = conn.request("GET", endpoint + param, headers=headers)
+        _ = conn.request("GET", endpoint + param, headers=headers)
         response = conn.getresponse()
         data = json.loads(response.read())
         return data
 
-    except Exception as e:
-        print(f"Failed to get response from {url + endpoint + param}")
-        print(str(e))
+    except Exception as error:
+        print(f"Failed to get response from {url + endpoint + param}\n{str(error)}")

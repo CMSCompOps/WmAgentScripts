@@ -5,9 +5,11 @@ Description: General API for reading data from ReqMgr
 """
 
 import logging
+from logging import Logger
 import os
 import copy
 from Utilities.WebTools import getResponse
+from Utilities.IteratorTools import mapKeys, filterKeys
 from Utilities.Decorators import runWithRetries
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
@@ -20,7 +22,7 @@ class ReqMgrReader(object):
     General API for reading data from ReqMgr
     """
 
-    def __init__(self, logger: Optional[logging.Logger] = None, **contact):
+    def __init__(self, logger: Optional[Logger] = None, **contact):
         try:
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
@@ -35,16 +37,14 @@ class ReqMgrReader(object):
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
-            msg = "Error initializing ReqMgrReader\n"
-            msg += f"{error}\n"
-            raise Exception(msg)
+            raise Exception(f"Error initializing ReqMgrReader\n{str(error)}")
 
     def getWorkflowSchema(self, wf: str, makeCopy: bool = False) -> dict:
         """
         The function to get the schema for a given workflow
         :param wf: workflow name
         :param makeCopy: if True, return a copy of the schema
-        :return: a dict
+        :return: workflow schema
         """
         try:
             result = getResponse(
@@ -52,9 +52,8 @@ class ReqMgrReader(object):
                 endpoint=self.reqmgrEndpoint["request"],
                 param={"name": wf},
             )
-            if makeCopy:
-                return copy.deepcopy(result["result"][0][wf])
-            return result["result"][0][wf]
+            data = result["result"][0][wf]
+            return copy.deepcopy(data) if makeCopy else data
 
         except Exception as error:
             self.logger.error("Failed to get workload from reqmgr for workflow %s", wf)
@@ -116,9 +115,9 @@ class ReqMgrReader(object):
                 "requestType": "request_type",
                 "priority": "initialpriority",
             }
-            extraParam = {extraParamMap[k]: v for k, v in extraParam.items() if k in extraParamMap}
-            param = {**{"status": status}, **extraParam}
-            return self.getWorkflowsByParam(param, details=details)
+            extraParam = filterKeys(extraParamMap, extraParam)
+            extraParam = mapKeys(lambda k: extraParamMap[k], extraParam)
+            return self.getWorkflowsByParam({**{"status": status}, **extraParam}, details=details)
 
         except Exception as error:
             self.logger.error(

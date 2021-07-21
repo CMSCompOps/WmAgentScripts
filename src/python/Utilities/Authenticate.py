@@ -6,7 +6,6 @@ Description: Module which takes care of all authentication to different services
 
 import os
 import http.client
-import json
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.Decorators import runWithRetries
 
