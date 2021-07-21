@@ -12,11 +12,11 @@ class TrelloClient(object):
     General API for connecting to Trello board
     """
 
-    def __init__(self, configFile: str = "Unified/secret_trello.txt", logger: Optional[Logger] = None) -> None:
+    def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
             self.configs = {}
-            with open(configFile) as file:
+            with open("src/python/Utilities/secret_trello.txt") as file:
                 for line in file:
                     try:
                         k, v = line.replace("\n", "").split(":")

@@ -20,12 +20,12 @@ class OracleClient(object):
             self.base = OracleDB.Base
             self.adminMode = adminMode
 
-            with open(f"Unified/secret_cmsr_{'admin' if self.adminMode else 'rw'}.txt") as file:
+            with open(f"src/python/Utilities/secret_cmsr_{'admin' if self.adminMode else 'rw'}.txt", "r") as file:
                 self.oracleUrl = file.read().strip()
 
             self.engine = create_engine(self.oracleUrl)
             if self.adminMode:
-                self.engine.execution_options(schema_translate_map={self.base.schema: None})
+                self.engine = self.engine.execution_options(schema_translate_map={self.base.schema: None})
 
             self.base.metadata.create_all(self.engine)
             self.base.metadata.bind = self.engine

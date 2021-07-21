@@ -11,7 +11,7 @@ class Base(object):
     """
 
     schema = "cms_unified_admin"
-    __table_args__ = {"schema": schema}
+    __table_args__ = {"schema": "cms_unified_admin"}
 
 
 Base = declarative_base(cls=Base)
@@ -25,7 +25,6 @@ class Workflow(Base):
 
     __tablename__ = "WORKFLOW"
     id = Column(Integer, Sequence("WORKFLOW_ID_SEQ", schema=Base.schema), primary_key=True)
-    workflow = Column(String(400))
     name = Column(String(400))
     status = Column(String(100), default="considered")
     wm_status = Column(String(100), default="assignment-approved")
@@ -47,6 +46,8 @@ class Output(Base):
     dsb_status = Column(String(30))
     status = Column(String(30))
     workfow_id = Column(Integer, ForeignKey(Base.schema + ".WORKFLOW.id"))
+    workflow = relationship(Workflow)
+    date = Column(Integer)
 
 
 class Transfer(Base):

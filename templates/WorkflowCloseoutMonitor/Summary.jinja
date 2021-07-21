@@ -59,21 +59,21 @@ Last update on {{ updateCETime }}(CET), {{ updateGMTime }}(GMT), <a href="logs/c
         {# table values #}
         {% for col in cols %}
         <td>
-            {% if col is "acdc" %}
+            {% if col == "acdc" %}
             <a 
-                href="https://{{ reqmgrUrl }}/reqmgr2/data/request?prep_id={{ wf.taskPrepId }}&detail=false">{{ dataset.col.value }}</a>
-            {% elif col is "percentage" and dataset.col.value < dataset.col.fractionPass %}
-            <b>{{ dataset.col.value}}</b>
+                href="https://{{ reqmgrUrl }}/reqmgr2/data/request?prep_id={{ wf.taskPrepId }}&detail=false">{{ dataset[col].value }}</a>
+            {% elif col == "percentage" and dataset[col].value < dataset[col].fractionPass %}
+            <b>{{ dataset[col].value}}</b>
             {% elif col in ["events", "lumis"] %}
-            {{ dataset.col.produced }}/{{ dataset.col.expected }}
+            {{ dataset[col].produced }}/{{ dataset[col].expected }}
             {% else %}
-            {{ dataset.col.value }}
+            {{ dataset[col].value }}
             {% endif %}
         </td>
         {% endfor %}
 
         {# row span if first dataset of a workflow #}
-        {% if loop.index0 is 0 %}
+        {% if loop.index0 == 0 %}
         <td rowspan="{{ wf.nDatasets }}">{{ dataset.updated }}</td>
         <td rowspan="{{ wf.nDatasets }}">{{ wf.priority }}</td>
         {% endif %}

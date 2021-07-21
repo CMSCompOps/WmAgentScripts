@@ -5,7 +5,7 @@ from time import gmtime, localtime, asctime
 from pymongo.collection import Collection
 from jinja2 import Template
 
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from Utilities.Logging import displayNumber
 from Utilities.ConfigurationHandler import ConfigurationHandler
@@ -28,11 +28,10 @@ class WorkflowCloseoutMonitor(MongoClient, OracleClient):
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
             self.unifiedUrl = os.getenv("UNIFIED_URL", configurationHandler.get("unified_url"))
             self.monitorEOSDirectory = configurationHandler.get("monitor_eos_dir")
-            self.templateDirectory = configurationHandler.get("template_dir")
 
             self.template = {
-                "summary": self.templateDirectory + "/WorkflowCloseoutMonitor/Summary.jinja",
-                "assistance": self.templateDirectory + "/WorkflowCloseoutMonitor/Assistance.jinja",
+                "summary": "templates/WorkflowCloseoutMonitor/Summary.jinja",
+                "assistance": "templates/WorkflowCloseoutMonitor/Assistance.jinja",
             }
 
             self.removed = set()
@@ -63,21 +62,21 @@ class WorkflowCloseoutMonitor(MongoClient, OracleClient):
         wfData = {}
         wfData["name"] = wf
         wfData["priority"] = record["priority"]
-        wfData["taskPrepId"] = record["prepId"]
+        wfData["taskPrepId"] = record["prepid"]
         wfData["prepId"] = wfData["taskPrepId"].replace("task_", "")
         wfData["nDatasets"] = len(record["datasets"])
         wfData["datasets"] = []
 
         datasetsProgress = sorted(
-            [(dataset, value.get("percentage")) for dataset, value in record["datasets"].items()],
+            [(dataset, value.get("percentage", "-NA-")) for dataset, value in record["datasets"].items()],
             key=lambda x: x[1],
         )
-        for dataset, _ in datasetsProgress:
+        for dataset, percentage in datasetsProgress:
             datasetData = {}
             datasetData["name"] = dataset
             datasetData["updated"] = record["datasets"][dataset]["updated"]
             datasetData["percentage"] = {
-                "value": record["datasets"].get("percentage", "-NA-"),
+                "value": percentage,
                 "fractionPass": record["datasets"][dataset].get("fractionpass", 0),
             }
             datasetData["events"] = {
@@ -104,13 +103,13 @@ class WorkflowCloseoutMonitor(MongoClient, OracleClient):
             wfData = self.session.query(Workflow).filter(Workflow.name == wf).first()
             if not wfData:
                 continue
-            if wfData["status"] != "away" and not wfData["status"].startswith("assistance"):
+            if wfData.status != "away" and not wfData.status.startswith("assistance"):
                 self.logger.info("Taking %s out of the closeout info", wf)
                 self.clean(wf)
                 continue
 
             workflow = self._buildHtmlRow(wf)
-            workflow["status"] = wfData["status"]
+            workflow["status"] = wfData.status
             workflow["bgColor"] = "lightblue" if i % 2 else "white"
             workflows.append(workflow)
 
@@ -126,26 +125,29 @@ class WorkflowCloseoutMonitor(MongoClient, OracleClient):
             cols=["percentage", "acdc", "events", "lumis", "dbsFiles", "dbsInvFiles", "phedexFiles"],
         )
 
-    def _renderAssistanceHtml(self, details: bool = False) -> str:
+    def _renderAssistanceHtml(self) -> Tuple[str, str]:
         """
         The function to render the assistance html from jinja template
-        :param details: if True return html with detailed table, summary table o/w
-        :return: assistance html
+        :return: assistance html, assistance summary html
         """
         wfsByStatus = defaultdict(list)
         for wf in self.session.query(Workflow).filter(Workflow.status.startswith("assistance")).all():
-            wfsByStatus[wf["status"]].append(wf)
+            wfsByStatus[wf.status].append(wf)
 
         assistanceStatus = []
-        for status, wfs in dict(sorted(wfsByStatus.items())).items():
+        for status in sorted(wfsByStatus):
             statusData = {}
             statusData["name"] = status
             statusData["wfs"] = []
 
             for i, wf in enumerate(
-                sorted(wfs, key=lambda x: self.record[x["name"]]["priority"] if x["name"] else None, reverse=True)
+                sorted(
+                    wfsByStatus[status],
+                    key=lambda wf: self.record[wf.name]["priority"] if self.get(wf.name) else 0,
+                    reverse=True,
+                )
             ):
-                wfData = self._buildHtmlRow(wf["name"])
+                wfData = self._buildHtmlRow(wf.name)
                 if not wfData:
                     continue
 
@@ -153,19 +155,25 @@ class WorkflowCloseoutMonitor(MongoClient, OracleClient):
                 wfData["bgColor"] = "lightblue" if i % 2 else "white"
                 statusData["wfs"].append(wfData)
 
+            statusData["nWfs"] = len(statusData["wfs"])
             assistanceStatus.append(statusData)
 
         with open(self.template["assistance"]) as tmpl:
             template = Template(tmpl.read())
 
-        return template.render(
-            updateGMTime=asctime(gmtime()),
-            assistanceStatus=assistanceStatus,
-            reqmgrUrl=self.reqmgrUrl,
-            unifiedUrl=self.unifiedUrl,
-            cols=["percentage", "acdc", "events", "lumis", "dbsFiles", "dbsInvFiles", "phedexFiles"],
-            details=details,
-        )
+        assistanceHtml = []
+        for details in [True, False]:
+            html = template.render(
+                updateGMTime=asctime(gmtime()),
+                assistanceStatus=assistanceStatus,
+                reqmgrUrl=self.reqmgrUrl,
+                unifiedUrl=self.unifiedUrl,
+                cols=["percentage", "acdc", "events", "lumis", "dbsFiles", "dbsInvFiles", "phedexFiles"],
+                details=details,
+            )
+            assistanceHtml.append(html)
+
+        return tuple(assistanceHtml)
 
     def set(self, wf: str, data: dict) -> None:
         """
@@ -242,9 +250,13 @@ class WorkflowCloseoutMonitor(MongoClient, OracleClient):
         The function to write the closeout info assistance in a html file and save it in EOS
         """
         try:
-            for filename, details in [("assistance.html", True), ("assistance_summary.html", False)]:
+            assistenceHtml, assistanceSummaryHtml = self._renderAssistanceHtml()
+            for filename, html in [
+                ("assistance.html", assistenceHtml),
+                ("assistance_summary.html", assistanceSummaryHtml),
+            ]:
                 assistanceFile = EOSWriter(f"{self.monitorEOSDirectory}/{filename}", self.logger)
-                assistanceFile.write(self._renderAssistanceHtml(details))
+                assistanceFile.write(html)
                 assistanceFile.save()
 
         except Exception as error:

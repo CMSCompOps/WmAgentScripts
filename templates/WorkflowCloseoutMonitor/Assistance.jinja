@@ -69,13 +69,13 @@ Updated on {{ updateGMTime }} (GMT) <br>
 {# number of workflows in each status#}
 <ul>
     {% for status in assistanceStatus %}
-    <li> <a href="#{{ status.name }}">{{ len(status.wfs) }}</a> in status {{ status.name }}</li><br>
+    <li> <a href="#{{ status.name }}">{{ status.nWfs }}</a> in status {{ status.name }}</li>
     {% endfor %}
 </ul>
 
 {# iterate over the status #}
 {% for status in assistanceStatus %}
-<a name="{{ status.name }}">Workflow in status <b> {{ status.name }} </b> ({{ len(status.wfs) }})</a>
+<a name="{{ status.name }}">Workflow in status <b> {{ status.name }} </b> ({{ status.nWfs }})</a>
 
 {# table header #}
 <table border=1>
@@ -137,21 +137,21 @@ Updated on {{ updateGMTime }} (GMT) <br>
         {# table values #}
         {% for col in cols %}
         <td>
-            {% if col is "acdc" %}
+            {% if col == "acdc" %}
             <a
-                href="https://{{ reqmgrUrl }}/reqmgr2/data/request?prep_id={{ wf.taskPrepId }}&detail=false">{{ dataset.col.value }}</a>
-            {% elif col is "percentage" and dataset.col.value < dataset.col.fractionPass %}
-            <b>{{ dataset.col.value }}</b>
+                href="https://{{ reqmgrUrl }}/reqmgr2/data/request?prep_id={{ wf.taskPrepId }}&detail=false">{{ dataset[col].value }}</a>
+            {% elif col == "percentage" and dataset[col].value < dataset[col].fractionPass %}
+            <b>{{ dataset[col].value }}</b>
             {% elif col in ["events", "lumis"] %}
-            {{ dataset.col.produced }}/{{ dataset.col.expected }}
+            {{ dataset[col].produced }}/{{ dataset[col].expected }}
             {% else %}
-            {{ dataset.col.value }}
+            {{ dataset[col].value }}
             {% endif %}
         </td>
         {% endfor %}
 
         {# row span if first dataset of a workflow #}
-        {% if loop.index0 is 0 %}
+        {% if loop.index0 == 0 %}
         <td rowspan="{{ wf.nDatasets }}">{{ dataset.updated }}</td>
         <td rowspan="{{ wf.nDatasets }}">{{ wf.priority }}</td>
         {% endif %}
