@@ -20,7 +20,6 @@ class RemainingDatasetMonitorTest(unittest.TestCase):
         "dataset": "/DYJetsToLL_Pt-50To100_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/Integ_Test-SC_MultiPU_Agent136_Val_Alanv19-v20/GEN-SIM",
         "docKeys": ["reasons", "size"],
         "doc": {"reasons": ["unlock"], "size": 0.5},
-        "tell": '{\n  "reasons": [\n    "unlock"\n  ], \n  "size": 0.5\n}',
     }
 
     def setUp(self) -> None:
@@ -83,11 +82,11 @@ class RemainingDatasetMonitorTest(unittest.TestCase):
     @patch("Components.Monitors.RemainingDatasetMonitor.RemainingDatasetMonitor.get")
     def testTell(self, mockGet):
         """tell prints the data for a given site"""
-        mockGet.return_value = self.params.get("doc")
         with self.assertLogs(self.remainingDatasetMonitor.logger, level="INFO") as result:
+            mockGet.return_value = self.params.get("doc")
             self.remainingDatasetMonitor.tell(self.params.get("site"))
-        isFound = self.params.get("tell") in result.output
-        self.assertTrue(isFound)
+            toldOnce = len(result.output) == 1
+            self.assertTrue(toldOnce)
 
 
 if __name__ == "__main__":

@@ -19,19 +19,27 @@ class EOSReader(object):
         try:
             super().__init__()
 
-            if not filename.replace("//", "/").startswith("/eos/"):
-                raise ValueError(f"{filename} is not an EOS path")
-
             configurationHandler = ConfigurationHandler()
             self.cacheDirectory = configurationHandler.get("cache_dir")
             self.cache = (self.cacheDirectory + "/" + filename.replace("/", "_")).replace("//", "/")
-            self.filename = filename.replace("//", "/")
+
+            self._filename = filename.replace("//", "/")
 
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing EOSReader\n{str(error)}")
+
+    @property
+    def filename(self):
+        return self._filename
+
+    @filename.setter
+    def filename(self, value: str):
+        if not value.replace("//", "/").startswith("/eos/"):
+            raise ValueError(f"{value} is not an EOS path")
+        self._filename = value.replace("//", "/")
 
     @runWithRetries(tries=5, wait=2, default={})
     def read(self) -> dict:

@@ -6,23 +6,23 @@ from abc import ABC, abstractmethod
 from typing import Optional, Any
 
 
-class DocCacheBuilder(ABC):
+class DocumentCacheBuilder(ABC):
     """
-    __DocCacheBuilder__
+    __DocumentCacheBuilder__
     General Abstract Base Class for building caching documents
     """
 
-    def __init__(self, default: Any = {}, logger: Optional[Logger] = None) -> None:
+    def __init__(self, defaultValue: Any = {}, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            self.default = default
+            self.defaultValue = defaultValue
             self.lifeTimeMinutes = int(20 + random.random() * 10)
 
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
-            raise Exception(f"Error initializing DocCacheBuilder\n{str(error)}")
+            raise Exception(f"Error initializing DocumentCacheBuilder\n{str(error)}")
 
     @abstractmethod
     def get(self) -> Any:

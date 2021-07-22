@@ -12,6 +12,7 @@ from Utilities.IteratorTools import filterKeys, mapValues
 from Cache.DataCacheLoader import DataCacheLoader
 from Databases.Mongo.MongoClient import MongoClient
 from Operations.Trello.TrelloClient import TrelloClient
+from Services.WMStats.WMStatsReader import WMStatsReader
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.ReqMgr.ReqMgrWriter import ReqMgrWriter
 
@@ -34,6 +35,7 @@ class AgentStatusController(MongoClient, TrelloClient):
             self.silent = kwargs.get("silent") or False
 
             self.reqmgr = {"reader": ReqMgrReader(self.logger), "writer": ReqMgrWriter(self.logger)}
+            self.wmstatsReader = WMStatsReader()
             self.dataCache = DataCacheLoader()
 
             self.agentsByStatus = defaultdict(set)
@@ -105,7 +107,7 @@ class AgentStatusController(MongoClient, TrelloClient):
         :return: True if it is properly sync, False o/w
         """
         try:
-            prodAgents = {}  # TODO: implement WMStatsReader().getProductionAgents()
+            prodAgents = self.wmstatsReader.getProductionAgents()
             if not prodAgents:
                 raise Exception("Failed to get production agents")
 

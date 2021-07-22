@@ -70,7 +70,7 @@ class RemainingDatasetMonitor(MongoClient):
                     None, os.popen(f"ls -1 {self.monitorEOSDirectory}/remaining_*.json | sort").read().split("\n")
                 ):
                     site = file.split("_", 1)[-1].split(".")[0]
-                    if not any(site.endswith(suffix) for suffix in ["_MSS", "_Export"]):
+                    if all(not site.endswith(suffix) for suffix in ["_MSS", "_Export"]):
                         sites.append(site)
 
             for site in sites:

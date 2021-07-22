@@ -2,7 +2,7 @@ import os
 from time import struct_time, gmtime, mktime
 import json
 from logging import Logger
-import pymongo
+from pymongo.errors import WriteError, DocumentTooLarge
 from pymongo.collection import Collection
 
 from typing import Optional
@@ -51,7 +51,7 @@ class CacheManager(MongoClient):
         try:
             super()._set(key, data, lifeTimeMinutes, key=key)
 
-        except (pymongo.errors.WriteError, pymongo.errors.DocumentTooLarge) as error:
+        except (WriteError, DocumentTooLarge) as error:
             self.logger.error("Failed writing in mongo, will use file instead")
             with open(self._getKeyFilePath(key), "w") as file:
                 file.write(json.dumps(data))
@@ -106,8 +106,10 @@ class CacheManager(MongoClient):
                         self.logger.info("Cache hit %s", key)
                         return content["data"]
                     return self._getFromFile(key)
-                self.logger.info("Expired doc %s", key)
-            self.logger.info("Cache miss %s", key)
+                else:
+                    self.logger.info("Expired doc %s", key)
+            else:
+                self.logger.info("Cache miss %s", key)
             return None
 
         except Exception as error:

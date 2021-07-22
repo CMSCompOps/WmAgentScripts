@@ -3,7 +3,7 @@ import json
 import logging
 from logging import Logger
 
-from typing import Optional
+from typing import Optional, Union
 
 
 class TrelloClient(object):
@@ -22,7 +22,9 @@ class TrelloClient(object):
                         k, v = line.replace("\n", "").split(":")
                         self.configs[k] = v
                     except Exception as e:
-                        pass
+                        print(f"{file} does not follow convention of key:value")
+
+            self._syncAgents()
 
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
@@ -30,16 +32,16 @@ class TrelloClient(object):
         except Exception as error:
             raise Exception(f"Error initializing TrelloClient\n{str(error)}")
 
-    def _get(self, key: str, id: str, endpoint: str = "?") -> dict:
+    def _get(self, key: str, id: str, param: str = "?") -> dict:
         """
         The function to get data from the Trello board
         :param key: key name
         :param id: key id
-        :param endpoint: endpoint
+        :param param: optional params
         :return: data in Trello
         """
         try:
-            url = f"https://api.trello.com/1/{key}/{id}{endpoint}&key={self.configs['key']}&token={self.configs['token']}"
+            url = f"https://api.trello.com/1/{key}/{id}{param}&key={self.configs['key']}&token={self.configs['token']}"
             with os.popen(f'curl -s "{url}"') as file:
                 data = json.loads(file.read())
             return data
@@ -48,18 +50,17 @@ class TrelloClient(object):
             self.logger.error("Failed to get %s with id %s", key, id)
             self.logger.error(str(error))
 
-    def getAgents(self) -> dict:
+    def _syncAgents(self) -> None:
         """
         The function to get all agents in the Trello board
         :return: agents
         """
         try:
-            agents = {}
+            self.agents = {}
             for card in self.getBoard():
-                name = card.get("name")
-                domaine = ".cern.ch" if "vocms" in name.split(" - ")[0] else ".fnal.gov"
-                agents[name + domaine] = card.get("id")
-            return agents
+                name = card.get("name", "").split(" - ")[0].strip()
+                domaine = ".cern.ch" if "vocms" in name else ".fnal.gov"
+                self.agents[name + domaine] = card.get("id")
 
         except Exception as error:
             self.logger.error("Failed to get agents")
@@ -78,7 +79,7 @@ class TrelloClient(object):
         :param name: agent name
         :return: card info
         """
-        return self._get("cards", self.getAgents().get(name, name))
+        return self._get("cards", self.agents.get(name, name))
 
     def getListId(self, status: str) -> str:
         """
