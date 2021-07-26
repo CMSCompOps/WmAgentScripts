@@ -773,6 +773,12 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
+  },
+  "RunIIAutumn18NanoAODv6": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
   }, 
   "RunIIAutumn18NanoAODv7": {
     "fractionpass": 0.99, 
@@ -883,6 +889,12 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
+  },
+  "RunIIFall17NanoAODv6": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
   }, 
   "RunIIFall17NanoAODv7": {
     "fractionpass": 0.99, 
@@ -1085,6 +1097,12 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "maxcopies": 1
+  },
+  "RunIISummer16NanoAODv6": {
+    "fractionpass": 0.99,
+    "go": true,
+    "lumisize": -1,
     "maxcopies": 1
   }, 
   "RunIISummer16NanoAODv7": {
