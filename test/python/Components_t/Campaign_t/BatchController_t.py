@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 """
-_BatchMonitor_t_
-Unit test for BatchMonitor helper class.
+_BatchController_t_
+Unit test for BatchController helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
-from Components.Monitors.BatchMonitor import BatchMonitor
+from Components.Campaign.BatchController import BatchController
 
 
-class BatchMonitorTest(unittest.TestCase):
+class BatchControllerTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "batchInfo"}
 
     def setUp(self) -> None:
-        self.batchMonitor = BatchMonitor()
+        self.batchController = BatchController()
         super().setUp()
         return
 
@@ -24,18 +24,18 @@ class BatchMonitorTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.batchMonitor.collection, Collection)
+        isCollection = isinstance(self.batchController.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.batchMonitor.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.batchController.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.batchMonitor.collection.name == self.mongoSettings.get("collection")
+        rightName = self.batchController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the batches names and ids"""
-        result = self.batchMonitor.get()
+        result = self.batchController.get()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -50,7 +50,7 @@ class BatchMonitorTest(unittest.TestCase):
 
     def testGetBatches(self):
         """getBatches gets the all the batches names"""
-        result = self.batchMonitor.getBatches()
+        result = self.batchController.getBatches()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 

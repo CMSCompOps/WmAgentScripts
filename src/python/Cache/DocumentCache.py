@@ -2,12 +2,12 @@ import os
 import json
 import csv
 
-from Cache.DocumentCacheBuilder import DocumentCacheBuilder
+from Cache.BaseDocumentCache import BaseDocumentCache
 
 
-class SSBProdStatusDocCache(DocumentCacheBuilder):
+class SSBProdStatus(BaseDocumentCache):
     """
-    __SSBProdStatusDocCache__
+    __SSBProdStatus__
     General API for building the chaching document of key ssb_prod_status
     """
 
@@ -15,9 +15,9 @@ class SSBProdStatusDocCache(DocumentCacheBuilder):
         return None  # TODO: implement get_dashbssb() or drop this
 
 
-class SSBCoreMaxUsedDocCache(DocumentCacheBuilder):
+class SSBCoreMaxUsed(BaseDocumentCache):
     """
-    __SSBCoreMaxUsedDocCache__
+    __SSBCoreMaxUsed__
     General API for building the chaching document of key ssb_core_max_used
     """
 
@@ -25,9 +25,9 @@ class SSBCoreMaxUsedDocCache(DocumentCacheBuilder):
         return None  # TODO: implement get_dashbssb() or drop this
 
 
-class SSBCoreProductionDocCache(DocumentCacheBuilder):
+class SSBCoreProduction(BaseDocumentCache):
     """
-    __SSBCoreProductionDocCache__
+    __SSBCoreProduction__
     General API for building the chaching document of key ssb_core_production
     """
 
@@ -35,9 +35,9 @@ class SSBCoreProductionDocCache(DocumentCacheBuilder):
         return None  # TODO: implement get_dashbssb() or drop this
 
 
-class SSBCoreCpuIntensiveDocCache(DocumentCacheBuilder):
+class SSBCoreCpuIntensive(BaseDocumentCache):
     """
-    __SSBCoreCpuIntensiveDocCache__
+    __SSBCoreCpuIntensive__
     General API for building the chaching document of key ssb_core_cpu_intensive
     """
 
@@ -45,48 +45,45 @@ class SSBCoreCpuIntensiveDocCache(DocumentCacheBuilder):
         return None  # TODO: implement get_dashbssb() or drop this
 
 
-class GWMSMONTotalsDocCache(DocumentCacheBuilder):
+class GWMSMonTotals(BaseDocumentCache):
     """
-    __GWMSMONTotalsDocCache__
+    __GWMSMonTotals__
     General API for building the chaching document of key gwmsmon_totals
     """
 
-    # TODO: url below does not return a json
     def get(self) -> dict:
         with os.popen("curl --retry 5 -s https://cms-gwmsmon.cern.ch/poolview/json/totals") as file:
             data = json.loads(file.read())
         return data
 
 
-class GWMSMONProdSiteSummaryDocCache(DocumentCacheBuilder):
+class GWMSMonProdSiteSummary(BaseDocumentCache):
     """
-    __GWMSMONProdSiteSummaryDocCache__
+    __GWMSMonProdSiteSummary__
     General API for building the chaching document of key gwmsmon_prod_site_summary
     """
 
-    # TODO: url below does not return a json
     def get(self) -> dict:
         with os.popen("curl --retry 5 -s https://cms-gwmsmon.cern.ch/prodview//json/site_summary") as file:
             data = json.loads(file.read())
         return data
 
 
-class GWMSMONProdMaxUsedDocCache(DocumentCacheBuilder):
+class GWMSMonProdMaxUsed(BaseDocumentCache):
     """
-    __GWMSMONProdMaxUsedDocCache__
+    __GWMSMonProdMaxUsed__
     General API for building the chaching document of key gwmsmon_prod_maxused
     """
 
-    # TODO: url below does not return a json
     def get(self) -> dict:
         with os.popen("curl --retry 5 -s https://cms-gwmsmon.cern.ch/prodview//json/maxusedcpus") as file:
             data = json.loads(file.read())
         return data
 
 
-class MCoreReadyDocCache(DocumentCacheBuilder):
+class MCoreReady(BaseDocumentCache):
     """
-    __MCoreReadyDocCache__
+    __MCoreReady__
     General API for building the chaching document of key mcore_ready
     """
 
@@ -98,22 +95,21 @@ class MCoreReadyDocCache(DocumentCacheBuilder):
         return data
 
 
-class DetoxSitesDocCache(DocumentCacheBuilder):
+class DetoxSites(BaseDocumentCache):
     """
-    __DetoxSitesDocCache__
+    __DetoxSites__
     General API for building the chaching document of key detox_sites
     """
 
-    # TODO: url below was not found
     def get(self) -> list:
         with os.popen("curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS/Detox/SitesInfo.txt") as file:
             data = file.read().split("\n")
         return data
 
 
-class SiteQueuesDocCache(DocumentCacheBuilder):
+class SiteQueues(BaseDocumentCache):
     """
-    __SiteQueuesDocCache__
+    __SiteQueues__
     General API for building the chaching document of key site_queues
     """
 
@@ -121,9 +117,9 @@ class SiteQueuesDocCache(DocumentCacheBuilder):
         return None  # TODO: implement getNodesQueue() or drop this
 
 
-class SiteStorageDocCache(DocumentCacheBuilder):
+class SiteStorage(BaseDocumentCache):
     """
-    __SiteStorageDocCache__
+    __SiteStorage__
     General API for building the chaching document of key site_storage
     """
 
@@ -131,13 +127,12 @@ class SiteStorageDocCache(DocumentCacheBuilder):
         return None  # TODO: implement getSiteStorage() or drop this
 
 
-class FileInvalidationDocCache(DocumentCacheBuilder):
+class FileInvalidation(BaseDocumentCache):
     """
-    __FileInvalidationDocCache__
+    __FileInvalidation__
     General API for building the chaching document of key file_invalidation
     """
 
-    # TODO: url below was not found
     def get(self) -> dict:
         with os.popen(
             'curl -s "https://docs.google.com/spreadsheets/d/11fFsDOTLTtRcI4Q3gXw0GNj4ZS8IoXMoQDC3CbOo_2o/export?format=csv"'
@@ -146,9 +141,9 @@ class FileInvalidationDocCache(DocumentCacheBuilder):
         return list(set(row[3].split(":")[-1] for row in data))
 
 
-class WMStatsDocCache(DocumentCacheBuilder):
+class WMStats(BaseDocumentCache):
     """
-    __WMStatsDocCache__
+    __WMStats__
     General API for building the chaching document of key wmstats
     """
 

@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 from pymongo.collection import Collection
 
-from Components.Controllers.AgentStatusController import AgentStatusController
+from Components.Agent.AgentStatusController import AgentStatusController
 
 
 class AgentStatusControllerTest(unittest.TestCase):
@@ -18,7 +18,7 @@ class AgentStatusControllerTest(unittest.TestCase):
     # For now, only test output types and content keys for a given agent.
     params = {"agent": "vocms0284.cern.ch", "docKeys": ["status", "version", "update", "date"]}
 
-    @patch("Components.Controllers.AgentStatusController.AgentStatusController.syncToProduction")
+    @patch("Components.Agent.AgentStatusController.AgentStatusController.syncToProduction")
     def setUp(self, mockSync) -> None:
         mockSync.return_value = True
         self.agentStatusController = AgentStatusController()

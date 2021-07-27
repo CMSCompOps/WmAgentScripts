@@ -7,7 +7,7 @@ Unit test for ModuleRuntimeMonitor helper class.
 import unittest
 from pymongo.collection import Collection
 
-from Components.Monitors.ModuleRuntimeMonitor import ModuleRuntimeMonitor
+from Components.Module.ModuleRuntimeMonitor import ModuleRuntimeMonitor
 
 
 class ModuleRuntimeMonitorTest(unittest.TestCase):

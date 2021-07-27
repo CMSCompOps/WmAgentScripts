@@ -7,7 +7,7 @@ Unit test for WorkflowStatusMonitor helper class.
 import unittest
 from pymongo.collection import Collection
 
-from Components.Monitors.WorkflowStatusMonitor import WorkflowStatusMonitor
+from Components.Workflow.WorkflowStatusMonitor import WorkflowStatusMonitor
 
 
 class WorkflowStatusMonitorTest(unittest.TestCase):

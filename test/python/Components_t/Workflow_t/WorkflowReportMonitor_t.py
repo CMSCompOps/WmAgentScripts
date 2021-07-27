@@ -8,7 +8,7 @@ import unittest
 from pymongo.collection import Collection
 
 from Databases.Mongo.MongoClient import MongoClient
-from Components.Monitors.WorkflowReportMonitor import WorkflowReportMonitor
+from Components.Workflow.WorkflowReportMonitor import WorkflowReportMonitor
 
 
 class MockMongoClient(MongoClient):

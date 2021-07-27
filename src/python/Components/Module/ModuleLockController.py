@@ -12,9 +12,9 @@ from Utilities.Logging import displayTime
 from Databases.Mongo.MongoClient import MongoClient
 
 
-class ModuleLocker(MongoClient):
+class ModuleLockController(MongoClient):
     """
-    __ModuleLocker__
+    __ModuleLockController__
     General API for locking (or not) a module
     """
 

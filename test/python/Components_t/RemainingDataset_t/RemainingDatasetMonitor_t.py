@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 from pymongo.collection import Collection
 
-from Components.Monitors.RemainingDatasetMonitor import RemainingDatasetMonitor
+from Components.RemainingDataset.RemainingDatasetMonitor import RemainingDatasetMonitor
 
 
 class RemainingDatasetMonitorTest(unittest.TestCase):
@@ -27,7 +27,7 @@ class RemainingDatasetMonitorTest(unittest.TestCase):
         super().setUp()
         return
 
-    @patch("Components.Monitors.RemainingDatasetMonitor.RemainingDatasetMonitor.purge")
+    @patch("Components.RemainingDataset.RemainingDatasetMonitor.RemainingDatasetMonitor.purge")
     def tearDown(self, mockPurge) -> None:
         mockPurge.return_value = None
         del self.remainingDatasetMonitor
@@ -79,7 +79,7 @@ class RemainingDatasetMonitorTest(unittest.TestCase):
         hasAllKeys = all(k in result[self.params.get("dataset")] for k in self.params.get("docKeys"))
         self.assertTrue(hasAllKeys)
 
-    @patch("Components.Monitors.RemainingDatasetMonitor.RemainingDatasetMonitor.get")
+    @patch("Components.RemainingDataset.RemainingDatasetMonitor.RemainingDatasetMonitor.get")
     def testTell(self, mockGet):
         """tell prints the data for a given site"""
         with self.assertLogs(self.remainingDatasetMonitor.logger, level="INFO") as result:

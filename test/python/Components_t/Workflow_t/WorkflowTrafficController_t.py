@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 """
-_WorkflowTrafficMonitor_t_
-Unit test for WorkflowTrafficMonitor helper class.
+_WorkflowTrafficController_t_
+Unit test for WorkflowTrafficController helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
-from Components.Monitors.WorkflowTrafficMonitor import WorkflowTrafficMonitor
+from Components.Workflow.WorkflowTrafficController import WorkflowTrafficController
 
 
-class WorkflowTrafficMonitorTest(unittest.TestCase):
+class WorkflowTrafficControllerTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "wtcInfo"}
 
     def setUp(self) -> None:
-        self.workflowTrafficMonitor = WorkflowTrafficMonitor()
+        self.workflowTrafficController = WorkflowTrafficController()
         super().setUp()
         return
 
@@ -24,18 +24,18 @@ class WorkflowTrafficMonitorTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.workflowTrafficMonitor.collection, Collection)
+        isCollection = isinstance(self.workflowTrafficController.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.workflowTrafficMonitor.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.workflowTrafficController.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.workflowTrafficMonitor.collection.name == self.mongoSettings.get("collection")
+        rightName = self.workflowTrafficController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGetHold(self):
         """getHold gets all data in hold"""
-        result = self.workflowTrafficMonitor.getHold()
+        result = self.workflowTrafficController.getHold()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -47,7 +47,7 @@ class WorkflowTrafficMonitorTest(unittest.TestCase):
 
     def testGetBypass(self):
         """getBypass gets all data in bypass"""
-        result = self.workflowTrafficMonitor.getBypass()
+        result = self.workflowTrafficController.getBypass()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -59,7 +59,7 @@ class WorkflowTrafficMonitorTest(unittest.TestCase):
 
     def testGetForce(self):
         """getForce gets all data in force"""
-        result = self.workflowTrafficMonitor.getForce()
+        result = self.workflowTrafficController.getForce()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -72,7 +72,7 @@ class WorkflowTrafficMonitorTest(unittest.TestCase):
     def testGet(self):
         """get gets all data with a given action"""
         # Test when action is invalid, since valid actions are tested by the other get methods
-        result = self.workflowTrafficMonitor.get("test")
+        result = self.workflowTrafficController.get("test")
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 

@@ -25,9 +25,7 @@ class WMStatsReader(object):
         try:
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
-            self.wmstatsEndpoint = {
-                "agentInfo": "/couchdb/wmstats/_design/WMStats/_view/agentInfo?stale=update_after"
-            }  # TODO: check endpoint
+            self.wmstatsEndpoint = {"agentInfo": "/couchdb/wmstats/_design/WMStats/_view/agentInfo?stale=update_after"}
 
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)

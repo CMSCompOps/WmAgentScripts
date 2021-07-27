@@ -4,10 +4,10 @@ from pymongo.collection import Collection
 from Databases.Mongo.MongoClient import MongoClient
 
 
-class BatchMonitor(MongoClient):
+class BatchController(MongoClient):
     """
-    __BatchMonitor__
-    General API for monitoring the batches info
+    __BatchController__
+    General API for controlling the batches info
     """
 
     def _setMongoCollection(self) -> Collection:

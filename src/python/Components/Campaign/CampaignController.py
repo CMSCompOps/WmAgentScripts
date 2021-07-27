@@ -7,10 +7,10 @@ from typing import Optional, Any
 from Databases.Mongo.MongoClient import MongoClient
 
 
-class CampaignMonitor(MongoClient):
+class CampaignController(MongoClient):
     """
-    __CampaignMonitor__
-    General API for monitoring the campaigns info
+    __CampaignController__
+    General API for controlling the campaigns info
     """
 
     def __init__(self, logger: Optional[Logger] = None) -> None:
@@ -20,7 +20,7 @@ class CampaignMonitor(MongoClient):
             self.campaigns = self._setCampaigns()
 
         except Exception as error:
-            raise Exception(f"Error initializing CampaignMonitor\n{str(error)}")
+            raise Exception(f"Error initializing CampaignController\n{str(error)}")
 
     def _setMongoCollection(self) -> Collection:
         return self.client.unified.campaignsConfiguration

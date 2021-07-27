@@ -6,9 +6,9 @@ from abc import ABC, abstractmethod
 from typing import Optional, Any
 
 
-class DocumentCacheBuilder(ABC):
+class BaseDocumentCache(ABC):
     """
-    __DocumentCacheBuilder__
+    __BaseDocumentCache__
     General Abstract Base Class for building caching documents
     """
 
@@ -22,7 +22,7 @@ class DocumentCacheBuilder(ABC):
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
-            raise Exception(f"Error initializing DocumentCacheBuilder\n{str(error)}")
+            raise Exception(f"Error initializing BaseDocumentCache\n{str(error)}")
 
     @abstractmethod
     def get(self) -> Any:

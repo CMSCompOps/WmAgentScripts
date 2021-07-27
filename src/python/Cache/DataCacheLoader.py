@@ -33,31 +33,31 @@ class DataCacheLoader(object):
         """
         try:
             if key == "ssb_prod_status":
-                self.cache[key] = DocumentCache.SSBProdStatusDocCache()
+                self.cache[key] = DocumentCache.SSBProdStatus()
             elif key == "ssb_core_max_used":
-                self.cache[key] = DocumentCache.SSBCoreMaxUsedDocCache([])
+                self.cache[key] = DocumentCache.SSBCoreMaxUsed([])
             elif key == "ssb_core_production":
-                self.cache[key] = DocumentCache.SSBCoreProductionDocCache([])
+                self.cache[key] = DocumentCache.SSBCoreProduction([])
             elif key == "ssb_core_cpu_intensive":
-                self.cache[key] = DocumentCache.SSBCoreCpuIntensiveDocCache([])
+                self.cache[key] = DocumentCache.SSBCoreCpuIntensive([])
             elif key == "gwmsmon_totals":
-                self.cache[key] = DocumentCache.GWMSMONTotalsDocCache()
+                self.cache[key] = DocumentCache.GWMSMonTotals()
             elif key == "gwmsmon_prod_site_summary":
-                self.cache[key] = DocumentCache.GWMSMONProdSiteSummaryDocCache()
+                self.cache[key] = DocumentCache.GWMSMonProdSiteSummary()
             elif key == "gwmsmon_prod_maxused":
-                self.cache[key] = DocumentCache.GWMSMONProdMaxUsedDocCache()
+                self.cache[key] = DocumentCache.GWMSMonProdMaxUsed()
             elif key == "mcore_ready":
-                self.cache[key] = DocumentCache.MCoreReadyDocCache()
+                self.cache[key] = DocumentCache.MCoreReady()
             elif key == "detox_sites":
-                self.cache[key] = DocumentCache.DetoxSitesDocCache([])
+                self.cache[key] = DocumentCache.DetoxSites([])
             elif key == "site_queues":
-                self.cache[key] = DocumentCache.SiteQueuesDocCache()
+                self.cache[key] = DocumentCache.SiteQueues()
             elif key == "site_storage":
-                self.cache[key] = DocumentCache.SiteStorageDocCache()
+                self.cache[key] = DocumentCache.SiteStorage()
             elif key == "file_invalidation":
-                self.cache[key] = DocumentCache.FileInvalidationDocCache([])
+                self.cache[key] = DocumentCache.FileInvalidation([])
             elif key == "wmstats":
-                self.cache[key] = DocumentCache.WMStatsDocCache()
+                self.cache[key] = DocumentCache.WMStats()
             else:
                 raise ValueError("Unknown cache doc key %s", key)
             return True
