@@ -57,26 +57,6 @@ class ReqMgrReaderTest(unittest.TestCase):
         },
         "toTestSplittings": {
             "workflow": "pdmvserv_task_BPH-RunIIFall18GS-00350__v1_T_201021_154340_8354",
-            "dropingParams": [
-                "algorithm",
-                "trustPUSitelists",
-                "trustSitelists",
-                "deterministicPileup",
-                "type",
-                "include_parents",
-                "lheInputFiles",
-                "runWhitelist",
-                "runBlacklist",
-                "collectionName",
-                "group",
-                "couchDB",
-                "couchURL",
-                "owner",
-                "initial_lfn_counter",
-                "filesetName",
-                "runs",
-                "lumis",
-            ],
         },
     }
 
@@ -244,7 +224,6 @@ class ReqMgrReaderTest(unittest.TestCase):
 
     def testGetSplittingsSchema(self):
         """getSplittingsSchema gets splittings for a given workflow name"""
-        # Test when strip is False and allTasks is False
         reqMgrReader = ReqMgrReader()
         splittings = reqMgrReader.getSplittingsSchema(
             self.otherWorkflowsParams.get("toTestSplittings").get("workflow"),
@@ -260,35 +239,6 @@ class ReqMgrReaderTest(unittest.TestCase):
             for splt in splittings
         )
         self.assertTrue(isFound)
-
-        keptOnlySomeTasksTypes = all(splt["taskType"] in ["Production", "Processing", "Skim"] for splt in splittings)
-        self.assertTrue(keptOnlySomeTasksTypes)
-
-        # Test when strip is True and allTasks is True
-        splittings = reqMgrReader.getSplittingsSchema(
-            self.otherWorkflowsParams.get("toTestSplittings").get("workflow"),
-            strip=True,
-            allTasks=True,
-        )
-        isList = isinstance(splittings, list)
-        self.assertTrue(isList)
-
-        isListOfDicts = isinstance(splittings[0], dict)
-        self.assertTrue(isListOfDicts)
-
-        isFound = all(
-            self.otherWorkflowsParams.get("toTestSplittings").get("workflow") in splt["taskName"]
-            for splt in splittings
-        )
-        self.assertTrue(isFound)
-
-        keptOnlySomeParams = False
-        for splt in splittings:
-            if splt["splitParams"] in self.otherWorkflowsParams.get("toTestSplittings").get("dropingParams"):
-                break
-        else:
-            keptOnlySomeParams = True
-        self.assertTrue(keptOnlySomeParams)
 
 
 if __name__ == "__main__":

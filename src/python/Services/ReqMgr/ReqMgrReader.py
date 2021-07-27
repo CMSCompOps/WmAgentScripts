@@ -190,72 +190,16 @@ class ReqMgrReader(object):
             self.logger.error("Failed to get configuration from reqmgr for agent %s", agent)
             self.logger.error(str(error))
 
-    def getSplittingsSchema(self, wf: str, strip: bool = False, allTasks: bool = False) -> List[dict]:
+    def getSplittingsSchema(self, wf: str) -> List[dict]:
         """
         The function to get splittings for a given workflow name
         :param wf: workflow name
-        :param strip: if True, it will drop some split params, o/w it will keep all params
-        :param allTasks: if True, it will keep all tasks types, o/w it will keep only production, processing and skim tasks
         :return: a list of dicts
         """
         try:
             result = getResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["splitting"] + wf)
-            data = result["result"]
-
-            if not allTasks:
-                data = self._filterSplittingsTaskTypes(data)
-            if strip:
-                data = self._stripSplittingsParam(data)
-            return data
+            return result["result"]
 
         except Exception as error:
             self.logger.error("Failed to get splittings from reqmgr for %s", wf)
             self.logger.error(str(error))
-
-    def _filterSplittingsTaskTypes(self, splittings: List[dict]) -> List[dict]:
-        """
-        The function to filter tasks types in splittings schema
-        :param splittings: workflow name
-        :return: a list of dicts where task types are production, processing or skim
-        """
-        tasksToKeep = ["Production", "Processing", "Skim"]
-        return [splt for splt in splittings if splt["taskType"] in tasksToKeep]
-
-    def _stripSplittingsParam(self, splittings: List[dict]) -> List[dict]:
-        """
-        The function to drop params from splittings schema
-        :param splittings: workflow name
-        :return: a list of dicts
-        """
-        paramsToDrop = [
-            "algorithm",
-            "trustPUSitelists",
-            "trustSitelists",
-            "deterministicPileup",
-            "type",
-            "include_parents",
-            "lheInputFiles",
-            "runWhitelist",
-            "runBlacklist",
-            "collectionName",
-            "group",
-            "couchDB",
-            "couchURL",
-            "owner",
-            "initial_lfn_counter",
-            "filesetName",
-            "runs",
-            "lumis",
-        ]
-        lumiBasedParamsToDrop = ["events_per_job", "job_time_limit"]
-
-        cleanSplittings = []
-        for splt in splittings:
-            for param in paramsToDrop:
-                splt["splitParams"].pop(param, None)
-
-            if splt["splitAlgo"] is "LumiBased":
-                for param in lumiBasedParamsToDrop:
-                    splt["splitParams"].pop(param, None)
-            cleanSplittings.append(splt)
-        return cleanSplittings
