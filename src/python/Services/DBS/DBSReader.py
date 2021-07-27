@@ -335,11 +335,12 @@ class DBSReader(object):
             self.logger.error("Failed to get parents from DBS for dataset %s", dataset)
             self.logger.error(str(error))
 
-    def getDatasetNames(self, dataset: str) -> List[dict]:
+    def getDatasetNames(self, dataset: str, details: bool = True) -> List[dict]:
         """
         The function to get the datasets matching a given dataset name
         :param dataset: dataset name
-        :return: a list of dicts with dataset names
+        :param details: return dataset info if True, o/w return only names
+        :return: list of datasets
         """
         try:
             _, datasetName, processedName, tierName = dataset.split("/")
@@ -349,7 +350,10 @@ class DBSReader(object):
                 data_tier_name=tierName,
                 dataset_access_type="*",
             )
-            return result
+
+            if details:
+                return result
+            return [item["dataset"] for item in result]
 
         except Exception as error:
             self.logger.error("Failed to get info from DBS for dataset %s", dataset)

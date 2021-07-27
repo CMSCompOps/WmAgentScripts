@@ -277,6 +277,7 @@ class DBSReaderTest(unittest.TestCase):
 
     def testGetDatasetNames(self):
         """getDatasetNames gets the name of a dataset"""
+        # Test when details is True
         dbsReader = DBSReader(self.url)
         names = dbsReader.getDatasetNames(self.validDataset.get("dataset"))
         isList = isinstance(names, list)
@@ -290,6 +291,18 @@ class DBSReaderTest(unittest.TestCase):
             if name["dataset"] == self.validDataset.get("dataset"):
                 isFound = True
                 break
+        self.assertTrue(isFound)
+
+        # Test when details is False
+        dbsReader = DBSReader(self.url)
+        names = dbsReader.getDatasetNames(self.validDataset.get("dataset"), details=False)
+        isList = isinstance(names, list)
+        self.assertTrue(isList)
+
+        isListOfStr = isinstance(names[0], str)
+        self.assertTrue(isListOfStr)
+
+        isFound = self.validDataset.get("dataset") in names
         self.assertTrue(isFound)
 
     def testGetLFNBase(self):
