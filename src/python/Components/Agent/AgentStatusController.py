@@ -34,7 +34,7 @@ class AgentStatusController(MongoClient, TrelloClient):
             self.wakeUpDraining = kwargs.get("wakeUpDraining") or False
             self.silent = kwargs.get("silent") or False
 
-            self.reqmgr = {"reader": ReqMgrReader(self.logger), "writer": ReqMgrWriter(self.logger)}
+            self.reqmgr = {"reader": ReqMgrReader(logger=logger), "writer": ReqMgrWriter(logger=logger)}
             self.wmstatsReader = WMStatsReader()
             self.dataCache = DataCacheLoader()
 

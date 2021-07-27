@@ -3,7 +3,7 @@ import json
 import logging
 from logging import Logger
 
-from typing import Optional, Union
+from typing import Optional
 
 
 class TrelloClient(object):
@@ -32,7 +32,7 @@ class TrelloClient(object):
         except Exception as error:
             raise Exception(f"Error initializing TrelloClient\n{str(error)}")
 
-    def _get(self, key: str, id: str, param: str = "?") -> dict:
+    def _getResponse(self, key: str, id: str, param: str = "?") -> dict:
         """
         The function to get data from the Trello board
         :param key: key name
@@ -71,7 +71,7 @@ class TrelloClient(object):
         The function to get all cards in the Trello board
         :return: board info
         """
-        return self._get("boards", "4np6TByB", "/cards?fields=name,url")
+        return self._getResponse("boards", "4np6TByB", "/cards?fields=name,url")
 
     def getCard(self, name: str) -> dict:
         """
@@ -79,7 +79,7 @@ class TrelloClient(object):
         :param name: agent name
         :return: card info
         """
-        return self._get("cards", self.agents.get(name, name))
+        return self._getResponse("cards", self.agents.get(name, name))
 
     def getListId(self, status: str) -> str:
         """

@@ -20,7 +20,7 @@ class CampaignControllerTest(unittest.TestCase):
         "secondaries": "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter21GS-112X_mcRun3_2021_realistic_v15-v1/GEN-SIM",
     }
     campaignWithTypeParam = {
-        "campaign": "CMSSW_12_0_0_pre4__PDMVRELVALS-109_CosmicRun-1626011964",
+        "campaign": "CMSSW_12_0_0_pre4__fullsim_PU_2021_14TeV-1627369162",
         "type": "relval",
         "parameters": {
             "SiteWhitelist": ["T1_US_FNAL"],
