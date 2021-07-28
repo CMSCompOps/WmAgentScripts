@@ -447,7 +447,7 @@ class WorkflowController(object):
         :param task: task name
         :return: memory
         """
-        return int(self.request.getParamByTask("Memory", task))
+        return int(self.request.getParamByTask("Memory", task) or 0)
 
     def getCoreByTask(self, task: str) -> int:
         """
@@ -455,7 +455,7 @@ class WorkflowController(object):
         :param task: task name
         :return: number of cores
         """
-        return int(self.request.getParamByTask("Multicore", task))
+        return int(self.request.getParamByTask("Multicore", task) or 1)
 
     def getFilterEfficiencyByTask(self, task: str) -> float:
         """
@@ -463,7 +463,7 @@ class WorkflowController(object):
         :param task: task name
         :return: filter efficiency
         """
-        return self.request.getParamByTask("FilterEfficiency", task) or 1.0
+        return float(self.request.getParamByTask("FilterEfficiency", task)) or 1.0
 
     def getLumiWhiteList(self) -> list:
         """
@@ -524,10 +524,10 @@ class WorkflowController(object):
         """
         return self.request.getParamList("ScramArch")
 
-    def getComputingTime(self, unit: str = "h"):
+    def getComputingTime(self, unit: str = "h") -> float:
         """
         The function to get the computing time
-        :param unit: time unit (s, m, h or d)
+        :param unit: time unit — s, m, h or d. Non valid units will return computing time in seconds
         :return: computing time
         """
         try:

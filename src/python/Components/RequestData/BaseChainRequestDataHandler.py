@@ -70,7 +70,7 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
             self.logger.error("Failed to get the workflow memory")
             self.logger.error(str(error))
 
-    def getIO(self) -> Tuple[bool, list, list, list]:
+    def getIO(self) -> Tuple[bool, set, set, set]:
         """
         The function to get the inputs/outputs
         :return: if any lhe input file, primaries, parents and secondaries

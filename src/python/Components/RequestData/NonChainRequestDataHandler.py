@@ -40,7 +40,7 @@ class NonChainRequestDataHandler(BaseRequestDataHandler):
         """
         return self.get("Memory")
 
-    def getIO(self) -> Tuple[bool, list, list, list]:
+    def getIO(self) -> Tuple[bool, set, set, set]:
         """
         The function to get the inputs/outputs
         :return: if any lhe input file, primaries, parents and secondaries
@@ -83,7 +83,10 @@ class NonChainRequestDataHandler(BaseRequestDataHandler):
         :param key: key name
         :return: values list
         """
-        return list(set(self.get(key, [])))
+        value = self.get(key, [])
+        if isinstance(value, str):
+            value = [value]
+        return list(set(value))
 
     def getParamByTask(self, key: str, _: str) -> Any:
         """

@@ -4,7 +4,6 @@ from logging import Logger
 from collections import defaultdict
 
 from typing import Optional, Tuple
-from utils import agentInfoDB
 
 from Utilities.IteratorTools import filterKeys
 from Components.RequestData.BaseChainRequestDataHandler import BaseChainRequestDataHandler

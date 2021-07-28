@@ -8,7 +8,7 @@ import os
 import json
 import pickle
 
-from Utils.Authenticate import getX509Conn
+from Utilities.Authenticate import getX509Conn
 
 from typing import Union, Optional, Any
 

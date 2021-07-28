@@ -19,7 +19,7 @@ class RucioReader(object):
             super().__init__()
             self.scope = "cms"
 
-            with open("Utilities/rucioConfiguration.json", "r") as file:
+            with open("src/python/Utilities/rucioConfiguration.json", "r") as file:
                 defaultConfig = json.loads(file.read())
             config = {**defaultConfig, **config}
             self.rucio = Client(**config)

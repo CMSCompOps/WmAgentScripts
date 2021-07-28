@@ -34,22 +34,21 @@ class BaseRequestDataHandler(ABC):
     def __contains__(self, value: str) -> bool:
         return value in self.wfSchema
 
-    def _getTaskIO(self, schema: Optional[dict] = None) -> Tuple[bool, list, list, list]:
+    def _getTaskIO(self, schema: Optional[dict] = None) -> Tuple[bool, set, set, set]:
         """
         The function to get the inputs/outputs for a given request schema
         :param request: request schema, use workflow schema if None is given
         :return: if any lhe input file, primaries, parents and secondaries
         """
         schema = schema or self.wfSchema
-        primaries, parents, secondaries = set(), set(), set()
-
-        primaries.update(filter(None, [schema.get("InputDataset")]))
-        if primaries and schema.get("IncludeParents"):
-            parents.update(self.reqmgrReader.getDatasetParent(primary) for primary in primaries)
-
-        secondaries.update(filter(None, [schema.get("MCPileup")]))
 
         lhe = schema.get("LheInputFiles") in ["True", True]
+        primaries = set(list(filter(None, [schema.get("InputDataset")])))
+        secondaries = set(list(filter(None, [schema.get("MCPileup")])))
+
+        parents = set()
+        if primaries and schema.get("IncludeParents"):
+            parents.update(self.reqmgrReader.getDatasetParent(primary) for primary in primaries)
 
         return lhe, primaries, parents, secondaries
 
@@ -128,7 +127,7 @@ class BaseRequestDataHandler(ABC):
         pass
 
     @abstractmethod
-    def getIO(self) -> Tuple[bool, list, list, list]:
+    def getIO(self) -> Tuple[bool, set, set, set]:
         """
         The function to get the inputs/outputs
         :return: if any lhe input file, primaries, parents and secondaries

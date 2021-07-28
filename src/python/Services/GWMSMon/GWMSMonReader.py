@@ -3,9 +3,8 @@ import json
 import logging
 from logging import Logger
 
-from Utilities.ConfigurationHandler import ConfigurationHandler
-
 from typing import Optional
+
 
 class GWMSMonReader(object):
     """
@@ -15,10 +14,9 @@ class GWMSMonReader(object):
 
     def __init__(self, logger: Optional[Logger] = None, **contact):
         try:
-            configurationHandler = ConfigurationHandler()
-            self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
+            self.gwmsUrl = "https://cms-gwmsmon.cern.ch"
             self.gwmsEndpoint = {
-                "prodView": "https://cms-gwmsmon.cern.ch/prodview/json/",
+                "prodView": "/prodview/json/",
             }
 
             logging.basicConfig(level=logging.INFO)
@@ -34,8 +32,8 @@ class GWMSMonReader(object):
         :return: summary
         """
         try:
-            url = f"{self.gwmsEndpoint['prodView']}/{wf}/summary"
-            with os.popen(f"curl -s {url}") as file:
+            endpoint = f"{self.gwmsEndpoint['prodView']}{wf}/summary"
+            with os.popen(f"curl -s {self.gwmsUrl}{endpoint}") as file:
                 data = json.loads(file.read())
             return data
 
