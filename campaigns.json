@@ -305,6 +305,24 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "tune": true
+  },
+  "MiniAODHI15Data": {
+    "fractionpass": 1.0,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+       "MergedLFNBase": "/store/himc",
+       "SiteBlacklist": [
+          "T1_US_FNAL",
+          "T2_US_Purdue",
+          "T2_US_Caltech",
+          "T2_US_Florida",
+          "T2_US_Nebraska",
+          "T2_US_UCSD",
+          "T2_US_Wisconsin"                         
+       ]
+    }
   }, 
   "MiniAODHI18Data": {
     "SiteWhitelist": [
