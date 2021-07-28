@@ -2782,7 +2782,7 @@
   },
   "RunIISummer20UL17pp5TeVMiniAOD": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
@@ -2800,7 +2800,7 @@
   }, 
   "RunIISummer20UL17pp5TeVDR": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
@@ -2818,7 +2818,7 @@
   },
   "RunIISummer20UL17pp5TeVGS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
@@ -2836,7 +2836,7 @@
   },
   "RunIISummer20UL17pp5TeVwmLHEGS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
