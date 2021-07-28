@@ -6,7 +6,7 @@ from Services.DBS.DBSReader import DBSReader
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
-from typing import Optional, Any, Union, Tuple
+from typing import Optional, Any, Union, Tuple, List
 
 
 class BaseRequestDataHandler(ABC):
@@ -17,6 +17,7 @@ class BaseRequestDataHandler(ABC):
 
     def __init__(self, wfSchema: dict, logger: Optional[Logger] = None) -> None:
         try:
+            super().__init__()
             self.unifiedConfiguration = ConfigurationHandler("unifiedConfiguration.json")
             self.dbsReader = DBSReader()
             self.reqmgrReader = ReqMgrReader()
@@ -40,20 +41,22 @@ class BaseRequestDataHandler(ABC):
         :return: if any lhe input file, primaries, parents and secondaries
         """
         schema = schema or self.wfSchema
-
         primaries, parents, secondaries = set(), set(), set()
+
         primaries.update(filter(None, [schema.get("InputDataset")]))
-        secondaries.update(filter(None, [schema.get("MCPileup")]))
         if primaries and schema.get("IncludeParents"):
             parents.update(self.reqmgrReader.getDatasetParent(primary) for primary in primaries)
 
+        secondaries.update(filter(None, [schema.get("MCPileup")]))
+
         lhe = schema.get("LheInputFiles") in ["True", True]
+
         return lhe, primaries, parents, secondaries
 
-    def isRelval(self) -> bool:
+    def isRelVal(self) -> bool:
         """
-        The function to check if a request is relval or not
-        :return: True if is relval, False o/w
+        The function to check if a request is for release validation or not
+        :return: True if is RelVal, False o/w
         """
         return "RelVal" in self.get("SubRequestType", [])
 
@@ -62,7 +65,7 @@ class BaseRequestDataHandler(ABC):
         The function to determine whether the workflow is producing PREMIX
         :return: True if producing premix, False o/w
         """
-        return "premix" in [x.split("/")[-1].lower() for x in self.get("OutputDatasets", [])]
+        return "premix" in [*map(lambda x: x.split("/")[-1].lower(), self.get("OutputDatasets", []))]
 
     def get(self, key: str, defaultValue: Any = None) -> Any:
         """
@@ -73,19 +76,19 @@ class BaseRequestDataHandler(ABC):
         """
         return self.wfSchema.get(key, defaultValue)
 
-    def getTasksByOutputDatasets(self, workTasks) -> dict:
+    def getTasksPerOutputDatasets(self, workTasks) -> dict:
         """
         The function to get the tasks by the output datasets
         :param workTasks: work tasks
         :return: a dict of dataset names by task names
         """
         try:
-            taskByOutput = {}
-            for task, datasets in self.getOutputDatasetsByTask(workTasks).items():
+            taskPerOutput = {}
+            for task, datasets in self.getOutputDatasetsPerTask(workTasks).items():
                 for dataset in datasets:
-                    taskByOutput[dataset] = task
+                    taskPerOutput[dataset] = task
 
-            return taskByOutput
+            return taskPerOutput
 
         except Exception as error:
             self.logger.error("Failed to get tasks by the output datasets")
@@ -95,6 +98,7 @@ class BaseRequestDataHandler(ABC):
     def isGoodToConvertToStepChain(self, keywords: Optional[list] = None) -> bool:
         """
         The function to check if a request is good to be converted to step chain
+        :param keywords: optional keywords list
         :return: True if good, False o/w
         """
         pass
@@ -116,10 +120,10 @@ class BaseRequestDataHandler(ABC):
         pass
 
     @abstractmethod
-    def getMemory(self) -> float:
+    def getMemory(self) -> Optional[float]:
         """
         The function to get the workflow memory
-        :return: memory
+        :return: memory value if any, None o/w
         """
         pass
 
@@ -152,7 +156,7 @@ class BaseRequestDataHandler(ABC):
     def getCampaigns(self, details: bool = True) -> Union[str, dict, list]:
         """
         The function to get the workflow campaigns
-        :param details: if True and if the request type is a chain it returns details of campaigns, o/w, just campaigns names
+        :param details: if True and if the request type is a chain it returns details of campaigns, o/w just campaigns names
         :return: campaigns
         """
         pass
@@ -170,7 +174,7 @@ class BaseRequestDataHandler(ABC):
         """
         The function to get the workflow's param list
         :param key: key name
-        :return: block white list
+        :return: values list
         """
         pass
 
@@ -185,7 +189,7 @@ class BaseRequestDataHandler(ABC):
         pass
 
     @abstractmethod
-    def getExpectedEventsByTask(self) -> dict:
+    def getExpectedEventsPerTask(self) -> dict:
         """
         The function to get the number of expected events
         :return: expected events by task
@@ -193,7 +197,7 @@ class BaseRequestDataHandler(ABC):
         pass
 
     @abstractmethod
-    def getOutputDatasetsByTask(self, workTasks) -> dict:
+    def getOutputDatasetsPerTask(self, workTasks) -> dict:
         """
         The function to get the output datasets by task
         :param workTasks: work tasks
@@ -204,31 +208,34 @@ class BaseRequestDataHandler(ABC):
     @abstractmethod
     def getComputingTime(self) -> int:
         """
-        The function to get the computing time (is seconds)
+        The function to get the computing time (in seconds)
         :return: computing time
         """
         pass
 
     @abstractmethod
-    def getBlowupFactors(self, splittings: list) -> Tuple[float, float, float]:
+    def getBlowupFactor(self, splittings: List[dict]) -> float:
         """
-        The function to get the blow up factors
-        :return: number of min children by event, number of root job by event and max blow up
+        The function to get the blow up factor considering the given splittings
+        :param splittings: splittings schemas
+        :return: blow up
         """
         pass
 
     @abstractmethod
-    def checkSplittings(self, splittings: dict) -> Tuple[bool, list]:
+    def checkSplittingsSize(self, splittings: List[dict]) -> Tuple[bool, list]:
         """
-        The function to check the splittings
+        The function to check the splittings sizes and if any action is required
         :param splittings: splittings schema
         :return: if to hold and a list of modified splittings
         """
         pass
 
     @abstractmethod
-    def writeDatasetPatternName(self, *elements) -> str:
+    def writeDatasetPatternName(self, elements: list) -> str:
         """
         The function to write the dataset pattern name from given elements
+        :param elements: dataset name elements — name, acquisition era, processing string, version, tier
+        :return: dataset name
         """
         pass

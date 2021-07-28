@@ -46,13 +46,13 @@ class WorkflowController(object):
             self.rucioReader = RucioReader()
             self.wmstatsReader = WMStatsReader()
             self.wqReader = WorkQueueReader()
-            
+
             self.request = RequestDataInterface(wf, kwargs.get("request"))
             self.campaignController = CampaignController()
             self.siteInfo = None  # TODO: implement siteInfo
 
             self.wf = wf
-            self.fullSpec = None if kwargs.get("noSpec") else self.reqmgrReader.getSpec(wf)
+            self.spec = None if kwargs.get("noSpec") else self.reqmgrReader.getSpec(wf)
             self.workQueue = self.wqReader.getWorkQueue(wf) if kwargs.get("workQueue") else None
             self.wmstats = self.getWMStats(wf) if kwargs.get("wmstats") else None
             self.wmerrors = self.getWMErrors(wf) if kwargs.get("errors") else None
@@ -104,7 +104,7 @@ class WorkflowController(object):
 
     def _getAllowedSites(self) -> set:
         """
-        The function to get the initially allowed sites
+        The function to get the allowed sites
         :return: site white list
         """
         allowedSites = set()
@@ -120,7 +120,7 @@ class WorkflowController(object):
 
         sites = ["T0Sites", "T1Sites", "GoodAAASites" if secondaries else "T2Sites"]
         for site in sites:
-            allowedSites.update(getattr(self.info, site))
+            allowedSites.update(getattr(self.siteInfo, site))
 
         if self.request.includeHEPCloudInSiteWhiteList:
             allowedSites.update(self.siteInfo.HEPCloudSites)
@@ -128,24 +128,24 @@ class WorkflowController(object):
 
         return allowedSites
 
-    def _restrictAllowedSitesByBlowUpFators(self, allowedSites: set) -> set:
+    def _restrictAllowedSitesByBlowUpFator(self, allowedSites: set) -> set:
         """
-        The function to restrict a site white list by the blow up factors
+        The function to restrict a site white list by the blow up factor
         :param allowedSites: site white list
         :return: new site white list
         """
-        minChildrenByEvent, rootJobByEvent, blowUp = self.getBlowupFactors()
+        blowUp = self.getBlowupFactor()
         maxBlowUp, neededCores = self.unifiedConfiguration.get("blow_up_limits")
 
         if blowUp > maxBlowUp:
             allowedSitesWithNeededCores = set(
                 [site for site in allowedSites if self.siteInfo.cpuPledges[site] > neededCores]
             )
+
             if allowedSitesWithNeededCores:
                 self.logger.info(
-                    "Restricting site white list because of blow-up factors: %s, %s, %s",
-                    minChildrenByEvent,
-                    rootJobByEvent,
+                    "Restricting site white list because of blow-up factors: %s > %s",
+                    blowUp,
                     maxBlowUp,
                 )
 
@@ -155,7 +155,7 @@ class WorkflowController(object):
 
     def _restrictAllowedSitesByCampaign(self, allowedSites: set) -> Tuple[set, set]:
         """
-        The function to restrict a site white list by the site lists of the campaigns
+        The function to restrict a site white list by the campaigns' site lists
         :param allowedSites: site white list
         :return: new site white list and site black list
         """
@@ -203,25 +203,24 @@ class WorkflowController(object):
     def _getVersionByWildcardPattern(self, version: Optional[int] = 0) -> Optional[int]:
         """
         The function to get the version by searching the datasets matching a wildcard pattern
-        :param version: current version if known
+        :param version: current version number if known
         :return: version number
         """
         outputDatasets = self.request.get("OutputDatasets", [])
-        for output in outputDatasets:
-            _, datasetName, processingString, tierName = output.split("/")
-            outputAcquisitionEra, outputProcessingString = self._parseOutputProcessingString(processingString)
 
-            pattern = self.request.writeDatasetPatternName(
-                datasetName, outputAcquisitionEra, outputProcessingString, "v*", tierName
-            )
+        for dataset in outputDatasets:
+            _, name, processingString, tier = dataset.split("/")
+            acquisitionEra, processingString = self._parseOutputProcessingString(processingString)
+
+            pattern = self.request.writeDatasetPatternName([name, acquisitionEra, processingString, "v*", tier])
             if not pattern:
                 return None
 
-            datasets = self.dbsReader.getDatasetNames(pattern)
-            self.logger.info("Found %s datasets matching %s", len(datasets), pattern)
-            for dataset in datasets:
-                _, _, datasetProcessingString, _ = dataset.split("/")
-                version = max(version, int(datasetProcessingString.split("-")[-1].replace("v", "")))
+            matches = self.dbsReader.getDatasetNames(pattern)
+            self.logger.info("Found %s datasets matching %s", len(matches), pattern)
+            for match in matches:
+                _, _, matchProcessingString, _ = match.split("/")
+                version = max(version, int(matchProcessingString.split("-")[-1].replace("v", "")))
 
         return version
 
@@ -232,13 +231,14 @@ class WorkflowController(object):
         :return: version number
         """
         outputDatasets = self.request.get("OutputDatasets", [])
-        for output in outputDatasets:
-            _, datasetName, processingString, tierName = output.split("/")
-            outputAcquisitionEra, outputProcessingString = self._parseOutputProcessingString(processingString)
+
+        for dataset in outputDatasets:
+            _, name, processingString, tier = dataset.split("/")
+            acquisitionEra, processingString = self._parseOutputProcessingString(processingString)
 
             while True:
                 expectedName = self.request.writeDatasetPatternName(
-                    datasetName, outputAcquisitionEra, outputProcessingString, f"v{version+1}", tierName
+                    [name, acquisitionEra, processingString, f"v{version+1}", tier]
                 )
                 if not expectedName:
                     return version
@@ -255,8 +255,8 @@ class WorkflowController(object):
 
     def isHeavyToRead(self, secondaries: Union[list, dict]) -> bool:
         """
-        The function to check if it is heavy to read
-        :param secondaries: secondary datasets
+        The function to check if it is heavy to read the secondaries
+        :param secondaries: secondaries dataset names
         :return: True if minbias appears in secondary, False o/w
         """
         return any("minbias" in secondary.lower() for secondary in secondaries)
@@ -265,7 +265,8 @@ class WorkflowController(object):
         """
         The function to get the blocks needed for the recovery of a workflow
         :param suffixTaskFilter: filter tasks ending with given suffix
-        :return: a list of blocks found in DBS, a dict of the blocks locations, a dict of the files locations whose blocks were found in DBS, and a dict of the files locations whose blocks were not found in DBS
+        :return: a list of blocks found in DBS, a dict of the blocks locations, a dict of the files locations
+        whose blocks were found in DBS, and a dict of the files locations whose blocks were not found in DBS
         """
         try:
             if not self.recoveryDocs:
@@ -294,15 +295,18 @@ class WorkflowController(object):
             whereToRun = defaultdict(set)
             missingToRun = defaultdict(int)
             whereIsMissingToRun = defaultdict(lambda: defaultdict(int))
+
             for doc in self.recoveryDocs:
                 task = doc.get("fileset_name", "")
                 for filename, data in doc.get("files").items():
                     whereToRun[task].update(
-                        self.request.get("SiteWhiteList") if filename.startswith("MCFakeFile") else data["locations"]
+                        self.request.get("SiteWhiteList")
+                        if filename.startswith("MCFakeFile")
+                        else data.get("locations", [])
                     )
 
                     missingToRun[task] += data.get("events")
-                    for location in data.get("locations"):
+                    for location in data.get("locations", []):
                         whereIsMissingToRun[task][location] += data.get("events")
 
             whereToRun = mapValues(list, whereToRun)
@@ -317,7 +321,7 @@ class WorkflowController(object):
     def getWMErrors(self, cacheLastUpdateLimit: int = 0) -> dict:
         """
         The function to get the WMErrors for the workflow
-        :param cacheLastUpdateLimit: seconds from a cache file creation for considering it valid
+        :param cacheLastUpdateLimit: limit of seconds since a cache file creation for considering it valid
         :return: WMErrors
         """
         try:
@@ -342,7 +346,7 @@ class WorkflowController(object):
     def getWMStats(self, cacheLastUpdateLimit: int = 0) -> dict:
         """
         The function to get the WMStats for the workflow
-        :param cacheLastUpdateLimit: seconds from a cache file creation for considering it valid
+        :param cacheLastUpdateLimit: limit of seconds since a cache file creation for considering it valid
         :return: WMStats
         """
         try:
@@ -372,6 +376,7 @@ class WorkflowController(object):
         """
         try:
             family = self.reqmgrReader.getWorkflowsByPrepId(self.request.get("PrepID"), details=True)
+
             family = [
                 member
                 for member in family
@@ -394,12 +399,13 @@ class WorkflowController(object):
         :return: list of tasks
         """
         try:
-            spec = self.fullSpec or self.reqmgrReader.getSpec(self.wf)
+            spec = self.spec or self.reqmgrReader.getSpec(self.wf)
 
             allTasks = []
             for task in spec.tasks.tasklist:
                 taskSpec = getattr(spec.tasks, task)
                 allTasks.extend(DataTools.flattenTaskTree(taskSpec, **selectParam))
+
             return allTasks
 
         except Exception as error:
@@ -416,20 +422,20 @@ class WorkflowController(object):
     def getFirstTask(self):
         """
         The function to get the first task
-        :return: first taks
+        :return: first task
         """
-        return (self.fullSpec or self.reqmgrReader.getSpec(self.wf)).tasks.tasklist[0]
+        return (self.spec or self.reqmgrReader.getSpec(self.wf)).tasks.tasklist[0]
 
-    def getOutputDatasetsByTask(self) -> dict:
+    def getOutputDatasetsPerTask(self) -> dict:
         """
         The function to get the output datasets by task
         :return: a dict of dataset names by task names
         """
-        return self.request.getOutputDatasetsByTask(self.getWorkTasks())
+        return self.request.getOutputDatasetsPerTask(self.getWorkTasks())
 
     def getCampaignByTask(self, task: str) -> str:
         """
-        The funtion to get the campaign for a given task
+        The function to get the campaign for a given task
         :param task: task name
         :return: campaign
         """
@@ -437,7 +443,7 @@ class WorkflowController(object):
 
     def getMemoryByTask(self, task: str) -> int:
         """
-        The funtion to get the memory used by task
+        The function to get the memory used by task
         :param task: task name
         :return: memory
         """
@@ -445,7 +451,7 @@ class WorkflowController(object):
 
     def getCoreByTask(self, task: str) -> int:
         """
-        The funtion to get the cores used by task
+        The function to get the cores used by task
         :param task: task name
         :return: number of cores
         """
@@ -453,7 +459,7 @@ class WorkflowController(object):
 
     def getFilterEfficiencyByTask(self, task: str) -> float:
         """
-        The funtion to get the filter efficiency by task
+        The function to get the filter efficiency by task
         :param task: task name
         :return: filter efficiency
         """
@@ -461,21 +467,21 @@ class WorkflowController(object):
 
     def getLumiWhiteList(self) -> list:
         """
-        The funtion to get the workflow's lumi white list
+        The function to get the workflow's lumi white list
         :return: lumi white list
         """
         return self.request.getParamList("LumiList")
 
     def getBlockWhiteList(self) -> list:
         """
-        The funtion to get the workflow's block white list
+        The function to get the workflow's block white list
         :return: block white list
         """
         return self.request.getParamList("BlockWhitelist")
 
     def getRunWhiteList(self) -> list:
         """
-        The funtion to get the workflow's run white list
+        The function to get the workflow's run white list
         :return: run white list
         """
         return self.request.getParamList("RunWhitelist")
@@ -483,7 +489,7 @@ class WorkflowController(object):
     def getSiteWhiteList(self, pickOne: bool = False) -> Tuple[list, list]:
         """
         The function to get the site white list
-        :param pickOne: if True base white list pick from CE, o/w will build it from IO
+        :param pickOne: pick one site from CE list, o/w keep all sites
         :return: site white list, site black list
         """
         try:
@@ -493,7 +499,7 @@ class WorkflowController(object):
 
             self.logger.info("Initially allow %s", allowedSites)
 
-            allowedSites = self._restrictAllowedSitesByBlowUpFators(allowedSites)
+            allowedSites = self._restrictAllowedSitesByBlowUpFator(allowedSites)
             allowedSites, notAllowedSites = self._restrictAllowedSitesByCampaign(allowedSites)
 
             self.logger.info("Allowed sites: %s", allowedSites)
@@ -506,14 +512,14 @@ class WorkflowController(object):
 
     def getPrepIds(self) -> list:
         """
-        The funtion to get the workflow prep ids
+        The function to get the workflow prep ids
         :return: list of prep ids
         """
         return self.request.getParamList("PrepID")
 
     def getScramArches(self) -> list:
         """
-        The funtion to get the scram arches
+        The function to get the scram arches
         :return: scram arches
         """
         return self.request.getParamList("ScramArch")
@@ -521,7 +527,7 @@ class WorkflowController(object):
     def getComputingTime(self, unit: str = "h"):
         """
         The function to get the computing time
-        :param unit: time unit
+        :param unit: time unit (s, m, h or d)
         :return: computing time
         """
         try:
@@ -622,9 +628,9 @@ class WorkflowController(object):
 
     def getSplittingsSchema(self, strip: bool = False, allTasks: bool = False) -> List[dict]:
         """
-        The function to get splittings shema for the workflow
-        :param strip: if True, it will drop some split params, o/w it will keep all params
-        :param allTasks: if True, it will keep all tasks types, o/w it will keep only production, processing and skim tasks
+        The function to get splittings schema for the workflow
+        :param strip: if True it will drop some split params, o/w it will keep all params
+        :param allTasks: if True it will keep all tasks types, o/w it will keep only production, processing and skim tasks
         :return: a list of dicts
         """
         try:
@@ -652,18 +658,19 @@ class WorkflowController(object):
                 name = task.pathName.split("/")[-1]
                 configId = task.steps.cmsRun1.application.configuration.configId
                 config[name] = configId
+
             return config
 
         except Exception as error:
             self.logger.error("Failed to get cache id configuration")
             self.logger.error(str(error))
 
-    def getBlowupFactors(self) -> Tuple[float, float, float]:
+    def getBlowupFactor(self) -> float:
         """
-        The function to get the blow up factors
-        :return: number of min children by event, number of root job by event and max blow up
+        The function to get the blow up factor
+        :return: blow up
         """
-        return self.request.getBlowupFactors(self.getSplittings())
+        return self.request.getBlowupFactor(self.getSplittings())
 
     def getCompletionFraction(self) -> dict:
         """
@@ -672,10 +679,11 @@ class WorkflowController(object):
         """
         try:
             percentCompletion = defaultdict(float)
-            expectedLumis = self.request.get("TotalInputLumis", 0)
-            expectedEventsByTask = self.request.getExpectedEventsByTask()
 
-            tasksByOutput = self.request.getTasksByOutputDatasets(self.getWorkTasks()) or {}
+            expectedLumis = self.request.get("TotalInputLumis", 0)
+            expectedEventsPerTask = self.request.getExpectedEventsPerTask()
+
+            tasksPerOutput = self.request.getTasksPerOutputDatasets(self.getWorkTasks()) or {}
 
             for dataset in self.request.get("OutputDatasets", []):
                 events, lumis = self.dbsReader.getDatasetEventsAndLumis(dataset)
@@ -683,7 +691,7 @@ class WorkflowController(object):
                     percentCompletion[dataset] = lumis / expectedLumis
                     self.logger.info("%s with lumi completion of %s of %s", dataset, lumis, expectedLumis)
 
-                datasetExpectedEvents = expectedEventsByTask.get(tasksByOutput.get(dataset, "NoTaskFound"))
+                datasetExpectedEvents = expectedEventsPerTask.get(tasksPerOutput.get(dataset, "NoTaskFound"))
                 if datasetExpectedEvents:
                     eventFraction = events / datasetExpectedEvents
                     if eventFraction > percentCompletion[dataset]:
@@ -698,7 +706,7 @@ class WorkflowController(object):
             self.logger.error("Failed to get completion fraction")
             self.logger.error(str(error))
 
-    def getNCopies(self, CPUh: float, m: int = 2, M: int = 3, w: int = 50000, C0: int = 100000) -> Tuple[int, float]:
+    def getNCopies(self, CPUh: float, m: int = 2, M: int = 3, w: int = 50000, C0: int = 100000) -> int:
         """
         The function to get the number of needed copies based on the computing time
         :param CPUh: computing hours
@@ -709,6 +717,7 @@ class WorkflowController(object):
             f = sigmoid(-C0 / w)
             D = (M - m) / (1 - f)
             O = (f * M - m) / (f - 1)
+
             return int(O + D * sigmoid((CPUh - C0) / w))
 
         except Exception as error:
@@ -724,16 +733,17 @@ class WorkflowController(object):
             version = max(0, int(self.request.get("ProcessingVersion", 0)) - 1)
             version = self._getVersionByWildcardPattern(version)
             version = self._getVersionByConflictingWorkflows(version)
+
             return version + 1
 
         except Exception as error:
             self.logger.error("Failed to get next version")
             self.logger.error(str(error))
 
-    def getGlideMonInfo(self):
+    def getGlideWMSMonSummary(self):
         """
-        The function to get the glide mon info
-        :return: glidemon info
+        The function to get the glide mon summary
+        :return: glide mon summary
         """
         return self.gwmsReader.getRequestSummary(self.wf)
 
@@ -746,12 +756,12 @@ class WorkflowController(object):
             self.summary = self.reqmgrReader.getWorkloadSummary(self.wf)
         return self.summary
 
-    def checkSplittings(self) -> Tuple[bool, list]:
+    def checkSplittingsSize(self) -> Tuple[bool, list]:
         """
         The function to check the splittings
         :return: if to hold and a list of modified splittings
         """
-        return self.request.checkSplittings(self.getSplittingsSchema(strip=True))
+        return self.request.checkSplittingsSize(self.getSplittingsSchema(strip=True))
 
     def go(self, silent: bool = False) -> bool:
         """

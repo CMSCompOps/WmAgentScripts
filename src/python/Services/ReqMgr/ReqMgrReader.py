@@ -63,9 +63,9 @@ class ReqMgrReader(object):
     def getSpec(self, wf: str) -> dict:
         # TODO: check endpoint, call against couchdb
         """
-        The function to get the workload specification for a given workflow
+        The function to get the specification for a given workflow
         :param wf: workflow name
-        :return: workload specification
+        :return: specification
         """
         try:
             return getResponse(url=self.reqmgrUrl, endpoint=f"/couchdb/reqmgr_workload_cache/{wf}/spec", isJson=False)

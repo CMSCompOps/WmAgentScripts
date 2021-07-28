@@ -16,12 +16,13 @@ class RucioReader(object):
 
     def __init__(self, logger: Optional[Logger] = None, **config) -> None:
         try:
+            super().__init__()
+            self.scope = "cms"
+
             with open("Utilities/rucioConfiguration.json", "r") as file:
                 defaultConfig = json.loads(file.read())
             config = {**defaultConfig, **config}
             self.rucio = Client(**config)
-
-            self.scope = "cms"
 
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
@@ -43,7 +44,7 @@ class RucioReader(object):
             self.logger.error(str(error))
             return 0
 
-    def countDatasetFilesByBlock(self, dataset: str) -> List[tuple]:
+    def countDatasetFilesPerBlock(self, dataset: str) -> List[tuple]:
         """
         The function to get the number of files by block for a given dataset
         :param dataset: dataset name
@@ -53,7 +54,7 @@ class RucioReader(object):
             return [(block, self.rucio.countBlockFiles(block)) for block in self.rucio.getDatasetBlockNames(dataset)]
 
         except Exception as error:
-            self.logger.error("Failed to get number of files by block for the dataset %s", dataset)
+            self.logger.error("Failed to get number of files per block for the dataset %s", dataset)
             self.logger.error(str(error))
             return []
 

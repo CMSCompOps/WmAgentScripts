@@ -30,11 +30,11 @@ class WorkQueueReader(object):
             raise Exception(f"Error initializing WorkQueueReader\n{str(error)}")
 
     @runWithRetries(tries=5, wait=0, default=[])
-    def getWorkQueue(self, wf: str):
+    def getWorkQueue(self, wf: str) -> list:
         """
         The function to get the work queue for a given workflow
         :param wf: workflow name
-        :return: workload specification
+        :return: work queue
         """
         try:
             result = getResponse(

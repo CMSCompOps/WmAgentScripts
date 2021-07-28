@@ -12,45 +12,104 @@ class NonChainRequestDataHandler(BaseRequestDataHandler):
     """
 
     def isGoodToConvertToStepChain(self, _: Optional[list]) -> bool:
+        """
+        The function to check if a request is good to be converted to step chain.
+        :return: False, since the convertion is not supported for non-chain requests
+        """
         self.logger.info("Convertion is supported only from TaskChain to StepChain")
         return False
 
     def getAcquisitionEra(self) -> str:
+        """
+        The function to get the workflow acquisition era
+        :return: acquisition era
+        """
         return self.get("AcquisitionEra")
 
     def getProcessingString(self) -> str:
+        """
+        The function to get the workflow processing string
+        :return: processing string
+        """
         return self.get("ProcessingString")
 
     def getMemory(self) -> float:
+        """
+        The function to get the workflow memory
+        :return: memory value if any, None o/w
+        """
         return self.get("Memory")
 
     def getIO(self) -> Tuple[bool, list, list, list]:
+        """
+        The function to get the inputs/outputs
+        :return: if any lhe input file, primaries, parents and secondaries
+        """
         return self._getTaskIO()
 
     def getMulticore(self, details: bool = False) -> Union[int, list]:
+        """
+        The function to get the workflow multicore
+        :param details: if True return list of multicores by task, o/w return multicore value
+        :return: multicore
+        """
         return [int(self.get("Multicore"))] if details else int(self.get("Multicore"))
 
     def getEvents(self) -> int:
+        """
+        The function to get the number of events in the request
+        :return: number of events
+        """
         return int(self.get("RequestNumEvents"))
 
     def getCampaigns(self, details: bool = True) -> Union[str, list]:
+        """
+        The function to get the workflow campaigns
+        :param details: if True and if the request type is a chain it returns details of campaigns, o/w just campaigns names
+        :return: campaigns
+        """
         return self.get("Campaign") if details else [self.get("Campaign")]
 
     def getCampaignsAndLabels(self) -> list:
+        """
+        The function to get a list of campaigns and labels
+        :return: a list of tuples containing campaign name and processing string
+        """
         return [(self.getCampaigns(), self.getProcessingString())]
 
     def getParamList(self, key: str) -> list:
+        """
+        The function to get the workflow's param list
+        :param key: key name
+        :return: values list
+        """
         return list(set(self.get(key, [])))
 
     def getParamByTask(self, key: str, _: str) -> Any:
+        """
+        The function to get a param value for a given key
+        :param key: key name
+        :return: value
+
+        Since non-chain requests have no task then return request value for the given key.
+        """
         return self.get(key)
 
-    def getExpectedEventsByTask(self) -> dict:
+    def getExpectedEventsPerTask(self) -> dict:
+        """
+        The function to get the number of expected events
+        :return: empty dict, since non-chain requests have no tasks
+        """
         return {}
 
-    def getOutputDatasetsByTask(self, workTasks=None) -> dict:
+    def getOutputDatasetsPerTask(self, workTasks=None) -> dict:
+        """
+        The function to get the output datasets by task
+        :param workTasks: work tasks
+        :return: a dict of dataset names by task names
+        """
         try:
-            outputByTask = defaultdict(set)
+            outputPerTask = defaultdict(set)
             for task in workTasks:
                 outputModules = (
                     task.subscriptions.outputModules
@@ -61,15 +120,19 @@ class NonChainRequestDataHandler(BaseRequestDataHandler):
                 for module in outputModules:
                     dataset = getattr(task.subscriptions, module).dataset
                     if dataset in self.get("OutputDatasets", []):
-                        outputByTask[task._internal_name].append(dataset)
+                        outputPerTask[task._internal_name].append(dataset)
 
-            return dict(outputByTask)
+            return dict(outputPerTask)
 
         except Exception as error:
             self.logger.error("Failed to get output datasets by task")
             self.logger.error(str(error))
 
     def getComputingTime(self) -> int:
+        """
+        The function to get the computing time (in seconds)
+        :return: computing time
+        """
         try:
             if self.get("BlockWhiteList"):
                 events, _ = self.dbsReader.getBlocksEventsAndLumis(self.get("BlockWhiteList"))
@@ -84,19 +147,33 @@ class NonChainRequestDataHandler(BaseRequestDataHandler):
             self.logger.error("Failed to get the computing time")
             self.logger.error(str(error))
 
-    def getBlowupFactors(self, _: list) -> Tuple[float, float, float]:
-        self.logger.info("Blockup factors only exists for TaskChain")
-        return 1.0, 1.0, 1.0
+    def getBlowupFactor(self, _: list) -> float:
+        """
+        The function to get the blow up factor
+        :return: 1, since blow up factor does not exist for non-chain request
+        """
+        self.logger.info("Blockup factor only exists for TaskChain")
+        return 1.0
 
-    def checkSplittings(self, _: list) -> Tuple[bool, list]:
+    def checkSplittingsSize(self, _: list) -> Tuple[bool, list]:
+        """
+        The function to check the splittings sizes
+        :return: no hold and no modified splittings, since this check does not exist for non-chain request
+        """
         return False, []
 
-    def writeDatasetPatternName(self, *elements) -> str:
+    def writeDatasetPatternName(self, elements: list) -> str:
+        """
+        The function to write the dataset pattern name from given elements
+        :param elements: dataset name elements — name, acquisition era, processing string, version, tier
+        :return: dataset name
+        """
         try:
             if (elements[3] == "v*" and all(element == "*" for element in elements[1:3])) or (
                 elements[3] != "v*" and elements[2] == "*"
             ):
                 return None
+
             return f"/{elements[0]}/{'-'.join(elements[1:4]/{elements[4]})}"
 
         except Exception as error:

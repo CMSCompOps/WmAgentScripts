@@ -14,7 +14,7 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
     General Abstract Base Class for building the concrete request data handlers based on the chainrequest type
     """
 
-    def __init__(self, wfSchema: dict, logger: Optional[Logger]) -> None:
+    def __init__(self, wfSchema: dict, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__(wfSchema, logger=logger)
             self.base = self.wfSchema["RequestType"].replace("Chain", "")
@@ -25,10 +25,10 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
 
     def getChainValues(self, key: str, f: Optional[Callable] = None) -> dict:
         """
-        The function to get the values in the chain
+        The function to get the values in the chain for a given key
         :param key: key name
         :param f: optional function to apply on the value
-        :return: a dict of value of the chain items
+        :return: values of the chain items
         """
         try:
             values = {}
@@ -44,12 +44,24 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
             self.logger.error(str(error))
 
     def getAcquisitionEra(self) -> dict:
+        """
+        The function to get the workflow acquisition era
+        :return: acquisition era
+        """
         return self.getChainValues("AcquisitionEra")
 
     def getProcessingString(self) -> dict:
+        """
+        The function to get the workflow processing string
+        :return: processing string
+        """
         return self.getChainValues("ProcessingString")
 
-    def getMemory(self) -> float:
+    def getMemory(self) -> Optional[float]:
+        """
+        The function to get the workflow memory
+        :return: memory value if any, None o/w
+        """
         try:
             memory = list(self.getChainValues("Memory").values())
             return max(map(float, filter(None, memory))) if memory else None
@@ -59,6 +71,10 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
             self.logger.error(str(error))
 
     def getIO(self) -> Tuple[bool, list, list, list]:
+        """
+        The function to get the inputs/outputs
+        :return: if any lhe input file, primaries, parents and secondaries
+        """
         try:
             lhe, primaries, parents, secondaries = False, set(), set(), set()
             for _, task in filterKeys(self.chainKeys, self.wfSchema).items():
@@ -75,6 +91,11 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
             self.logger.error(str(error))
 
     def getMulticore(self, details: bool = False) -> Union[int, list]:
+        """
+        The function to get the workflow multicore
+        :param details: if True return list of multicores by task, o/w return multicore value
+        :return: multicore
+        """
         try:
             multicores = list(self.getChainValues("Multicore").values())
 
@@ -87,8 +108,13 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
             self.logger.error(str(error))
 
     def getCampaigns(self, details: bool = True) -> Union[dict, list]:
+        """
+        The function to get the workflow campaigns
+        :param details: if True and if the request type is a chain it returns details of campaigns, o/w just campaigns names
+        :return: campaigns
+        """
         try:
-            campaigns = self.getChainValues("Campaign" if self.isRelval() else "AcquisitionEra")
+            campaigns = self.getChainValues("Campaign" if self.isRelVal() else "AcquisitionEra")
 
             if details:
                 return campaigns
@@ -99,6 +125,10 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
             self.logger.error(str(error))
 
     def getCampaignsAndLabels(self) -> list:
+        """
+        The function to get a list of campaigns and labels
+        :return: a list of tuples containing campaign name and processing string
+        """
         try:
             campaigns = self.getCampaigns()
             processingStrings = self.getProcessingString()
@@ -112,14 +142,29 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
             self.logger.error(str(error))
 
     def getParamList(self, key: str) -> list:
+        """
+        The function to get the workflow's param list for a given key
+        :param key: key name
+        :return: values list
+        """
         return list(set(item for lst in self.getChainValues(key).values() for item in lst))
 
     def getParamByTask(self, key: str, task: str) -> Any:
+        """
+        The function to get a param value for a given task
+        :param key: key name
+        :param task: task name
+        :return: value
+        """
         return self.getChainValues(key).get(task, self.get(key))
 
-    def getExpectedEventsByTask(self) -> dict:
+    def getExpectedEventsPerTask(self) -> dict:
+        """
+        The function to get the number of expected events
+        :return: expected events by task
+        """
         try:
-            eventsExpectedByTask = {}
+            eventsExpectedPerTask = {}
             eventsExpected = self.get("TotalInputEvents", 0)
 
             values = {}
@@ -130,33 +175,43 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
 
             for _, task in filterKeys(self.chainKeys, self.wfSchema).items():
                 taskName = task[f"{self.base}Name"]
-                eventsExpectedByTask[taskName] = eventsExpected
+                eventsExpectedPerTask[taskName] = eventsExpected
                 nestedTask = task
                 while f"Input{self.base}" in nestedTask:
-                    eventsExpectedByTask[taskName] *= nestedTask.get("FilterEfficiency", 1.0)
+                    eventsExpectedPerTask[taskName] *= nestedTask.get("FilterEfficiency", 1.0)
                     nestedTask = self.get(values[nestedTask[f"Input{self.base}"]])
 
-            return eventsExpectedByTask
+            return eventsExpectedPerTask
 
         except Exception as error:
             self.logger.error("Failed to get expected events")
             self.logger.error(str(error))
 
-    def getOutputDatasetsByTask(self, _) -> dict:
+    def getOutputDatasetsPerTask(self, _) -> dict:
+        """
+        The function to get the output datasets by task
+        :param workTasks: work tasks
+        :return: a dict of dataset names by task names
+        """
         try:
-            outputByTask = defaultdict(set)
+            outputPerTask = defaultdict(set)
             for task, data in self.get("ChainParentageMap", {}).items():
-                outputByTask[task].update(data.get("ChildDsets", []))
+                outputPerTask[task].update(data.get("ChildDsets", []))
 
-            return dict(outputByTask)
+            return dict(outputPerTask)
 
         except Exception as error:
             self.logger.error("Failed to get output datasets by task")
             self.logger.error(str(error))
 
     def getComputingTime(self) -> int:
+        """
+        The function to get the computing time (in seconds)
+        :return: computing time
+        """
         try:
             cpuTime, cacheTime = 0, {}
+
             for _, task in filterKeys(self.chainKeys, self.wfSchema).items():
                 if task.get("BlockWhiteList"):
                     events, _ = self.dbsReader.getBlocksEventsAndLumis(task["BlockWhiteList"])
