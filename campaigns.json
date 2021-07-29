@@ -3147,6 +3147,24 @@
             "SiteWhitelist":[
                 "T1_ES_PIC_Disk"
                 ]
+        },
+        "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO": 
+        {
+            "SiteWhitelist":[
+                "T1_RU_JINR_Disk"
+            ]
+        },
+        "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO":
+        {
+            "SiteWhitelist":[
+                "T1_US_FNAL_Disk"
+            ]
+        },
+        "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
+        {
+            "SiteWhitelist":[
+                "T2_US_Purdue"
+             ]
         }
 
      }
