@@ -3163,7 +3163,7 @@
         "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
         {
             "SiteWhitelist":[
-                "T2_US_Purdue"
+                "T2_US_UCSD"
              ]
         }
 
