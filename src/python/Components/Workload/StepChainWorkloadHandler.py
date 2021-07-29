@@ -1,12 +1,12 @@
 from logging import Logger
 from typing import Optional, Tuple
 
-from Components.RequestData.BaseChainRequestDataHandler import BaseChainRequestDataHandler
+from Components.Workload.BaseChainWorkloadHandler import BaseChainWorkloadHandler
 
 
-class StepChainRequestDataHandler(BaseChainRequestDataHandler):
+class StepChainWorkloadHandler(BaseChainWorkloadHandler):
     """
-    __StepChainRequestDataHandler__
+    __StepChainWorkloadHandler__
     General API for handling the request data of step chain request type
     """
 
@@ -20,7 +20,7 @@ class StepChainRequestDataHandler(BaseChainRequestDataHandler):
             }
 
         except Exception as error:
-            raise Exception(f"Error initializing StepChainRequestDataHandler\n{str(error)}")
+            raise Exception(f"Error initializing StepChainWorkloadHandler\n{str(error)}")
 
     def isGoodToConvertToStepChain(self, _: Optional[list]) -> bool:
         """
@@ -30,12 +30,12 @@ class StepChainRequestDataHandler(BaseChainRequestDataHandler):
         self.logger.info("Convertion is supported only from TaskChain to StepChain")
         return False
 
-    def getEvents(self) -> int:
+    def getRequestNumEvents(self) -> int:
         """
         The function to get the number of events in the request
         :return: number of events
         """
-        return int(self.get("RequestNumEvents"))
+        return int(self.get("RequestNumEvents") or 0)
 
     def getBlowupFactor(self, _: list) -> float:
         """

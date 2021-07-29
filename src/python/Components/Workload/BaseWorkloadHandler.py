@@ -9,9 +9,9 @@ from Utilities.ConfigurationHandler import ConfigurationHandler
 from typing import Optional, Any, Union, Tuple, List
 
 
-class BaseRequestDataHandler(ABC):
+class BaseWorkloadHandler(ABC):
     """
-    __BaseRequestDataHandler__
+    __BaseWorkloadHandler__
     General Abstract Base Class for building the concrete request data handlers based on the request type
     """
 
@@ -135,16 +135,16 @@ class BaseRequestDataHandler(ABC):
         pass
 
     @abstractmethod
-    def getMulticore(self, details: bool = False) -> Union[int, list]:
+    def getMulticore(self, maxOnly: bool = True) -> Union[int, list]:
         """
         The function to get the workflow multicore
-        :param details: if True return list of multicores by task, o/w return multicore value
+        :param maxOnly: if True return max multicore, o/w return list of multicore values
         :return: multicore
         """
         pass
 
     @abstractmethod
-    def getEvents(self) -> int:
+    def getRequestNumEvents(self) -> int:
         """
         The function to get the number of events in the request
         :return: number of events

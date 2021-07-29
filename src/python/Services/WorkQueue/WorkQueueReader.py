@@ -19,9 +19,7 @@ class WorkQueueReader(object):
         try:
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
-            self.wqEndpoint = {
-                "elementsByParent": "/couchdb/workqueue/_design/WorkQueue/_view/elementsByParent",
-            }  # TODO: check endpoint, call against couchdb
+            self.workqueueEndpoint = "/couchdb/workqueue/_design/WorkQueue/_view/"
 
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
@@ -38,9 +36,7 @@ class WorkQueueReader(object):
         """
         try:
             result = getResponse(
-                url=self.reqmgrUrl,
-                endpoint=self.wqEndpoint["elementsByParent"],
-                param={"key": wf, "include_docs": True},
+                url=self.reqmgrUrl, endpoint=self.workqueueEndpoint + f'elementsByParent?key="{wf}"&include_docs=true'
             )
             return [item["doc"] for item in result["rows"] if item["doc"] is not None]
 

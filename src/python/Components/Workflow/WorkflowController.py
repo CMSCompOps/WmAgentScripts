@@ -7,7 +7,7 @@ from collections import defaultdict
 from time import mktime, gmtime
 
 from Components.Campaign.CampaignController import CampaignController
-from Components.RequestData.RequestDataInterface import RequestDataInterface
+from Components.Workload.WorkloadInterface import WorkloadInterface
 
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.DBS.DBSReader import DBSReader
@@ -47,7 +47,7 @@ class WorkflowController(object):
             self.wmstatsReader = WMStatsReader()
             self.wqReader = WorkQueueReader()
 
-            self.request = RequestDataInterface(wf, kwargs.get("request"))
+            self.request = WorkloadInterface(wf, kwargs.get("request"))
             self.campaignController = CampaignController()
             self.siteInfo = None  # TODO: implement siteInfo
 
@@ -463,7 +463,7 @@ class WorkflowController(object):
         :param task: task name
         :return: filter efficiency
         """
-        return float(self.request.getParamByTask("FilterEfficiency", task)) or 1.0
+        return float(self.request.getParamByTask("FilterEfficiency", task) or 1)
 
     def getLumiWhiteList(self) -> list:
         """

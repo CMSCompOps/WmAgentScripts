@@ -6,12 +6,12 @@ from collections import defaultdict
 from typing import Optional, Tuple
 
 from Utilities.IteratorTools import filterKeys
-from Components.RequestData.BaseChainRequestDataHandler import BaseChainRequestDataHandler
+from Components.Workload.BaseChainWorkloadHandler import BaseChainWorkloadHandler
 
 
-class TaskChainRequestDataHandler(BaseChainRequestDataHandler):
+class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
     """
-    __TaskChainRequestDataHandler__
+    __TaskChainWorkloadHandler__
     General API for handling the request data of task chain request type
     """
 
@@ -212,7 +212,7 @@ class TaskChainRequestDataHandler(BaseChainRequestDataHandler):
         :return: True if good, False o/w
         """
         try:
-            taskKeys = filter(re.compile(f"^Task").search, self.wfSchema)
+            taskKeys = [*filter(re.compile(f"^Task").search, self.wfSchema)]
             for _, task in filterKeys(taskKeys, self.wfSchema).items():
                 if isinstance(task, dict) and task.get("EventStreams", 0) != 0:
                     self.logger.info("Convertion is supported only when EventStreams are zero")
@@ -220,16 +220,19 @@ class TaskChainRequestDataHandler(BaseChainRequestDataHandler):
 
             moreThanOneTask = self.get("TaskChain", 0) > 1
 
-            allSameTiers = len(set(map(lambda x: x.split("/")[-1], self.get("OutputDatasets", [])))) == 1
-            allSameArches = len(set(map(lambda x: x[:4], self.getParamList("ScramArch")))) == 1
-            allSameCores = len(set(self.getMulticore(details=True))) == 1
+            tiers = [*map(lambda x: x.split("/")[-1], self.get("OutputDatasets", []))]
+            allUniqueTiers = len(tiers) == len(set(tiers))
 
-            processingString = "".join(f"{k}-{v}" for k, v in self.getProcessingString().items())
+            allSameArches = len(set(map(lambda x: x[:4], self.getParamList("ScramArch")))) == 1
+
+            allSameCores = len(set(self.getMulticore(maxOnly=False))) == 1
+
+            processingString = "".join(f"{k}{v}" for k, v in self.getProcessingString().items())
             foundKeywords = any(keyword in processingString + self.wf for keyword in keywords) if keywords else True
 
             return (
                 moreThanOneTask
-                and allSameTiers
+                and allUniqueTiers
                 and allSameArches
                 and (allSameCores or self._hasAcceptableEfficiency())
                 and foundKeywords
@@ -239,7 +242,7 @@ class TaskChainRequestDataHandler(BaseChainRequestDataHandler):
             self.logger.error("Failed to check if good to convert to step chain")
             self.logger.error(str(error))
 
-    def getEvents(self) -> int:
+    def getRequestNumEvents(self) -> int:
         """
         The function to get the number of events in the request
         :return: number of events

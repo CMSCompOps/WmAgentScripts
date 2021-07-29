@@ -5,20 +5,20 @@ from collections import defaultdict
 from typing import Optional, Union, Any, Tuple, Callable
 
 from Utilities.IteratorTools import filterKeys
-from Components.RequestData.BaseRequestDataHandler import BaseRequestDataHandler
+from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
 
 
-class BaseChainRequestDataHandler(BaseRequestDataHandler):
+class BaseChainWorkloadHandler(BaseWorkloadHandler):
     """
-    __BaseChainRequestDataHandler__
-    General Abstract Base Class for building the concrete request data handlers based on the chainrequest type
+    __BaseChainWorkloadHandler__
+    General Abstract Base Class for building the concrete request data handlers based on the chain request type
     """
 
     def __init__(self, wfSchema: dict, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__(wfSchema, logger=logger)
             self.base = self.wfSchema["RequestType"].replace("Chain", "")
-            self.chainKeys = filter(re.compile(f"^{self.base}\d+$").search, self.wfSchema)
+            self.chainKeys = [*filter(re.compile(f"^{self.base}\d+$").search, self.wfSchema)]
 
         except Exception as error:
             raise Exception(f"Error initializing {self.__class__.__name__}\n{str(error)}")
@@ -64,7 +64,7 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
         """
         try:
             memory = list(self.getChainValues("Memory").values())
-            return max(map(float, filter(None, memory))) if memory else None
+            return max(map(float, filter(None, memory))) if memory else self.get("Memory")
 
         except Exception as error:
             self.logger.error("Failed to get the workflow memory")
@@ -90,18 +90,19 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
             self.logger.error("Failed to get I/O")
             self.logger.error(str(error))
 
-    def getMulticore(self, details: bool = False) -> Union[int, list]:
+    def getMulticore(self, maxOnly: bool = True) -> Union[int, list]:
         """
         The function to get the workflow multicore
-        :param details: if True return list of multicores by task, o/w return multicore value
+        :param maxOnly: if True return max multicore, o/w return list of multicore values
         :return: multicore
         """
         try:
             multicores = list(self.getChainValues("Multicore").values())
 
-            if details:
-                return multicores
-            return max(map(int, filter(None, multicores)))
+            if maxOnly:
+                return max(map(int, filter(None, multicores))) if multicores else self.get("Multicore")
+
+            return multicores if multicores else [self.get("Multicore")]
 
         except Exception as error:
             self.logger.error("Failed to get the workflow multicore")
@@ -118,6 +119,7 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
 
             if details:
                 return campaigns
+
             return list(set(campaigns.values()))
 
         except Exception as error:
@@ -147,7 +149,15 @@ class BaseChainRequestDataHandler(BaseRequestDataHandler):
         :param key: key name
         :return: values list
         """
-        return list(set(item for lst in self.getChainValues(key).values() for item in lst))
+        try:
+            values = list(self.getChainValues(key).values())
+            if values and isinstance(values[0], str):
+                return list(set(values))
+            return list(set(item for lst in values for item in lst))
+
+        except Exception as error:
+            self.logger.error("Failed to get %s", key)
+            self.logger.error(str(error))
 
     def getParamByTask(self, key: str, task: str) -> Any:
         """

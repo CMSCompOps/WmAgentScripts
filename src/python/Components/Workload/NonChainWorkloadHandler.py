@@ -2,12 +2,12 @@ from collections import defaultdict
 
 from typing import Optional, Union, Any, Tuple
 
-from Components.RequestData.BaseRequestDataHandler import BaseRequestDataHandler
+from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
 
 
-class NonChainRequestDataHandler(BaseRequestDataHandler):
+class NonChainWorkloadHandler(BaseWorkloadHandler):
     """
-    __NonChainRequestDataHandler__
+    __NonChainWorkloadHandler__
     General API for handling the request data of non-chain request type
     """
 
@@ -47,15 +47,15 @@ class NonChainRequestDataHandler(BaseRequestDataHandler):
         """
         return self._getTaskIO()
 
-    def getMulticore(self, details: bool = False) -> Union[int, list]:
+    def getMulticore(self, maxOnly: bool = True) -> Union[int, list]:
         """
         The function to get the workflow multicore
-        :param details: if True return list of multicores by task, o/w return multicore value
+        :param maxOnly: if True return max multicore, o/w return list of multicore values
         :return: multicore
         """
-        return [int(self.get("Multicore"))] if details else int(self.get("Multicore"))
+        return int(self.get("Multicore")) if maxOnly else [int(self.get("Multicore"))]
 
-    def getEvents(self) -> int:
+    def getRequestNumEvents(self) -> int:
         """
         The function to get the number of events in the request
         :return: number of events

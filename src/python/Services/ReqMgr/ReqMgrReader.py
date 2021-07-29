@@ -23,6 +23,7 @@ class ReqMgrReader(object):
         try:
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
+
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
         except Exception as e:
@@ -61,7 +62,6 @@ class ReqMgrReader(object):
 
     @runWithRetries(tries=2, wait=1, default=False)
     def getSpec(self, wf: str) -> dict:
-        # TODO: check endpoint, call against couchdb
         """
         The function to get the specification for a given workflow
         :param wf: workflow name
@@ -75,7 +75,6 @@ class ReqMgrReader(object):
             print(str(error))
 
     def getWorkloadSummary(self, wf: str):
-        # TODO: check endpoint, call against couchdb
         """
         The function to get the workload summary for a given workflow
         :param wf: workflow name

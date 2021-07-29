@@ -18,9 +18,7 @@ class ACDCReader(object):
         try:
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
-            self.acdcEndpoint = {
-                "collection": "/couchdb/acdcserver/_design/ACDC/_view/byCollectionName",
-            }  # TODO: check endpoint, call against couchdb
+            self.acdcEndpoint = "/couchdb/acdcserver/_design/ACDC/_view/"
 
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
@@ -37,8 +35,7 @@ class ACDCReader(object):
         try:
             result = getResponse(
                 url=self.reqmgrUrl,
-                endpoint=self.acdcEndpoint["collection"],
-                param={"key": wf, "include_docs": True, "reduce": False},
+                endpoint=self.acdcEndpoint + f'byCollectionName?key="{wf}"&include_docs=true&reduce=false',
             )
             return [item["doc"] for item in result["rows"]]
 
