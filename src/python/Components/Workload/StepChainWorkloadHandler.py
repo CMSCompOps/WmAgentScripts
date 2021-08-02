@@ -45,7 +45,7 @@ class StepChainWorkloadHandler(BaseChainWorkloadHandler):
         self.logger.info("Blow up factor only exists for TaskChain")
         return 1.0
 
-    def checkSplittingsSize(self, splittings: dict) -> Tuple[bool, list]:
+    def checkSplitting(self, splittings: dict) -> Tuple[bool, list]:
         """
         The function to check the splittings sizes and if any action is required
         :param splittings: splittings schema

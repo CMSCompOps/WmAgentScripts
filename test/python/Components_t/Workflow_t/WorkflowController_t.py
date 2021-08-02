@@ -795,9 +795,9 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
     def testCheckSplittingsSize(self) -> None:
-        """checkSplittingsSize checks the splittings"""
+        """checkSplitting checks the splittings"""
         ### Test when non-chain request
-        response = self.mcWfController.checkSplittingsSize()
+        response = self.mcWfController.checkSplitting()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
 
@@ -812,7 +812,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEmpty)
 
         ### Test when step chain request
-        response = self.stepChainWfController.checkSplittingsSize()
+        response = self.stepChainWfController.checkSplitting()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
 
@@ -827,7 +827,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEmpty)
 
         ### Test when task chain request
-        response = self.taskChainWfController.checkSplittingsSize()
+        response = self.taskChainWfController.checkSplitting()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
 

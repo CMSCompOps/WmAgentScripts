@@ -94,15 +94,13 @@ class NonChainWorkloadHandler(BaseWorkloadHandler):
         The function to get a param value for a given key
         :param key: key name
         :return: value
-
-        Since non-chain requests have no task then return request value for the given key.
         """
         return self.get(key)
 
     def getExpectedEventsPerTask(self) -> dict:
         """
         The function to get the number of expected events
-        :return: empty dict, since non-chain requests have no tasks
+        :return: empty dict
         """
         return {}
 
@@ -159,10 +157,10 @@ class NonChainWorkloadHandler(BaseWorkloadHandler):
         self.logger.info("Blow up factor only exists for TaskChain")
         return 1.0
 
-    def checkSplittingsSize(self, splittings: list) -> Tuple[bool, list]:
+    def checkSplitting(self, splittings: list) -> Tuple[bool, list]:
         """
         The function to check the splittings sizes
-        :return: no hold and no modified splittings, since this check does not exist for non-chain request
+        :return: no hold and no modified splittings
         """
         return False, []
 

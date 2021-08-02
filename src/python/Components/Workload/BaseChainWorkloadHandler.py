@@ -11,7 +11,7 @@ from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
 class BaseChainWorkloadHandler(BaseWorkloadHandler):
     """
     __BaseChainWorkloadHandler__
-    General Abstract Base Class for building the concrete request data handlers based on the chain request type
+    General Abstract Base Class for building the concrete workload handlers based on the chain request type
     """
 
     def __init__(self, wfSchema: dict, logger: Optional[Logger] = None) -> None:
@@ -101,7 +101,6 @@ class BaseChainWorkloadHandler(BaseWorkloadHandler):
 
             if maxOnly:
                 return max(map(int, filter(None, multicores))) if multicores else self.get("Multicore")
-
             return multicores if multicores else [self.get("Multicore")]
 
         except Exception as error:
@@ -170,7 +169,7 @@ class BaseChainWorkloadHandler(BaseWorkloadHandler):
 
     def getExpectedEventsPerTask(self) -> dict:
         """
-        The function to get the number of expected events
+        The function to get the number of expected events by task
         :return: expected events by task
         """
         try:
@@ -197,7 +196,7 @@ class BaseChainWorkloadHandler(BaseWorkloadHandler):
             self.logger.error("Failed to get expected events")
             self.logger.error(str(error))
 
-    def getOutputDatasetsPerTask(self, _) -> dict:
+    def getOutputDatasetsPerTask(self, workTasks) -> dict:
         """
         The function to get the output datasets by task
         :param workTasks: work tasks

@@ -12,7 +12,7 @@ from typing import Optional, Any, Union, Tuple, List
 class BaseWorkloadHandler(ABC):
     """
     __BaseWorkloadHandler__
-    General Abstract Base Class for building the concrete request data handlers based on the request type
+    General Abstract Base Class for building the concrete workload handlers based on the request type
     """
 
     def __init__(self, wfSchema: dict, logger: Optional[Logger] = None) -> None:
@@ -36,8 +36,8 @@ class BaseWorkloadHandler(ABC):
 
     def _getTaskIO(self, schema: Optional[dict] = None) -> Tuple[bool, set, set, set]:
         """
-        The function to get the inputs/outputs for a given request schema
-        :param request: request schema, use workflow schema if None is given
+        The function to get the inputs/outputs for a given task schema
+        :param schema: task schema, use workflow schema if None is given
         :return: if any lhe input file, primaries, parents and secondaries
         """
         schema = schema or self.wfSchema
@@ -222,7 +222,7 @@ class BaseWorkloadHandler(ABC):
         pass
 
     @abstractmethod
-    def checkSplittingsSize(self, splittings: List[dict]) -> Tuple[bool, list]:
+    def checkSplitting(self, splittings: List[dict]) -> Tuple[bool, list]:
         """
         The function to check the splittings sizes and if any action is required
         :param splittings: splittings schema

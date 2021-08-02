@@ -7,7 +7,10 @@ from collections import defaultdict
 from time import mktime, gmtime
 
 from Components.Campaign.CampaignController import CampaignController
-from Components.Workload.WorkloadInterface import WorkloadInterface
+from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
+from Components.Workload.NonChainWorkloadHandler import NonChainWorkloadHandler
+from Components.Workload.StepChainWorkloadHandler import StepChainWorkloadHandler
+from Components.Workload.TaskChainWorkloadHandler import TaskChainWorkloadHandler
 
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.DBS.DBSReader import DBSReader
@@ -47,13 +50,13 @@ class WorkflowController(object):
             self.wmstatsReader = WMStatsReader()
             self.wqReader = WorkQueueReader()
 
-            self.request = WorkloadInterface(wf, kwargs.get("request"))()
             self.campaignController = CampaignController()
             self.siteInfo = None  # TODO: implement siteInfo
 
             self.wf = wf
+            self.request = self._getWorkloadHandler(kwargs.get("request"))
             self.spec = None if kwargs.get("noSpec") else self.reqmgrReader.getSpec(wf)
-            self.workQueue = self.wqReader.getWorkQueue(wf) if kwargs.get("workQueue") else None
+            self.workqueue = self.wqReader.getWorkQueue(wf) if kwargs.get("workQueue") else None
             self.wmstats = self.getWMStats(wf) if kwargs.get("wmstats") else None
             self.wmerrors = self.getWMErrors(wf) if kwargs.get("errors") else None
 
@@ -65,6 +68,25 @@ class WorkflowController(object):
 
         except Exception as error:
             raise Exception(f"Error initializing WorkflowController\n{str(error)}")
+
+    def _getWorkloadHandler(self, wfSchema: Optional[dict] = None) -> BaseWorkloadHandler:
+        """
+        The function to set the proper workload handler for a given workflow based on its request type
+        :param wfSchema: optional workflow schema
+        :return: workload handler
+        """
+        try:
+            wfSchema = wfSchema or self.reqmgrReader.getWorkflowSchema(self.wf, makeCopy=True)
+
+            if wfSchema.get("RequestType") == "TaskChain":
+                return TaskChainWorkloadHandler(wfSchema, logger=self.logger)
+            if wfSchema.get("RequestType") == "StepChain":
+                return StepChainWorkloadHandler(wfSchema, logger=self.logger)
+            return NonChainWorkloadHandler(wfSchema, logger=self.logger)
+
+        except Exception as error:
+            self.logger.error("Failed to get workload handler")
+            self.logger.error(str(error))
 
     def _getFromFile(self, filename: str) -> Optional[dict]:
         """
@@ -104,7 +126,7 @@ class WorkflowController(object):
 
     def _getAllowedSites(self) -> set:
         """
-        The function to get the allowed sites
+        The function to get the workflow's allowed sites
         :return: site white list
         """
         allowedSites = set()
@@ -130,7 +152,7 @@ class WorkflowController(object):
 
     def _restrictAllowedSitesByBlowUpFactor(self, allowedSites: set) -> set:
         """
-        The function to restrict a site white list by the blow up factor
+        The function to restrict a site white list by the workflow's blow up factor
         :param allowedSites: site white list
         :return: new site white list
         """
@@ -191,7 +213,7 @@ class WorkflowController(object):
 
         if parsedAcquisitionEra in ["None", "FAKE"]:
             acquisitionEra = self.request.getAcquisitionEra()
-            self.logger.info("%s has no acquisition era, using %s", processingString, acquisitionEra)
+            self.logger.info("%s has no acquisition era, using %s instead", processingString, acquisitionEra)
             parsedAcquisitionEra = acquisitionEra
 
         if parsedProcessingString == "None":
@@ -202,7 +224,7 @@ class WorkflowController(object):
 
     def _getVersionByWildcardPattern(self, version: Optional[int] = 0) -> Optional[int]:
         """
-        The function to get the version by searching the datasets matching a wildcard pattern
+        The function to get the version by searching the datasets matching a wildcard pattern for the dataset name
         :param version: current version number if known
         :return: version number
         """
@@ -431,7 +453,7 @@ class WorkflowController(object):
 
     def getFirstTask(self) -> str:
         """
-        The function to get the first task
+        The function to get the workflow's first task
         :return: first task
         """
         return (self.spec or self.reqmgrReader.getSpec(self.wf)).tasks.tasklist[0]
@@ -579,7 +601,7 @@ class WorkflowController(object):
         try:
             agents = defaultdict(lambda: defaultdict(int))
 
-            workQueue = self.workQueue or self.wqReader.getWorkQueue(self.wf)
+            workQueue = self.workqueue or self.wqReader.getWorkQueue(self.wf)
             workers = [worker.get(worker.get("type")) for worker in workQueue]
 
             for status in set([worker.get("Status") for worker in workers]):
@@ -677,7 +699,7 @@ class WorkflowController(object):
 
     def getBlowupFactor(self) -> float:
         """
-        The function to get the blow up factor
+        The function to get the workflow's blow up factor
         :return: blow up
         """
         return self.request.getBlowupFactor(self.getSplittings())
@@ -717,13 +739,17 @@ class WorkflowController(object):
             self.logger.error("Failed to get completion fraction")
             self.logger.error(str(error))
 
-    def getNCopies(self, CPUh: float, m: int = 2, M: int = 3, w: int = 50000, C0: int = 100000) -> int:
+    def getNCopies(
+        self, CPUh: Optional[float] = None, m: int = 2, M: int = 3, w: int = 50000, C0: int = 100000
+    ) -> int:
         """
         The function to get the number of needed copies based on the computing time
         :param CPUh: computing hours
         :return: number of required copies
         """
         try:
+            CPUh = CPUh or self.getComputingTime()
+
             sigmoid = lambda x: 1 / (1 + math.exp(-x))
             f = sigmoid(-C0 / w)
             D = (M - m) / (1 - f)
@@ -767,12 +793,12 @@ class WorkflowController(object):
             self.summary = self.reqmgrReader.getWorkloadSummary(self.wf)
         return self.summary
 
-    def checkSplittingsSize(self) -> Tuple[bool, list]:
+    def checkSplitting(self) -> Tuple[bool, list]:
         """
         The function to check the splittings
         :return: if to hold and a list of modified splittings
         """
-        return self.request.checkSplittingsSize(self.getSplittingsSchema(strip=True))
+        return self.request.checkSplitting(self.getSplittingsSchema(strip=True))
 
     def go(self, silent: bool = False) -> bool:
         """

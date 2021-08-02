@@ -33,9 +33,9 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
 
     def _isBelowMinEventsPerLumi(self, eventsPerLumi: int) -> bool:
         """
-        The function to check if given number of events per lumi if below the min allowed value
+        The function to check if given number of events per lumi is below the min allowed value
         :param: number of events per lumi
-        :return: True if below min, Falow o/w
+        :return: True if below min, False o/w
         """
         minEventsPerLumi = self.unifiedConfiguration.get("min_events_per_lumi_output")
 
@@ -49,7 +49,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
 
     def _hasAcceptableEfficiency(self) -> bool:
         """
-        The function to check if TaskChain has acceptable efficiency
+        The function to check if the request has acceptable efficiency
         :return: True if acceptable efficiency, False o/w
         """
         maxCores = self.unifiedConfiguration.get("max_nCores_for_stepchain")
@@ -67,6 +67,17 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
             self.logger.debug("CPU efficiency of StepChain with %u cores: %0.1f%%", maxCores, efficiency * 100)
             return efficiency > self.unifiedConfiguration.get("efficiency_threshold_for_stepchain")
 
+        return False
+
+    def _hasNonZeroEventStreams(self) -> bool:
+        """
+        The function to check if the request has non-zero event streams.
+        :return: True if it has non-zero event streams, False o/w
+        """
+        taskKeys = [*filter(re.compile(f"^Task").search, self.wfSchema)]
+        for _, task in filterKeys(taskKeys, self.wfSchema).items():
+            if isinstance(task, dict) and task.get("EventStreams", 0) != 0:
+                return True
         return False
 
     def _getTaskEfficiencyFactor(self, schema: dict, efficiencyFactor: float = 1.0) -> float:
@@ -96,7 +107,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
 
     def _getTaskMaxEventsPerLumiAndJob(self, schema: dict, eventsPerLumi: int) -> Tuple[list, Optional[int]]:
         """
-        The function to get the max number of events per lumi and job for a given task
+        The function to get the max number of events per lumi and per job for a given task
         :param schema: task schema
         :param eventsPerLumi: base events per lumi
         :return: list of max events per lumi by time and by size, and max events per job
@@ -111,7 +122,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
         considering a set number of events per lumi and time per event
         :param schema: task schema
         :param eventsPerLumi: base events per lumi
-        :return: max events per lumi if base events per lumi is longer than timoeout, None o/w
+        :return: max events per lumi if base events per lumi will last longer than timoeout, None o/w
         """
         timeoutHours, targetHours = 45.0, 8.0
 
@@ -141,7 +152,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
         considering a set number of events per lumi and size per event
         :param schema: task schema
         :param eventsPerLumi: base events per lumi
-        :return: max events per lumi if base events per lumi are larger than limit space and
+        :return: max events per lumi if base events per lumi are larger than limit space, and
         max events per job if the output size is larger than limit space
         """
         gbSpaceLimit = self.unifiedConfiguration.get("GB_space_limit")
@@ -212,11 +223,9 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
         :return: True if good, False o/w
         """
         try:
-            taskKeys = [*filter(re.compile(f"^Task").search, self.wfSchema)]
-            for _, task in filterKeys(taskKeys, self.wfSchema).items():
-                if isinstance(task, dict) and task.get("EventStreams", 0) != 0:
-                    self.logger.info("Convertion is supported only when EventStreams are zero")
-                    return False
+            if self._hasNonZeroEventStreams():
+                self.logger.info("Convertion is supported only when EventStreams are zero")
+                return False
 
             moreThanOneTask = self.get("TaskChain", 0) > 1
 
@@ -265,9 +274,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
                 key = "splittingTask"
                 task = splitting.get(key)
 
-                parents = [
-                    parent for parent in splittings if task.startswith(parent.get(key)) and task != parent.get(key)
-                ]
+                parents = [splt for splt in splittings if task.startswith(splt.get(key)) and task != splt.get(key)]
                 if parents:
                     for parent in parents:
                         for k in eventKeys:
@@ -287,7 +294,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
             self.logger.error("Failed to get blowup factors")
             self.logger.error(str(error))
 
-    def checkSplittingsSize(self, splittings: dict) -> Tuple[bool, list]:
+    def checkSplitting(self, splittings: dict) -> Tuple[bool, list]:
         """
         The function to check the splittings sizes and if any action is required
         :param splittings: splittings schema
