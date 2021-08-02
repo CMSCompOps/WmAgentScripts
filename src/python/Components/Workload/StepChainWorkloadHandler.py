@@ -22,10 +22,10 @@ class StepChainWorkloadHandler(BaseChainWorkloadHandler):
         except Exception as error:
             raise Exception(f"Error initializing StepChainWorkloadHandler\n{str(error)}")
 
-    def isGoodToConvertToStepChain(self, _: Optional[list]) -> bool:
+    def isGoodToConvertToStepChain(self, keywords: Optional[list]) -> bool:
         """
         The function to check if a request is good to be converted to step chain.
-        :return: False, since the convertion this is already a step chain request
+        :return: False, since this is already a step chain request
         """
         self.logger.info("Convertion is supported only from TaskChain to StepChain")
         return False
@@ -37,12 +37,12 @@ class StepChainWorkloadHandler(BaseChainWorkloadHandler):
         """
         return int(self.get("RequestNumEvents") or 0)
 
-    def getBlowupFactor(self, _: list) -> float:
+    def getBlowupFactor(self, splittings: list) -> float:
         """
         The function to get the blow up factor
         :return: 1, since blow up factor does not exist for step chain request
         """
-        self.logger.info("Blockup factor only exists for TaskChain")
+        self.logger.info("Blow up factor only exists for TaskChain")
         return 1.0
 
     def checkSplittingsSize(self, splittings: dict) -> Tuple[bool, list]:
@@ -95,7 +95,7 @@ class StepChainWorkloadHandler(BaseChainWorkloadHandler):
                 elements[3] != "v*" and elements[2] == "*"
             ):
                 return None
-            return f"/{elements[0]}/{'-'.join(elements[1:4]/{elements[4]})}"
+            return f"/{elements[0]}/{'-'.join(elements[1:4])}/{elements[4]}"
 
         except Exception as error:
             self.logger.error("Failed to write dataset pattern name for %s", elements)

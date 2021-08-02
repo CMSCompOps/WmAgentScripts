@@ -34,7 +34,7 @@ class WMStatsReader(object):
         except Exception as error:
             raise Exception(f"Error initializing WMStatsReader\n{str(error)}")
 
-    def getWMStats(self, wf: str):
+    def getWMStats(self, wf: str) -> dict:
         """
         The function to get the WMStats for a given workflow
         :param wf: workflow name
@@ -42,21 +42,21 @@ class WMStatsReader(object):
         """
         try:
             result = getResponse(self.reqmgrUrl, self.wmstatsEndpoint["request"] + wf)
-            return result["result"][0][wf]
+            return result["result"][0].get(wf, {})
 
         except Exception as error:
             self.logger.error("Failed to get wmstats for %s", wf)
             self.logger.error(str(error))
 
-    def getWMErrors(self, wf: str):
+    def getWMErrors(self, wf: str) -> dict:
         """
         The function to get the WMErrors for a given workflow
         :param wf: workflow name
         :return: WMErrors
         """
         try:
-            result = getResponse(self.reqmgrUrl, self.wmstatsEndpoint["jobdetail"] + wf)
-            return result["result"][0][wf]
+            result = getResponse(url=self.reqmgrUrl, endpoint=self.wmstatsEndpoint["jobdetail"] + wf)
+            return result["result"][0].get(wf, {})
 
         except Exception as error:
             self.logger.error("Failed to get wmerrors for %s", wf)

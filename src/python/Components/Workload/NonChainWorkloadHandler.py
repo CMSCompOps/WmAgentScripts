@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Optional, Union, Any, Tuple
 
 from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
+from Utilities.IteratorTools import mapValues
 
 
 class NonChainWorkloadHandler(BaseWorkloadHandler):
@@ -11,7 +12,7 @@ class NonChainWorkloadHandler(BaseWorkloadHandler):
     General API for handling the request data of non-chain request type
     """
 
-    def isGoodToConvertToStepChain(self, _: Optional[list]) -> bool:
+    def isGoodToConvertToStepChain(self, keywords: Optional[list]) -> bool:
         """
         The function to check if a request is good to be converted to step chain.
         :return: False, since the convertion is not supported for non-chain requests
@@ -85,10 +86,10 @@ class NonChainWorkloadHandler(BaseWorkloadHandler):
         """
         value = self.get(key, [])
         if isinstance(value, str):
-            value = [value]
+            return [value]
         return list(set(value))
 
-    def getParamByTask(self, key: str, _: str) -> Any:
+    def getParamByTask(self, key: str, task: str) -> Any:
         """
         The function to get a param value for a given key
         :param key: key name
@@ -123,9 +124,9 @@ class NonChainWorkloadHandler(BaseWorkloadHandler):
                 for module in outputModules:
                     dataset = getattr(task.subscriptions, module).dataset
                     if dataset in self.get("OutputDatasets", []):
-                        outputPerTask[task._internal_name].append(dataset)
+                        outputPerTask[task._internal_name].add(dataset)
 
-            return dict(outputPerTask)
+            return mapValues(list, outputPerTask)
 
         except Exception as error:
             self.logger.error("Failed to get output datasets by task")
@@ -150,15 +151,15 @@ class NonChainWorkloadHandler(BaseWorkloadHandler):
             self.logger.error("Failed to get the computing time")
             self.logger.error(str(error))
 
-    def getBlowupFactor(self, _: list) -> float:
+    def getBlowupFactor(self, splittings: list) -> float:
         """
         The function to get the blow up factor
         :return: 1, since blow up factor does not exist for non-chain request
         """
-        self.logger.info("Blockup factor only exists for TaskChain")
+        self.logger.info("Blow up factor only exists for TaskChain")
         return 1.0
 
-    def checkSplittingsSize(self, _: list) -> Tuple[bool, list]:
+    def checkSplittingsSize(self, splittings: list) -> Tuple[bool, list]:
         """
         The function to check the splittings sizes
         :return: no hold and no modified splittings, since this check does not exist for non-chain request
@@ -177,7 +178,7 @@ class NonChainWorkloadHandler(BaseWorkloadHandler):
             ):
                 return None
 
-            return f"/{elements[0]}/{'-'.join(elements[1:4]/{elements[4]})}"
+            return f"/{elements[0]}/{'-'.join(elements[1:4])}/{elements[4]}"
 
         except Exception as error:
             self.logger.error("Failed to write dataset pattern name for %s", elements)

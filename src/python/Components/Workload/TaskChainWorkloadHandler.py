@@ -54,7 +54,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
         """
         maxCores = self.unifiedConfiguration.get("max_nCores_for_stepchain")
 
-        time = self._getTimeInfo(self)
+        time = self._getTimeInfo()
         totalTimePerEvent, efficiency = 0, 0
         for _, info in time.items():
             totalTimePerEvent += info["timePerEvent"]
@@ -205,7 +205,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
 
         return dict(time)
 
-    def isGoodToConvertToStepChain(self, keywords: Optional[list]) -> bool:
+    def isGoodToConvertToStepChain(self, keywords: Optional[list] = None) -> bool:
         """
         The function to check if a request is good to be converted to step chain
         :param keywords: optional keywords list
@@ -323,7 +323,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
                     modifiedSplittings.append(splitting)
 
                 if not smallLumi and not primaries and not self.isRelVal():
-                    effEventsPerLumi = min(eventsPerLumi, min(maxEventsPerLumi, default=0))
+                    effEventsPerLumi = min(eventsPerLumi, min(maxEventsPerLumi, default=eventsPerLumi))
                     effEventsPerLumi *= schema.get("FilterEfficiency", 1.0)
                     smallLumi = self._isBelowMinEventsPerLumi(effEventsPerLumi)
                     hold |= smallLumi
@@ -356,7 +356,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
         try:
             if elements[3] != "v*" and all(element == "*" for element in elements[1:3]):
                 return None
-            return f"/{elements[0]}/{'-'.join(elements[1:4]/{elements[4]})}"
+            return f"/{elements[0]}/{'-'.join(elements[1:4])}/{elements[4]}"
 
         except Exception as error:
             self.logger.error("Failed to write dataset pattern name for %s", elements)

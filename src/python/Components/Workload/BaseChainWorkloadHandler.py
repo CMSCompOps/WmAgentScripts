@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from typing import Optional, Union, Any, Tuple, Callable
 
-from Utilities.IteratorTools import filterKeys
+from Utilities.IteratorTools import filterKeys, mapValues
 from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
 
 
@@ -18,7 +18,7 @@ class BaseChainWorkloadHandler(BaseWorkloadHandler):
         try:
             super().__init__(wfSchema, logger=logger)
             self.base = self.wfSchema["RequestType"].replace("Chain", "")
-            self.chainKeys = [*filter(re.compile(f"^{self.base}\d+$").search, self.wfSchema)]
+            self.chainKeys = sorted(filter(re.compile(f"^{self.base}\d+$").search, self.wfSchema))
 
         except Exception as error:
             raise Exception(f"Error initializing {self.__class__.__name__}\n{str(error)}")
@@ -189,7 +189,7 @@ class BaseChainWorkloadHandler(BaseWorkloadHandler):
                 nestedTask = task
                 while f"Input{self.base}" in nestedTask:
                     eventsExpectedPerTask[taskName] *= nestedTask.get("FilterEfficiency", 1.0)
-                    nestedTask = self.get(values[nestedTask[f"Input{self.base}"]])
+                    nestedTask = values.get(nestedTask[f"Input{self.base}"])
 
             return eventsExpectedPerTask
 
@@ -206,9 +206,10 @@ class BaseChainWorkloadHandler(BaseWorkloadHandler):
         try:
             outputPerTask = defaultdict(set)
             for task, data in self.get("ChainParentageMap", {}).items():
-                outputPerTask[task].update(data.get("ChildDsets", []))
+                if data.get("ChildDsets"):
+                    outputPerTask[task].update(data.get("ChildDsets"))
 
-            return dict(outputPerTask)
+            return mapValues(list, outputPerTask)
 
         except Exception as error:
             self.logger.error("Failed to get output datasets by task")

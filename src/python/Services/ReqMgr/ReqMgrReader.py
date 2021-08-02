@@ -5,11 +5,14 @@ Description: General API for reading data from ReqMgr
 """
 
 import logging
+from logging import Logger
 import os
 
 from Utilities.WebTools import getResponse
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.Decorators import runWithRetries
+
+from typing import Optional
 
 
 class ReqMgrReader(object):
@@ -18,14 +21,24 @@ class ReqMgrReader(object):
     General API for reading data from ReqMgr
     """
 
-    def __init__(self, url=None, logger=None, **contact):
+    def __init__(self, logger: Optional[Logger] = None, **contact):
 
         try:
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
 
+            self.reqmgrEndpoint = {
+                "request": "/reqmgr2/data/request/",
+                "info": "/reqmgr2/data/info/",
+                "agentConfig": "/reqmgr2/data/wmagentconfig/",
+                "splitting": "/reqmgr2/data/splitting/",
+                "cache": "/couchdb/reqmgr_workload_cache/",
+                "summary": "/couchdb/workloadsummary/",
+            }
+
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
+
         except Exception as e:
             msg = "Error initializing ReqMgrReader\n"
             msg += "%s\n" % format(e)
@@ -68,20 +81,20 @@ class ReqMgrReader(object):
         :return: specification
         """
         try:
-            return getResponse(url=self.reqmgrUrl, endpoint=f"/couchdb/reqmgr_workload_cache/{wf}/spec", isJson=False)
+            return getResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["cache"] + f"{wf}/spec", isJson=False)
 
         except Exception as error:
             print("Failed to get workflow specification")
             print(str(error))
 
-    def getWorkloadSummary(self, wf: str):
+    def getWorkloadSummary(self, wf: str) -> dict:
         """
         The function to get the workload summary for a given workflow
         :param wf: workflow name
         :return: workload summary
         """
         try:
-            return getResponse(url=self.reqmgrUrl, endpoint="/couchdb/workloadsummary/" + wf)
+            return getResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["summary"] + wf)
 
         except Exception as error:
             print("Failed to get workflow summary")

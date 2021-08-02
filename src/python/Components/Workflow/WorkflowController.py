@@ -34,7 +34,7 @@ class WorkflowController(object):
     def __init__(self, wf: str, logger: Optional[Logger] = None, **kwargs) -> None:
         try:
             super().__init__()
-            self.unifiedConfiguration = ConfigurationHandler("unifiedConfiguration.json")
+            self.unifiedConfiguration = ConfigurationHandler("config/unifiedConfiguration.json")
 
             configurationHandler = ConfigurationHandler()
             self.cacheDirectory = configurationHandler.get("cache_dir")
@@ -47,7 +47,7 @@ class WorkflowController(object):
             self.wmstatsReader = WMStatsReader()
             self.wqReader = WorkQueueReader()
 
-            self.request = WorkloadInterface(wf, kwargs.get("request"))
+            self.request = WorkloadInterface(wf, kwargs.get("request"))()
             self.campaignController = CampaignController()
             self.siteInfo = None  # TODO: implement siteInfo
 
@@ -128,7 +128,7 @@ class WorkflowController(object):
 
         return allowedSites
 
-    def _restrictAllowedSitesByBlowUpFator(self, allowedSites: set) -> set:
+    def _restrictAllowedSitesByBlowUpFactor(self, allowedSites: set) -> set:
         """
         The function to restrict a site white list by the blow up factor
         :param allowedSites: site white list
@@ -216,7 +216,7 @@ class WorkflowController(object):
             if not pattern:
                 return None
 
-            matches = self.dbsReader.getDatasetNames(pattern)
+            matches = self.dbsReader.getDatasetNames(pattern, details=False) or []
             self.logger.info("Found %s datasets matching %s", len(matches), pattern)
             for match in matches:
                 _, _, matchProcessingString, _ = match.split("/")
@@ -368,31 +368,41 @@ class WorkflowController(object):
             self.logger.error("Failed to get WMStats")
             self.logger.error(str(error))
 
-    def getFamily(self, details: bool = True) -> list:
+    def getFamily(self, onlyResubmissions: bool = False, includeItself: bool = False) -> list:
         """
         The function to get the request family
-        :param details: return all family member data if True, o/w return a list of names
+        :param onlyResubmissions: if to only include resubmissions
+        :param includeItself: if to include itself
         :return: request family
         """
         try:
-            family = self.reqmgrReader.getWorkflowsByPrepId(self.request.get("PrepID"), details=True)
+            possibleFamily = self.reqmgrReader.getWorkflowsByPrepId(self.request.get("PrepID"), details=True)
 
-            family = [
-                member
-                for member in family
-                if member.get("RequestDate") >= self.request.get("RequestDate")
-                and str(member.get("RequestStatus")) != "None"
-            ]
+            family = []
+            for member in possibleFamily:
+                if (
+                    member.get("RequestDate") < self.request.get("RequestDate")
+                    or str(member.get("RequestStatus")) == "None"
+                ):
+                    continue
 
-            if details:
-                return family
-            return [member.get("RequestName") for member in family]
+                itself = member.get("RequestName") == self.get("RequestName")
+                resubmitted = member.get("RequestType") == "Resubmission"
+
+                if (
+                    (includeItself and itself)
+                    or (onlyResubmissions and resubmitted and not itself)
+                    or (not itself and not resubmitted)
+                ):
+                    family.append(member)
+
+            return family
 
         except Exception as error:
             self.logger.error("Failed to get family")
             self.logger.error(str(error))
 
-    def getTasks(self, **selectParam) -> list:
+    def getAllTasks(self, **selectParam) -> list:
         """
         The function to get all tasks in the workflow
         :param selectParam: optional task selection params
@@ -417,9 +427,9 @@ class WorkflowController(object):
         The function to get the work tasks in the workflow
         :return: list of work tasks
         """
-        return self.getTasks(taskType=["Production", "Processing", "Skim"])
+        return self.getAllTasks(taskType=["Production", "Processing", "Skim"])
 
-    def getFirstTask(self):
+    def getFirstTask(self) -> str:
         """
         The function to get the first task
         :return: first task
@@ -499,7 +509,7 @@ class WorkflowController(object):
 
             self.logger.info("Initially allow %s", allowedSites)
 
-            allowedSites = self._restrictAllowedSitesByBlowUpFator(allowedSites)
+            allowedSites = self._restrictAllowedSitesByBlowUpFactor(allowedSites)
             allowedSites, notAllowedSites = self._restrictAllowedSitesByCampaign(allowedSites)
 
             self.logger.info("Allowed sites: %s", allowedSites)
@@ -672,9 +682,10 @@ class WorkflowController(object):
         """
         return self.request.getBlowupFactor(self.getSplittings())
 
-    def getCompletionFraction(self) -> dict:
+    def getCompletionFraction(self, withEvents: bool = True) -> dict:
         """
         The function to get the completion fraction of the output datasets
+        :param withEvents: compute completion fraction using events if True, use only lumis o/w
         :return: a dict of dataset names by completion fraction
         """
         try:
@@ -692,7 +703,7 @@ class WorkflowController(object):
                     self.logger.info("%s with lumi completion of %s of %s", dataset, lumis, expectedLumis)
 
                 datasetExpectedEvents = expectedEventsPerTask.get(tasksPerOutput.get(dataset, "NoTaskFound"))
-                if datasetExpectedEvents:
+                if datasetExpectedEvents and withEvents:
                     eventFraction = events / datasetExpectedEvents
                     if eventFraction > percentCompletion[dataset]:
                         percentCompletion[dataset] = eventFraction

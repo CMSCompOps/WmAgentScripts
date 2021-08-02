@@ -1,3 +1,4 @@
+import logging
 from logging import Logger
 
 from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
@@ -18,17 +19,28 @@ class WorkloadInterface(object):
 
     def __init__(
         self, wf: str, wfSchema: Optional[dict] = None, logger: Optional[Logger] = None
-    ) -> BaseWorkloadHandler:
+    ) -> None:
         try:
             super().__init__()
             reqmgrReader = ReqMgrReader()
-            wfSchema = wfSchema or reqmgrReader.getWorkflowSchema(wf, makeCopy=True)
+            self.wfSchema = wfSchema or reqmgrReader.getWorkflowSchema(wf, makeCopy=True)
 
-            if wfSchema.get("RequestType") == "TaskChain":
-                return TaskChainWorkloadHandler(wfSchema, logger=logger)
-            if wfSchema.get("RequestType") == "StepChain":
-                return StepChainWorkloadHandler(wfSchema, logger=logger)
-            return NonChainWorkloadHandler(wfSchema, logger=logger)
+            logging.basicConfig(level=logging.INFO)
+            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing WorkloadInterface\n{str(error)}")
+    
+    def __call__(self) -> BaseWorkloadHandler:
+        try:
+            if self.wfSchema.get("RequestType") == "TaskChain":
+                return TaskChainWorkloadHandler(self.wfSchema, logger=self.logger)
+            if self.wfSchema.get("RequestType") == "StepChain":
+                return StepChainWorkloadHandler(self.wfSchema, logger=self.logger)
+            return NonChainWorkloadHandler(self.wfSchema, logger=self.logger)
+        
+        except Exception as error:
+            self.logger.error("Failed to get workload handler")
+            self.logger.error(str(error))
+        
+

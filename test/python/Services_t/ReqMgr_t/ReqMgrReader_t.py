@@ -7,26 +7,40 @@ Unit test for ReqMgr DBS helper class.
 import unittest
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 
+from WMCore.WMSpec.WMWorkload import WMWorkload
+
 
 class ReqMgrReaderTest(unittest.TestCase):
 
-    # There are many more workflows under this campaign, but that information could be updated as new workflows comes in
-    # For now, just test for one of the workflows
-    campaignParams = {
-        "campaign": "Run3Winter21DRMiniAOD",
-        "workflow": "cmsunified_task_TSG-Run3Winter21DRMiniAOD-00081__v1_T_210507_182332_1792"
+    wfParams = {
+        "workflow": "pdmvserv_SMP-RunIISummer15wmLHEGS-00016_00051_v0__160525_042701_9941",
+        "campaign": "RunIISummer15wmLHEGS",
     }
 
-    def testGetWorkflowByCampaign(self):
-        """getWorkflowByCampaign gets workflows for a given campaign"""
-        reqMgrReader = ReqMgrReader()
-        workflows = reqMgrReader.getWorkflowByCampaign(self.campaignParams.get("campaign"), details=True)
-        isFound = False
-        for workflow in workflows:
-            if workflow["RequestName"] == self.campaignParams.get("workflow"):
-                isFound = True
+    def setUp(self) -> None:
+        self.reqMgrReader = ReqMgrReader()
+        super().setUp()
+        return
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        return
+
+    def testGetWorkloadSummary(self) -> None:
+        """getWorkloadSummary gets the workload summary for a given workflow"""
+        response = self.reqMgrReader.getWorkloadSummary(self.wfParams.get("workflow"))
+        isDict = isinstance(response, dict)
+        self.assertTrue(isDict)
+
+        isFound = response.get("campaign") == self.wfParams.get("campaign")
         self.assertTrue(isFound)
 
+    def testGetSpec(self) -> None:
+        """getSpec gets the workflow spec"""
+        response = self.reqMgrReader.getSpec(self.wfParams.get("workflow"))
+        isWorkload = isinstance(response, WMWorkload)
+        self.assertTrue(isWorkload)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
