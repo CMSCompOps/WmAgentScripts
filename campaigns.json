@@ -2854,7 +2854,7 @@
   },
   "RunIISummer20UL17pp5TeVwmLHEGS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
@@ -2950,7 +2950,6 @@
     "secondaries": {
       "/ReggeGribovPartonMC_EposLHC_pPb_4080_4080/pPb816Spring16GS-80X_mcRun2_asymptotic_v17-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_CH_CERN",
           "T2_IT_Pisa",
           "T1_IT_CNAF_Disk"
         ]
