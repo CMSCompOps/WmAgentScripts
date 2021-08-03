@@ -141,7 +141,7 @@ class NonChainWorkloadHandler(BaseWorkloadHandler):
             elif self.get("InputDataset"):
                 events, _ = self.dbsReader.getDatasetEventsAndLumis(self.get("InputDataset"))
             else:
-                events = float(self.get("RequestNumEvents")) / float(self.get("FilterEfficiency"))
+                events = float(self.get("RequestNumEvents")) / float(self.get("FilterEfficiency", 1))
 
             return events * self.get("TimePerEvent")
 

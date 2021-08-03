@@ -57,7 +57,7 @@ class BaseWorkloadHandler(ABC):
         The function to check if a request is for release validation or not
         :return: True if is RelVal, False o/w
         """
-        return "RelVal" in self.get("SubRequestType", [])
+        return "RelVal" in self.get("SubRequestType", "")
 
     def isProducingPremix(self) -> bool:
         """

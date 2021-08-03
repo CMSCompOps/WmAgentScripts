@@ -133,12 +133,12 @@ class WorkflowController(object):
 
         lhe, _, _, secondaries = self.request.getIO()
         if lhe:
-            return allowedSites + sorted(self.siteInfo.EOSSites)
+            return set(sorted(self.siteInfo.EOSSites))
 
         if secondaries and self.isHeavyToRead(secondaries):
             for secondary in secondaries:
                 allowedSites.update(self.rucioReader.getDatasetLocationsByAccount(secondary, "wmcore_transferor"))
-            return allowedSites
+            return set(sorted(allowedSites))
 
         sites = ["T0Sites", "T1Sites", "GoodAAASites" if secondaries else "T2Sites"]
         for site in sites:
@@ -148,7 +148,7 @@ class WorkflowController(object):
             allowedSites.update(self.siteInfo.HEPCloudSites)
             self.logger.info("Including HEPCloud in the site white list of %s", self.wf)
 
-        return allowedSites
+        return set(sorted(allowedSites))
 
     def _restrictAllowedSitesByBlowUpFactor(self, allowedSites: set) -> set:
         """
@@ -186,12 +186,12 @@ class WorkflowController(object):
         for campaign in self.request.getCampaigns(details=False):
             campaignParam = self.campaignController.getCampaignParameters(campaign)
 
-            allowedCampaignSites = campaignParam.get("SiteWhitelist")
+            allowedCampaignSites = set(campaignParam.get("SiteWhitelist", []))
             if allowedCampaignSites:
                 self.logger.info("Restricting site white list by campaign %s", campaign)
-                allowedSites = allowedSites & allowedCampaignSites or allowedSites
+                allowedSites = allowedSites & allowedCampaignSites or allowedCampaignSites
 
-            notAllowedCampaignSites = campaignParam.get("SiteBlacklist")
+            notAllowedCampaignSites = set(campaignParam.get("SiteBlacklist", []))
             if notAllowedCampaignSites:
                 self.logger.info("Restricting site white list by black list in campaign %s", campaign)
                 notAllowedSites.update(sorted(notAllowedCampaignSites))
@@ -713,7 +713,7 @@ class WorkflowController(object):
         try:
             percentCompletion = defaultdict(float)
 
-            expectedLumis = self.request.get("TotalInputLumis", 0)
+            expectedLumis = float(self.request.get("TotalInputLumis", 0))
             expectedEventsPerTask = self.request.getExpectedEventsPerTask()
 
             tasksPerOutput = self.request.getTasksPerOutputDatasets(self.getWorkTasks()) or {}
