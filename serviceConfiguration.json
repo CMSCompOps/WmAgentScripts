@@ -1,9 +1,9 @@
 {
-    "mongo_db_url":  {
+    "mongo_db_url": {
         "value": "vocms0274.cern.ch",
         "description": "The mongodb instance."
     },
-    "dbs_url":  {
+    "dbs_url": {
         "value": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader",
         "description": "The base Url for DBS Reader "
     },
@@ -12,8 +12,8 @@
         "description": "The base Url for DBS Writer."
     },
     "phedex_url": {
-        "value" : "cmsweb.cern.ch",
-        "description" : "The base url for PhEDEx service."
+        "value": "cmsweb.cern.ch",
+        "description": "The base url for PhEDEx service."
     },
     "reqmgr_url": {
         "value": "cmsweb.cern.ch",
@@ -27,36 +27,44 @@
         "value": "/eos/cms/store/unified/www/",
         "description": "The monitor dir at EOS."
     },
-    "monitor_pub_dir":  {
+    "monitor_pub_dir": {
         "value": "/data/unified/www/public/",
         "description": "The public monitor dir."
     },
-    "monitor_pub_eos_dir":  {
+    "monitor_pub_eos_dir": {
         "value": "/eos/cms/store/unified/www/public/",
         "description": "The public monitor dir at EOS."
     },
-    "base_dir":  {
+    "base_dir": {
         "value": "/data/unified/",
         "description": "The base dir for the unified code."
     },
-    "base_eos_dir":  {
+    "base_eos_dir": {
         "value": "/eos/cms/store/unified/",
         "description": "The base dir for unified at EOS."
     },
-    "unified_url":  {
+    "unified_url": {
         "value": "https://cms-unified.web.cern.ch/cms-unified/",
         "description": "The base Url for Unified."
     },
-    "unified_url_eos":  {
+    "unified_url_eos": {
         "value": "https://cms-unified.web.cern.ch/cms-unified/",
         "description": "The base Url for Unified at EOS."
     },
-    "unified_pub_url":  {
+    "unified_pub_url": {
         "value": "https://cms-unified.web.cern.ch/cms-unified/public/",
         "description": "The public Url for Unified."
     },
-    "cache_dir":  {
+    "cache_dir": {
         "value": "/data/unified-cache/",
         "description": "Cache dir."
+    },
+    "cric_url": {
+        "value": "cms-cric.cern.ch",
+        "description": "The base Url for CRIC"
+    },
+    "gwmsmon_url": {
+        "value": "https://cms-gwmsmon.cern.ch",
+        "description": "The base Url for GWMSMon"
     }
 }
