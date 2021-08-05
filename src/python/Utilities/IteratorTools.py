@@ -32,3 +32,12 @@ def mapKeys(f: Callable, data: dict) -> dict:
     :return: dict of format {f(k): v}
     """
     return dict((f(k), v) for k, v in data.items())
+
+
+def sortByKeys(data: dict) -> dict:
+    """
+    The function to sort a dictionary by its keys
+    :param data: dict
+    :return: sorted dict
+    """
+    return dict(sorted(data.items(), key=lambda item: item[0]))

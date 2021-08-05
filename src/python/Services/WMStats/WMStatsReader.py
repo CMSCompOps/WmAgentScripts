@@ -27,7 +27,8 @@ class WMStatsReader(object):
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
             self.wmstatsEndpoint = {
                 "request": "/wmstatsserver/data/request/",
-                "cache": "/wmstatsserver/data/requestcache",
+                "filteredRequest": "/wmstatsserver/data/filtered_requests/",
+                "cache": "/wmstatsserver/data/requestcache/",
                 "jobdetail": "/wmstatsserver/data/jobdetail/",
             }
 
@@ -48,4 +49,33 @@ class WMStatsReader(object):
 
         except Exception as error:
             self.logger.error("Failed to get cached wmstats")
+            self.logger.error(str(error))
+
+    def getFailedJobs(self, task: str) -> int:
+        """
+        The function to get the number of failed jobs
+        :param task: task name
+        :return: number of failed jobs
+        """
+        try:
+            wf = task.split("/")[1]
+
+            result = getResponse(
+                self.reqmgrUrl,
+                self.wmstatsEndpoint["filteredRequest"],
+                param={"RequestName": wf, "mask": ["PrepID", "AgentJobInfo"]},
+            )
+            data = result["result"]
+
+            failedJobs = 0
+            for item in data:
+                for _, agent in item.get('AgentJobInfo', {}).items():
+                    taskInfo = agent.get("tasks", {}).get(task, {})
+                    for _, nFailures in taskInfo.get("status", {}).get("failure", {}).items():
+                        failedJobs += nFailures
+            
+            return failedJobs
+
+        except Exception as error:
+            self.logger.error("Failed to get failed jobs")
             self.logger.error(str(error))

@@ -49,8 +49,8 @@ class GWMSMonReader(object):
             return data
 
         except Exception as error:
-            print("Failed to get GWMSMon %s from %s view", key, view)
-            print(str(error))
+            self.logger.error("Failed to get GWMSMon %s from %s view", key, view)
+            self.logger.error(str(error))
 
     def getMCoreReady(self) -> list:
         """
@@ -65,5 +65,5 @@ class GWMSMonReader(object):
             return data.get("sites_for_mcore", [])
 
         except Exception as error:
-            print("Failed to get mcore ready")
-            print(str(error))
+            self.logger.error("Failed to get mcore ready")
+            self.logger.error(str(error))

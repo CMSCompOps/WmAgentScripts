@@ -50,8 +50,6 @@ class DataCacheLoader(object):
                 self.cache[key] = DocumentCache.MCoreReady([])
             elif key == "detox_sites":
                 self.cache[key] = DocumentCache.DetoxSites([])
-            elif key == "site_queues":
-                self.cache[key] = DocumentCache.SiteQueues()
             elif key == "site_storage":
                 self.cache[key] = DocumentCache.SiteStorage()
             elif key == "file_invalidation":

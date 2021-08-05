@@ -14,7 +14,7 @@ from typing import List, Optional, Tuple, Union
 
 class SiteController(object):
     """
-    __SiteController__
+    _SiteController_
     General API for controlling the sites info
     """
 
@@ -25,15 +25,17 @@ class SiteController(object):
             self.sitesConfiguration = ConfigurationHandler("config/sitesConfiguration.json")
 
             self.dataCache = DataCacheLoader()
+            self.wmstatsReader = WMStatsReader()
 
             self._setSitesConfiguration(overrideGoodSites)
             self._setAddHocStorageConfiguration()
             self.cpuPledges, self.disk = self.getCpuPledgesAndDisk()
-            self.vetoTransferSites = self.getVetoTransferSites()
 
             self.syncToSSB()
-            self.syncToQueue()
             self.syncToDetox()
+            self.syncToGWMSMon()
+
+            self.vetoTransferSites = self.getVetoTransferSites()
 
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
@@ -60,22 +62,22 @@ class SiteController(object):
         self.AAASites.update(self.sitesConfiguration.get("sites_good_for_lightweight"))
         self.AAASites.update(self.sitesConfiguration.get("sites_good_for_premix"))
 
-        self.EOSSites = self._filterOnlySitesReady(self.sitesConfiguration.get("sites_eos"))
-        self.goodAAASites = self._filterOnlySitesReady(self.sitesConfiguration.get("sites_with_goodAAA"))
-        self.goodIOSites = self._filterOnlySitesReady(self.sitesConfiguration.get("sites_with_goodIO"))
-        self.hepCloudSites = self._filterOnlySitesReady(self.sitesConfiguration.get("sites_HEPCloud"))
-        self.mcoreSitesReady = self._filterOnlySitesReady(self.dataCache.get("mcore_ready"))
+        self.EOSSites = self._filterSitesReadyOnly(self.sitesConfiguration.get("sites_eos"))
+        self.goodAAASites = self._filterSitesReadyOnly(self.sitesConfiguration.get("sites_with_goodAAA"))
+        self.goodIOSites = self._filterSitesReadyOnly(self.sitesConfiguration.get("sites_with_goodIO"))
+        self.hepCloudSites = self._filterSitesReadyOnly(self.sitesConfiguration.get("sites_HEPCloud"))
+        self.mcoreSitesReady = self._filterSitesReadyOnly(self.dataCache.get("mcore_ready"))
 
         for n in range(4):
             setattr(self, f"T{n}Sites", self.getTierSites(n))
-            setattr(self, f"allT{n}Sites", self.getTierSites(n, onlyReady=False))
+            setattr(self, f"allT{n}Sites", self.getTierSites(n, readyOnly=False))
 
     def _setAddHocStorageConfiguration(self) -> None:
         """
         The function to set the storage configuration
         """
         self.addHocStorage = self.sitesConfiguration.get("sites_addHocStorage")
-        self.addHocStorageSites = mapValues(set, self.addHocStorage)
+        self.addHocStorageSites = mapValues(lambda x: set([x]), self.addHocStorage)
 
         self.mapSEToCE, self.mapCEToSE = defaultdict(set), defaultdict(set)
         for se, ce in self.dataCache.get("site_storage"):
@@ -91,7 +93,7 @@ class SiteController(object):
                 continue
             self.addHocStorage[ce] = se
 
-    def _filterOnlySitesReady(self, sites: Union[list, set]) -> set:
+    def _filterSitesReadyOnly(self, sites: Union[list, set]) -> set:
         """
         The function to filter a given list of sites to only ready sites
         :param sites: list of sites
@@ -130,7 +132,7 @@ class SiteController(object):
         """
         sitesWeights = {} if sites else weights
         for site in sites:
-            sitesWeights[site] = weights.get(site)
+            sitesWeights[site] = weights.get(site, 0)
 
         return list(sitesWeights.keys())[self._chooseWeightedIndex(sitesWeights.values())]
 
@@ -140,10 +142,7 @@ class SiteController(object):
         :param weights: weights list
         :return: index
         """
-        if sum(weights) > 0:
-            rand = random.random() * sum(weights)
-        else:
-            rand = random.random() * len(weights)
+        rand = random.random() * (sum(weights) or len(weights))
 
         for i, weight in enumerate(weights):
             rand -= weight
@@ -158,12 +157,17 @@ class SiteController(object):
         The function to get the sites' cpu pledges and disk
         :return: cpu pledges and disk
         """
-        cpuPledges, disk = defaultdict(int), defaultdict(int)
-        for site in self.allSites:
-            cpuPledges[site] = 1
-            disk[self.CEToSE(site)] = 0
+        try:
+            cpuPledges, disk = defaultdict(int), defaultdict(int)
+            for site in self.allSites:
+                cpuPledges[site] = 1
+                disk[self.CEToSE(site)] = 0
 
-        return cpuPledges, disk
+            return cpuPledges, disk
+
+        except Exception as error:
+            self.logger.error("Failed to get cpu pledges and disk")
+            self.logger.error(str(error))
 
     def getSitesReadyInAgent(self) -> set:
         """
@@ -173,8 +177,7 @@ class SiteController(object):
         try:
             sites = set()
 
-            wmstatsReader = WMStatsReader()
-            prodAgents = wmstatsReader.getProductionAgents() or {}
+            prodAgents = self.wmstatsReader.getProductionAgents() or {}
             for _, agent in prodAgents.items():
                 if agent.get("status") != "ok":
                     continue
@@ -189,15 +192,15 @@ class SiteController(object):
             self.logger.error("Failed to get sites ready in agent")
             self.logger.error(str(error))
 
-    def getTierSites(self, n: int, onlyReady: bool = True) -> set:
+    def getTierSites(self, n: int, readyOnly: bool = True) -> set:
         """
         The function to get the tier sites
         :param n: tier number
-        :param onlyReady: if True include only sites ready, include all o/w
+        :param readyOnly: if True include only sites ready, include all o/w
         :return: tier sites
         """
         try:
-            sites = self.sitesReady if onlyReady else self.allSites
+            sites = self.sitesReady if readyOnly else self.allSites
             return set(site for site in sites if site.startswith(f"T{n}_"))
 
         except Exception as error:
@@ -281,7 +284,7 @@ class SiteController(object):
 
     def SEToCEs(self, se: str) -> list:
         """
-        The function to map SE to CE
+        The function to map SE to list of CE
         :param se: SE name
         :return: CE names
         """
@@ -315,7 +318,7 @@ class SiteController(object):
 
     def CEToSEs(self, ce: Union[str, list]) -> list:
         """
-        The function to map CE to SE
+        The function to map CE to list of SE
         :param ce: CE name
         :return: SE names
         """
@@ -384,17 +387,6 @@ class SiteController(object):
 
         except Exception as error:
             self.logger.error("Failed to sync SSB info")
-            self.logger.error(str(error))
-
-    def syncToQueue(self) -> None:
-        """
-        The function to sync to the site queue
-        """
-        try:
-            self.queue = self.dataCache.get("site_queues")
-
-        except Exception as error:
-            self.logger.error("Failed to sync queue")
             self.logger.error(str(error))
 
     def syncToDetox(self, bufferLevel: float = 0.8) -> None:

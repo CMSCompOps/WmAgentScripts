@@ -109,16 +109,6 @@ class DetoxSites(BaseDocumentCache):
         return data
 
 
-class SiteQueues(BaseDocumentCache):
-    """
-    __SiteQueues__
-    General API for building the chaching document of key site_queues
-    """
-
-    def get(self) -> dict:
-        return None  # TODO: implement getNodesQueue() or drop this
-
-
 class SiteStorage(BaseDocumentCache):
     """
     __SiteStorage__
