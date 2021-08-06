@@ -12,7 +12,10 @@ from Utilities.Authenticate import getX509Conn
 
 from typing import Union, Optional, Any
 
-def getResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None, isJson: bool = True) -> Any:
+
+def getResponse(
+    url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None, isJson: bool = True
+) -> Any:
     """
     The function to get the response for a given request
     :param url: url
@@ -22,7 +25,7 @@ def getResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: 
     :return: request response
     """
     if headers == None:
-        headers = {"Accept":"application/json"}
+        headers = {"Accept": "application/json"}
 
     if isinstance(param, dict):
         _param = []
@@ -35,8 +38,8 @@ def getResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: 
 
     try:
         conn = getX509Conn(url)
-        _= conn.request("GET",endpoint+param,headers=headers)
-        response=conn.getresponse()
+        _ = conn.request("GET", endpoint + param, headers=headers)
+        response = conn.getresponse()
         data = response.read()
         return json.loads(data) if isJson else pickle.loads(data)
 
