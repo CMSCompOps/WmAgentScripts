@@ -755,7 +755,7 @@ class WorkflowControllerTest(unittest.TestCase):
         isValueFloat = all(isinstance(v, float) for v in response.values())
         self.assertTrue(isValueFloat)
 
-        isEqual = all(math.isclose(v, self.stepChainParams.get("completionFraction")) for v in response.values())
+        isEqual = all(math.isclose(v, self.taskChainParams.get("completionFraction")) for v in response.values())
         self.assertTrue(isEqual)
 
     def testGetNCopies(self) -> None:

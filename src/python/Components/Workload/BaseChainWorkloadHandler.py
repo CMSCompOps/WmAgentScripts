@@ -64,7 +64,7 @@ class BaseChainWorkloadHandler(BaseWorkloadHandler):
         """
         try:
             memory = list(self.getChainValues("Memory").values())
-            return max(map(float, filter(None, memory))) if memory else self.get("Memory")
+            return max(map(float, filter(None, memory))) if memory else float(self.get("Memory"))
 
         except Exception as error:
             self.logger.error("Failed to get the workflow memory")
