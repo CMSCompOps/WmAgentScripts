@@ -37,7 +37,7 @@ class RucioReader(object):
         :return: number of files
         """
         try:
-            return len(self.rucio.list_files(self.scope, dataset))
+            return len([*self.rucio.list_files(self.scope, dataset)])
 
         except Exception as error:
             self.logger.error("Failed to get number of files for the dataset %s", dataset)
@@ -51,7 +51,7 @@ class RucioReader(object):
         :return: list of (block name, number of files)
         """
         try:
-            return [(block, self.rucio.countBlockFiles(block)) for block in self.rucio.getDatasetBlockNames(dataset)]
+            return [(block, self.countBlockFiles(block)) for block in self.getDatasetBlockNames(dataset)]
 
         except Exception as error:
             self.logger.error("Failed to get number of files per block for the dataset %s", dataset)

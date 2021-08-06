@@ -4,6 +4,7 @@ _RucioReader_t_
 Unit test for RucioReader helper class.
 """
 
+import os
 import unittest
 
 from Services.Rucio.RucioReader import RucioReader
@@ -17,10 +18,11 @@ class RucioReaderTest(unittest.TestCase):
         "block": "/TT_Mtt-1000toInf_TuneCP5_PSweights_13TeV-powheg-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14_ext1-v1/MINIAODSIM#01f05879-f811-45c8-b3c1-b22705fd93a5",
         "nBlocksInDataset": 143,
         "nFilesInBlock": 1,
+        "account": "transfer_ops",
     }
 
     def setUp(self) -> None:
-        self.rucio = RucioReader()
+        self.rucio = RucioReader(account=os.getenv("RUCIO_ACCOUNT"))
         super().setUp()
         return
 
@@ -95,5 +97,17 @@ class RucioReaderTest(unittest.TestCase):
         isFound = self.datasetParams.get("block") in blocks
         self.assertTrue(isFound)
 
-if __name__ == '__main__':
+    def testGetDatasetLocationsByAccount(self) -> None:
+        """getDatasetLocationsByAccount gets the dataset location of an account"""
+        response = self.rucio.getDatasetLocationsByAccount(
+            self.datasetParams.get("dataset"), self.datasetParams.get("account")
+        )
+        isList = isinstance(response, list)
+        self.assertTrue(isList)
+
+        isEmpty = len(response) == 0
+        self.assertTrue(isEmpty)
+
+
+if __name__ == "__main__":
     unittest.main()

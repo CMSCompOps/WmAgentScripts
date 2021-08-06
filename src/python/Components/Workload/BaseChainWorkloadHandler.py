@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from typing import Optional, Union, Any, Tuple, Callable
 
-from Utilities.IteratorTools import filterKeys, mapValues
+from Utilities.IteratorTools import filterKeys, mapValues, sortByKeys
 from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
 
 
@@ -222,7 +222,7 @@ class BaseChainWorkloadHandler(BaseWorkloadHandler):
         try:
             cpuTime, cacheTime = 0, {}
 
-            for _, task in filterKeys(self.chainKeys, self.wfSchema).items():
+            for _, task in sortByKeys(filterKeys(self.chainKeys, self.wfSchema)).items():
                 if task.get("BlockWhiteList"):
                     events, _ = self.dbsReader.getBlocksEventsAndLumis(task["BlockWhiteList"])
                 elif task.get("InputDataset"):

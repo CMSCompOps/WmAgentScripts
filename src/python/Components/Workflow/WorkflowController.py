@@ -46,9 +46,9 @@ class WorkflowController(object):
             self.dbsReader = DBSReader()
             self.gwmsReader = GWMSMonReader()
             self.reqmgrReader = ReqMgrReader()
-            self.rucioReader = RucioReader()
             self.wmstatsReader = WMStatsReader()
             self.wqReader = WorkQueueReader()
+            self.rucioReader = RucioReader(**kwargs.get("rucioConfig"))
 
             self.campaignController = CampaignController()
             self.siteInfo = None  # TODO: implement siteInfo
@@ -75,18 +75,13 @@ class WorkflowController(object):
         :param wfSchema: optional workflow schema
         :return: workload handler
         """
-        try:
-            wfSchema = wfSchema or self.reqmgrReader.getWorkflowSchema(self.wf, makeCopy=True)
+        wfSchema = wfSchema or self.reqmgrReader.getWorkflowSchema(self.wf, makeCopy=True)
 
-            if wfSchema.get("RequestType") == "TaskChain":
-                return TaskChainWorkloadHandler(wfSchema, logger=self.logger)
-            if wfSchema.get("RequestType") == "StepChain":
-                return StepChainWorkloadHandler(wfSchema, logger=self.logger)
-            return NonChainWorkloadHandler(wfSchema, logger=self.logger)
-
-        except Exception as error:
-            self.logger.error("Failed to get workload handler")
-            self.logger.error(str(error))
+        if wfSchema.get("RequestType") == "TaskChain":
+            return TaskChainWorkloadHandler(wfSchema)
+        if wfSchema.get("RequestType") == "StepChain":
+            return StepChainWorkloadHandler(wfSchema)
+        return NonChainWorkloadHandler(wfSchema)
 
     def _getFromFile(self, filename: str) -> Optional[dict]:
         """
@@ -408,7 +403,7 @@ class WorkflowController(object):
                 ):
                     continue
 
-                itself = member.get("RequestName") == self.get("RequestName")
+                itself = member.get("RequestName") == self.request.get("RequestName")
                 resubmitted = member.get("RequestType") == "Resubmission"
 
                 if (
@@ -581,11 +576,13 @@ class WorkflowController(object):
 
             runs = self.getRunWhiteList()
             if runs:
-                blocks.update(self.dbsReader.getDatasetBlockNamesByRuns(primary, runs) for primary in primaries)
+                runBlocks = [self.dbsReader.getDatasetBlockNamesByRuns(primary, runs) for primary in primaries]
+                blocks.update(*runBlocks)
 
             lumis = self.getLumiWhiteList()
             if lumis:
-                blocks.update(self.dbsReader.getDatasetBlockNamesByLumis(primary, lumis) for primary in primaries)
+                lumisBlocks = [self.dbsReader.getDatasetBlockNamesByLumis(primary, lumis) for primary in primaries]
+                blocks.update(*lumisBlocks)
 
             return list(blocks)
 

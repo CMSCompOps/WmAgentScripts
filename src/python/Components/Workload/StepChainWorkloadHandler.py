@@ -22,7 +22,7 @@ class StepChainWorkloadHandler(BaseChainWorkloadHandler):
         except Exception as error:
             raise Exception(f"Error initializing StepChainWorkloadHandler\n{str(error)}")
 
-    def isGoodToConvertToStepChain(self, keywords: Optional[list]) -> bool:
+    def isGoodToConvertToStepChain(self, keywords: Optional[list] = None) -> bool:
         """
         The function to check if a request is good to be converted to step chain.
         :return: False, since this is already a step chain request

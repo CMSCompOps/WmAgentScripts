@@ -12,7 +12,7 @@ class NonChainWorkloadHandler(BaseWorkloadHandler):
     General API for handling the request data of non-chain request type
     """
 
-    def isGoodToConvertToStepChain(self, keywords: Optional[list]) -> bool:
+    def isGoodToConvertToStepChain(self, keywords: Optional[list] = None) -> bool:
         """
         The function to check if a request is good to be converted to step chain.
         :return: False, since the convertion is not supported for non-chain requests

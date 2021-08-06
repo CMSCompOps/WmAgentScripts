@@ -120,7 +120,7 @@ class ReqMgrReaderTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when details is True
-        workflows = reqMgrReader.getWorkflowsByOutput(self.outputParams.get("dataset"), details=True)
+        workflows = self.reqMgrReader.getWorkflowsByOutput(self.outputParams.get("dataset"), details=True)
         isList = isinstance(workflows, list)
         self.assertTrue(isList)
 
@@ -147,7 +147,7 @@ class ReqMgrReaderTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when details is True
-        workflows = reqMgrReader.getWorkflowsByPrepId(self.prepIdParams.get("prep_id"), details=True)
+        workflows = self.reqMgrReader.getWorkflowsByPrepId(self.prepIdParams.get("prep_id"), details=True)
         isList = isinstance(workflows, list)
         self.assertTrue(isList)
 

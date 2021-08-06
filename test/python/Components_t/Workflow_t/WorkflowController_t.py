@@ -3,6 +3,7 @@ _WorkflowController_t_
 Unit test for WorkflowController helper class.
 """
 
+import os
 import unittest
 import math
 from collections import Counter
@@ -15,6 +16,8 @@ from Components.Workload.TaskChainWorkloadHandler import TaskChainWorkloadHandle
 
 
 class WorkflowControllerTest(unittest.TestCase):
+    rucioConfig = {"account": os.getenv("RUCIO_ACCOUNT")}
+
     # This workflow is a non-chain request. Use it for testing functions depending on the request type as well as splittings functions.
     mcParams = {
         "workflow": "pdmvserv_SMP-RunIISummer15wmLHEGS-00016_00051_v0__160525_042701_9941",
@@ -143,10 +146,14 @@ class WorkflowControllerTest(unittest.TestCase):
     }
 
     def setUp(self) -> None:
-        self.mcWfController = WorkflowController(self.mcParams.get("workflow"))
-        self.rerecoWfControler = WorkflowController(self.rerecoParams.get("workflow"))
-        self.stepChainWfController = WorkflowController(self.stepChainParams.get("workflow"))
-        self.taskChainWfController = WorkflowController(self.taskChainParams.get("workflow"))
+        self.mcWfController = WorkflowController(self.mcParams.get("workflow"), rucioConfig=self.rucioConfig)
+        self.rerecoWfController = WorkflowController(self.rerecoParams.get("workflow"), rucioConfig=self.rucioConfig)
+        self.stepChainWfController = WorkflowController(
+            self.stepChainParams.get("workflow"), rucioConfig=self.rucioConfig
+        )
+        self.taskChainWfController = WorkflowController(
+            self.taskChainParams.get("workflow"), rucioConfig=self.rucioConfig
+        )
         super().setUp()
         return
 
@@ -455,7 +462,7 @@ class WorkflowControllerTest(unittest.TestCase):
     def testGetRunWhiteList(self) -> None:
         """getRunWhiteList gets the run white list"""
         ### Test when non-chain request
-        runList = self.rerecoWfControler.getRunWhiteList()
+        runList = self.rerecoWfController.getRunWhiteList()
         isList = isinstance(runList, list)
         self.assertTrue(isList)
 
@@ -585,7 +592,7 @@ class WorkflowControllerTest(unittest.TestCase):
     def testGetBlocks(self) -> None:
         """getBlocks gets the blocks"""
         ### Test when non-chain request
-        blocks = self.rerecoWfControler.getBlocks()
+        blocks = self.rerecoWfController.getBlocks()
         isList = isinstance(blocks, list)
         self.assertTrue(isList)
 
@@ -1030,7 +1037,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEqual)
 
         ### Test when step chain request
-        response = self.stepChainParams.request.getMemory()
+        response = self.stepChainWfController.request.getMemory()
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
 
@@ -1182,7 +1189,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEqual)
 
         ### Test when step chain request
-        response = self.stepChainParams.request.getRequestNumEvents()
+        response = self.stepChainWfController.request.getRequestNumEvents()
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
 
@@ -1202,7 +1209,7 @@ class WorkflowControllerTest(unittest.TestCase):
         ### Test when non-chain request
         # Test when details is True
         response = self.mcWfController.request.getCampaigns()
-        isStr = isinstance(response, int)
+        isStr = isinstance(response, str)
         self.assertTrue(isStr)
 
         isFound = response == self.mcParams.get("campaign")
@@ -1312,10 +1319,10 @@ class WorkflowControllerTest(unittest.TestCase):
         isListOfTuple = isinstance(response[0], tuple)
         self.assertTrue(isListOfTuple)
 
-        isFound = response[0][0] == self.mcParams.get("campaign")
+        isFound = response[0][0] == self.stepChainParams.get("campaign")
         self.assertTrue(isFound)
 
-        isFound = response[0][1] == self.mcParams.get("processingString")
+        isFound = response[0][1] == self.stepChainParams.get("processingString")
         self.assertTrue(isFound)
 
         ### Test when task chain request
@@ -1352,7 +1359,7 @@ class WorkflowControllerTest(unittest.TestCase):
         isValueDict = all(isinstance(v, dict) for v in response.values())
         self.assertTrue(isValueDict)
 
-        total = sum([v["timePerEvent"] for v in response.values])
+        total = sum([v["timePerEvent"] for v in response.values()])
         isEqual = math.isclose(total, self.taskChainParams.get("totalTimePerEvent"))
         self.assertTrue(isEqual)
 
