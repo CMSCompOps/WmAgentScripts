@@ -7,7 +7,7 @@ Description: Useful functions while interacting different services
 import os
 import json
 
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, Any
 
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.Authenticate import getX509Conn

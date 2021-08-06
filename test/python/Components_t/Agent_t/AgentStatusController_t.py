@@ -19,8 +19,10 @@ class AgentStatusControllerTest(unittest.TestCase):
     params = {"agent": "vocms0284.cern.ch", "docKeys": ["status", "version", "update", "date"]}
 
     @patch("Components.Agent.AgentStatusController.AgentStatusController.syncToProduction")
-    def setUp(self, mockSync) -> None:
+    @patch("Operations.Trello.TrelloClient.TrelloClient.__init__")
+    def setUp(self, mockTrello, mockSync) -> None:
         mockSync.return_value = True
+        mockTrello.return_value = None
         self.agentStatusController = AgentStatusController()
         super().setUp()
         return
