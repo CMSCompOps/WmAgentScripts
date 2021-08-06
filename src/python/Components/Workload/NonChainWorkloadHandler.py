@@ -39,7 +39,7 @@ class NonChainWorkloadHandler(BaseWorkloadHandler):
         The function to get the workflow memory
         :return: memory value if any, None o/w
         """
-        return self.get("Memory")
+        return float(self.get("Memory"))
 
     def getIO(self) -> Tuple[bool, set, set, set]:
         """

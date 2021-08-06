@@ -248,7 +248,7 @@ class DBSReaderTest(unittest.TestCase):
             isInt = isinstance(i, int)
             self.assertTrue(isInt)
 
-    def testGetBlocksEventsAndLumis(self) -> None
+    def testGetBlocksEventsAndLumis(self) -> None:
         """getBlocksEventsAndLumis gets number of events and lumis of blocks"""
         dbsReader = DBSReader(self.url)
         events, lumis = dbsReader.getBlocksEventsAndLumis([self.validDataset.get("block_name")])
