@@ -5,31 +5,40 @@ Description: Useful functions while interacting different services
 """
 
 import os
-import http.client
 import json
-from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.Authenticate import getX509Conn
 
-# Get necessary parameters
-configurationHandler = ConfigurationHandler()
-reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
+from typing import Union, Optional, Any
 
 
-def getResponse(url, endpoint, param="", headers=None):
+def getResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None) -> Any:
+    """
+    The function to get the response for a given request
+    :param url: url
+    :param endpoint: endpoint
+    :param param: optional request params
+    :param headers: optional request headers
+    :return: request response
+    """
 
     if headers == None:
         headers = {"Accept": "application/json"}
 
-    if type(param) == dict:
-        _param = "&".join(["=".join([k, v]) for k, v in param.items()])
-        param = "?" + _param
+    if isinstance(param, dict):
+        _param = []
+        for k, v in param.items():
+            if isinstance(v, str):
+                _param += ["=".join([k, v])]
+            elif isinstance(v, list):
+                _param += ["=".join([k, vi]) for vi in v]
+        param = "?" + "&".join(_param)
 
     try:
         conn = getX509Conn(url)
-        request = conn.request("GET", endpoint + param, headers=headers)
+        _ = conn.request("GET", endpoint + param, headers=headers)
         response = conn.getresponse()
         data = json.loads(response.read())
         return data
-    except Exception as e:
-        print("Failed to get response from %s" % url + endpoint + param)
-        print(str(e))
+
+    except Exception as error:
+        print(f"Failed to get response from {url + endpoint + param}\n{str(error)}")
