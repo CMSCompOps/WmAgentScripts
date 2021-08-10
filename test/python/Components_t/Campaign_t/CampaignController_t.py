@@ -19,16 +19,7 @@ class CampaignControllerTest(unittest.TestCase):
         "resize": "auto",
         "secondaries": "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter21GS-112X_mcRun3_2021_realistic_v15-v1/GEN-SIM",
     }
-    campaignWithTypeParam = {
-        "campaign": "CMSSW_12_0_0_pre4__fullsim_PU_2021_14TeV-1627369162",
-        "type": "relval",
-        "parameters": {
-            "SiteWhitelist": ["T1_US_FNAL"],
-            "MergedLFNBase": "/store/relval",
-            "NonCustodialGroup": "RelVal",
-            "Team": "relval",
-        },
-    }
+    campaignWithTypeParam = {"type": "relval"}
 
     def setUp(self) -> None:
         self.campaignController = CampaignController()
@@ -87,9 +78,6 @@ class CampaignControllerTest(unittest.TestCase):
         isListOfStr = isinstance(result[0], str)
         self.assertTrue(isListOfStr)
 
-        isFound = self.campaignWithTypeParam.get("campaign") in result
-        self.assertTrue(isFound)
-
     def testGetCampaignValue(self):
         """getCampaignValue gets the value of a given campaign"""
         # Test when the key exists, will use resize in this case
@@ -110,12 +98,9 @@ class CampaignControllerTest(unittest.TestCase):
 
     def testGetCampaignParameters(self):
         """getCampaignParameters gets the parameters of a given campaign"""
-        result = self.campaignController.getCampaignParameters(self.campaignWithTypeParam.get("campaign"))
+        result = self.campaignController.getCampaignParameters(self.campaignParam.get("campaign"))
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
-
-        isFound = result == self.campaignWithTypeParam.get("parameters")
-        self.assertTrue(isFound)
 
     def testGetSecondaries(self):
         """getSecondaries gets the campaigns secondaries"""
