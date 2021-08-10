@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 """
-_UserLockController_t_
-Unit test for UserLockController helper class.
+_UserLock_t_
+Unit test for UserLock helper class.
 """
 
 import unittest
 from unittest.mock import patch
 
-from Components.Module.UserLockController import UserLockController
+from Components.UserLock import UserLock
 
-class UserLockControllerTest(unittest.TestCase):
+
+class UserLockTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.userLockController = UserLockController(component="test")
+        self.userLock = UserLock(component="test")
         super().setUp()
         return
-    
+
     def tearDown(self) -> None:
         super().tearDown()
         return
@@ -24,23 +25,22 @@ class UserLockControllerTest(unittest.TestCase):
         """go checks if a component is blocked by a user or not"""
         # Test bahavior when lock file exists
         mockIsFile.return_value = True
-        response = self.userLockController.go()
+        response = self.userLock.go()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
 
         isFalse = not response
         self.assertTrue(isFalse)
 
-        
         # Test behavior when lock file does not exist
-        mockIsFile.side_effect = [False] * len(self.userLockController.lockers)
-        response = self.userLockController.go()
+        mockIsFile.side_effect = [False] * len(self.userLock.lockers)
+        response = self.userLock.go()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
 
         isTrue = response
         self.assertTrue(isTrue)
 
+
 if __name__ == "__main__":
     unittest.main()
-

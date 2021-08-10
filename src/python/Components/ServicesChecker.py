@@ -1,5 +1,4 @@
 import os
-import sys
 import socket
 import json
 from logging import Logger
@@ -19,10 +18,10 @@ from Utilities.ConfigurationHandler import ConfigurationHandler
 from typing import Optional, List
 
 
-class ComponentsChecker(object):
+class ServicesChecker(object):
     """
-    _ComponentsChecker_
-    General API for checking the components
+    _ServicesChecker_
+    General API for checking the services
     """
 
     def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
@@ -32,7 +31,7 @@ class ComponentsChecker(object):
 
             self.block = kwargs.get("block") or True
             self.keepTrying = kwargs.get("keepTrying") or False
-            self.softComponents = kwargs.get("soft") or ["mcm", "wtc", "mongo", "jira"]
+            self.softServices = kwargs.get("soft") or ["mcm", "wtc", "mongo", "jira"]
 
             self.code = 0
             self.go = False
@@ -43,7 +42,7 @@ class ComponentsChecker(object):
                 "ReqMgr": False,
                 "McM": False,
                 "DBS": False,
-                "CMSr": False,
+                "Oracle": False,
                 "Wtc": False,
                 "EOS": False,
                 "Mongo": False,
@@ -51,11 +50,11 @@ class ComponentsChecker(object):
             }
 
         except Exception as error:
-            raise Exception(f"Error initializing ComponentsChecker\n{str(error)}")
+            raise Exception(f"Error initializing ServicesChecker\n{str(error)}")
 
-    def checkCMSr(self) -> bool:
+    def checkOracle(self) -> bool:
         """
-        The function to check CMSr
+        The function to check Oracle
         :return: True if ok, False o/w
         """
         try:
@@ -64,7 +63,7 @@ class ComponentsChecker(object):
             return True
 
         except Exception as error:
-            self.logger.error("Failed to check CMSr")
+            self.logger.error("Failed to check Oracle")
             self.logger.error(str(error))
             return False
 
@@ -180,30 +179,29 @@ class ComponentsChecker(object):
             self.logger.error(str(error))
             return False
 
-    @runWithMultiThreading(mtParam="components", timeout=120, wait=10)
-    def _checkComponent(self, components: List[str]) -> bool:
+    @runWithMultiThreading(mtParam="services", timeout=120, wait=10)
+    def _checkService(self, services: List[str]) -> bool:
         """
-        The function to check a given component
-        :param components: components name
+        The function to check a given service
+        :param services: services name
         :return: True if ok, False o/w
         """
         try:
-            self.logger.info("Checking on %s", components)
-            self.checking = components
-            sys.stdout.flush()
+            self.logger.info("Checking on %s", services)
+            self.checking = services
 
-            isOk = getattr(self, f"check{components}")()
+            isOk = getattr(self, f"check{services}")()
             if isOk:
-                self.status[components] = True
+                self.status[services] = True
                 return True
 
-            self.logger.critical("The %s component is unreachable from %s", components, self.host)
+            self.logger.critical("The service %s is unreachable from %s", services, self.host)
 
             if self.keepTrying:
-                self.logger.info("Re-checking on %s", components)
+                self.logger.info("Re-checking on %s", services)
                 sleep(30)
-                return self._checkComponent(components=[components])
-            if self.block and components not in self.softComponents:
+                return self._checkService(components=[services])
+            if self.block and services not in self.softServices:
                 return False
 
             return True
@@ -215,11 +213,11 @@ class ComponentsChecker(object):
 
     def check(self) -> bool:
         """
-        The function to check all components
+        The function to check all services
         :return: True if ok, False o/w
         """
         try:
-            checks = self._checkComponent(components=sorted(self.status))
+            checks = self._checkService(components=sorted(self.status))
             if not all(checks):
                 self.code = 120 + sum(checks)
                 self.go = False
@@ -227,7 +225,6 @@ class ComponentsChecker(object):
 
             self.logger.info(json.dumps(self.status, indent=2))
 
-            sys.stdout.flush()
             self.go = True
             return True
 

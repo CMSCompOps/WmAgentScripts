@@ -8,9 +8,9 @@ from Utilities.ConfigurationHandler import ConfigurationHandler
 from typing import Optional
 
 
-class UserLockController(object):
+class UserLock(object):
     """
-    _UserLockController_
+    _UserLock_
     General API for controlling the user lock
     """
 
@@ -25,7 +25,7 @@ class UserLockController(object):
             self.component = kwargs.get("component") or sys._getframe(1).f_code.co_name
 
         except Exception as error:
-            raise Exception(f"Error initializing UserLockController\n{str(error)}")
+            raise Exception(f"Error initializing UserLock\n{str(error)}")
 
     def __call__(self) -> bool:
         return not self.go()

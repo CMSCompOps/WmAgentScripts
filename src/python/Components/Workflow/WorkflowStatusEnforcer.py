@@ -11,10 +11,10 @@ from Utilities.Logging import getLogger
 from typing import Optional
 
 
-class WorkflowStatusAnalyzer(object):
+class WorkflowStatusEnforcer(object):
     """
-    _WorkflowStatusAnalyzer_
-    General API for analyzing invalid workflows
+    _WorkflowStatusEnforcer_
+    General API to force a workflow status
     """
 
     def __init__(self, wf: str, logger: Optional[Logger] = None) -> None:
@@ -29,7 +29,7 @@ class WorkflowStatusAnalyzer(object):
             self.dbs = {"writer": DBSWriter(), "reader": DBSReader()}
 
         except Exception as error:
-            raise Exception(f"Error initializing WorkflowStatusAnalyzer\n{str(error)}")
+            raise Exception(f"Error initializing WorkflowStatusEnforcer\n{str(error)}")
 
     @runWithRetries(tries=3, wait=0, default=False)
     def invalidate(self, onlyResubmissions: bool = False, invalidateOutputDatasets: bool = True) -> bool:

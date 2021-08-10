@@ -1,10 +1,7 @@
 import os
 import logging
-import logging.handlers
 from logging import Logger, LogRecord
-import smtplib
 from time import gmtime, mktime, asctime, struct_time
-from typing import Optional
 from urllib.parse import urlencode
 from base64 import encodestring
 from email.mime.multipart import MIMEMultipart
@@ -38,9 +35,6 @@ class ElasticSearchHandler(logging.Handler):
 
         except Exception as error:
             raise Exception(f"Error initializing ElasticSearchHandler\n{str(error)}")
-
-    def __del__(self) -> None:
-        self.flush()
 
     def _setHeaders(self) -> None:
         """
@@ -121,6 +115,13 @@ class ElasticSearchHandler(logging.Handler):
             print("Failed to send log to Elastic Search")
             print(str(error))
 
+    def close(self) -> None:
+        """
+        The function to properly close the handler
+        """
+        self.flush()
+        super().close()
+
 
 class EmailHandler(logging.Handler):
     """
@@ -144,9 +145,6 @@ class EmailHandler(logging.Handler):
 
         except Exception as error:
             raise Exception(f"Error initializing EmailHandler\n{str(error)}")
-
-    def __del__(self) -> None:
-        self.flush()
 
     def _getMessage(self, record: LogRecord) -> MIMEMultipart:
         """
@@ -194,6 +192,13 @@ class EmailHandler(logging.Handler):
             print("Failed to send log to Elastic Search")
             print(str(error))
 
+    def close(self) -> None:
+        """
+        The function to properly close the handler
+        """
+        self.flush()
+        super().close()
+
 
 def getWorkflowLogLevel(logger: Logger, msg: str, *args, **kwargs) -> None:
     """
@@ -213,8 +218,12 @@ def getLogger(name: str, level: str = "INFO", flushEveryLog: bool = True, **kwar
     :param flushEveryLog: if to flush every log
     :return: a logger
     """
-    logging.basicConfig(level=level, format="%(asctime)s:%(levelname)s:%(module)s:%(message)s")
     logger = logging.getLogger(name)
+
+    streamHandler = logging.StreamHandler()
+    streamHandler.setLevel(level=level)
+    streamHandler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(module)s:%(message)s"))
+    logger.addHandler(streamHandler)
 
     if kwargs.get("addWfLevel"):
         logging.addLevelName(100, "WORKFLOW")
@@ -222,11 +231,11 @@ def getLogger(name: str, level: str = "INFO", flushEveryLog: bool = True, **kwar
         logging.Logger.workflow = getWorkflowLogLevel
 
     if kwargs.get("elasticSearch"):
-        esHandler = ElasticSearchHandler(flushEveryLog=flushEveryLog)
+        esHandler = ElasticSearchHandler(level=kwargs.get("elasticSearch") or level, flushEveryLog=flushEveryLog)
         logger.addHandler(esHandler)
 
     if kwargs.get("email"):
-        emailHandler = EmailHandler(flushEveryLog=flushEveryLog)
+        emailHandler = EmailHandler(level=kwargs.get("email") or level, flushEveryLog=flushEveryLog)
         logger.addHandler(emailHandler)
 
     return logger

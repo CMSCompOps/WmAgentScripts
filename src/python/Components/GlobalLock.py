@@ -9,9 +9,9 @@ from Databases.Oracle.OracleClient import OracleClient
 from Databases.Oracle.OracleDB import Lock, LockOfLock
 
 
-class GeneralLockController(OracleClient):
+class GlobalLock(OracleClient):
     """
-    _GeneralLockController_
+    _GlobalLock_
     General API for controlling locks
     """
 
@@ -26,7 +26,7 @@ class GeneralLockController(OracleClient):
                 self.acquire()
 
         except Exception as error:
-            raise Exception(f"Error initializing GeneralLockController\n{str(error)}")
+            raise Exception(f"Error initializing GlobalLock\n{str(error)}")
 
     def __del__(self):
         self.release()
@@ -62,6 +62,18 @@ class GeneralLockController(OracleClient):
             self.logger.error("Failed to check if %s is a deadlock", pid)
             self.logger.error(str(error))
 
+    def tell(self) -> None:
+        """
+        The function to print items and if locked
+        """
+        try:
+            for lock in self.session.query(Lock).all():
+                self.logger.info("Item: %s, Locked: %s", lock.item, lock.lock)
+
+        except Exception as error:
+            self.logger.error("Failed to tell all items")
+            self.logger.error(str(error))
+
     def acquire(self) -> None:
         """
         The function to set a new lock of lock object with the current timestamp and owner
@@ -73,6 +85,27 @@ class GeneralLockController(OracleClient):
 
         except Exception as error:
             self.logger.error("Failed to acquire %s", self.owner)
+            self.logger.error(str(error))
+
+    def deadlock(self) -> None:
+        """
+        The function to clean deadlocks
+        """
+        try:
+            for lockOfLock in (
+                self.session.query(LockOfLock)
+                .filter(LockOfLock.lock == True)
+                .filter(LockOfLock.owner.contains(self.host))
+                .all()
+            ):
+                _, lockPid = lockOfLock.owner.split("-")
+                if self.isDeadlock(lockPid):
+                    self.session.delete(lockOfLock)
+
+            self.session.commit()
+
+        except Exception as error:
+            self.logger.error("Failed to clean %s locks", self.owner)
             self.logger.error(str(error))
 
     def lockItem(self, item: str, reason: Optional[str] = None) -> None:
@@ -164,37 +197,4 @@ class GeneralLockController(OracleClient):
 
         except Exception as error:
             self.logger.error("Failed to get items")
-            self.logger.error(str(error))
-
-    def deadlock(self) -> None:
-        """
-        The function to clean deadlocks
-        """
-        try:
-            for lockOfLock in (
-                self.session.query(LockOfLock)
-                .filter(LockOfLock.lock == True)
-                .filter(LockOfLock.owner.contains(self.host))
-                .all()
-            ):
-                _, lockPid = lockOfLock.owner.split("-")
-                if self.isDeadlock(lockPid):
-                    self.session.delete(lockOfLock)
-
-            self.session.commit()
-
-        except Exception as error:
-            self.logger.error("Failed to clean %s locks", self.owner)
-            self.logger.error(str(error))
-
-    def tell(self) -> None:
-        """
-        The function to print items and if locked
-        """
-        try:
-            for lock in self.session.query(Lock).all():
-                self.logger.info("Item: %s, Locked: %s", lock.item, lock.lock)
-
-        except Exception as error:
-            self.logger.error("Failed to tell all items")
             self.logger.error(str(error))
