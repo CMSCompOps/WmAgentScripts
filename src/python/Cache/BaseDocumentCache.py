@@ -15,11 +15,11 @@ class BaseDocumentCache(ABC):
     def __init__(self, defaultValue: Any = {}, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            self.defaultValue = defaultValue
-            self.lifeTimeMinutes = int(20 + random.random() * 10)
-
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
+
+            self.defaultValue = defaultValue
+            self.lifeTimeMinutes = int(20 + random.random() * 10)
 
         except Exception as error:
             raise Exception(f"Error initializing BaseDocumentCache\n{str(error)}")

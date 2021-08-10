@@ -15,6 +15,9 @@ class TrelloClient(object):
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
+            logging.basicConfig(level=logging.INFO)
+            self.logger = logger or logging.getLogger(self.__class__.__name__)
+
             self.configs = {}
             with open("src/python/Utilities/secret_trello.txt") as file:
                 for line in file:
@@ -25,9 +28,6 @@ class TrelloClient(object):
                         print(f"{file} does not follow convention of key:value")
 
             self._syncAgents()
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing TrelloClient\n{str(error)}")

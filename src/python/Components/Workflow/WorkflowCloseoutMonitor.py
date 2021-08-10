@@ -9,7 +9,7 @@ from typing import List, Optional, Tuple
 
 from Utilities.Logging import displayNumber
 from Utilities.ConfigurationHandler import ConfigurationHandler
-from Storage.EOS.EOSWriter import EOSWriter
+from Services.EOS.EOSWriter import EOSWriter
 from Databases.Mongo.MongoClient import MongoClient
 from Databases.Oracle.OracleClient import OracleClient
 from Databases.Oracle.OracleDB import Workflow

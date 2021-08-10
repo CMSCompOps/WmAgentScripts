@@ -16,11 +16,11 @@ class DataCacheLoader(object):
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            self.cacheManager = CacheManager()
-            self.cache = {}
-
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
+
+            self.cacheManager = CacheManager()
+            self.cache = {}
 
         except Exception as error:
             raise Exception(f"Error initializing DataCacheLoader\n{str(error)}")

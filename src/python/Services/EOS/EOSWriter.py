@@ -17,6 +17,8 @@ class EOSWriter(object):
     def __init__(self, filename: str, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
+            logging.basicConfig(level=logging.INFO)
+            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
             if not filename.startswith("/eos/"):
                 raise ValueError(f"{filename} is not an EOS path")
@@ -25,9 +27,6 @@ class EOSWriter(object):
             self.cacheDirectory = configurationHandler.get("cache_dir")
             self.cache = (self.cacheDirectory + "/" + filename.replace("/", "_")).replace("//", "/")
             self.filename = filename.replace("//", "/")
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing EOSWriter\n{str(error)}")

@@ -8,7 +8,7 @@ import json
 import unittest
 from unittest.mock import patch, mock_open
 
-from Storage.EOS.EOSReader import EOSReader
+from Services.EOS.EOSReader import EOSReader
 
 
 class EOSReaderTest(unittest.TestCase):

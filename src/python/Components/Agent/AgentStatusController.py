@@ -11,7 +11,7 @@ from Utilities.Logging import displayTime
 from Utilities.IteratorTools import filterKeys, mapValues
 from Cache.DataCacheLoader import DataCacheLoader
 from Databases.Mongo.MongoClient import MongoClient
-from Operations.Trello.TrelloClient import TrelloClient
+from Services.Trello.TrelloClient import TrelloClient
 from Services.WMStats.WMStatsReader import WMStatsReader
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.ReqMgr.ReqMgrWriter import ReqMgrWriter
@@ -26,6 +26,7 @@ class AgentStatusController(MongoClient, TrelloClient):
     def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
         try:
             super().__init__(logger=logger)
+
             self.busyFraction = kwargs.get("busyFraction") or 0.8
             self.idleFraction = kwargs.get("idleFraction") or 0.1
             self.speedDrainingFraction = kwargs.get("speedDrainingFraction") or 0.05

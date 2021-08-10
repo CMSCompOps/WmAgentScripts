@@ -17,6 +17,9 @@ class OracleClient(object):
     def __init__(self, adminMode: bool = False, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
+            logging.basicConfig(level=logging.INFO)
+            self.logger = logger or logging.getLogger(self.__class__.__name__)
+
             self.base = OracleDB.Base
             self.adminMode = adminMode
 
@@ -31,9 +34,6 @@ class OracleClient(object):
             self.base.metadata.bind = self.engine
 
             self.session = self.startSession()
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing OracleClient\n{str(error)}")

@@ -20,13 +20,13 @@ class MongoClient(ABC):
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
+            logging.basicConfig(level=logging.INFO)
+            self.logger = logger or logging.getLogger(self.__class__.__name__)
+
             configurationHandler = ConfigurationHandler()
             self.mongoUrl = configurationHandler.get("mongo_db_url")
             self.client = pymongo.MongoClient(f"mongodb://{self.mongoUrl}/?ssl=true", tlsAllowInvalidCertificates=True)
             self.collection = self._setMongoCollection()
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing MongoClient\n{str(error)}")
