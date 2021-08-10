@@ -1,9 +1,11 @@
 import random
-import logging
 from logging import Logger
 from abc import ABC, abstractmethod
 
+from Utilities.Logging import getLogger
+
 from typing import Optional, Any
+
 
 class BaseDocumentCache(ABC):
     """
@@ -14,15 +16,14 @@ class BaseDocumentCache(ABC):
     def __init__(self, defaultValue: Any = {}, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             self.defaultValue = defaultValue
             self.lifeTimeMinutes = int(20 + random.random() * 10)
 
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
-        
         except Exception as error:
             raise Exception(f"Error initializing BaseDocumentCache\n{str(error)}")
-    
+
     @abstractmethod
     def get(self) -> Any:
         """

@@ -42,3 +42,28 @@ def getResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: 
 
     except Exception as error:
         print(f"Failed to get response from {url + endpoint + param}\n{str(error)}")
+
+def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None) -> dict:
+    """
+    The function to send data to a given url
+    :param url: request url
+    :param endpoint: request endpoint
+    :param param: data params
+    :param headers: request headers
+    :return: request response
+    """
+    if headers is None:
+        headers = {"Accept": "application/json", "Content-type": "application/json", "Host": "cmsweb.cern.ch"}
+
+    if isinstance(param, dict):
+        param = json.dumps(param)
+
+    try:
+        conn = getX509Conn(url)
+        _ = conn.request("PUT", endpoint, param, headers=headers)
+        response = conn.getresponse()
+        data = json.loads(response.read())
+        return data
+
+    except Exception as error:
+        print(f"Failed to send response to {url + endpoint + param}\n{str(error)}")

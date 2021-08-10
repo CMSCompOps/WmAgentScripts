@@ -1,32 +1,24 @@
-import logging
 from logging import Logger
 
-from Utilities.ConfigurationHandler import ConfigurationHandler
-from Utilities.WebTools import getResponse
+from Utilities.Logging import getLogger
 from Utilities.DataTools import countLumisPerFile
 
 from typing import Optional
 
 
-class FilesAnalyzer(object):
+class DuplicateFilesAnalyzer(object):
     """
-    _FilesAnalyzer_
-    General API for analyzing duplicate and/or invalid files
+    _DuplicateFilesAnalyzer_
+    General API for analyzing duplicate files
     """
 
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            configurationHandler = ConfigurationHandler()
-            self.dynamoUrl = configurationHandler.get("dynamo_url")
-
-            self.invalidationEndpoint = "/registry/invalidation/invalidate"
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
+            self.logger = logger or getLogger(self.__class__.__name__)
 
         except Exception as error:
-            raise Exception(f"Error initializing FilesAnalyzer\n{str(error)}")
+            raise Exception(f"Error initializing DuplicateFilesAnalyzer\n{str(error)}")
 
     def _buildGraph(self, filesPerlumis: dict) -> dict:
         """
@@ -142,33 +134,11 @@ class FilesAnalyzer(object):
                 return self._deleteByColorBipartiteGraph(graph, lumisPerFile)
 
             except Exception as error:
-                self.logger.error("Failed to get files by color bipartite graph, will try greedy algorithm")
+                self.logger.error("Failed to get files by color bipartite graph, will try the greedy algorithm")
                 self.logger.error(str(error))
 
             return self._deleteSmallestVertexFirst(graph, lumisPerFile)
 
         except Exception as error:
             self.logger.error("Failed to get files with duplicate lumis to remove")
-            self.logger.error(str(error))
-
-    def invalidateFiles(self, files: list) -> bool:
-        """
-        The function to invalidate a given list of files
-        :param files: files to invalidate
-        :return: True if all succeeded, False o/w
-        """
-        try:
-            for file in files:
-                response = getResponse(self.dynamoUrl, self.invalidationEndpoint, param={"item": file})
-
-                if response["result"] == "OK":
-                    self.logger.info("%s set for invalidation", file)
-                else:
-                    self.logger.info("Could not set %s for invalidation", file)
-                    return False
-
-            return True
-
-        except Exception as error:
-            self.logger.error("Failed to invalidate files")
             self.logger.error(str(error))

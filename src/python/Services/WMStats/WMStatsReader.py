@@ -5,10 +5,10 @@ Description: General API for reading data from WMStats
 """
 
 import os
-import logging
 from logging import Logger
 
 from Utilities.WebTools import getResponse
+from Utilities.Logging import getLogger
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
 from typing import Optional
@@ -23,6 +23,8 @@ class WMStatsReader(object):
     def __init__(self, logger: Optional[Logger] = None, **contact):
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
             self.wmstatsEndpoint = {
@@ -31,9 +33,6 @@ class WMStatsReader(object):
                 "cache": "/wmstatsserver/data/requestcache/",
                 "jobdetail": "/wmstatsserver/data/jobdetail/",
             }
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing WMStatsReader\n{str(error)}")

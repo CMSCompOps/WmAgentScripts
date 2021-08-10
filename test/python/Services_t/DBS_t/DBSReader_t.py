@@ -115,11 +115,11 @@ class DBSReaderTest(unittest.TestCase):
 
     @patch("Cache.CacheManager.CacheManager.get")
     @patch("Cache.CacheManager.CacheManager.set")
-    def testGetDatasetFiles(self, mock_set, mock_get):
+    def testGetDatasetFiles(self, mockSet, mockGet):
         """getDatasetFiles gets files of a dataset"""
         # Test when details is False and validFileOnly is False
-        mock_set.return_value = True
-        mock_get.return_value = None
+        mockSet.return_value = True
+        mockGet.return_value = None
         dbsReader = DBSReader(self.url)
         files = dbsReader.getDatasetFiles(self.invalidDataset.get("dataset"))
         isList = isinstance(files, list)
@@ -144,8 +144,8 @@ class DBSReaderTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when details is False and validFileOnly is True
-        mock_set.return_value = True
-        mock_get.return_value = None
+        mockSet.return_value = True
+        mockGet.return_value = None
         files = dbsReader.getDatasetFiles(self.invalidDataset.get("dataset"), validFileOnly=True)
         isList = isinstance(files, list)
         self.assertTrue(isList)
@@ -317,10 +317,10 @@ class DBSReaderTest(unittest.TestCase):
 
     @patch("Cache.CacheManager.CacheManager.get")
     @patch("Cache.CacheManager.CacheManager.set")
-    def testGetDatasetLumisAndFiles(self, mock_set, mock_get):
+    def testGetDatasetLumisAndFiles(self, mockSet, mockGet):
         """getDatasetLumisAndFiles gets lumi sections and files of a dataset"""
-        mock_set.return_value = True
-        mock_get.return_value = None
+        mockSet.return_value = True
+        mockGet.return_value = None
         dbsReader = DBSReader(self.url)
         results = dbsReader.getDatasetLumisAndFiles(self.validDataset.get("dataset"), withCache=False)
         isDict = all(isinstance(result, dict) for result in results)

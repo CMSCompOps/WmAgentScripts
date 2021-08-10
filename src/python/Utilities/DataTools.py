@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, Mapping
 from Utilities.IteratorTools import mapValues, filterKeys
 
 from typing import Optional, List, Tuple
@@ -136,3 +136,20 @@ def filterSplittingsParam(splittings: List[dict]) -> List[dict]:
                 splt["splitParams"].pop(param, None)
         cleanSplittings.append(splt)
     return cleanSplittings
+
+
+def deepUpdate(toUpdate: dict, data: dict) -> dict:
+    """
+    The function to deep update a given dictionary
+    :param toUpdate: dict to update
+    :param data: data to updatade dict
+    :return: updated dict
+    """
+    for k, v in data.items():
+        if isinstance(v, dict) or isinstance(v, Mapping):
+            defaultValue = v.copy()
+            defaultValue.clear()
+            v = deepUpdate(toUpdate.get(k, defaultValue), v)
+
+        toUpdate[k] = v
+    return toUpdate

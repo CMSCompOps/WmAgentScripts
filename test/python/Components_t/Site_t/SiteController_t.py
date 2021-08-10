@@ -5,6 +5,7 @@ Unit test for SiteController helper class.
 """
 
 import unittest
+from unittest.mock import patch
 from collections import defaultdict
 
 from Components.Site.SiteController import SiteController
@@ -30,8 +31,8 @@ class SiteControllerTest(unittest.TestCase):
     sitesParam = {
         "production": "T2_CH_CERN",
         "vetoTransferSites": {"T1_US_FNAL_Disk", "T2_CH_CERN"},
-        "cpuPledges": {"T1_US_FNAL_Disk": 0, "T2_CH_CERN": 0},
-        "disk": {"T1_US_FNAL_Disk": 0, "T2_CH_CERN": 0},
+        "cpuPledges": {"T3_CH_CERN_HelixNebula": 1},
+        "disk": {"T2_CH_CERN": 0},
         "se": "T1_US_FNAL_Disk",
         "ce": "T1_US_FNAL",
     }
@@ -54,7 +55,7 @@ class SiteControllerTest(unittest.TestCase):
         isSetOfStr = isinstance(list(result)[0], str)
         self.assertTrue(isSetOfStr)
 
-        isFound = self.sitesParam in result
+        isFound = self.sitesParam.get("production") in result
         self.assertTrue(isFound)
 
     def testGetTotalDisk(self) -> None:
@@ -77,13 +78,29 @@ class SiteControllerTest(unittest.TestCase):
 
         isDict = isinstance(result[0], dict)
         self.assertTrue(isDict)
-        isEqual = result[0] == self.sitesParam.get("cpuPledges")
-        self.assertTrue(isEqual)
+
+        isAllOne = all(v == 1 for v in result[0].values())
+        self.assertTrue(isAllOne)
+
+        isFound = False
+        for site, pledge in result[0].items():
+            if site in self.sitesParam.get("cpuPledges"):
+                isFound = self.sitesParam.get("cpuPledges").get(site) == pledge
+                break
+        self.assertTrue(isFound)
 
         isDict = isinstance(result[1], dict)
         self.assertTrue(isDict)
-        isEqual = result[0] == self.sitesParam.get("disk")
-        self.assertTrue(isEqual)
+
+        isAllZero = all(v == 0 for v in result[1].values())
+        self.assertTrue(isAllZero)
+
+        isFound = False
+        for site, disk in result[1].items():
+            if site in self.sitesParam.get("disk"):
+                isFound = self.sitesParam.get("disk").get(site) == disk
+                break
+        self.assertTrue(isFound)
 
     def testGetTierSites(self) -> None:
         """getTierSites gets the tier sites"""
@@ -157,8 +174,11 @@ class SiteControllerTest(unittest.TestCase):
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
-        isEmpty = len(result) == 0
-        self.assertTrue(isEmpty)
+        isListOfStr = isinstance(result[0], str)
+        self.assertTrue(isListOfStr)
+
+        isFound = self.sitesParam.get("se") in result
+        self.assertTrue(isFound)
 
 
 if __name__ == "__main__":

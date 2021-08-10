@@ -15,14 +15,15 @@ class GeneralLockController(OracleClient):
     General API for controlling locks
     """
 
-    def __init__(self, lock: bool = True, logger: Optional[Logger] = None) -> None:
+    def __init__(self, acquire: bool = True, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__(logger=logger)
+
             self.owner = f"{socket.gethostname()}-{os.getpid()}"
             self.host = os.getenv("HOST", os.getenv("HOSTNAME", socket.gethostname()))
 
-            if lock:
-                self.lock()
+            if acquire:
+                self.acquire()
 
         except Exception as error:
             raise Exception(f"Error initializing GeneralLockController\n{str(error)}")
@@ -61,7 +62,7 @@ class GeneralLockController(OracleClient):
             self.logger.error("Failed to check if %s is a deadlock", pid)
             self.logger.error(str(error))
 
-    def lock(self) -> None:
+    def acquire(self) -> None:
         """
         The function to set a new lock of lock object with the current timestamp and owner
         """
@@ -151,7 +152,7 @@ class GeneralLockController(OracleClient):
         except Exception as error:
             self.logger.error("Failed to release item %s", item)
             self.logger.error(str(error))
-  
+
     def getItems(self, locked: bool = True) -> list:
         """
         The function to get all items
@@ -165,7 +166,7 @@ class GeneralLockController(OracleClient):
             self.logger.error("Failed to get items")
             self.logger.error(str(error))
 
-    def clean(self) -> None:
+    def deadlock(self) -> None:
         """
         The function to clean deadlocks
         """

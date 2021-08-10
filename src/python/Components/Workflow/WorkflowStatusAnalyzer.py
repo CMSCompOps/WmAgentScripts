@@ -1,5 +1,3 @@
-from http.client import responses
-import logging
 from logging import Logger
 
 from Utilities.Decorators import runWithRetries
@@ -8,6 +6,7 @@ from Components.Workflow.WorkflowController import WorkflowController
 from Services.ReqMgr.ReqMgrWriter import ReqMgrWriter
 from Services.DBS.DBSWriter import DBSWriter
 from Services.DBS.DBSReader import DBSReader
+from Utilities.Logging import getLogger
 
 from typing import Optional
 
@@ -21,14 +20,13 @@ class WorkflowStatusAnalyzer(object):
     def __init__(self, wf: str, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             self.wf = wf
             self.workflowController = WorkflowController(wf)
 
             self.reqmgrWriter = ReqMgrWriter()
             self.dbs = {"writer": DBSWriter(), "reader": DBSReader()}
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing WorkflowStatusAnalyzer\n{str(error)}")

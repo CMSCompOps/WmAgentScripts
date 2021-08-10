@@ -1,9 +1,9 @@
 import random
-import logging
 from logging import Logger
 from collections import defaultdict
 
 from Cache.DataCacheLoader import DataCacheLoader
+from Utilities.Logging import getLogger
 from Utilities.IteratorTools import mapValues, filterKeys
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Services.WMStats.WMStatsReader import WMStatsReader
@@ -18,9 +18,11 @@ class SiteController(object):
     General API for controlling the sites info
     """
 
-    def __init__(self, overrideGoodSites: Optional[List[str]], logger: Optional[Logger] = None) -> None:
+    def __init__(self, overrideGoodSites: Optional[List[str]] = None, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             self.unifiedConfiguration = ConfigurationHandler("config/unifiedConfiguration.json")
             self.sitesConfiguration = ConfigurationHandler("config/sitesConfiguration.json")
 
@@ -37,13 +39,10 @@ class SiteController(object):
 
             self.vetoTransferSites = self.getVetoTransferSites()
 
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
-
         except Exception as error:
             raise Exception(f"Error initializing SiteController\n{str(error)}")
 
-    def _setSitesConfiguration(self, overrideGoodSites: Optional[List[str]]) -> None:
+    def _setSitesConfiguration(self, overrideGoodSites: Optional[List[str]] = None) -> None:
         """
         The function to set the sites configuration
         :param overrideGoodSites: optional list of sites to override
@@ -77,21 +76,18 @@ class SiteController(object):
         The function to set the storage configuration
         """
         self.addHocStorage = self.sitesConfiguration.get("sites_addHocStorage")
+
         self.addHocStorageSites = mapValues(lambda x: set([x]), self.addHocStorage)
+        self.addHocStorageSites = defaultdict(set, self.addHocStorageSites)
 
         self.mapSEToCE, self.mapCEToSE = defaultdict(set), defaultdict(set)
         for se, ce in self.dataCache.get("site_storage"):
             self.mapSEToCE[se].add(ce)
             self.mapCEToSE[ce].add(se)
 
-            if ce in self.addHocStorageSites:
-                self.addHocStorageSites[ce].add(se)
-            else:
-                self.addHocStorageSites[ce] = set(se)
-
-            if self.SEToCE(se) == ce or ce == "T2_CH_CERN":
-                continue
-            self.addHocStorage[ce] = se
+            self.addHocStorageSites[ce].add(se)
+            if self.SEToCE(se) != ce and ce != "T2_CH_CERN":
+                self.addHocStorage[ce] = se
 
     def _filterSitesReadyOnly(self, sites: Union[list, set]) -> set:
         """
@@ -101,7 +97,7 @@ class SiteController(object):
         """
         return set(sites) & self.sitesReady
 
-    def _updateSitesReadyBySSBStatus(self, overrideGoodSites: Optional[List[str]]) -> None:
+    def _updateSitesReadyBySSBStatus(self, overrideGoodSites: Optional[List[str]] = None) -> None:
         """
         The function to update the list of sites ready and not ready based on SSB status
         :param overrideGoodSites: optional list of sites to override
@@ -178,7 +174,7 @@ class SiteController(object):
             sites = set()
 
             prodAgents = self.wmstatsReader.getProductionAgents() or {}
-            for _, agent in prodAgents.items():
+            for agent in prodAgents.values():
                 if agent.get("status") != "ok":
                     continue
 

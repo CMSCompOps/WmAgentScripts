@@ -1,10 +1,11 @@
-import logging
 from logging import Logger
 
 from typing import Optional, Any
 
 from Cache import DocumentCache
 from Cache.CacheManager import CacheManager
+
+from Utilities.Logging import getLogger
 
 
 class DataCacheLoader(object):
@@ -16,11 +17,10 @@ class DataCacheLoader(object):
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             self.cacheManager = CacheManager()
             self.cache = {}
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing DataCacheLoader\n{str(error)}")
@@ -91,6 +91,8 @@ class DataCacheLoader(object):
                 if cached:
                     self.logger.info("Returning the last doc in cache")
                     return cached
+                else:
+                    self.logger.info("Returning the default value")
 
             self.cacheManager.set(key, data, lifeTimeMinutes=self.cache[key].lifeTimeMinutes)
             return data

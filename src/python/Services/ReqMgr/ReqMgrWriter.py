@@ -1,8 +1,8 @@
 import os
-import logging
 from logging import Logger
 
 from Utilities.WebTools import sendResponse
+from Utilities.Logging import getLogger
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
 from typing import Optional
@@ -17,12 +17,11 @@ class ReqMgrWriter(object):
     def __init__(self, logger: Optional[Logger] = None, **contact):
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
             self.reqmgrEndpoint = {"agentConfig": "/reqmgr2/data/wmagentconfig/", "request": "/reqmgr2/data/request/"}
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing ReqMgrWriter\n{str(error)}")

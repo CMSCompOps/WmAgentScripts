@@ -10,6 +10,21 @@
     ],
     "description": "The list of people that get the emails notifications"
   },
+  "email_sender": {
+    "value": {
+      "mcremone": "matteoc@fnal.gov",
+      "qnguyen": "thong.nguyen@cern.ch"
+    },
+    "description": "The dictionary of people to send email notifications"
+  },
+  "locker_users": {
+    "value": [
+      "dmytro",
+      "mcremone",
+      "vlimant"
+    ],
+    "description": "The list of people who can disable/lock a component"
+  },
   "busy_agent_fraction": {
     "value": 0.9,
     "description": "Running/MaxRunning job fraction above which to consider an agent busy. Default 0.9"
@@ -604,182 +619,5 @@
   "max_memory_for_stepchain": {
     "value": 7900,
     "description": "Maximum memory for stepchain workflows"
-  },
-  "sites_ready": {
-    "value": [
-      "T3_US_OSG",
-      "T3_US_Colorado",
-      "T3_CH_CERN_HelixNebula",
-      "T3_CH_CERN_HelixNebula_REHA",
-      "T3_US_NERSC",
-      "T3_US_TACC",
-      "T3_US_PSC",
-      "T3_US_SDSC"
-    ],
-    "description": "The sites to over-ride as ready since they are only handled through jobrouting"
-  },
-  "sites_eos": {
-    "value": [
-      "T2_CH_CERN",
-      "T2_CH_CERN_HLT"
-    ],
-    "description": "The EOS sites"
-  },
-  "sites_good_for_lightweight": {
-    "value": [
-      "T3_CH_CERN_HelixNebula",
-      "T3_CH_CERN_HelixNebula_REHA"
-    ],
-    "description": "The sites good enough to read lightweight"
-  },
-  "sites_good_for_premix": {
-    "value": [
-      "T3_IN_TIFRCloud",
-      "T3_US_NERSC",
-      "T3_US_PSC",
-      "T3_US_TACC",
-      "T3_US_OSG",
-      "T3_US_Colorado",
-      "T3_US_SDSC"
-    ],
-    "description": "The sites good enough to do premixing)"
-  },
-  "sites_non_AAA": {
-    "value": [
-      "T2_CH_CERN_HLT"
-    ],
-    "description": "The sites that should not be in the AAA list"
-  },
-  "sites_banned": {
-    "value": [
-      "T2_CH_CERN_AI",
-      "T2_TH_CUNSTDA",
-      "T0_CH_CERN",
-      "T0_CH_CSCS_HPC"
-    ],
-    "description": "The sites that are banned from production"
-  },
-  "sites_auto_approve": {
-    "value": [
-      "T0_CH_CERN_MSS",
-      "T1_FR_CCIN2P3_MSS",
-      "T1_IT_CNAF_MSS",
-      "T1_RU_JINR_MSS"
-    ],
-    "description": "The sites we can autoapprove tape request to"
-  },
-  "sites_with_goodIO": {
-    "value": [
-      "T2_CH_CSCS",
-      "T2_DE_DESY",
-      "T2_DE_RWTH",
-      "T2_ES_CIEMAT",
-      "T2_FR_GRIF_LLR",
-      "T2_FR_GRIF_IRFU",
-      "T2_FR_IPHC",
-      "T2_FR_CCIN2P3",
-      "T2_IT_Bari",
-      "T2_IT_Legnaro",
-      "T2_IT_Pisa",
-      "T2_IT_Rome",
-      "T2_UK_London_Brunel",
-      "T2_UK_London_IC",
-      "T2_US_Caltech",
-      "T2_US_MIT",
-      "T2_US_Nebraska",
-      "T2_US_Purdue",
-      "T2_US_UCSD",
-      "T2_US_Wisconsin",
-      "T2_US_Florida",
-      "T2_BE_IIHE",
-      "T2_EE_Estonia",
-      "T2_PL_Swierk",
-      "T2_CH_CERN",
-      "T2_CH_CERN_HLT",
-      "T2_KR_KISTI",
-      "T2_UK_SGrid_RALPP",
-      "T2_BR_SPRACE",
-      "T2_UA_KIPT",
-      "T2_BR_UERJ",
-      "T2_BE_UCL",
-      "T2_RU_JINR"
-    ],
-    "description": "The sites identified as having good storage bandwidth"
-  },
-  "sites_with_goodAAA": {
-    "value": [
-      "T2_CH_CSCS",
-      "T2_DE_DESY",
-      "T2_DE_RWTH",
-      "T2_ES_CIEMAT",
-      "T2_FR_GRIF_LLR",
-      "T2_FR_GRIF_IRFU",
-      "T2_FR_IPHC",
-      "T2_FR_CCIN2P3",
-      "T2_IT_Bari",
-      "T2_IT_Legnaro",
-      "T2_IT_Pisa",
-      "T2_IT_Rome",
-      "T2_UK_London_Brunel",
-      "T2_UK_London_IC",
-      "T2_US_Caltech",
-      "T2_US_MIT",
-      "T2_US_Nebraska",
-      "T2_US_Purdue",
-      "T2_US_UCSD",
-      "T2_US_Wisconsin",
-      "T2_US_Florida",
-      "T2_BE_IIHE",
-      "T2_EE_Estonia",
-      "T2_PL_Swierk",
-      "T2_CH_CERN",
-      "T2_CH_CERN_HLT",
-      "T2_TW_NCHC",
-      "T2_IN_TIFR",
-      "T2_HU_Budapest",
-      "T2_KR_KISTI",
-      "T2_BR_SPRACE",
-      "T2_RU_JINR",
-      "T2_UK_SGrid_RALPP",
-      "T2_US_Vanderbilt",
-      "T2_BE_UCL",
-      "T2_CN_Beijing",
-      "T2_UA_KIPT",
-      "T2_AT_Vienna",
-      "T2_ES_IFCA",
-      "T3_US_Baylor",
-      "T3_US_Colorado",
-      "T3_UK_London_RHUL",
-      "T3_UK_SGrid_Oxford"
-    ],
-    "description": "The sites identified as having good AAA bandwidth"
-  },
-  "HEPCloud_sites": {
-    "value": [
-      "T3_US_NERSC",
-      "T3_US_PSC",
-      "T3_US_SDSC",
-      "T3_US_TACC"
-    ],
-    "description": "HEPCloud sites"
-  },
-  "sites_space_override": {
-    "value": {},
-    "description": "The sites to over-ride the available space at a phedex end point"
-  },
-  "sites_addHocStorage": {
-    "value": {
-      "T2_CH_CERN_AI": "T2_CH_CERN",
-      "T2_CH_CERN_T0": "T2_CH_CERN",
-      "T3_US_NERSC": "T1_US_FNAL_Disk",
-      "T3_US_TACC": "T1_US_FNAL_Disk",
-      "T3_US_SDSC": "T1_US_FNAL_Disk",
-      "T3_US_PSC": "T1_US_FNAL_Disk",
-      "T3_US_OSG": "T1_US_FNAL_Disk",
-      "T3_US_Colorado": "T1_US_FNAL_Disk",
-      "T3_CH_CERN_HelixNebula": "T2_CH_CERN",
-      "T3_CH_CERN_HelixNebula_REHA": "T2_CH_CERN"
-    },
-    "description": "The sites and the correspondent storage site"
   }
 }

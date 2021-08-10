@@ -6,9 +6,10 @@ Description: General API for writing data to DBS
 
 
 import os
-import logging
 from logging import Logger
 from dbs.apis.dbsClient import DbsApi
+
+from Utilities.Logging import getLogger
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
 from typing import Optional, List
@@ -22,15 +23,14 @@ class DBSWriter(object):
 
     def __init__(self, url: Optional[str] = None, logger: Optional[Logger] = None, **contact):
         try:
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             if url:
                 self.dbsURL = url.replace("cmsweb.cern.ch", "cmsweb-prod.cern.ch")
             else:
                 configurationHandler = ConfigurationHandler()
                 self.dbsURL = os.getenv("DBS_WRITER_URL", configurationHandler.get("dbs_url_writer"))
             self.dbs = DbsApi(self.dbsURL, **contact)
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing DBSWriter\n{str(error)}")

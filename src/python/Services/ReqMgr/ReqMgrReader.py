@@ -3,12 +3,12 @@ File       : ReqMgrReader.py
 Author     : Hasan Ozturk <haozturk AT cern dot com>
 Description: General API for reading data from ReqMgr
 """
-
-import logging
 from logging import Logger
 import os
 import copy
+
 from Utilities.WebTools import getResponse
+from Utilities.Logging import getLogger
 from Utilities.IteratorTools import mapKeys, filterKeys
 from Utilities.Decorators import runWithRetries
 from Utilities.ConfigurationHandler import ConfigurationHandler
@@ -24,6 +24,8 @@ class ReqMgrReader(object):
 
     def __init__(self, logger: Optional[Logger] = None, **contact):
         try:
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
             self.reqmgrEndpoint = {
@@ -32,9 +34,6 @@ class ReqMgrReader(object):
                 "agentConfig": "/reqmgr2/data/wmagentconfig/",
                 "splitting": "/reqmgr2/data/splitting/",
             }
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing ReqMgrReader\n{str(error)}")

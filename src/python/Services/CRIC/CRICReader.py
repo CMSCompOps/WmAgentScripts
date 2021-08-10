@@ -1,8 +1,8 @@
-import logging
 from logging import Logger
 
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.WebTools import getResponse
+from Utilities.Logging import getLogger
 
 from typing import Optional, List
 
@@ -16,12 +16,11 @@ class CRICReader(object):
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             configurationHandler = ConfigurationHandler()
             self.cricUrl = configurationHandler.get("cric_url")
             self.cricEndpoint = "/api/cms/site/query/"
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing CRICReader\n{str(error)}")

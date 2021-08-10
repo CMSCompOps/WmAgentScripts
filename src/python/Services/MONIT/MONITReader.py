@@ -1,11 +1,11 @@
 import os
 import json
-import logging
 from logging import Logger
 
+from Utilities.Logging import getLogger
 from Utilities.Decorators import runWithRetries
 
-from typing import Optional, List
+from typing import Optional
 
 
 class MONITReader(object):
@@ -17,13 +17,12 @@ class MONITReader(object):
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             with open("config/monit_secret.json", "r") as file:
                 self.config = json.load(file.read())
 
             self.ssbQuery = f'curl -s -X POST {self.config.get("url")} -H "Authorization: Bearer {self.config.get("token")}" -H "Content-Type: application/json" -d '
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing MONITReader\n{str(error)}")

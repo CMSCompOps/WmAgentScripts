@@ -2,7 +2,6 @@ import os
 import sys
 import socket
 import json
-import logging
 from logging import Logger
 from time import sleep
 
@@ -14,6 +13,7 @@ from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.DBS.DBSReader import DBSReader
 
 from Utilities.Decorators import runWithMultiThreading
+from Utilities.Logging import getLogger
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
 from typing import Optional, List
@@ -28,6 +28,8 @@ class ComponentsChecker(object):
     def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             self.block = kwargs.get("block") or True
             self.keepTrying = kwargs.get("keepTrying") or False
             self.softComponents = kwargs.get("soft") or ["mcm", "wtc", "mongo", "jira"]
@@ -47,9 +49,6 @@ class ComponentsChecker(object):
                 "Mongo": False,
                 "Jira": False,
             }
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing ComponentsChecker\n{str(error)}")

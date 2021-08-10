@@ -1,8 +1,8 @@
 import os
 import json
-import logging
 from logging import Logger
 
+from Utilities.Logging import getLogger
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
 from typing import Optional
@@ -17,13 +17,12 @@ class GWMSMonReader(object):
     def __init__(self, logger: Optional[Logger] = None, **contact):
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             configurationHandler = ConfigurationHandler()
             self.gwmsUrl = configurationHandler.get("gwmsmon_url")
+            self.gwmsEndpoint = {"prodView": "/prodview/json/", "poolView": "/poolview/json/"}            
             self.gwmsEndpoint = {"prodView": "/prodview/json/", "poolView": "/poolview/json/"}
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
-
         except Exception as error:
             raise Exception(f"Error initializing WorkQueueReader\n{str(error)}")
 
