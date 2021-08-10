@@ -77,12 +77,9 @@ def singleRecovery(url, task, initial, actions, do=False, priority_change=False)
                         if t in initial:
                             tname = payload.setdefault(t, initial[t])['TaskName']
                             payload[t]['Memory'] = set_to
-                            #mem = mem_dict.setdefault( tname, payload[t]['Memory'])
-                            #mem_dict[tname] = set_to
                         else:
                             break
-                    #payload['Memory'] = mem_dict
-                    #print "Memory set to: ",json.dumps( mem_dict, indent=2)
+                    payload['Memory'] = set_to
                     print
                     "Memory set to: ", set_to
                 else: 
