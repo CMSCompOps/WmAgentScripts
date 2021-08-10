@@ -10,7 +10,7 @@ from collections import Counter
 
 from Components.Workflow.WorkflowController import WorkflowController
 
-from Components.Workload.NonChainWorkloadHandler import NonChainWorkloadHandler
+from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
 from Components.Workload.StepChainWorkloadHandler import StepChainWorkloadHandler
 from Components.Workload.TaskChainWorkloadHandler import TaskChainWorkloadHandler
 
@@ -18,7 +18,7 @@ from Components.Workload.TaskChainWorkloadHandler import TaskChainWorkloadHandle
 class WorkflowControllerTest(unittest.TestCase):
     rucioConfig = {"account": os.getenv("RUCIO_ACCOUNT")}
 
-    # This workflow is a non-chain request. Use it for testing functions depending on the request type as well as splittings functions.
+    # This workflow is a monte carlo request. Use it for testing functions depending on the request type as well as splittings functions.
     mcParams = {
         "workflow": "pdmvserv_SMP-RunIISummer15wmLHEGS-00016_00051_v0__160525_042701_9941",
         "campaign": "RunIISummer15wmLHEGS",
@@ -71,7 +71,7 @@ class WorkflowControllerTest(unittest.TestCase):
         },
     }
 
-    # This workflow is also a non-chain request. Use it for testing functions with a non-empty run white list.
+    # This workflow is also a reconstruction request. Use it for testing functions with a non-empty run white list.
     rerecoParams = {
         "workflow": "sagarwal_Run2017E-31Mar2018-v1-HighMultiplicityEOF3-Nano1June2019_10215_190607_141831_7758",
         "runWhiteList": [303818, 303819],
@@ -163,8 +163,8 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testWorkloadInterface(self) -> None:
         """WorkloadInterface gets the request data handler"""
-        ### Test when non-chain request
-        isNonChain = isinstance(self.mcWfController.request, NonChainWorkloadHandler)
+        ### Test when monte carlo request
+        isNonChain = isinstance(self.mcWfController.request, BaseWorkloadHandler)
         self.assertTrue(isNonChain)
 
         ### Test when step chain request
@@ -250,7 +250,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetOutputDatasetsPerTask(self) -> None:
         """getOutputDatasetsPerTask gets output datasets per task"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.getOutputDatasetsPerTask()
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
@@ -297,7 +297,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetCampaignByTask(self) -> None:
         """getCampaignByTask gets the campaigns for a given task"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.getCampaignByTask("")
         isStr = isinstance(response, str)
         self.assertTrue(isStr)
@@ -325,7 +325,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetMemoryByTask(self) -> None:
         """getMemoryByTask gets the memory for a given task"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.getMemoryByTask("")
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
@@ -353,7 +353,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetCoreByTask(self) -> None:
         """getCoreByTask gets the memory for a given task"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.getCoreByTask("")
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
@@ -381,7 +381,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetFilterEfficiencyByTask(self) -> None:
         """getFilterEfficiencyByTask gets the filter efficiency for a given task"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.getFilterEfficiencyByTask("")
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
@@ -409,7 +409,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetLumiWhiteList(self) -> None:
         """getLumiWhiteList gets the lumi white list"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         lumiList = self.mcWfController.getLumiWhiteList()
         isList = isinstance(lumiList, list)
         self.assertTrue(isList)
@@ -435,7 +435,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetBlockWhiteList(self) -> None:
         """getBlockWhiteList gets the block white list"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         blockList = self.mcWfController.getBlockWhiteList()
         isList = isinstance(blockList, list)
         self.assertTrue(isList)
@@ -461,7 +461,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetRunWhiteList(self) -> None:
         """getRunWhiteList gets the run white list"""
-        ### Test when non-chain request
+        ### Test when reconstruction request
         runList = self.rerecoWfController.getRunWhiteList()
         isList = isinstance(runList, list)
         self.assertTrue(isList)
@@ -490,7 +490,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetPrepIds(self) -> None:
         """getPrepIds gets the prep ids"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.getPrepIds()
         isList = isinstance(response, list)
         self.assertTrue(isList)
@@ -530,7 +530,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetScramArches(self) -> None:
         """getScramArches gets the arches"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.getScramArches()
         isList = isinstance(response, list)
         self.assertTrue(isList)
@@ -565,7 +565,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetComputingTime(self) -> None:
         """getComputingTime gets the computing time"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.getComputingTime(unit="s")
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
@@ -591,7 +591,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetBlocks(self) -> None:
         """getBlocks gets the blocks"""
-        ### Test when non-chain request
+        ### Test when reconstruction request
         blocks = self.rerecoWfController.getBlocks()
         isList = isinstance(blocks, list)
         self.assertTrue(isList)
@@ -690,7 +690,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetBlowupFactor(self) -> None:
         """getBlowupFactor gets the blocks"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.getBlowupFactor()
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
@@ -716,7 +716,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetCompletionFraction(self) -> None:
         """getCompletionFraction gets the completion fraction"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.getCompletionFraction()
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
@@ -803,7 +803,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testCheckSplittingsSize(self) -> None:
         """checkSplitting checks the splittings"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.checkSplitting()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
@@ -850,7 +850,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testIsRelVal(self) -> None:
         """isRelVal checks if a request is relval"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.request.isRelVal()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
@@ -876,7 +876,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testIsProducingPremix(self) -> None:
         """isProducingPremix checks if a request is producing premix"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.request.isProducingPremix()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
@@ -902,7 +902,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testIsGoodToConvertToStepChain(self) -> None:
         """isGoodToConvertToStepChain checks if a request is good to be converted to step chain"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.request.isGoodToConvertToStepChain()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
@@ -928,7 +928,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetAcquisitionEra(self) -> None:
         """getAcquisitionEra gets the acquisition era"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.request.getAcquisitionEra()
         isStr = isinstance(response, str)
         self.assertTrue(isStr)
@@ -978,7 +978,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetProcessingString(self) -> None:
         """getProcessingString gets the processing string"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.request.getProcessingString()
         isStr = isinstance(response, str)
         self.assertTrue(isStr)
@@ -1028,7 +1028,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetMemory(self) -> None:
         """getMemory gets the memory"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.request.getMemory()
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
@@ -1054,7 +1054,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetIO(self) -> None:
         """getIO gets the inputs/outputs"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.request.getIO()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
@@ -1118,7 +1118,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetMulticore(self) -> None:
         """getMulticore gets the multicore"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         # Test when maxOnly is True
         response = self.mcWfController.request.getMulticore()
         isInt = isinstance(response, int)
@@ -1180,7 +1180,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetRequestNumEvents(self) -> None:
         """getRequestNumEvents gets the number of events requested"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.request.getRequestNumEvents()
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
@@ -1206,7 +1206,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetCampaigns(self) -> None:
         """getCampaigns gets the campaigns"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         # Test when details is True
         response = self.mcWfController.request.getCampaigns()
         isStr = isinstance(response, str)
@@ -1297,7 +1297,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetCampaignsAndLabels(self) -> None:
         """getCampaignsAndLabels gets a list of campaigns and labels"""
-        ### Test when non-chain request
+        ### Test when monte carlo request
         response = self.mcWfController.request.getCampaignsAndLabels()
         isList = isinstance(response, list)
         self.assertTrue(isList)

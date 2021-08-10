@@ -22,29 +22,6 @@ class StepChainWorkloadHandler(BaseChainWorkloadHandler):
         except Exception as error:
             raise Exception(f"Error initializing StepChainWorkloadHandler\n{str(error)}")
 
-    def isGoodToConvertToStepChain(self, keywords: Optional[list] = None) -> bool:
-        """
-        The function to check if a request is good to be converted to step chain.
-        :return: False, since this is already a step chain request
-        """
-        self.logger.info("Convertion is supported only from TaskChain to StepChain")
-        return False
-
-    def getRequestNumEvents(self) -> int:
-        """
-        The function to get the number of events in the request
-        :return: number of events
-        """
-        return int(self.get("RequestNumEvents") or 0)
-
-    def getBlowupFactor(self, splittings: list) -> float:
-        """
-        The function to get the blow up factor
-        :return: 1, since blow up factor does not exist for step chain request
-        """
-        self.logger.info("Blow up factor only exists for TaskChain")
-        return 1.0
-
     def checkSplitting(self, splittings: dict) -> Tuple[bool, list]:
         """
         The function to check the splittings sizes and if any action is required

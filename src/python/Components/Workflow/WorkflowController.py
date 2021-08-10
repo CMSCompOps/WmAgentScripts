@@ -8,7 +8,6 @@ from time import mktime, gmtime
 
 from Components.Campaign.CampaignController import CampaignController
 from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
-from Components.Workload.NonChainWorkloadHandler import NonChainWorkloadHandler
 from Components.Workload.StepChainWorkloadHandler import StepChainWorkloadHandler
 from Components.Workload.TaskChainWorkloadHandler import TaskChainWorkloadHandler
 
@@ -81,7 +80,7 @@ class WorkflowController(object):
             return TaskChainWorkloadHandler(wfSchema)
         if wfSchema.get("RequestType") == "StepChain":
             return StepChainWorkloadHandler(wfSchema)
-        return NonChainWorkloadHandler(wfSchema)
+        return BaseWorkloadHandler(wfSchema)
 
     def _getFromFile(self, filename: str) -> Optional[dict]:
         """

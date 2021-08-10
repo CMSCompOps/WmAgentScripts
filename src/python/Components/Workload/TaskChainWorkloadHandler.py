@@ -256,7 +256,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
         The function to get the number of events in the request
         :return: number of events
         """
-        return int(self.get("Task1").get("RequestNumEvents"))
+        return int(self.get("Task1").get("RequestNumEvents") or 0)
 
     def getBlowupFactor(self, splittings: list) -> float:
         """
