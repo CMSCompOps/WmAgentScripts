@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """
-_WorkflowStatusMonitor_t_
-Unit test for WorkflowStatusMonitor helper class.
+_WorkflowsStatusMonitor_t_
+Unit test for WorkflowsStatusMonitor helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
-from Components.Workflow.WorkflowStatusMonitor import WorkflowStatusMonitor
+from Components.Workflow.WorkflowsStatusMonitor import WorkflowsStatusMonitor
 
 
-class WorkflowStatusMonitorTest(unittest.TestCase):
+class WorkflowsStatusMonitorTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "statusHistory"}
 
     # StatusHistory is always changing
@@ -18,7 +18,7 @@ class WorkflowStatusMonitorTest(unittest.TestCase):
     params = {"dateTimeKeys": ["time", "date"]}
 
     def setUp(self) -> None:
-        self.workflowStatusMonitor = WorkflowStatusMonitor()
+        self.workflowsStatusMonitor = WorkflowsStatusMonitor()
         super().setUp()
         return
 
@@ -28,18 +28,18 @@ class WorkflowStatusMonitorTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.workflowStatusMonitor.collection, Collection)
+        isCollection = isinstance(self.workflowsStatusMonitor.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.workflowStatusMonitor.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.workflowsStatusMonitor.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.workflowStatusMonitor.collection.name == self.mongoSettings.get("collection")
+        rightName = self.workflowsStatusMonitor.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the data in status history"""
-        result = self.workflowStatusMonitor.get()
+        result = self.workflowsStatusMonitor.get()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 

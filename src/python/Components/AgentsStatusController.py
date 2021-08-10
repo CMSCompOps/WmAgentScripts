@@ -8,7 +8,8 @@ from pymongo.collection import Collection
 from typing import Optional
 
 from Utilities.Logging import displayTime
-from Utilities.IteratorTools import filterKeys, mapValues
+from Utilities.DataTools import sortByWakeUpPriority
+from Utilities.IteratorTools import filterKeys
 from Cache.DataCacheLoader import DataCacheLoader
 from Databases.Mongo.MongoClient import MongoClient
 from Services.Trello.TrelloClient import TrelloClient
@@ -17,9 +18,9 @@ from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.ReqMgr.ReqMgrWriter import ReqMgrWriter
 
 
-class AgentStatusController(MongoClient, TrelloClient):
+class AgentsStatusController(MongoClient, TrelloClient):
     """
-    __AgentStatusController__
+    __AgentsStatusController__
     General API for controlling the agents status
     """
 
@@ -52,7 +53,7 @@ class AgentStatusController(MongoClient, TrelloClient):
                     self.logger.warning("Failed to properly initialize the agent info")
 
         except Exception as error:
-            raise Exception(f"Error initializing AgentStatusController\n{str(error)}")
+            raise Exception(f"Error initializing AgentsStatusController\n{str(error)}")
 
     def _setMongoCollection(self) -> Collection:
         return self.client.unified.agentInfo
@@ -569,18 +570,3 @@ class AgentStatusController(MongoClient, TrelloClient):
         priorityDrain.update(self.candidates.get("openDrain", []))
         for name in self.getAgents():
             self.set(name, speeddrain=name in priorityDrain)
-
-
-def sortByWakeUpPriority(agents: dict) -> list:
-    """
-    The function to get the wake up priority list of the given agents sorted by the defined metric
-    :param agents: agents info
-    :return: agents names sorted by priority for waking up
-    """
-    try:
-        wakeUpMetric = lambda v: v.get("TotalIdleJobs", 0) - v.get("TotalRunningJobs", 0)
-        return [name for name in sorted(mapValues(wakeUpMetric, agents), key=lambda x: x[1], reverse=True)]
-
-    except Exception as error:
-        print("Failed to sort agents by wake up metric")
-        print(str(error))

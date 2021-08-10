@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 """
-_BatchController_t_
-Unit test for BatchController helper class.
+_BatchesController_t_
+Unit test for BatchesController helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
-from Components.Campaign.BatchController import BatchController
+from Components.BatchesController import BatchesController
 
 
-class BatchControllerTest(unittest.TestCase):
+class BatchesControllerTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "batchInfo"}
 
     def setUp(self) -> None:
-        self.batchController = BatchController()
+        self.batchesController = BatchesController()
         super().setUp()
         return
 
@@ -24,18 +24,18 @@ class BatchControllerTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.batchController.collection, Collection)
+        isCollection = isinstance(self.batchesController.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.batchController.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.batchesController.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.batchController.collection.name == self.mongoSettings.get("collection")
+        rightName = self.batchesController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the batches names and ids"""
-        result = self.batchController.get()
+        result = self.batchesController.get()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -50,7 +50,7 @@ class BatchControllerTest(unittest.TestCase):
 
     def testGetBatches(self):
         """getBatches gets the all the batches names"""
-        result = self.batchController.getBatches()
+        result = self.batchesController.getBatches()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 

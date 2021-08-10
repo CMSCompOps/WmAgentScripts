@@ -15,9 +15,9 @@ from Databases.Oracle.OracleClient import OracleClient
 from Databases.Oracle.OracleDB import Workflow
 
 
-class WorkflowCloseoutMonitor(MongoClient, OracleClient):
+class WorkflowsCloseoutMonitor(MongoClient, OracleClient):
     """
-    __WorkflowCloseoutMonitor__
+    __WorkflowsCloseoutMonitor__
     General API for monitoring workflows closeout info
     """
 
@@ -30,15 +30,15 @@ class WorkflowCloseoutMonitor(MongoClient, OracleClient):
             self.monitorEOSDirectory = configurationHandler.get("monitor_eos_dir")
 
             self.template = {
-                "summary": "templates/WorkflowCloseoutMonitor/Summary.jinja",
-                "assistance": "templates/WorkflowCloseoutMonitor/Assistance.jinja",
+                "summary": "templates/WorkflowsCloseoutMonitor/Summary.jinja",
+                "assistance": "templates/WorkflowsCloseoutMonitor/Assistance.jinja",
             }
 
             self.removed = set()
             self.record = {}
 
         except Exception as error:
-            raise Exception(f"Error initializing WorkflowCloseoutMonitor\n{str(error)}")
+            raise Exception(f"Error initializing WorkflowsCloseoutMonitor\n{str(error)}")
 
     def _setMongoCollection(self) -> Collection:
         return self.client.unified.closeoutInfo

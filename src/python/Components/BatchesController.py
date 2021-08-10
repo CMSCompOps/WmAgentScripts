@@ -4,9 +4,9 @@ from pymongo.collection import Collection
 from Databases.Mongo.MongoClient import MongoClient
 
 
-class BatchController(MongoClient):
+class BatchesController(MongoClient):
     """
-    __BatchController__
+    __BatchesController__
     General API for controlling the batches info
     """
 

@@ -9,9 +9,9 @@ from Databases.Mongo.MongoClient import MongoClient
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 
 
-class WorkflowTrafficController(MongoClient):
+class WorkflowsTrafficController(MongoClient):
     """
-    __WorkflowTrafficController__
+    __WorkflowsTrafficController__
     General API for monitoring the workflow traffic controller
     """
 

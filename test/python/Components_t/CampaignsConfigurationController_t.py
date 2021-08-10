@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """
-_CampaignController_t_
-Unit test for CampaignController helper class.
+_CampaignsConfigurationController_t_
+Unit test for CampaignsConfigurationController helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
-from Components.Campaign.CampaignController import CampaignController
+from Components.CampaignsConfigurationController import CampaignsConfigurationController
 
 
-class CampaignControllerTest(unittest.TestCase):
+class CampaignsConfigurationControllerTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "campaignsConfiguration"}
 
     # Some campaign params for testing
@@ -22,7 +22,7 @@ class CampaignControllerTest(unittest.TestCase):
     campaignWithTypeParam = {"type": "relval"}
 
     def setUp(self) -> None:
-        self.campaignController = CampaignController()
+        self.campaignsConfigController = CampaignsConfigurationController()
         super().setUp()
         return
 
@@ -32,18 +32,18 @@ class CampaignControllerTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.campaignController.collection, Collection)
+        isCollection = isinstance(self.campaignsConfigController.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.campaignController.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.campaignsConfigController.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.campaignController.collection.name == self.mongoSettings.get("collection")
+        rightName = self.campaignsConfigController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the campaigns info"""
-        result = self.campaignController.get()
+        result = self.campaignsConfigController.get()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -60,7 +60,7 @@ class CampaignControllerTest(unittest.TestCase):
     def testGetCampaigns(self):
         """getCampaigns gets the campaigns names"""
         # Test when campaign type is empty
-        result = self.campaignController.getCampaigns()
+        result = self.campaignsConfigController.getCampaigns()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
@@ -71,7 +71,7 @@ class CampaignControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when campaign type is given
-        result = self.campaignController.getCampaigns(self.campaignWithTypeParam.get("type"))
+        result = self.campaignsConfigController.getCampaigns(self.campaignWithTypeParam.get("type"))
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
@@ -81,7 +81,9 @@ class CampaignControllerTest(unittest.TestCase):
     def testGetCampaignValue(self):
         """getCampaignValue gets the value of a given campaign"""
         # Test when the key exists, will use resize in this case
-        result = self.campaignController.getCampaignValue(self.campaignParam.get("campaign"), "resize", "default")
+        result = self.campaignsConfigController.getCampaignValue(
+            self.campaignParam.get("campaign"), "resize", "default"
+        )
         isStr = isinstance(result, str)
         self.assertTrue(isStr)
 
@@ -89,7 +91,9 @@ class CampaignControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when key does not exists
-        result = self.campaignController.getCampaignValue(self.campaignParam.get("campaign"), "invalidKey", "default")
+        result = self.campaignsConfigController.getCampaignValue(
+            self.campaignParam.get("campaign"), "invalidKey", "default"
+        )
         isStr = isinstance(result, str)
         self.assertTrue(isStr)
 
@@ -98,13 +102,13 @@ class CampaignControllerTest(unittest.TestCase):
 
     def testGetCampaignParameters(self):
         """getCampaignParameters gets the parameters of a given campaign"""
-        result = self.campaignController.getCampaignParameters(self.campaignParam.get("campaign"))
+        result = self.campaignsConfigController.getCampaignParameters(self.campaignParam.get("campaign"))
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
     def testGetSecondaries(self):
         """getSecondaries gets the campaigns secondaries"""
-        result = self.campaignController.getSecondaries()
+        result = self.campaignsConfigController.getSecondaries()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 

@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """
-_ModuleRuntimeMonitor_t_
-Unit test for ModuleRuntimeMonitor helper class.
+_RuntimeMonitor_t_
+Unit test for RuntimeMonitor helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
-from Components.Module.ModuleRuntimeMonitor import ModuleRuntimeMonitor
+from Components.RuntimeMonitor import RuntimeMonitor
 
 
-class ModuleRuntimeMonitorTest(unittest.TestCase):
+class RuntimeMonitorTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "startStopTime"}
 
     # StartStopInfo is always changing.
@@ -18,7 +18,7 @@ class ModuleRuntimeMonitorTest(unittest.TestCase):
     params = {"component": "htmlor"}
 
     def setUp(self) -> None:
-        self.moduleRuntimeMonitor = ModuleRuntimeMonitor()
+        self.runtimeMonitor = RuntimeMonitor()
         super().setUp()
         return
 
@@ -28,19 +28,19 @@ class ModuleRuntimeMonitorTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.moduleRuntimeMonitor.collection, Collection)
+        isCollection = isinstance(self.runtimeMonitor.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.moduleRuntimeMonitor.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.runtimeMonitor.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.moduleRuntimeMonitor.collection.name == self.mongoSettings.get("collection")
+        rightName = self.runtimeMonitor.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the start/stop info"""
         # Test valid component and metric
-        result = self.moduleRuntimeMonitor.get(self.params.get("component"))
+        result = self.runtimeMonitor.get(self.params.get("component"))
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
@@ -48,7 +48,7 @@ class ModuleRuntimeMonitorTest(unittest.TestCase):
         self.assertTrue(isListOfInt)
 
         # Test invalid component
-        result = self.moduleRuntimeMonitor.get("test")
+        result = self.runtimeMonitor.get("test")
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
@@ -56,7 +56,7 @@ class ModuleRuntimeMonitorTest(unittest.TestCase):
         self.assertTrue(isEmpty)
 
         # Test invalid metric
-        result = self.moduleRuntimeMonitor.get(self.params.get("component"), metric="test")
+        result = self.runtimeMonitor.get(self.params.get("component"), metric="test")
         isList = isinstance(result, list)
         self.assertTrue(isList)
 

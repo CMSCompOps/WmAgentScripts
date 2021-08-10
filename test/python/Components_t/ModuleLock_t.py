@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 """
-_ModuleLockController_t_
-Unit test for ModuleLockController helper class.
+_ModuleLock_t_
+Unit test for ModuleLock helper class.
 """
 
 import unittest
 from unittest.mock import patch
 from pymongo.collection import Collection
 
-from Components.Module.ModuleLockController import ModuleLockController
+from Components.ModuleLock import ModuleLock
 
 
-class ModuleLockControllerTest(unittest.TestCase):
+class ModuleLockTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "moduleLock"}
 
     # ModuleLock is always changing.
@@ -19,31 +19,31 @@ class ModuleLockControllerTest(unittest.TestCase):
     params = {"docKeys": ["component", "pid", "host", "time", "date"]}
 
     def setUp(self) -> None:
-        self.moduleLockController = ModuleLockController()
+        self.moduleLock = ModuleLock()
         super().setUp()
         return
 
-    @patch("Components.Module.ModuleLockController.ModuleLockController.clean")
+    @patch("Components.ModuleLock.ModuleLock.clean")
     def tearDown(self, mockClean) -> None:
         mockClean.return_value = None
-        del self.moduleLockController
+        del self.moduleLock
         super().tearDown()
         return
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.moduleLockController.collection, Collection)
+        isCollection = isinstance(self.moduleLock.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.moduleLockController.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.moduleLock.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.moduleLockController.collection.name == self.mongoSettings.get("collection")
+        rightName = self.moduleLock.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the module locks"""
-        result = self.moduleLockController.get()
+        result = self.moduleLock.get()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
@@ -58,12 +58,12 @@ class ModuleLockControllerTest(unittest.TestCase):
             hasAllKeys = True
         self.assertTrue(hasAllKeys)
 
-    @patch("Components.Module.ModuleLockController.ModuleLockController.get")
+    @patch("Components.ModuleLock.ModuleLock.get")
     def testGo(self, mockGet):
         """go checks if a module is locked or not"""
         # Test when there is no locks
         mockGet.return_value = []
-        result = self.moduleLockController.go()
+        result = self.moduleLock.go()
         isBool = isinstance(result, bool)
         self.assertTrue(isBool)
 
@@ -72,7 +72,7 @@ class ModuleLockControllerTest(unittest.TestCase):
 
         # Test when there are locks
         mockGet.return_value = ["lock1", "lock2"]
-        result = self.moduleLockController.go()
+        result = self.moduleLock.go()
         isBool = isinstance(result, bool)
         self.assertTrue(isBool)
 
@@ -81,8 +81,8 @@ class ModuleLockControllerTest(unittest.TestCase):
 
         # Test when locking is False
         mockGet.return_value = []
-        self.moduleLockController.locking = False
-        result = self.moduleLockController.go()
+        self.moduleLock.locking = False
+        result = self.moduleLock.go()
         isBool = isinstance(result, bool)
         self.assertTrue(isBool)
 

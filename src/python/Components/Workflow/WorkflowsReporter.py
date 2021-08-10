@@ -7,10 +7,10 @@ from Utilities.IteratorTools import mapKeys, mapValues
 from Databases.Mongo.MongoClient import MongoClient
 
 
-class WorkflowReportMonitor(MongoClient):
+class WorkflowsReporter(MongoClient):
     """
-    __WorkflowReportMonitor__
-    General API for monitoing the workflows reports info
+    __WorkflowsReporter__
+    General API for reporting the workflows info
     """
 
     def _setMongoCollection(self) -> Collection:

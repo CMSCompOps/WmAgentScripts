@@ -6,9 +6,9 @@ from typing import Optional
 from Databases.Mongo.MongoClient import MongoClient
 
 
-class ModuleRuntimeMonitor(MongoClient):
+class RuntimeMonitor(MongoClient):
     """
-    __ModuleRuntimeMonitor__
+    __RuntimeMonitor__
     General API for monitoring modules runtimes
     """
 
