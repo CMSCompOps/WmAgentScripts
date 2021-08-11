@@ -2828,7 +2828,7 @@
        "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
                 {
                   "SecondaryLocation": [
-                     "T1_RU_JINR_DISK",
+                     "T1_RU_JINR_Disk",
                      "T1_US_FNAL_Disk"
                        ]
                  }
@@ -2855,7 +2855,7 @@
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" : 
       {
               "SecondaryLocation": [
-                 "T1_RU_JINR_DISK",
+                 "T1_RU_JINR_Disk",
                  "T1_US_FNAL_Disk"
                    ]
       }
