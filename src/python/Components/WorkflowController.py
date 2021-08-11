@@ -6,7 +6,7 @@ from logging import Logger
 from collections import defaultdict
 from time import mktime, gmtime
 
-from Components.Campaign.CampaignController import CampaignController
+from MongoControllers.CampaignController import CampaignController
 from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
 from Components.Workload.StepChainWorkloadHandler import StepChainWorkloadHandler
 from Components.Workload.TaskChainWorkloadHandler import TaskChainWorkloadHandler

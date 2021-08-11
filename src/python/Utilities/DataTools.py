@@ -119,6 +119,22 @@ def filterSplittingsParam(splittings: List[dict]) -> List[dict]:
         cleanSplittings.append(splt)
     return cleanSplittings
 
+
+def sortByWakeUpPriority(agents: dict) -> list:
+    """
+    The function to get the wake up priority list of the given agents sorted by the defined metric
+    :param agents: agents info
+    :return: agents names sorted by priority for waking up
+    """
+    try:
+        wakeUpMetric = lambda v: v.get("TotalIdleJobs", 0) - v.get("TotalRunningJobs", 0)
+        return [name for name in sorted(mapValues(wakeUpMetric, agents), key=lambda x: x[1], reverse=True)]
+
+    except Exception as error:
+        print("Failed to sort agents by wake up metric")
+        print(str(error))
+
+
 def flattenTaskTree(task: str, **selectParam) -> list:
     """
     The function to flatten a task tree into a list

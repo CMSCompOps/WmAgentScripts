@@ -15,7 +15,8 @@ class ConfigurationHandler:
             self.configs = self.configFile
         else:
             try:
-                self.configs = json.loads(open(self.configFile).read())
+                with open(self.configFile) as file:
+                    self.configs = json.loads(file.read())
             except Exception as ex:
                 print(("Could not read configuration file: %s\nException: %s" % (self.configFile, str(ex))))
                 sys.exit(124)

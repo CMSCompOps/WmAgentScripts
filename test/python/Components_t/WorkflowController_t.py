@@ -8,7 +8,7 @@ import unittest
 import math
 from collections import Counter
 
-from Components.Workflow.WorkflowController import WorkflowController
+from Components.WorkflowController import WorkflowController
 
 from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
 from Components.Workload.StepChainWorkloadHandler import StepChainWorkloadHandler
