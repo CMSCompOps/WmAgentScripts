@@ -2748,7 +2748,7 @@
       {
              "SecondaryLocation": [
                  "T1_US_FNAL_Disk",
-                 "T1_UK_RAL_Disk"
+                 "T1_FR_CCIN2P3_Disk"
               ]
       }    
     },
@@ -2802,7 +2802,7 @@
           
                  "SecondaryLocation": [
                     "T1_DE_KIT_Disk",
-                    "T2_US_Nebraska"
+                    "T1_US_FNAL_Disk"
                      ]
          }
     },
