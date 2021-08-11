@@ -9,5 +9,5 @@ setup(name='wmagentscripts',
       python_requires=">=3.6",
       package_dir={"": "src/python"},
       packages=find_packages(where="src/python"),
-      install_requires=["pymongo"]
+      install_requires=["pymongo", "sqlalchemy"]
 )

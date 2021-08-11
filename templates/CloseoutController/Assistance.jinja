@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <META HTTP-EQUIV="refresh" CONTENT="900">
+</head>
+
+<a href="logs/checkor/last.log" target="_blank">log</a> <a href="logs/recoveror/last.log" target="_blank">postlog</a><br>
+
+{# link to other assistance view #}
+{% if details %}
+<a href="assistance_summary.html">Summary</a>
+{% else %}
+<a href="assistance.html">Details</a>
+{% endif %}
+
+<br>
+Updated on {{ updateGMTime }} (GMT) <br>
+<br>
+
+{# explanation #}
+<ul>
+    <li> <b>custodial</b> : one the output dataset is waiting for the subscription to tape to be made. The request has been created already.<font color="green">(Automatic)</font>
+    </li>
+    <li> <b>parentcustodial</b> : the parent of the dataset is not set on tape <font color="red">(Operator)</font>
+    </li>
+    <li> <b>recovering</b> : there is at least one active ACDC for the worflow <font color="orange">(Wait)</font>
+    </li>
+    <li> <b>recovered</b> : there is at least one inactive ACDC for the workflow <font color="green">(Automatic)</font>
+    <li> <b>recovery</b> : the final statistics of the sample is not passing the requirements <font color="green">
+            (Automatic)</font>
+    </li>
+    <li> <b>announce</b> : the final statistics of the sample is enough to announce the outputs <font color="green">
+            (Automatic)</font>
+    </li>
+    <li> <b>announced</b> : the final statistics of the sample is enough and the outputs are announced <font
+            color="green">(Automatic)</font>
+    </li>
+    <li> <b>over100</b> : the final statistics is over 100%% <font color="red">(Operator)</font>
+    </li>
+    <li> <b>biglumi</b> : the maximum size of the lumisection in one of the output has been exceeded <font color="red">
+            (Operator)</font>
+    </li>
+    <li> <b>smalllumi</b> : the size of the lumisection of one of the output is too small <font color="red">(Operator)
+        </font>
+    </li>
+    <li> <b>bigoutput</b> : the maximum size for an output dataset to go to tape was exceeded <font color="blue">
+            (Requester</font>/<font color="red">Operator)</font>
+    </li>
+    <li> <b>filemismatch</b> : there is a mismatch in the number of files in DBS and Phedex <font color="red">(Operator)
+        </font>
+    </li>
+    <li> <b>agentfilemismatch</b> : there is a mismatch in the number of files in DBS and Phedex, and the grace period
+        for the agent is not over <font color="green">(Automatic)</font>
+    </li>
+    <li> <b>duplicates</b> : duplicated lumisection have been found and need to be invalidated <font color="green">
+            (Automatic)</font>
+    </li>
+    <li> <b>inconsistent</b> : the output of the recovery workflow is not consistent with the main workflow <font
+            color="red">(Operator)</font>
+    </li>
+    <li> <b>manual</b> : no automatic recovery was possible <font color="red">(Operator)</font>
+    </li>
+    <li> <b>on-hold</b> : there was a notification made that a decision needs to be taken to move forward. Check the
+        JIRA for details <font color="blue">(Requester</font>/<font color="red">Operator)</font>
+    </li>
+</ul><br>
+
+{# number of workflows in each status#}
+<ul>
+    {% for status in assistanceStatus %}
+    <li> <a href="#{{ status.name }}">{{ status.nWfs }}</a> in status {{ status.name }}</li>
+    {% endfor %}
+</ul>
+
+{# iterate over the status #}
+{% for status in assistanceStatus %}
+<a name="{{ status.name }}">Workflow in status <b> {{ status.name }} </b> ({{ status.nWfs }})</a>
+
+{# table header #}
+<table border=1>
+    <thead>
+        <tr>
+            {% if details %}
+            <th>workflow</th>
+            <th>OutputDataSet</th>
+            <th>%Compl</th>
+            <th>acdc</th>
+            <th>Events</th>
+            <th>Lumis</th>
+            <th>dbsF</th>
+            <th>dbsIF</th>
+            <th>phdF</th>
+            <th>Updated</th>
+            <th>Priority</th>
+            {% else %}
+            <th> workflow </th>
+            <th> output dataset </th>
+            <th> completion </th>
+            {% endif %}
+        </tr>
+    </thead>
+
+    {# iterate over the workflows of each status #}
+    {% for wf in status.wfs %}
+    {% for dataset in wf.datasets %}
+    <tr bgcolor="{{ wf.bgColor }}">
+        {### detailed table ###}
+        {% if details %}
+        {# row span if first dataset of a workflow #}
+        {% if loop.index0 == 0 %}
+        <td rowspan="{{ wf.nDatasets }}"><a id="{{ wf.name }}">{{ wf.name }}</a><br>
+            <a href="https://{{ reqmgrUrl }}/reqmgr2/fetch?rid={{ wf.name }}" target="_blank">dts</a>,
+            <a href="https://{{ reqmgrUrl }}/reqmgr2/data/request/{{ wf.name }}" target="_blank">wfc</a>,
+            <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext={{ wf.prepId }}&sall=q"
+                target="_blank">elog</a>,
+            <a
+                href="https://{{ reqmgrUrl }}/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/{{ wf.name }}">perf</a>,
+            <a href="assistance.html#{{ wf.name }}">{{ wf.status }}</a><br>
+            <a href="https://cms-unified.web.cern.ch/cms-unified/showlog/?search={{ wf.prepId }}"
+                target="_blank">history</a>,
+            <a 
+                href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{ wf.taskPrepId }}">{{ wf.taskPrepId }}</a>,
+            <a href="report/{{ wf.name }}">report</a>,
+
+            {% if "ReReco" in taskPrepId %}
+            <a href="{{ unifiedUrl }}/datalumi/lumi.{{ wf.taskPrepId }}.html">lumis</a>,
+            {% endif %}
+
+            <a href="https://its.cern.ch/jira/issues/?jql=(text~{{ wf.prepId }} OR text~task_{{ wf.prepId }} ) AND project = CMSCOMPPR"
+                target="_blank">jira</a>
+        </td>
+        {% endif %}
+
+        <td>{{ dataset.name.rsplit("/", 1)[0] }}/<b>{{ dataset.name.rsplit("/", 1)[1] }}<b></td>
+
+        {# table values #}
+        {% for col in cols %}
+        <td>
+            {% if col == "acdc" %}
+            <a
+                href="https://{{ reqmgrUrl }}/reqmgr2/data/request?prep_id={{ wf.taskPrepId }}&detail=false">{{ dataset[col].value }}</a>
+            {% elif col == "percentage" and dataset[col].value < dataset[col].fractionPass %}
+            <b>{{ dataset[col].value }}</b>
+            {% elif col in ["events", "lumis"] %}
+            {{ dataset[col].produced }}/{{ dataset[col].expected }}
+            {% else %}
+            {{ dataset[col].value }}
+            {% endif %}
+        </td>
+        {% endfor %}
+
+        {# row span if first dataset of a workflow #}
+        {% if loop.index0 == 0 %}
+        <td rowspan="{{ wf.nDatasets }}">{{ dataset.updated }}</td>
+        <td rowspan="{{ wf.nDatasets }}">{{ wf.priority }}</td>
+        {% endif %}
+
+        {### summary table ###}
+        {% else %}
+        <td> <a id="{{ wf.name }}">{{ wf.name }}</a> </td>
+        <td> {{ dataset.name }} </td>
+        <td> <a href="closeout.html#{{ wf.name }}">{{ dataset.percentage.value }}</a> </td>
+        {% endif %}
+    </tr>
+
+    {% endfor %}
+    {% endfor %}
+
+</table><br><br>
+
+{% endfor %}
+
+{% for _ in range(100) %}
+<br>
+{% endfor %}
+
+bottom of page
+
+</html>

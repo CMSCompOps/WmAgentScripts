@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+Last update on {{ updateCETime }}(CET), {{ updateGMTime }}(GMT), <a href="logs/checkor/" target="_blank">logs</a>
+<br><br>
+
+{# table header #}
+<table border=1>
+    <thead>
+        <tr>
+            <th>workflow</th>
+            <th>OutputDataSet</th>
+            <th>%Compl</th>
+            <th>acdc</th>
+            <th>Events</th>
+            <th>Lumis</th>
+            <th>dbsF</th>
+            <th>dbsIF</th>
+            <th>phdF</th>
+            <th>Updated</th>
+            <th>Priority</th>
+        </tr>
+    </thead>
+
+    {# iterate over the workflows #}
+    {% for wf in wfs %}
+
+    {# iterate over the dataset of each workflow #}
+    {% for dataset in wf.datasets %}
+
+    <tr bgcolor="{{ wf.bgColor }}">
+
+        {# row span if first dataset of a workflow #}
+        {% if loop.index0 == 0 %}
+        <td rowspan="{{ wf.nDatasets }}"><a id="{{ wf.name }}">{{ wf.name }}</a><br>
+            <a href="https://{{ reqmgrUrl }}/reqmgr2/fetch?rid={{ wf.name }}" target="_blank">dts</a>,
+            <a href="https://{{ reqmgrUrl }}/reqmgr2/data/request/{{ wf.name }}" target="_blank">wfc</a>,
+            <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext={{ wf.prepId }}&sall=q"
+                target="_blank">elog</a>,
+            <a
+                href="https://{{ reqmgrUrl }}/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/{{ wf.name }}">perf</a>,
+            <a href="assistance.html#{{ wf.name }}">{{ wf.status }}</a><br>
+            <a href="https://cms-unified.web.cern.ch/cms-unified/showlog/?search={{ wf.prepId }}"
+                target="_blank">history</a>,
+            <a
+                href="https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id={{ wf.taskPrepId }}">{{ wf.taskPrepId }}</a>,
+            <a href="report/{{ wf.name }}">report</a>,
+
+            {% if "ReReco" in taskPrepId %}
+            <a href="{{ unifiedUrl }}/datalumi/lumi.{{ wf.taskPrepId }}.html">lumis</a>,
+            {% endif %}
+
+            <a href="https://its.cern.ch/jira/issues/?jql=(text~{{ wf.prepId }} OR text~task_{{ wf.prepId }} ) AND project = CMSCOMPPR"
+                target="_blank">jira</a>
+        </td>
+        {% endif %}
+
+        <td>{{ dataset.name.rsplit("/", 1)[0] }}/<b>{{ dataset.name.rsplit("/", 1)[1] }}<b></td>
+
+        {# table values #}
+        {% for col in cols %}
+        <td>
+            {% if col == "acdc" %}
+            <a 
+                href="https://{{ reqmgrUrl }}/reqmgr2/data/request?prep_id={{ wf.taskPrepId }}&detail=false">{{ dataset[col].value }}</a>
+            {% elif col == "percentage" and dataset[col].value < dataset[col].fractionPass %}
+            <b>{{ dataset[col].value}}</b>
+            {% elif col in ["events", "lumis"] %}
+            {{ dataset[col].produced }}/{{ dataset[col].expected }}
+            {% else %}
+            {{ dataset[col].value }}
+            {% endif %}
+        </td>
+        {% endfor %}
+
+        {# row span if first dataset of a workflow #}
+        {% if loop.index0 == 0 %}
+        <td rowspan="{{ wf.nDatasets }}">{{ dataset.updated }}</td>
+        <td rowspan="{{ wf.nDatasets }}">{{ wf.priority }}</td>
+        {% endif %}
+
+    </tr>
+
+    {% endfor %}
+    {% endfor %}
+
+</table>
+
+{% for _ in range(100) %}
+<br>
+{% endfor %}
+
+bottom of page
+
+</html>
