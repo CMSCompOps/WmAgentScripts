@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 """
-_WorkflowsReporter_t_
-Unit test for WorkflowsReporter helper class.
+_ReportController_t_
+Unit test for ReportController helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
 from Databases.Mongo.MongoClient import MongoClient
-from Components.Workflow.WorkflowsReporter import WorkflowsReporter
+from MongoControllers.ReportController import ReportController
 
 
 class MockMongoClient(MongoClient):
@@ -19,7 +19,7 @@ class MockMongoClient(MongoClient):
         pass
 
 
-class WorkflowsReporterTest(unittest.TestCase):
+class ReportControllerTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "reportInfo"}
 
     # The data in ReportInfo is always changing.
@@ -28,7 +28,7 @@ class WorkflowsReporterTest(unittest.TestCase):
     params = {"workflow": mockMongoClient._getOne()["workflow"], "dropKey": "_id", "dateTimeKeys": ["time", "date"]}
 
     def setUp(self) -> None:
-        self.workflowsReporter = WorkflowsReporter()
+        self.reportController = ReportController()
         super().setUp()
         return
 
@@ -38,19 +38,19 @@ class WorkflowsReporterTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.workflowsReporter.collection, Collection)
+        isCollection = isinstance(self.reportController.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.workflowsReporter.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.reportController.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.workflowsReporter.collection.name == self.mongoSettings.get("collection")
+        rightName = self.reportController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the report info for a given workflow"""
         # Test when the workflow exists
-        result = self.workflowsReporter.get(self.params.get("workflow"))
+        result = self.reportController.get(self.params.get("workflow"))
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -61,7 +61,7 @@ class WorkflowsReporterTest(unittest.TestCase):
         self.assertTrue(hasDateTimeKeys)
 
         # Test when the worklfow does not exist
-        result = self.workflowsReporter.get("test")
+        result = self.reportController.get("test")
         isNone = result is None
         self.assertTrue(isNone)
 

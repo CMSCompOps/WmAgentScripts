@@ -7,9 +7,9 @@ from Utilities.IteratorTools import mapKeys, mapValues
 from Databases.Mongo.MongoClient import MongoClient
 
 
-class WorkflowsReporter(MongoClient):
+class ReportController(MongoClient):
     """
-    __WorkflowsReporter__
+    __ReportController__
     General API for reporting the workflows info
     """
 

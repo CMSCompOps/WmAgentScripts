@@ -12,9 +12,9 @@ from Utilities.Logging import displayTime
 from Databases.Mongo.MongoClient import MongoClient
 
 
-class ModuleLock(MongoClient):
+class ModuleLockController(MongoClient):
     """
-    __ModuleLock__
+    __ModuleLockController__
     General API for locking (or not) a module
     """
 
@@ -38,7 +38,7 @@ class ModuleLock(MongoClient):
             }
 
         except Exception as error:
-            raise Exception(f"Error initializing ModuleLock\n{str(error)}")
+            raise Exception(f"Error initializing ModuleLockController\n{str(error)}")
 
     def __call__(self) -> bool:
         self.logger.info("Module lock for component %s from MongoDB", self.component)

@@ -6,9 +6,9 @@ from typing import Optional
 from Databases.Mongo.MongoClient import MongoClient
 
 
-class RuntimeMonitor(MongoClient):
+class StartStopTimeController(MongoClient):
     """
-    __RuntimeMonitor__
+    __StartStopTimeController__
     General API for monitoring modules runtimes
     """
 

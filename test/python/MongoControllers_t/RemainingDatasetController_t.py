@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 """
-_RemainingDatasetsMonitor_t_
-Unit test for RemainingDatasetsMonitor helper class.
+_RemainingDatasetController_t_
+Unit test for RemainingDatasetController helper class.
 """
 
 import unittest
 from unittest.mock import patch
 from pymongo.collection import Collection
 
-from Components.RemainingDatasetsMonitor import RemainingDatasetsMonitor
+from MongoControllers.RemainingDatasetController import RemainingDatasetController
 
 
-class RemainingDatasetsMonitorTest(unittest.TestCase):
+class RemainingDatasetControllerTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "remainingDatasetInfo"}
 
     # There are lots of datasets under this site. For now, test for only one.
@@ -23,31 +23,31 @@ class RemainingDatasetsMonitorTest(unittest.TestCase):
     }
 
     def setUp(self) -> None:
-        self.remainingDatasetsMonitor = RemainingDatasetsMonitor()
+        self.remainingDatasetController = RemainingDatasetController()
         super().setUp()
         return
 
-    @patch("Components.RemainingDatasetsMonitor.RemainingDatasetsMonitor.purge")
+    @patch("MongoControllers.RemainingDatasetController.RemainingDatasetController.purge")
     def tearDown(self, mockPurge) -> None:
         mockPurge.return_value = None
-        del self.remainingDatasetsMonitor
+        del self.remainingDatasetController
         super().tearDown()
         return
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.remainingDatasetsMonitor.collection, Collection)
+        isCollection = isinstance(self.remainingDatasetController.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.remainingDatasetsMonitor.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.remainingDatasetController.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.remainingDatasetsMonitor.collection.name == self.mongoSettings.get("collection")
+        rightName = self.remainingDatasetController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGetSites(self):
         """getSites gets list of sites"""
-        result = self.remainingDatasetsMonitor.getSites()
+        result = self.remainingDatasetController.getSites()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
@@ -59,7 +59,7 @@ class RemainingDatasetsMonitorTest(unittest.TestCase):
 
     def testGet(self):
         """get gets the data of a given site"""
-        result = self.remainingDatasetsMonitor.get(self.params.get("site"))
+        result = self.remainingDatasetController.get(self.params.get("site"))
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -79,12 +79,12 @@ class RemainingDatasetsMonitorTest(unittest.TestCase):
         hasAllKeys = all(k in result[self.params.get("dataset")] for k in self.params.get("docKeys"))
         self.assertTrue(hasAllKeys)
 
-    @patch("Components.RemainingDatasetsMonitor.RemainingDatasetsMonitor.get")
+    @patch("MongoControllers.RemainingDatasetController.RemainingDatasetController.get")
     def testTell(self, mockGet):
         """tell prints the data for a given site"""
-        with self.assertLogs(self.remainingDatasetsMonitor.logger, level="INFO") as result:
+        with self.assertLogs(self.remainingDatasetController.logger, level="INFO") as result:
             mockGet.return_value = self.params.get("doc")
-            self.remainingDatasetsMonitor.tell(self.params.get("site"))
+            self.remainingDatasetController.tell(self.params.get("site"))
             toldOnce = len(result.output) == 1
             self.assertTrue(toldOnce)
 

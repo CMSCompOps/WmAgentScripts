@@ -1,29 +1,29 @@
 #!/usr/bin/env python
 """
-_AgentsStatusController_t_
-Unit test for AgentsStatusController helper class.
+_AgentController_t_
+Unit test for AgentController helper class.
 """
 
 import unittest
 from unittest.mock import patch
 from pymongo.collection import Collection
 
-from Components.AgentsStatusController import AgentsStatusController
+from MongoControllers.AgentController import AgentController
 
 
-class AgentsStatusControllerTest(unittest.TestCase):
+class AgentControllerTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "agentInfo"}
 
     # AgentInfo is always changing.
     # For now, only test output types and content keys for a given agent.
     params = {"agent": "vocms0284.cern.ch", "docKeys": ["status", "version", "update", "date"]}
 
-    @patch("Components.AgentsStatusController.AgentsStatusController.syncToProduction")
+    @patch("MongoControllers.AgentController.AgentController.syncToProduction")
     @patch("Services.Trello.TrelloClient.TrelloClient.__init__")
     def setUp(self, mockTrello, mockSync) -> None:
         mockSync.return_value = True
         mockTrello.return_value = None
-        self.agentsStatusController = AgentsStatusController()
+        self.agentController = AgentController()
         super().setUp()
         return
 
@@ -33,18 +33,18 @@ class AgentsStatusControllerTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.agentsStatusController.collection, Collection)
+        isCollection = isinstance(self.agentController.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.agentsStatusController.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.agentController.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.agentsStatusController.collection.name == self.mongoSettings.get("collection")
+        rightName = self.agentController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGetAgents(self):
         """get gets the agents names"""
-        result = self.agentsStatusController.getAgents()
+        result = self.agentController.getAgents()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
@@ -57,7 +57,7 @@ class AgentsStatusControllerTest(unittest.TestCase):
     def testGet(self):
         """get gets the info of a given agent"""
         # Test when agent exists
-        result = self.agentsStatusController.get(self.params.get("agent"))
+        result = self.agentController.get(self.params.get("agent"))
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
@@ -68,7 +68,7 @@ class AgentsStatusControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when agent does not exist
-        result = self.agentsStatusController.get("test")
+        result = self.agentController.get("test")
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 

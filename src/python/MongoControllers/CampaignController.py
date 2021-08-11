@@ -7,9 +7,9 @@ from typing import Optional, Any
 from Databases.Mongo.MongoClient import MongoClient
 
 
-class CampaignsConfigurationController(MongoClient):
+class CampaignController(MongoClient):
     """
-    __CampaignsConfigurationController__
+    __CampaignController__
     General API for controlling the campaigns configuration info
     """
 
@@ -20,7 +20,7 @@ class CampaignsConfigurationController(MongoClient):
             self.campaigns = self._setCampaigns()
 
         except Exception as error:
-            raise Exception(f"Error initializing CampaignsConfigurationController\n{str(error)}")
+            raise Exception(f"Error initializing CampaignController\n{str(error)}")
 
     def _setMongoCollection(self) -> Collection:
         return self.client.unified.campaignsConfiguration

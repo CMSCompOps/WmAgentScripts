@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 """
-_WorkflowsCloseoutMonitor_t_
-Unit test for WorkflowsCloseoutMonitor helper class.
+_CloseoutController_t_
+Unit test for CloseoutController helper class.
 """
 
 import unittest
 from pymongo.collection import Collection
 
 from Databases.Mongo.MongoClient import MongoClient
-from Components.Workflow.WorkflowsCloseoutMonitor import WorkflowsCloseoutMonitor
+from MongoControllers.CloseoutController import CloseoutController
 
 
 class MockMongoClient(MongoClient):
@@ -19,7 +19,7 @@ class MockMongoClient(MongoClient):
         pass
 
 
-class WorkflowsCloseoutMonitorTest(unittest.TestCase):
+class CloseoutControllerTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "closeoutInfo"}
 
     # CloseoutInfo is always changing.
@@ -31,7 +31,7 @@ class WorkflowsCloseoutMonitorTest(unittest.TestCase):
     }
 
     def setUp(self) -> None:
-        self.workflowsCloseoutMonitor = WorkflowsCloseoutMonitor()
+        self.closeoutController = CloseoutController()
         super().setUp()
         return
 
@@ -41,36 +41,36 @@ class WorkflowsCloseoutMonitorTest(unittest.TestCase):
 
     def testMongoSettings(self):
         """MongoClient gets the connection to MongoDB"""
-        isCollection = isinstance(self.workflowsCloseoutMonitor.collection, Collection)
+        isCollection = isinstance(self.closeoutController.collection, Collection)
         self.assertTrue(isCollection)
 
-        rightName = self.workflowsCloseoutMonitor.collection.database.name == self.mongoSettings.get("database")
+        rightName = self.closeoutController.collection.database.name == self.mongoSettings.get("database")
         self.assertTrue(rightName)
 
-        rightName = self.workflowsCloseoutMonitor.collection.name == self.mongoSettings.get("collection")
+        rightName = self.closeoutController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
     def testGet(self):
         """get gets the closeout info for a given workflow"""
         # Test when workflow exists
-        result = self.workflowsCloseoutMonitor.get(self.params.get("workflow"))
+        result = self.closeoutController.get(self.params.get("workflow"))
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
         noDropKeys = all(k not in result for k in self.params.get("dropKeys"))
         self.assertTrue(noDropKeys)
 
-        isRecorded = self.params.get("workflow") in self.workflowsCloseoutMonitor.record
+        isRecorded = self.params.get("workflow") in self.closeoutController.record
         self.assertTrue(isRecorded)
 
         # Test when workflow does not exist
-        result = self.workflowsCloseoutMonitor.get("test")
+        result = self.closeoutController.get("test")
         isNone = result is None
         self.assertTrue(isNone)
 
     def testGetWorkflows(self):
         """get gets all workflow names"""
-        result = self.workflowsCloseoutMonitor.getWorkflows()
+        result = self.closeoutController.getWorkflows()
         isList = isinstance(result, list)
         self.assertTrue(isList)
 
