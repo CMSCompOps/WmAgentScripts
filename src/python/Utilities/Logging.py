@@ -9,7 +9,6 @@ from email.mime.text import MIMEText
 from email.utils import COMMASPACE, formatdate
 from smtplib import SMTP
 
-from WorkflowMgmt.WorkflowController import WorkflowController
 from Utilities.WebTools import sendResponse
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
@@ -45,7 +44,7 @@ class ElasticSearchHandler(logging.Handler):
         auth = encodestring(f"{entryPointName}:{password}".replace("\n", "")).replace("\n", "")
         self.headers = {"Authorization": f"Basic {auth}", "Content-Type": "application/json"}
 
-    def _formatWorkflowMetadata(workflowController: WorkflowController) -> str:
+    def _formatWorkflowMetadata(workflowController) -> str:
         """
         The function to format the workflow metadata for logging
         :param workflowController: instance of WorkflowController

@@ -8,6 +8,7 @@ from time import mktime, gmtime
 
 from MongoControllers.CampaignController import CampaignController
 
+from WorkflowMgmt.SiteController import SiteController
 from WorkflowMgmt.WorkflowSchemaHandlers.BaseWfSchemaHandler import BaseWfSchemaHandler
 from WorkflowMgmt.WorkflowSchemaHandlers.StepChainWfSchemaHandler import StepChainWfSchemaHandler
 from WorkflowMgmt.WorkflowSchemaHandlers.TaskChainWfSchemaHandler import TaskChainWfSchemaHandler
@@ -51,7 +52,7 @@ class WorkflowController(object):
             self.rucioReader = RucioReader(**kwargs.get("rucioConfig"))
 
             self.campaignController = CampaignController()
-            self.siteInfo = None  # TODO: implement siteInfo
+            self.siteController = SiteController()
 
             self.wf = wf
             self.request = self._getWorkloadHandler(kwargs.get("request"))
@@ -128,19 +129,19 @@ class WorkflowController(object):
 
         lhe, _, _, secondaries = self.request.getIO()
         if lhe:
-            return set(sorted(self.siteInfo.EOSSites))
+            return set(sorted(self.siteController.EOSSites))
 
         if secondaries and self.isHeavyToRead(secondaries):
             for secondary in secondaries:
                 allowedSites.update(self.rucioReader.getDatasetLocationsByAccount(secondary, "wmcore_transferor"))
             return set(sorted(allowedSites))
 
-        sites = ["T0Sites", "T1Sites", "GoodAAASites" if secondaries else "T2Sites"]
+        sites = ["T0Sites", "T1Sites", "goodAAASites" if secondaries else "T2Sites"]
         for site in sites:
-            allowedSites.update(getattr(self.siteInfo, site))
+            allowedSites.update(getattr(self.siteController, site))
 
         if self.request.includeHEPCloudInSiteWhiteList:
-            allowedSites.update(self.siteInfo.HEPCloudSites)
+            allowedSites.update(self.siteController.hepCloudSites)
             self.logger.info("Including HEPCloud in the site white list of %s", self.wf)
 
         return set(sorted(allowedSites))
@@ -156,7 +157,7 @@ class WorkflowController(object):
 
         if blowUp > maxBlowUp:
             allowedSitesWithNeededCores = set(
-                [site for site in allowedSites if self.siteInfo.cpuPledges[site] > neededCores]
+                [site for site in allowedSites if self.siteController.cpuPledges[site] > neededCores]
             )
 
             if allowedSitesWithNeededCores:
@@ -515,7 +516,7 @@ class WorkflowController(object):
         try:
             allowedSites = self._getAllowedSites()
             if pickOne:
-                allowedSites = set(sorted(self.siteInfo.pickCE(allowedSites)))
+                allowedSites = set(sorted(self.siteController.pickCE(allowedSites)))
 
             self.logger.info("Initially allow %s", allowedSites)
 

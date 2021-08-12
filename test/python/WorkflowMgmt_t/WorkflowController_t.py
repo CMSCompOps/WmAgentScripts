@@ -10,8 +10,9 @@ import unittest
 from unittest.mock import patch, mock_open, MagicMock
 from collections import Counter
 
-from WorkflowMgmt.WorkflowController import WorkflowController
+from MongoControllers.CampaignController import CampaignController
 
+from WorkflowMgmt.WorkflowController import WorkflowController
 from WorkflowMgmt.WorkflowSchemaHandlers.BaseWfSchemaHandler import BaseWfSchemaHandler
 from WorkflowMgmt.WorkflowSchemaHandlers.StepChainWfSchemaHandler import StepChainWfSchemaHandler
 from WorkflowMgmt.WorkflowSchemaHandlers.TaskChainWfSchemaHandler import TaskChainWfSchemaHandler
@@ -19,6 +20,7 @@ from WorkflowMgmt.WorkflowSchemaHandlers.TaskChainWfSchemaHandler import TaskCha
 
 class WorkflowControllerTest(unittest.TestCase):
     rucioConfig = {"account": os.getenv("RUCIO_ACCOUNT")}
+    realCampaignController = CampaignController()
 
     # This workflow is a monte carlo request. Use it for testing functions depending on the request type as well as splittings functions.
     mcParams = {
@@ -158,7 +160,12 @@ class WorkflowControllerTest(unittest.TestCase):
         "lumiList": {"344068": [[1, 1512]]},
     }
 
-    def setUp(self) -> None:
+    @patch("MongoControllers.CampaignController.CampaignController.__init__")
+    @patch("MongoControllers.SiteController.SiteController.__init__")
+    def setUp(self, mockSite: MagicMock, mockCampaign: MagicMock) -> None:
+        mockCampaign.side_effect = [None] * 5
+        mockSite.side_effect = [None] * 5
+
         self.mcWfController = WorkflowController(self.mcParams.get("workflow"), rucioConfig=self.rucioConfig)
 
         self.rerecoWfController = WorkflowController(self.rerecoParams.get("workflow"), rucioConfig=self.rucioConfig)
@@ -253,6 +260,9 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGo(self) -> None:
         """go checks if a workflow is allowed to go"""
+        self.mcWfController.campaignController = self.realCampaignController
+        self.relvalTaskChainWfController.campaignController = self.realCampaignController
+
         # Test when go is True
         response = self.mcWfController.go()
         isBool = isinstance(response, bool)
