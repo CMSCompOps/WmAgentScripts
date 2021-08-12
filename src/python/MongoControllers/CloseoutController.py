@@ -113,7 +113,7 @@ class CloseoutController(MongoClient, OracleClient):
             workflow["bgColor"] = "lightblue" if i % 2 else "white"
             workflows.append(workflow)
 
-        with open(self.template["summary"]) as tmpl:
+        with open(self.template["summary"], "r") as tmpl:
             template = Template(tmpl.read())
 
         return template.render(
@@ -158,7 +158,7 @@ class CloseoutController(MongoClient, OracleClient):
             statusData["nWfs"] = len(statusData["wfs"])
             assistanceStatus.append(statusData)
 
-        with open(self.template["assistance"]) as tmpl:
+        with open(self.template["assistance"], "r") as tmpl:
             template = Template(tmpl.read())
 
         assistanceHtml = []

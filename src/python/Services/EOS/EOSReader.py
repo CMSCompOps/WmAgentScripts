@@ -25,7 +25,7 @@ class EOSReader(object):
             self.cacheDirectory = configurationHandler.get("cache_dir")
             self.cache = (self.cacheDirectory + "/" + filename.replace("/", "_")).replace("//", "/")
 
-            self._filename = filename.replace("//", "/")
+            self._filename = filename
 
         except Exception as error:
             raise Exception(f"Error initializing EOSReader\n{str(error)}")

@@ -50,6 +50,24 @@ class TrelloClient(object):
             self.logger.error("Failed to get %s with id %s", key, id)
             self.logger.error(str(error))
 
+    def _sendResponse(self, key: str, id: str, param=dict) -> None:
+        """
+        The function to set data in the Trello board
+        :param key: key name
+        :param id: key id
+        :param param: param values
+        """
+        try:
+            param = "&".join(f"{k}={v}" for k, v in param.items())
+            url = f"https://api.trello.com/1/{key}/{id}{param}&key={self.configs['key']}&token={self.configs['token']}"
+            with os.popen(f'curl -s --request PUT --url "{url}"') as file:
+                data = json.loads(file.read())
+            return data
+
+        except Exception as error:
+            self.logger.error("Failed to set %s with %s, %s", key, id, param)
+            self.logger.error(str(error))
+
     def _syncAgents(self) -> None:
         """
         The function to get all agents in the Trello board
@@ -101,28 +119,10 @@ class TrelloClient(object):
             self.logger.error("Failed to get list id for %s", status)
             self.logger.error(str(error))
 
-    def _set(self, key: str, id: str, param=dict) -> None:
-        """
-        The function to set data in the Trello board
-        :param key: key name
-        :param id: key id
-        :param param: param values
-        """
-        try:
-            param = "&".join(f"{k}={v}" for k, v in param.items())
-            url = f"https://api.trello.com/1/{key}/{id}{param}&key={self.configs['key']}&token={self.configs['token']}"
-            with os.popen(f'curl -s --request PUT --url "{url}"') as file:
-                data = json.loads(file.read())
-            return data
-
-        except Exception as error:
-            self.logger.error("Failed to set %s with %s, %s", key, id, param)
-            self.logger.error(str(error))
-
     def setList(self, name: str, status: str) -> None:
         """
         The function to set a given agent into the list of a given status
         :param name: agent name
         :param status: status name
         """
-        return self._set("cards", self.getCard(name).get("id"), {"idList": self.getListId(status)})
+        return self._sendResponse("cards", self.getCard(name).get("id"), {"idList": self.getListId(status)})

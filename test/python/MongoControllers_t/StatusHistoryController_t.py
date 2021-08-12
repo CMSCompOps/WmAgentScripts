@@ -5,6 +5,7 @@ Unit test for StatusHistoryController helper class.
 """
 
 import unittest
+from time import struct_time, mktime, asctime
 from pymongo.collection import Collection
 
 from MongoControllers.StatusHistoryController import StatusHistoryController
@@ -15,7 +16,7 @@ class StatusHistoryControllerTest(unittest.TestCase):
 
     # StatusHistory is always changing
     # For now, test only output types and date/time keys
-    params = {"dateTimeKeys": ["time", "date"]}
+    params = {"dateTimeKeys": ["time", "date"], "now": struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0))}
 
     def setUp(self) -> None:
         self.statusHistoryController = StatusHistoryController()
@@ -26,7 +27,7 @@ class StatusHistoryControllerTest(unittest.TestCase):
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.statusHistoryController.collection, Collection)
         self.assertTrue(isCollection)
@@ -37,7 +38,22 @@ class StatusHistoryControllerTest(unittest.TestCase):
         rightName = self.statusHistoryController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
-    def testGet(self):
+    def testBuildMongoDocument(self) -> None:
+        """_buildMongoDocument builds the document to store on Mongo"""
+        result = self.statusHistoryController._buildMongoDocument({"test": "ok"}, self.params.get("now"))
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
+
+        isTimeEqual = result.get("time") == mktime(self.params.get("now"))
+        self.assertTrue(isTimeEqual)
+
+        isDateEqual = result.get("date") == asctime(self.params.get("now"))
+        self.assertTrue(isDateEqual)
+
+        isFound = result.get("test") == "ok"
+        self.assertTrue(isFound)
+
+    def testGet(self) -> None:
         """get gets the data in status history"""
         result = self.statusHistoryController.get()
         isDict = isinstance(result, dict)

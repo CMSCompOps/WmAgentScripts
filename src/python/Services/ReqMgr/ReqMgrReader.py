@@ -33,6 +33,8 @@ class ReqMgrReader(object):
                 "info": "/reqmgr2/data/info/",
                 "agentConfig": "/reqmgr2/data/wmagentconfig/",
                 "splitting": "/reqmgr2/data/splitting/",
+                "cache": "/couchdb/reqmgr_workload_cache/",
+                "summary": "/couchdb/workloadsummary/",
             }
 
         except Exception as error:
@@ -202,3 +204,30 @@ class ReqMgrReader(object):
         except Exception as error:
             self.logger.error("Failed to get splittings from reqmgr for %s", wf)
             self.logger.error(str(error))
+
+    @runWithRetries(tries=2, wait=1, default=False)
+    def getSpec(self, wf: str) -> dict:
+        """
+        The function to get the specification for a given workflow
+        :param wf: workflow name
+        :return: specification
+        """
+        try:
+            return getResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["cache"] + f"{wf}/spec", isJson=False)
+
+        except Exception as error:
+            print("Failed to get workflow specification")
+            print(str(error))
+
+    def getWorkloadSummary(self, wf: str) -> dict:
+        """
+        The function to get the workload summary for a given workflow
+        :param wf: workflow name
+        :return: workload summary
+        """
+        try:
+            return getResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["summary"] + wf)
+
+        except Exception as error:
+            print("Failed to get workflow summary")
+            print(str(error))

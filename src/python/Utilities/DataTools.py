@@ -146,3 +146,26 @@ def sortByWakeUpPriority(agents: dict) -> list:
     """
     wakeUpMetric = lambda v: v.get("TotalIdleJobs", 0) - v.get("TotalRunningJobs", 0)
     return [name for name in sorted(mapValues(wakeUpMetric, agents), key=lambda x: x[1], reverse=True)]
+
+
+def flattenTaskTree(task: str, **selectParam) -> list:
+    """
+    The function to flatten a task tree into a list
+    :param task: task
+    :param selectParam: optional selection params
+    :return: list of tasks
+    """
+    allTasks = []
+    if selectParam:
+        for k, v in selectParam.items():
+            if (isinstance(v, list) and getattr(task, k) in v) or (not isinstance(v, list) and getattr(task, k) == v):
+                allTasks.append(task)
+                break
+    else:
+        allTasks.append(task)
+
+    for child in task.tree.childNames:
+        childSpec = getattr(task.tree.children, child)
+        allTasks.extend(flattenTaskTree(childSpec, **selectParam))
+
+    return allTasks
