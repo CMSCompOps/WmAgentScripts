@@ -14,6 +14,7 @@ from typing import Optional, Any
 
 
 class BaseDocumentCache(ABC):
+
     """
     __BaseDocumentCache__
     General Abstract Base Class for building caching documents

@@ -6,7 +6,7 @@ Unit test for DuplicateFilesAnalyzer helper class.
 
 import unittest
 
-from Components.File.DuplicateFilesAnalyzer import DuplicateFilesAnalyzer
+from WorkflowMgmt.DuplicateFilesAnalyzer import DuplicateFilesAnalyzer
 
 
 class FilesAnalyzerTest(unittest.TestCase):

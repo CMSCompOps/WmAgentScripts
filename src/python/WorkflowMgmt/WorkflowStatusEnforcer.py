@@ -2,7 +2,7 @@ from logging import Logger
 
 from Utilities.Decorators import runWithRetries
 
-from Components.Workflow.WorkflowController import WorkflowController
+from WorkflowMgmt.WorkflowController import WorkflowController
 from Services.ReqMgr.ReqMgrWriter import ReqMgrWriter
 from Services.DBS.DBSWriter import DBSWriter
 from Services.DBS.DBSReader import DBSReader

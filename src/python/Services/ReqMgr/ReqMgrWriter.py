@@ -75,3 +75,20 @@ class ReqMgrWriter(object):
             self.logger.error("Failed to set %s for %s", param, wf)
             self.logger.error(str(error))
             return False
+
+    def setAgentConfig(self, agent: str, config: dict) -> bool:
+        """
+        The function to set the configuration for a given agent
+        :param agent: agent name
+        :param config: agent configuration params
+        :return: True if succeeded, False o/w
+        """
+        try:
+            result = sendResponse(
+                url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["agentConfig"] + agent, param=config
+            )
+            return result["result"][0]["ok"]
+
+        except Exception as error:
+            self.logger.error("Failed to set configuration in reqmgr for agent %s", agent)
+            self.logger.error(str(error))

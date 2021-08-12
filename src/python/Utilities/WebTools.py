@@ -6,9 +6,15 @@ Description: Useful functions while interacting different services
 
 import os
 import json
+
+from typing import Dict, Optional, Union, Any
+
+from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.Authenticate import getX509Conn
 
-from typing import Union, Optional, Any
+# Get necessary parameters
+configurationHandler = ConfigurationHandler()
+reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
 
 
 def getResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None) -> Any:
@@ -42,6 +48,7 @@ def getResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: 
 
     except Exception as error:
         print(f"Failed to get response from {url + endpoint + param}\n{str(error)}")
+
 
 def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None) -> dict:
     """

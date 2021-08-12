@@ -9,9 +9,9 @@ from Databases.Oracle.OracleClient import OracleClient
 from Databases.Oracle.OracleDB import Lock, LockOfLock
 
 
-class GlobalLock(OracleClient):
+class GlobalLockController(OracleClient):
     """
-    _GlobalLock_
+    _GlobalLockController_
     General API for controlling locks
     """
 
@@ -26,7 +26,7 @@ class GlobalLock(OracleClient):
                 self.acquire()
 
         except Exception as error:
-            raise Exception(f"Error initializing GlobalLock\n{str(error)}")
+            raise Exception(f"Error initializing GlobalLockController\n{str(error)}")
 
     def __del__(self):
         self.release()

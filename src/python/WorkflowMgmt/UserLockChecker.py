@@ -8,10 +8,10 @@ from Utilities.ConfigurationHandler import ConfigurationHandler
 from typing import Optional
 
 
-class UserLock(object):
+class UserLockChecker(object):
     """
-    _UserLock_
-    General API for controlling the user lock
+    _UserLockChecker_
+    General API for checking if the component is locked by an user
     """
 
     def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
@@ -25,9 +25,13 @@ class UserLock(object):
             self.component = kwargs.get("component") or sys._getframe(1).f_code.co_name
 
         except Exception as error:
-            raise Exception(f"Error initializing UserLock\n{str(error)}")
+            raise Exception(f"Error initializing UserLockChecker\n{str(error)}")
 
-    def __call__(self) -> bool:
+    def isLocked(self) -> bool:
+        """
+        The function to check if the component is locked by an user
+        :return: True if locked, False o/w
+        """
         return not self.go()
 
     def go(self) -> bool:

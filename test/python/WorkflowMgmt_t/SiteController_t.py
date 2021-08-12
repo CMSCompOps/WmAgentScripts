@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 from collections import defaultdict
 
-from Components.Site.SiteController import SiteController
+from WorkflowMgmt.SiteController import SiteController
 
 
 class SiteControllerTest(unittest.TestCase):

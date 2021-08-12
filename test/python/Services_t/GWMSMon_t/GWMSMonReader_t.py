@@ -32,11 +32,6 @@ class GWMSMonReaderTest(unittest.TestCase):
 
         isFound = self.sitesParam.get("mcore") in result
         self.assertTrue(isFound)
-    
-    def testGetViewByKey(self) -> None:
-        """getViewByKey gets the view data for a given key"""
-        # Test for gwmsmon_totals doc cache key
-        result = self.gwmsmonReader.getViewByKey("pool", "totals")
 
 
 if __name__ == "__main__":

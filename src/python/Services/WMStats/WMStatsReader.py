@@ -6,6 +6,7 @@ Description: General API for reading data from WMStats
 
 import os
 from logging import Logger
+from collections import defaultdict
 
 from Utilities.WebTools import getResponse
 from Utilities.Logging import getLogger
@@ -20,7 +21,7 @@ class WMStatsReader(object):
     General API for reading data from WMStats
     """
 
-    def __init__(self, logger: Optional[Logger] = None, **contact):
+    def __init__(self, logger: Optional[Logger] = None):
         try:
             super().__init__()
             self.logger = logger or getLogger(self.__class__.__name__)
@@ -32,10 +33,41 @@ class WMStatsReader(object):
                 "filteredRequest": "/wmstatsserver/data/filtered_requests/",
                 "cache": "/wmstatsserver/data/requestcache/",
                 "jobdetail": "/wmstatsserver/data/jobdetail/",
+                "agentInfo": "/couchdb/wmstats/_design/WMStats/_view/agentInfo?stale=update_after",
             }
 
         except Exception as error:
             raise Exception(f"Error initializing WMStatsReader\n{str(error)}")
+
+    def getAgents(self) -> dict:
+        """
+        The function to get all agents by team
+        :return: agents
+        """
+        try:
+            result = getResponse(self.reqmgrUrl, self.wmstatsEndpoint["agentInfo"])
+
+            data = defaultdict(list)
+            for item in [row["value"] for row in result["rows"]]:
+                data[item["agent_team"]].append(item)
+            return dict(data)
+
+        except Exception as error:
+            self.logger.error("Failed to get agents from wmstats")
+            self.logger.error(str(error))
+
+    def getProductionAgents(self) -> dict:
+        """
+        The function to get all agents in production
+        :return: agents
+        """
+        try:
+            agents = self.getAgents().get("production")
+            return dict((agent["agent_url"].split(":")[0], agent) for agent in agents)
+
+        except Exception as error:
+            self.logger.error("Failed to get production agents from wmstats")
+            self.logger.error(str(error))
 
     def getCachedWMStats(self) -> dict:
         """
@@ -68,11 +100,11 @@ class WMStatsReader(object):
 
             failedJobs = 0
             for item in data:
-                for _, agent in item.get('AgentJobInfo', {}).items():
+                for _, agent in item.get("AgentJobInfo", {}).items():
                     taskInfo = agent.get("tasks", {}).get(task, {})
                     for _, nFailures in taskInfo.get("status", {}).get("failure", {}).items():
                         failedJobs += nFailures
-            
+
             return failedJobs
 
         except Exception as error:

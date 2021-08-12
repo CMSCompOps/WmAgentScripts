@@ -1,4 +1,4 @@
-from collections import defaultdict, Mapping
+from collections import defaultdict
 from Utilities.IteratorTools import mapValues, filterKeys
 
 from typing import Optional, List, Tuple
@@ -138,18 +138,11 @@ def filterSplittingsParam(splittings: List[dict]) -> List[dict]:
     return cleanSplittings
 
 
-def deepUpdate(toUpdate: dict, data: dict) -> dict:
+def sortByWakeUpPriority(agents: dict) -> list:
     """
-    The function to deep update a given dictionary
-    :param toUpdate: dict to update
-    :param data: data to updatade dict
-    :return: updated dict
+    The function to get the wake up priority list of the given agents sorted by the defined metric
+    :param agents: agents info
+    :return: agents names sorted by priority for waking up
     """
-    for k, v in data.items():
-        if isinstance(v, dict) or isinstance(v, Mapping):
-            defaultValue = v.copy()
-            defaultValue.clear()
-            v = deepUpdate(toUpdate.get(k, defaultValue), v)
-
-        toUpdate[k] = v
-    return toUpdate
+    wakeUpMetric = lambda v: v.get("TotalIdleJobs", 0) - v.get("TotalRunningJobs", 0)
+    return [name for name in sorted(mapValues(wakeUpMetric, agents), key=lambda x: x[1], reverse=True)]

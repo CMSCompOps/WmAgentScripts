@@ -6,8 +6,8 @@ from time import sleep
 
 from Databases.Oracle.OracleClient import OracleClient
 from Databases.Oracle.OracleDB import Workflow
-from Components.Agent.AgentStatusController import AgentStatusController
-from Storage.EOS.EOSWriter import EOSWriter
+from MongoControllers.AgentController import AgentController
+from Services.EOS.EOSWriter import EOSWriter
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.DBS.DBSReader import DBSReader
 
@@ -43,7 +43,7 @@ class ServicesChecker(object):
                 "McM": False,
                 "DBS": False,
                 "Oracle": False,
-                "Wtc": False,
+                "WTC": False,
                 "EOS": False,
                 "Mongo": False,
                 "Jira": False,
@@ -110,9 +110,9 @@ class ServicesChecker(object):
             self.logger.error(str(error))
             return False
 
-    def checkWtc(self) -> bool:
+    def checkWTC(self) -> bool:
         """
-        The function to check Wtc
+        The function to check WTC
         :return: True if ok, False o/w
         """
         try:
@@ -120,7 +120,7 @@ class ServicesChecker(object):
             return True
 
         except Exception as error:
-            self.logger.error("Failed to check Wtc")
+            self.logger.error("Failed to check WTC")
             self.logger.error(str(error))
             return False
 
@@ -156,8 +156,8 @@ class ServicesChecker(object):
         :return: True if ok, False o/w
         """
         try:
-            agentStatusController = AgentStatusController()
-            _ = agentStatusController.getAgents()
+            agentController = AgentController()
+            _ = agentController.getAgents()
             return True
 
         except Exception as error:
@@ -201,7 +201,7 @@ class ServicesChecker(object):
                 self.logger.info("Re-checking on %s", services)
                 sleep(30)
                 return self._checkService(components=[services])
-            if self.block and services not in self.softServices:
+            if self.block and services.lower() not in self.softServices:
                 return False
 
             return True

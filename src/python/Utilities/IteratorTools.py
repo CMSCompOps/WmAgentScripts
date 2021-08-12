@@ -1,3 +1,5 @@
+from collections import Mapping
+
 from typing import Callable
 
 
@@ -41,3 +43,20 @@ def sortByKeys(data: dict) -> dict:
     :return: sorted dict
     """
     return dict(sorted(data.items(), key=lambda item: item[0]))
+
+
+def deepUpdate(toUpdate: dict, data: dict) -> dict:
+    """
+    The function to deep update a given dictionary
+    :param toUpdate: dict to update
+    :param data: data to updatade dict
+    :return: updated dict
+    """
+    for k, v in data.items():
+        if isinstance(v, dict) or isinstance(v, Mapping):
+            defaultValue = v.copy()
+            defaultValue.clear()
+            v = deepUpdate(toUpdate.get(k, defaultValue), v)
+
+        toUpdate[k] = v
+    return toUpdate

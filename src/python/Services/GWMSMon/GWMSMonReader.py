@@ -14,15 +14,15 @@ class GWMSMonReader(object):
     General API for reading data from GWMSMon
     """
 
-    def __init__(self, logger: Optional[Logger] = None, **contact):
+    def __init__(self, logger: Optional[Logger] = None):
         try:
             super().__init__()
             self.logger = logger or getLogger(self.__class__.__name__)
 
             configurationHandler = ConfigurationHandler()
             self.gwmsUrl = configurationHandler.get("gwmsmon_url")
-            self.gwmsEndpoint = {"prodView": "/prodview/json/", "poolView": "/poolview/json/"}            
             self.gwmsEndpoint = {"prodView": "/prodview/json/", "poolView": "/poolview/json/"}
+
         except Exception as error:
             raise Exception(f"Error initializing WorkQueueReader\n{str(error)}")
 
