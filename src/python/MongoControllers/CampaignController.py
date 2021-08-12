@@ -5,6 +5,7 @@ from pymongo.collection import Collection
 from typing import Optional, Any
 
 from Databases.Mongo.MongoClient import MongoClient
+from WorkflowMgmt.SiteController import SiteController
 
 
 class CampaignController(MongoClient):
@@ -16,7 +17,8 @@ class CampaignController(MongoClient):
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__(logger=logger)
-            self.allSites = []  # TODO: implement siteInfo().allSites
+            siteController = SiteController()
+            self.allSites = siteController.allSites
             self.campaigns = self._setCampaigns()
 
         except Exception as error:

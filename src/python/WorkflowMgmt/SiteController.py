@@ -65,7 +65,7 @@ class SiteController(object):
         self.goodAAASites = self._filterSitesReadyOnly(self.sitesConfiguration.get("sites_with_goodAAA"))
         self.goodIOSites = self._filterSitesReadyOnly(self.sitesConfiguration.get("sites_with_goodIO"))
         self.hepCloudSites = self._filterSitesReadyOnly(self.sitesConfiguration.get("sites_HEPCloud"))
-        self.mcoreSitesReady = self._filterSitesReadyOnly(self.dataCache.get("mcore_ready"))
+        self.mcoreSitesReady = self._filterSitesReadyOnly(self.dataCache.get("mcore_ready").get("sites_for_mcore", []))
 
         for n in range(4):
             setattr(self, f"T{n}Sites", self.getTierSites(n))

@@ -47,7 +47,7 @@ class DataCacheLoader(object):
             elif key == "gwmsmon_prod_maxused":
                 self.cache[key] = DocumentCache.GWMSMonProdMaxUsed()
             elif key == "mcore_ready":
-                self.cache[key] = DocumentCache.MCoreReady([])
+                self.cache[key] = DocumentCache.MCoreReady()
             elif key == "detox_sites":
                 self.cache[key] = DocumentCache.DetoxSites([])
             elif key == "site_storage":

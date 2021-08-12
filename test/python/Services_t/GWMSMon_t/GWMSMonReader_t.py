@@ -10,7 +10,7 @@ from Services.GWMSMon.GWMSMonReader import GWMSMonReader
 
 
 class GWMSMonReaderTest(unittest.TestCase):
-    sitesParam = {"mcore": "T2_CH_CERN"}
+    sitesParam = {"key": "sites_for_mcore", "mcore": "T2_CH_CERN"}
 
     def setUp(self) -> None:
         self.gwmsmonReader = GWMSMonReader()
@@ -24,13 +24,19 @@ class GWMSMonReaderTest(unittest.TestCase):
     def testGetMCoreReady(self) -> None:
         """getMCoreReady gets the mcore sites"""
         result = self.gwmsmonReader.getMCoreReady()
-        isList = isinstance(result, list)
-        self.assertTrue(isList)
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
 
-        isListOfStr = isinstance(result[0], str)
+        hasKey = self.sitesParam.get("key") in result
+        self.assertTrue(hasKey)
+
+        isValueList = isinstance(result.get(self.sitesParam.get("key")), list)
+        self.assertTrue(isValueList)
+
+        isListOfStr = isinstance(result.get(self.sitesParam.get("key"))[0], str)
         self.assertTrue(isListOfStr)
 
-        isFound = self.sitesParam.get("mcore") in result
+        isFound = self.sitesParam.get("mcore") in result.get(self.sitesParam.get("key"))
         self.assertTrue(isFound)
 
 

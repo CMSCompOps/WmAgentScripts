@@ -51,7 +51,7 @@ class GWMSMonReader(object):
             self.logger.error("Failed to get GWMSMon %s from %s view", key, view)
             self.logger.error(str(error))
 
-    def getMCoreReady(self) -> list:
+    def getMCoreReady(self) -> dict:
         """
         The function to get a list of mcore sites
         :return: mcore sites
@@ -61,7 +61,7 @@ class GWMSMonReader(object):
                 "curl --retry 5 -s http://cmsgwms-frontend-global.cern.ch/vofrontend/stage/mcore_siteinfo.json"
             ) as file:
                 data = json.loads(file.read())
-            return data.get("sites_for_mcore", [])
+            return data
 
         except Exception as error:
             self.logger.error("Failed to get mcore ready")
