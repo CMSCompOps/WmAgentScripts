@@ -197,8 +197,8 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isTaskChain)
 
     @patch("os.path.isfile")
-    @patch("builtins.open", create=True)
-    def testGetFromFile(self, mockOpen: MagicMock, mockIsFile: MagicMock) -> None:
+    @patch("builtins.open", mock_open(read_data=json.dumps(mcParams.get("cachedFile").get("fileData"))))
+    def testGetFromFile(self, mockIsFile: MagicMock) -> None:
         """_getFromFile gets the data from file"""
         # Test behavior when the file does not exist
         mockIsFile.return_value = False
@@ -208,9 +208,6 @@ class WorkflowControllerTest(unittest.TestCase):
 
         # Test behavior when the file exists
         mockIsFile.return_value = True
-        mockOpen.return_value = mock_open(
-            read_data=json.dumps(self.mcParams.get("cachedFile").get("fileData"))
-        ).return_value
         response = self.mcWfController._getFromFile(self.mcParams.get("cachedFile").get("filename"))
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
@@ -248,6 +245,24 @@ class WorkflowControllerTest(unittest.TestCase):
 
         # Test when response is False
         response = self.redigiTaskChainWfController.isHeavyToRead(self.redigiTaskChainParams.get("secondary"))
+        isBool = isinstance(response, bool)
+        self.assertTrue(isBool)
+
+        isFalse = not response
+        self.assertTrue(isFalse)
+
+    def testGo(self) -> None:
+        """go checks if a workflow is allowed to go"""
+        # Test when go is True
+        response = self.mcWfController.go()
+        isBool = isinstance(response, bool)
+        self.assertTrue(isBool)
+
+        isTrue = response
+        self.assertTrue(isTrue)
+
+        # Test when go is False
+        response = self.relvalTaskChainWfController.go()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
 

@@ -71,7 +71,7 @@ class CacheManager(MongoClient):
             filePath = self._getKeyFilePath(key)
             if os.path.isfile(filePath):
                 self.logger.info("File cache hit %s", key)
-                with open(filePath) as file:
+                with open(filePath, "r") as file:
                     content = json.loads(file.read())
                 return content
 

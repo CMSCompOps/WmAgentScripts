@@ -41,6 +41,7 @@ def getResponse(
         _ = conn.request("GET", endpoint + param, headers=headers)
         response = conn.getresponse()
         data = response.read()
+        conn.close()
         return json.loads(data) if isJson else pickle.loads(data)
 
     except Exception as error:
@@ -67,8 +68,9 @@ def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers:
         conn = getX509Conn(url)
         _ = conn.request("PUT", endpoint, param, headers=headers)
         response = conn.getresponse()
-        data = json.loads(response.read())
-        return data
+        data = response.read()
+        conn.close()
+        return json.loads(data)
 
     except Exception as error:
         print(f"Failed to send response to {url + endpoint + param}\n{str(error)}")

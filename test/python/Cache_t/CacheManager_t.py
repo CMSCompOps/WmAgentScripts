@@ -91,8 +91,8 @@ class CacheManagerTest(unittest.TestCase):
         self.assertTrue(rightPath)
 
     @patch("os.path.isfile")
-    @patch("builtins.open", create=True)
-    def testGetFromFile(self, mockOpen: MagicMock, mockIsFile: MagicMock) -> None:
+    @patch("builtins.open", mock_open(read_data=json.dumps(params.get("fileData"))))
+    def testGetFromFile(self, mockIsFile: MagicMock) -> None:
         """_getFromFile gets the data from file"""
         # Test behavior when the file does not exist
         mockIsFile.return_value = False
@@ -102,7 +102,6 @@ class CacheManagerTest(unittest.TestCase):
 
         # Test behavior when the file exists
         mockIsFile.return_value = True
-        mockOpen.return_value = mock_open(read_data=json.dumps(self.params.get("fileData"))).return_value
         result = self.cache._getFromFile(self.params.get("key"))
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)

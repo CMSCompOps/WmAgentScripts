@@ -38,12 +38,10 @@ class EOSReaderTest(unittest.TestCase):
             self.eosReader.filename = self.params.get("invalidFilename")
             _ = EOSReader(self.params.get("invalidFilename"))
 
-    @patch("os.system")
-    @patch("builtins.open", create=True)
-    def testRead(self, mockOpen: MagicMock, mockSystem: MagicMock) -> None:
+    @patch("builtins.open", mock_open(read_data=json.dumps(params.get("mockContent"))))
+    def testReadWithFile(self) -> None:
         """read gets the content of an EOS file"""
         # Test behavior when file is found locally
-        mockOpen.return_value = mock_open(read_data=json.dumps(self.params.get("mockContent"))).return_value
         result = self.eosReader.read()
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
@@ -51,8 +49,11 @@ class EOSReaderTest(unittest.TestCase):
         isEqual = result == self.params.get("mockContent")
         self.assertTrue(isEqual)
 
+    @patch("os.system")
+    @patch("builtins.open", mock_open(read_data=None))
+    def testReadWithoutFile(self, mockSystem: MagicMock) -> None:
+        """read gets the content of an EOS file"""
         # Test behavior when file is not found at all
-        mockOpen.return_value = mock_open(read_data=None).return_value
         mockSystem.return_value = 99
         result = self.eosReader.read()
         isDict = isinstance(result, dict)

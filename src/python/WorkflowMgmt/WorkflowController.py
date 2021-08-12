@@ -93,7 +93,7 @@ class WorkflowController(object):
             filePath = f"{self.cacheDirectory}/{filename}"
             if os.path.isfile(filePath):
                 self.logger.info("File cache hit %s", filePath)
-                with open(filePath) as file:
+                with open(filePath, "r") as file:
                     cached = json.loads(file.read())
                 return cached
 
