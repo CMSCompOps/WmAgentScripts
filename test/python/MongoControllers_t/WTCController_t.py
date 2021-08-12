@@ -5,6 +5,7 @@ Unit test for WTCController helper class.
 """
 
 import unittest
+from time import struct_time, mktime, asctime
 from pymongo.collection import Collection
 
 from MongoControllers.WTCController import WTCController
@@ -12,6 +13,8 @@ from MongoControllers.WTCController import WTCController
 
 class WTCControllerTest(unittest.TestCase):
     mongoSettings = {"database": "unified", "collection": "wtcInfo"}
+
+    params = {"action": "hold", "user": "test", "keyword": "ok", "now": struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0))}
 
     def setUp(self) -> None:
         self.wtcController = WTCController()
@@ -32,6 +35,29 @@ class WTCControllerTest(unittest.TestCase):
 
         rightName = self.wtcController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
+
+    def testBuildMongoDocument(self) -> None:
+        """_buildMongoDocument builds the document to store on Mongo"""
+        result = self.wtcController._buildMongoDocument(
+            self.params.get("action"), self.params.get("keyword"), self.params.get("user"), self.params.get("now")
+        )
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
+
+        isUserEqual = result.get("user") == self.params.get("user")
+        self.assertTrue(isUserEqual)
+
+        isKeywordEqual = result.get("keyword") == self.params.get("keyword")
+        self.assertTrue(isKeywordEqual)
+
+        isActionEqual = result.get("action") == self.params.get("action")
+        self.assertTrue(isActionEqual)
+
+        isTimeEqual = result.get("time") == mktime(self.params.get("now"))
+        self.assertTrue(isTimeEqual)
+
+        isDateEqual = result.get("date") == asctime(self.params.get("now"))
+        self.assertTrue(isDateEqual)
 
     def testGetHold(self):
         """getHold gets all data in hold"""

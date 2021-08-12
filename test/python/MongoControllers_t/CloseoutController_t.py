@@ -50,6 +50,18 @@ class CloseoutControllerTest(unittest.TestCase):
         rightName = self.closeoutController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
+    def testBuildMongoDocument(self) -> None:
+        """_buildMongoDocument builds the document to store in Mongo"""
+        result = self.closeoutController._buildMongoDocument(self.params.get("workflow"), {"test": "ok"})
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
+
+        isNameEqual = result.get("name") == self.params.get("workflow")
+        self.assertTrue(isNameEqual)
+
+        isFound = result.get("test") == "ok"
+        self.assertTrue(isFound)
+
     def testGet(self):
         """get gets the closeout info for a given workflow"""
         # Test when workflow exists

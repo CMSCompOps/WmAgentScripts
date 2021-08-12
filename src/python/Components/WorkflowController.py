@@ -408,7 +408,7 @@ class WorkflowController(object):
                 if (
                     (includeItself and itself)
                     or (onlyResubmissions and resubmitted and not itself)
-                    or (not itself and not resubmitted)
+                    or (not onlyResubmissions and not itself)
                 ):
                     family.append(member)
 
@@ -491,13 +491,6 @@ class WorkflowController(object):
         """
         return float(self.request.getParamByTask("FilterEfficiency", task) or 1)
 
-    def getLumiWhiteList(self) -> list:
-        """
-        The function to get the workflow's lumi white list
-        :return: lumi white list
-        """
-        return self.request.getParamList("LumiList")
-
     def getBlockWhiteList(self) -> list:
         """
         The function to get the workflow's block white list
@@ -578,7 +571,7 @@ class WorkflowController(object):
                 runBlocks = [self.dbsReader.getDatasetBlockNamesByRuns(primary, runs) for primary in primaries]
                 blocks.update(*runBlocks)
 
-            lumis = self.getLumiWhiteList()
+            lumis = self.request.getLumiWhiteList()
             if lumis:
                 lumisBlocks = [self.dbsReader.getDatasetBlockNamesByLumis(primary, lumis) for primary in primaries]
                 blocks.update(*lumisBlocks)

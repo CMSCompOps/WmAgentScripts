@@ -18,6 +18,7 @@ class CampaignControllerTest(unittest.TestCase):
         "campaign": "Run3Winter21DRMiniAOD",
         "resize": "auto",
         "secondaries": "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter21GS-112X_mcRun3_2021_realistic_v15-v1/GEN-SIM",
+        "go": True,
     }
     campaignWithTypeParam = {"type": "relval"}
 
@@ -40,6 +41,15 @@ class CampaignControllerTest(unittest.TestCase):
 
         rightName = self.campaignController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
+
+    def testBuildMongoDocument(self) -> None:
+        """_buildMongoDocument builds the document to store on Mongo"""
+        result = self.campaignController._buildMongoDocument(self.campaignParam.get("campaign"), {"name": "test"})
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
+
+        isFound = result.get("name") == self.campaignParam.get("campaign")
+        self.assertTrue(isFound)
 
     def testGet(self):
         """get gets the campaigns info"""
@@ -114,6 +124,14 @@ class CampaignControllerTest(unittest.TestCase):
         isFound = self.campaignParam.get("secondaries") in result
         self.assertTrue(isFound)
 
+    def testGo(self) -> None:
+        """go checks if a campaign is allowed to go"""
+        result = self.campaignController.go(self.campaignParam.get("campaign"))
+        isBool = isinstance(result, bool)
+        self.assertTrue(isBool)
+
+        isTrue = result
+        self.assertTrue(isTrue)
 
 if __name__ == "__main__":
     unittest.main()

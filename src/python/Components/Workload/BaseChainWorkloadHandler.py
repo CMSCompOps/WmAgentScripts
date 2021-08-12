@@ -142,6 +142,23 @@ class BaseChainWorkloadHandler(BaseWorkloadHandler):
             self.logger.error("Available campaigns: %s", campaigns)
             self.logger.error(str(error))
 
+    def getLumiWhiteList(self) -> dict:
+        """
+        The function to get the workflow's lumi white list
+        :return: lumi white list
+        """
+        try:
+            lumiList = {}
+            values = list(self.getChainValues("LumiList").values())
+            for value in values:
+                lumiList.update(value)
+
+            return lumiList
+
+        except Exception as error:
+            self.logger.error("Failed to get Lumi White List")
+            self.logger.error(str(error))
+
     def getParamList(self, key: str) -> list:
         """
         The function to get the workflow's param list for a given key

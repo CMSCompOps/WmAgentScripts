@@ -68,10 +68,10 @@ class CacheManager(MongoClient):
         :return: cached data if any, None o/w
         """
         try:
-            fileKey = self._getKeyFilePath(key)
-            if os.path.isfile(fileKey):
+            filePath = self._getKeyFilePath(key)
+            if os.path.isfile(filePath):
                 self.logger.info("File cache hit %s", key)
-                with open(fileKey) as file:
+                with open(filePath) as file:
                     content = json.loads(file.read())
                 return content
 

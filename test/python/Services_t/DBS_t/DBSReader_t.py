@@ -103,7 +103,7 @@ class DBSReaderTest(unittest.TestCase):
                 break
         self.assertTrue(isFound)
 
-    def testgetBlockName(self) -> None:
+    def testGetBlockName(self) -> None:
         """getBlockName gets the block name of a file"""
         dbsReader = DBSReader(self.url)
         block = dbsReader.getBlockName(self.validDataset.get("logical_file_name"))

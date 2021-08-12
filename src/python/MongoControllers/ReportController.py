@@ -23,7 +23,7 @@ class ReportController(MongoClient):
         :return: converted value
         """
         return (
-            list(value) if isinstance(value, set) else self._convertValues(value) if isinstance(value, dict) else value
+            list(value) if isinstance(value, set) else mapValues(self._convertValues, value) if isinstance(value, dict) else value
         )
 
     def _buildMongoDocument(self, data: dict, now: struct_time = gmtime()) -> dict:

@@ -4,8 +4,10 @@ Unit test for WorkflowController helper class.
 """
 
 import os
-import unittest
+import json
 import math
+import unittest
+from unittest.mock import patch, mock_open, MagicMock
 from collections import Counter
 
 from Components.WorkflowController import WorkflowController
@@ -34,6 +36,7 @@ class WorkflowControllerTest(unittest.TestCase):
         "cpuSec": 204123160.0,
         "neededCopies": 2,
         "nextVersion": 3,
+        "wildcardVersionGuess": 2,
         "nTasks": 8,
         "nWorkTasks": 1,
         "firstTask": "Production",
@@ -69,13 +72,15 @@ class WorkflowControllerTest(unittest.TestCase):
                 "lumis",
             ],
         },
+        "cachedFile": {"filename": "test", "fileData": {"test": "data"}},
     }
 
-    # This workflow is also a reconstruction request. Use it for testing functions with a non-empty run white list.
+    # This workflow is a reconstruction request. Use it for testing functions with a non-empty run white list or a non-empty input dataset
     rerecoParams = {
         "workflow": "sagarwal_Run2017E-31Mar2018-v1-HighMultiplicityEOF3-Nano1June2019_10215_190607_141831_7758",
         "runWhiteList": [303818, 303819],
         "block": "/HighMultiplicityEOF3/Run2017E-31Mar2018-v1/MINIAOD#5d2100bc-370d-11e8-aea5-02163e01877e",
+        "cpuSec": 4185924.2,
     }
 
     # This workflow is a step chain request. Use it for testing function depending on the request type.
@@ -100,7 +105,7 @@ class WorkflowControllerTest(unittest.TestCase):
         "step2Output": "/VectorZPrimeToQQ_M-100_Pt-300_TuneCP5_14TeV-madgraph-pythia8/Run3Winter21DRMiniAOD-FlatPU30to80_Scouting_Patatrack_112X_mcRun3_2021_realistic_v16-v2/MINIAODSIM",
     }
 
-    # This workflow is a task chain request. Use it for testing function depending on the request type.
+    # This workflow is a task chain / redigi request. Use it for testing function depending on the request type.
     taskChainParams = {
         "workflow": "pdmvserv_task_BPH-RunIIFall18GS-00350__v1_T_201021_154340_8354",
         "requestType": "TaskChain",
@@ -145,15 +150,31 @@ class WorkflowControllerTest(unittest.TestCase):
         "task3Output": "/DPS_ToJPsiJPsi_TuneCP5_DP_13TeV-pythia8/RunIIAutumn18DRPremix-102X_upgrade2018_realistic_v15-v1/AODSIM",
     }
 
+    # This workflow is a task chain / relval request. Use it for testing functions with a non-empty lumi white list and non-empty wmstats.
+    relvalTaskChainParams = {
+        "workflow": "kaura_EXPRESS_newco_RelVal_344068_210803_171336_8221",
+        "block": "/ExpressCosmics/Commissioning2021-Express-v1/FEVT#f84fe79b-e395-430d-a92a-5c697c9f268a",
+        "campaign": "CMSSW_11_3_2__ALCA_137-2021_08_03_17_02",
+        "lumiList": {"344068": [[1, 1512]]},
+    }
+
     def setUp(self) -> None:
         self.mcWfController = WorkflowController(self.mcParams.get("workflow"), rucioConfig=self.rucioConfig)
+
         self.rerecoWfController = WorkflowController(self.rerecoParams.get("workflow"), rucioConfig=self.rucioConfig)
+
         self.stepChainWfController = WorkflowController(
             self.stepChainParams.get("workflow"), rucioConfig=self.rucioConfig
         )
-        self.taskChainWfController = WorkflowController(
-            self.taskChainParams.get("workflow"), rucioConfig=self.rucioConfig
+
+        self.redigiTaskChainWfController = WorkflowController(
+            self.redigiTaskChainParams.get("workflow"), rucioConfig=self.rucioConfig
         )
+
+        self.relvalTaskChainWfController = WorkflowController(
+            self.relvalTaskChainParams.get("workflow"), rucioConfig=self.rucioConfig
+        )
+
         super().setUp()
         return
 
@@ -161,19 +182,59 @@ class WorkflowControllerTest(unittest.TestCase):
         super().tearDown()
         return
 
-    def testWorkloadInterface(self) -> None:
-        """WorkloadInterface gets the request data handler"""
-        ### Test when monte carlo request
-        isNonChain = isinstance(self.mcWfController.request, BaseWorkloadHandler)
-        self.assertTrue(isNonChain)
+    def testGetWorkloadHandler(self) -> None:
+        """_getWorkloadHandler gets the workload handler"""
+        ### Test when base handler
+        isBase = isinstance(self.mcWfController.request, BaseWorkloadHandler)
+        self.assertTrue(isBase)
 
-        ### Test when step chain request
+        ### Test when step chain handler
         isStepChain = isinstance(self.stepChainWfController.request, StepChainWorkloadHandler)
         self.assertTrue(isStepChain)
 
-        ### Test when task chain request
-        isTaskChain = isinstance(self.taskChainWfController.request, TaskChainWorkloadHandler)
+        ### Test when task chain handler
+        isTaskChain = isinstance(self.redigiTaskChainWfController.request, TaskChainWorkloadHandler)
         self.assertTrue(isTaskChain)
+
+    @patch("os.path.isfile")
+    @patch("builtins.open", create=True)
+    def testGetFromFile(self, mockOpen: MagicMock, mockIsFile: MagicMock) -> None:
+        """_getFromFile gets the data from file"""
+        # Test behavior when the file does not exist
+        mockIsFile.return_value = False
+        response = self.mcWfController._getFromFile(self.mcParams.get("cachedFile").get("filename"))
+        isNone = response is None
+        self.assertTrue(isNone)
+
+        # Test behavior when the file exists
+        mockIsFile.return_value = True
+        mockOpen.return_value = mock_open(
+            read_data=json.dumps(self.mcParams.get("cachedFile").get("fileData"))
+        ).return_value
+        response = self.mcWfController._getFromFile(self.mcParams.get("cachedFile").get("filename"))
+        isDict = isinstance(response, dict)
+        self.assertTrue(isDict)
+
+        isEqual = response == self.mcParams.get("cachedFile").get("fileData")
+        self.assertTrue(isEqual)
+
+    def testGetVersionByWildcardPattern(self) -> None:
+        """_getVersionByWildcardPattern searches the version by the dataset name pattern"""
+        response = self.mcWfController._getVersionByWildcardPattern()
+        isInt = isinstance(response, int)
+        self.assertTrue(isInt)
+
+        isEqual = response == self.mcParams.get("wildcardVersionGuess")
+        self.assertTrue(isEqual)
+
+    def testGetVersionByConflictingWorkflows(self) -> None:
+        """_getVersionByConflictingWorkflows searches the version by conflicting workflows"""
+        response = self.mcWfController._getVersionByConflictingWorkflows()
+        isInt = isinstance(response, int)
+        self.assertTrue(isInt)
+
+        isZero = response == 0
+        self.assertTrue(isZero)
 
     def testIsHeavyToRead(self) -> None:
         """isHeavyToRead checks if it is heavy to read"""
@@ -186,12 +247,24 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isTrue)
 
         # Test when response is False
-        response = self.taskChainWfController.isHeavyToRead(self.taskChainParams.get("secondary"))
+        response = self.redigiTaskChainWfController.isHeavyToRead(self.redigiTaskChainParams.get("secondary"))
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
 
         isFalse = not response
         self.assertTrue(isFalse)
+
+    @patch("Components.WorkflowController.WorkflowController._saveInFile")
+    def testGetWMStats(self, mockSave: MagicMock) -> None:
+        """getWMStats gets the wmstats"""
+        # Test when wmstats exists and no cache is allowed. This request is quite heavy, so only test this.
+        mockSave.return_value = True
+        response = self.relvalTaskChainWfController.getWMStats()
+        isDict = isinstance(response, dict)
+        self.assertTrue(isDict)
+
+        isFound = response.get("Campaign") == self.relvalTaskChainParams.get("campaign")
+        self.assertTrue(isFound)
 
     def testGetFamily(self) -> None:
         """getFamily gets the workflow family"""
@@ -208,6 +281,36 @@ class WorkflowControllerTest(unittest.TestCase):
 
         # Test when onlyResubmissions is False and includeItself is True
         response = self.mcWfController.getFamily(includeItself=True)
+        isList = isinstance(response, list)
+        self.assertTrue(isList)
+
+        isListOfDict = isinstance(response[0], dict)
+        self.assertTrue(isListOfDict)
+
+        isFound = False
+        for member in response:
+            if member.get("RequestName") == self.mcParams.get("workflow"):
+                isFound = True
+                break
+        self.assertTrue(isFound)
+
+        isFound = False
+        for member in response:
+            if member.get("RequestName") == self.mcParams.get("family"):
+                isFound = True
+                break
+        self.assertTrue(isFound)
+
+        # Test when onlyResubmissions is True and includeItself is False
+        response = self.mcWfController.getFamily(onlyResubmissions=True)
+        isList = isinstance(response, list)
+        self.assertTrue(isList)
+
+        isEmpty = len(response) == 0
+        self.assertTrue(isEmpty)
+
+        # Test when onlyResubmissions is True and includeItself is True
+        response = self.mcWfController.getFamily(onlyResubmissions=True, includeItself=True)
         isList = isinstance(response, list)
         self.assertTrue(isList)
 
@@ -250,7 +353,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetOutputDatasetsPerTask(self) -> None:
         """getOutputDatasetsPerTask gets output datasets per task"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.getOutputDatasetsPerTask()
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
@@ -281,7 +384,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         ### Test when task chain request
-        response = self.taskChainWfController.getOutputDatasetsPerTask()
+        response = self.redigiTaskChainWfController.getOutputDatasetsPerTask()
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
 
@@ -291,13 +394,13 @@ class WorkflowControllerTest(unittest.TestCase):
         isFound = False
         for k, v in response.items():
             if k == "Task3":
-                isFound = v[0] == self.taskChainParams.get("task3Output")
+                isFound = v[0] == self.redigiTaskChainParams.get("task3Output")
                 break
         self.assertTrue(isFound)
 
     def testGetCampaignByTask(self) -> None:
         """getCampaignByTask gets the campaigns for a given task"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.getCampaignByTask("")
         isStr = isinstance(response, str)
         self.assertTrue(isStr)
@@ -315,17 +418,17 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         ### Test when task chain request
-        task = list(self.taskChainParams.get("tasks").keys())[0]
-        response = self.taskChainWfController.getCampaignByTask(task)
+        task = list(self.redigiTaskChainParams.get("tasks").keys())[0]
+        response = self.redigiTaskChainWfController.getCampaignByTask(task)
         isStr = isinstance(response, str)
         self.assertTrue(isStr)
 
-        isFound = response == self.taskChainParams.get("tasks").get(task).get("campaign")
+        isFound = response == self.redigiTaskChainParams.get("tasks").get(task).get("campaign")
         self.assertTrue(isFound)
 
     def testGetMemoryByTask(self) -> None:
         """getMemoryByTask gets the memory for a given task"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.getMemoryByTask("")
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
@@ -343,17 +446,17 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEqual)
 
         ### Test when task chain request
-        task = list(self.taskChainParams.get("tasks").keys())[0]
-        response = self.taskChainWfController.getMemoryByTask(task)
+        task = list(self.redigiTaskChainParams.get("tasks").keys())[0]
+        response = self.redigiTaskChainWfController.getMemoryByTask(task)
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
 
-        isEqual = response == self.taskChainParams.get("tasks").get(task).get("memory")
+        isEqual = response == self.redigiTaskChainParams.get("tasks").get(task).get("memory")
         self.assertTrue(isEqual)
 
     def testGetCoreByTask(self) -> None:
         """getCoreByTask gets the memory for a given task"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.getCoreByTask("")
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
@@ -371,17 +474,17 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEqual)
 
         ### Test when task chain request
-        task = list(self.taskChainParams.get("tasks").keys())[0]
-        response = self.taskChainWfController.getCoreByTask(task)
+        task = list(self.redigiTaskChainParams.get("tasks").keys())[0]
+        response = self.redigiTaskChainWfController.getCoreByTask(task)
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
 
-        isEqual = response == self.taskChainParams.get("tasks").get(task).get("multicore")
+        isEqual = response == self.redigiTaskChainParams.get("tasks").get(task).get("multicore")
         self.assertTrue(isEqual)
 
     def testGetFilterEfficiencyByTask(self) -> None:
         """getFilterEfficiencyByTask gets the filter efficiency for a given task"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.getFilterEfficiencyByTask("")
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
@@ -399,43 +502,43 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEqual)
 
         ### Test when task chain request
-        task = list(self.taskChainParams.get("tasks").keys())[-1]
-        response = self.taskChainWfController.getFilterEfficiencyByTask(task)
+        task = list(self.redigiTaskChainParams.get("tasks").keys())[-1]
+        response = self.redigiTaskChainWfController.getFilterEfficiencyByTask(task)
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
 
-        isEqual = response == self.taskChainParams.get("tasks").get(task).get("filterEfficiency")
+        isEqual = response == self.redigiTaskChainParams.get("tasks").get(task).get("filterEfficiency")
         self.assertTrue(isEqual)
 
     def testGetLumiWhiteList(self) -> None:
         """getLumiWhiteList gets the lumi white list"""
-        ### Test when monte carlo request
-        lumiList = self.mcWfController.getLumiWhiteList()
-        isList = isinstance(lumiList, list)
-        self.assertTrue(isList)
+        ### Test when base request
+        lumiList = self.mcWfController.request.getLumiWhiteList()
+        isDict = isinstance(lumiList, dict)
+        self.assertTrue(isDict)
 
         isEmpty = len(lumiList) == 0
         self.assertTrue(isEmpty)
 
         ### Test when step chain request
-        lumiList = self.stepChainWfController.getLumiWhiteList()
-        isList = isinstance(lumiList, list)
-        self.assertTrue(isList)
+        lumiList = self.stepChainWfController.request.getLumiWhiteList()
+        isDict = isinstance(lumiList, dict)
+        self.assertTrue(isDict)
 
         isEmpty = len(lumiList) == 0
         self.assertTrue(isEmpty)
 
-        ### Test when task chain request
-        lumiList = self.taskChainWfController.getLumiWhiteList()
-        isList = isinstance(lumiList, list)
-        self.assertTrue(isList)
+        ### Test when task chain request. This workflow has non-empty lumiList
+        lumiList = self.relvalTaskChainWfController.request.getLumiWhiteList()
+        isDict = isinstance(lumiList, dict)
+        self.assertTrue(isDict)
 
-        isEmpty = len(lumiList) == 0
-        self.assertTrue(isEmpty)
+        isFound = len(lumiList) == self.relvalTaskChainParams.get("lumiList")
+        self.assertTrue(isFound)
 
     def testGetBlockWhiteList(self) -> None:
         """getBlockWhiteList gets the block white list"""
-        ### Test when monte carlo request
+        ### Test when base request
         blockList = self.mcWfController.getBlockWhiteList()
         isList = isinstance(blockList, list)
         self.assertTrue(isList)
@@ -452,7 +555,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEmpty)
 
         ### Test when task chain request
-        blockList = self.taskChainWfController.getBlockWhiteList()
+        blockList = self.redigiTaskChainWfController.getBlockWhiteList()
         isList = isinstance(blockList, list)
         self.assertTrue(isList)
 
@@ -461,7 +564,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetRunWhiteList(self) -> None:
         """getRunWhiteList gets the run white list"""
-        ### Test when reconstruction request
+        ### Test when base request and non-empty run white list
         runList = self.rerecoWfController.getRunWhiteList()
         isList = isinstance(runList, list)
         self.assertTrue(isList)
@@ -481,7 +584,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEmpty)
 
         ### Test when task chain request
-        runList = self.taskChainWfController.getRunWhiteList()
+        runList = self.redigiTaskChainWfController.getRunWhiteList()
         isList = isinstance(runList, list)
         self.assertTrue(isList)
 
@@ -490,7 +593,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetPrepIds(self) -> None:
         """getPrepIds gets the prep ids"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.getPrepIds()
         isList = isinstance(response, list)
         self.assertTrue(isList)
@@ -513,7 +616,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         ### Test when task chain request
-        response = self.taskChainWfController.getPrepIds()
+        response = self.redigiTaskChainWfController.getPrepIds()
         isList = isinstance(response, list)
         self.assertTrue(isList)
 
@@ -521,7 +624,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isListOfStr)
 
         isFound = False
-        for task in self.taskChainParams.get("tasks").values():
+        for task in self.redigiTaskChainParams.get("tasks").values():
             if task.get("prepId") not in response:
                 break
         else:
@@ -530,7 +633,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetScramArches(self) -> None:
         """getScramArches gets the arches"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.getScramArches()
         isList = isinstance(response, list)
         self.assertTrue(isList)
@@ -553,24 +656,32 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         ### Test when task chain request
-        response = self.taskChainWfController.getScramArches()
+        response = self.redigiTaskChainWfController.getScramArches()
         isList = isinstance(response, list)
         self.assertTrue(isList)
 
         isListOfStr = isinstance(response[0], str)
         self.assertTrue(isListOfStr)
 
-        isFound = response[0] == self.taskChainParams.get("scramArch")
+        isFound = response[0] == self.redigiTaskChainParams.get("scramArch")
         self.assertTrue(isFound)
 
     def testGetComputingTime(self) -> None:
         """getComputingTime gets the computing time"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.getComputingTime(unit="s")
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
 
         isEqual = response == self.mcParams.get("cpuSec")
+        self.assertTrue(isEqual)
+
+        ### Test when base request and non-empty input dataset
+        response = self.rerecoWfController.getComputingTime(unit="s")
+        isFloat = isinstance(response, float)
+        self.assertTrue(isFloat)
+
+        isEqual = response == self.rerecoParams.get("cpuSec")
         self.assertTrue(isEqual)
 
         ### Test when step chain request
@@ -582,16 +693,16 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEqual)
 
         ### Test when task chain request
-        response = self.taskChainWfController.getComputingTime(unit="s")
+        response = self.redigiTaskChainWfController.getComputingTime(unit="s")
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
 
-        isEqual = math.isclose(response, self.taskChainParams.get("cpuSec"))
+        isEqual = math.isclose(response, self.redigiTaskChainParams.get("cpuSec"))
         self.assertTrue(isEqual)
 
     def testGetBlocks(self) -> None:
         """getBlocks gets the blocks"""
-        ### Test when reconstruction request
+        ### Test when base request and non-empty run white list
         blocks = self.rerecoWfController.getBlocks()
         isList = isinstance(blocks, list)
         self.assertTrue(isList)
@@ -610,13 +721,13 @@ class WorkflowControllerTest(unittest.TestCase):
         isEmpty = len(blocks) == 0
         self.assertTrue(isEmpty)
 
-        ### Test when task chain request
-        blocks = self.taskChainWfController.getBlocks()
+        ### Test when task chain request and nom-empty lumi list
+        blocks = self.relvalTaskChainWfController.getBlocks()
         isList = isinstance(blocks, list)
         self.assertTrue(isList)
 
-        isEmpty = len(blocks) == 0
-        self.assertTrue(isEmpty)
+        isFound = self.relvalTaskChainParams.get("block") in blocks
+        self.assertTrue(isFound)
 
     def testGetSplittings(self) -> None:
         """getSplittings gets the splittings"""
@@ -690,7 +801,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetBlowupFactor(self) -> None:
         """getBlowupFactor gets the blocks"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.getBlowupFactor()
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
@@ -707,16 +818,16 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEqual)
 
         ### Test when task chain request
-        response = self.taskChainWfController.getBlowupFactor()
+        response = self.redigiTaskChainWfController.getBlowupFactor()
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
 
-        isEqual = math.isclose(response, self.taskChainParams.get("blowUp"))
+        isEqual = math.isclose(response, self.redigiTaskChainParams.get("blowUp"))
         self.assertTrue(isEqual)
 
     def testGetCompletionFraction(self) -> None:
         """getCompletionFraction gets the completion fraction"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.getCompletionFraction()
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
@@ -745,7 +856,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isComplete)
 
         ### Test when task chain request
-        response = self.taskChainWfController.getCompletionFraction()
+        response = self.redigiTaskChainWfController.getCompletionFraction()
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
 
@@ -755,7 +866,7 @@ class WorkflowControllerTest(unittest.TestCase):
         isValueFloat = all(isinstance(v, float) for v in response.values())
         self.assertTrue(isValueFloat)
 
-        isEqual = all(math.isclose(v, self.taskChainParams.get("completionFraction")) for v in response.values())
+        isEqual = all(math.isclose(v, self.redigiTaskChainParams.get("completionFraction")) for v in response.values())
         self.assertTrue(isEqual)
 
     def testGetNCopies(self) -> None:
@@ -769,6 +880,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetNextVersion(self) -> None:
         """getNextVersion gets the next processing version"""
+        ### Test when base request
         response = self.mcWfController.getNextVersion()
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
@@ -785,11 +897,11 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEqual)
 
         ### Test when task chain request
-        response = self.taskChainWfController.getNextVersion()
+        response = self.redigiTaskChainWfController.getNextVersion()
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
 
-        isEqual = response == self.taskChainParams.get("nextVersion")
+        isEqual = response == self.redigiTaskChainParams.get("nextVersion")
         self.assertTrue(isEqual)
 
     def testGetSummary(self) -> None:
@@ -803,7 +915,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testCheckSplittingsSize(self) -> None:
         """checkSplitting checks the splittings"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.checkSplitting()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
@@ -834,7 +946,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEmpty)
 
         ### Test when task chain request
-        response = self.taskChainWfController.checkSplitting()
+        response = self.redigiTaskChainWfController.checkSplitting()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
 
@@ -850,7 +962,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testIsRelVal(self) -> None:
         """isRelVal checks if a request is relval"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.request.isRelVal()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
@@ -866,17 +978,17 @@ class WorkflowControllerTest(unittest.TestCase):
         isFalse = not response
         self.assertTrue(isFalse)
 
-        ### Test when task chain request
-        response = self.taskChainWfController.request.isRelVal()
+        ### Test when task chain request and rel val
+        response = self.relvalTaskChainWfController.request.isRelVal()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
 
-        isFalse = not response
-        self.assertTrue(isFalse)
+        isTrue = response
+        self.assertTrue(isTrue)
 
     def testIsProducingPremix(self) -> None:
         """isProducingPremix checks if a request is producing premix"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.request.isProducingPremix()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
@@ -893,7 +1005,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isFalse)
 
         ### Test when task chain request
-        response = self.taskChainWfController.request.isProducingPremix()
+        response = self.redigiTaskChainWfController.request.isProducingPremix()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
 
@@ -902,7 +1014,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testIsGoodToConvertToStepChain(self) -> None:
         """isGoodToConvertToStepChain checks if a request is good to be converted to step chain"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.request.isGoodToConvertToStepChain()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
@@ -919,7 +1031,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isFalse)
 
         ### Test when task chain request
-        response = self.taskChainWfController.request.isGoodToConvertToStepChain()
+        response = self.redigiTaskChainWfController.request.isGoodToConvertToStepChain()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
 
@@ -928,7 +1040,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetAcquisitionEra(self) -> None:
         """getAcquisitionEra gets the acquisition era"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.request.getAcquisitionEra()
         isStr = isinstance(response, str)
         self.assertTrue(isStr)
@@ -956,7 +1068,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         ### Test when task chain request
-        response = self.taskChainWfController.request.getAcquisitionEra()
+        response = self.redigiTaskChainWfController.request.getAcquisitionEra()
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
 
@@ -968,9 +1080,9 @@ class WorkflowControllerTest(unittest.TestCase):
 
         isFound = False
         for k, v in response.items():
-            if k not in self.taskChainParams.get("tasks") or v != self.taskChainParams.get("tasks").get(k).get(
-                "acquisitionEra"
-            ):
+            if k not in self.redigiTaskChainParams.get("tasks") or v != self.redigiTaskChainParams.get("tasks").get(
+                k
+            ).get("acquisitionEra"):
                 break
         else:
             isFound = True
@@ -978,7 +1090,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetProcessingString(self) -> None:
         """getProcessingString gets the processing string"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.request.getProcessingString()
         isStr = isinstance(response, str)
         self.assertTrue(isStr)
@@ -1006,7 +1118,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         ### Test when task chain request
-        response = self.taskChainWfController.request.getProcessingString()
+        response = self.redigiTaskChainWfController.request.getProcessingString()
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
 
@@ -1018,9 +1130,9 @@ class WorkflowControllerTest(unittest.TestCase):
 
         isFound = False
         for k, v in response.items():
-            if k not in self.taskChainParams.get("tasks") or v != self.taskChainParams.get("tasks").get(k).get(
-                "processingString"
-            ):
+            if k not in self.redigiTaskChainParams.get("tasks") or v != self.redigiTaskChainParams.get("tasks").get(
+                k
+            ).get("processingString"):
                 break
         else:
             isFound = True
@@ -1028,7 +1140,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetMemory(self) -> None:
         """getMemory gets the memory"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.request.getMemory()
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
@@ -1045,16 +1157,16 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEqual)
 
         ### Test when task chain request
-        response = self.taskChainWfController.request.getMemory()
+        response = self.redigiTaskChainWfController.request.getMemory()
         isFloat = isinstance(response, float)
         self.assertTrue(isFloat)
 
-        isEqual = response == self.taskChainParams.get("memory")
+        isEqual = response == self.redigiTaskChainParams.get("memory")
         self.assertTrue(isEqual)
 
     def testGetIO(self) -> None:
         """getIO gets the inputs/outputs"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.request.getIO()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
@@ -1096,7 +1208,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         ### Test when task chain request
-        response = self.taskChainWfController.request.getIO()
+        response = self.redigiTaskChainWfController.request.getIO()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
 
@@ -1113,12 +1225,12 @@ class WorkflowControllerTest(unittest.TestCase):
 
         isSet = isinstance(response[3], set)
         self.assertTrue(isSet)
-        isFound = list(response[3]) == self.taskChainParams.get("secondary")
+        isFound = list(response[3]) == self.redigiTaskChainParams.get("secondary")
         self.assertTrue(isFound)
 
     def testGetMulticore(self) -> None:
         """getMulticore gets the multicore"""
-        ### Test when monte carlo request
+        ### Test when base request
         # Test when maxOnly is True
         response = self.mcWfController.request.getMulticore()
         isInt = isinstance(response, int)
@@ -1160,27 +1272,27 @@ class WorkflowControllerTest(unittest.TestCase):
 
         ### Test when task chain request
         # Test when maxOnly is True
-        response = self.taskChainWfController.request.getMulticore()
+        response = self.redigiTaskChainWfController.request.getMulticore()
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
 
-        isEqual = response == max(self.taskChainParams.get("multicore"))
+        isEqual = response == max(self.redigiTaskChainParams.get("multicore"))
         self.assertTrue(isEqual)
 
         # Test when maxOnly is False
-        response = self.taskChainWfController.request.getMulticore(maxOnly=False)
+        response = self.redigiTaskChainWfController.request.getMulticore(maxOnly=False)
         isList = isinstance(response, list)
         self.assertTrue(isList)
 
         isListOfInt = isinstance(response[0], int)
         self.assertTrue(isListOfInt)
 
-        isEqual = Counter(response) == Counter(self.taskChainParams.get("multicore"))
+        isEqual = Counter(response) == Counter(self.redigiTaskChainParams.get("multicore"))
         self.assertTrue(isEqual)
 
     def testGetRequestNumEvents(self) -> None:
         """getRequestNumEvents gets the number of events requested"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.request.getRequestNumEvents()
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
@@ -1197,16 +1309,16 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isZero)
 
         ### Test when task chain request
-        response = self.taskChainWfController.request.getRequestNumEvents()
+        response = self.redigiTaskChainWfController.request.getRequestNumEvents()
         isInt = isinstance(response, int)
         self.assertTrue(isInt)
 
-        isEqual = response == self.taskChainParams.get("requestNumEvents")
+        isEqual = response == self.redigiTaskChainParams.get("requestNumEvents")
         self.assertTrue(isEqual)
 
     def testGetCampaigns(self) -> None:
         """getCampaigns gets the campaigns"""
-        ### Test when monte carlo request
+        ### Test when base request
         # Test when details is True
         response = self.mcWfController.request.getCampaigns()
         isStr = isinstance(response, str)
@@ -1259,7 +1371,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
         ### Test when task chain request
         # Test when details is True
-        response = self.taskChainWfController.request.getCampaigns()
+        response = self.redigiTaskChainWfController.request.getCampaigns()
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
 
@@ -1271,16 +1383,16 @@ class WorkflowControllerTest(unittest.TestCase):
 
         isFound = False
         for k, v in response.items():
-            if k not in self.taskChainParams.get("tasks") or v != self.taskChainParams.get("tasks").get(k).get(
-                "acquisitionEra"
-            ):
+            if k not in self.redigiTaskChainParams.get("tasks") or v != self.redigiTaskChainParams.get("tasks").get(
+                k
+            ).get("acquisitionEra"):
                 break
         else:
             isFound = True
         self.assertTrue(isFound)
 
         # Test when details is False
-        response = self.taskChainWfController.request.getCampaigns(details=False)
+        response = self.redigiTaskChainWfController.request.getCampaigns(details=False)
         isList = isinstance(response, list)
         self.assertTrue(isList)
 
@@ -1288,7 +1400,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isListOfStr)
 
         isFound = False
-        for _, v in self.taskChainParams.get("tasks").items():
+        for _, v in self.redigiTaskChainParams.get("tasks").items():
             if v.get("acquisitionEra") not in response:
                 break
         else:
@@ -1297,7 +1409,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetCampaignsAndLabels(self) -> None:
         """getCampaignsAndLabels gets a list of campaigns and labels"""
-        ### Test when monte carlo request
+        ### Test when base request
         response = self.mcWfController.request.getCampaignsAndLabels()
         isList = isinstance(response, list)
         self.assertTrue(isList)
@@ -1326,7 +1438,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         ### Test when task chain request
-        response = self.taskChainWfController.request.getCampaignsAndLabels()
+        response = self.redigiTaskChainWfController.request.getCampaignsAndLabels()
         isList = isinstance(response, list)
         self.assertTrue(isList)
 
@@ -1334,7 +1446,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isListOfTuple)
 
         isFound = False
-        for task in self.taskChainParams.get("tasks").values():
+        for task in self.redigiTaskChainParams.get("tasks").values():
             if (task.get("acquisitionEra"), task.get("processingString")) not in response:
                 break
         else:
@@ -1343,7 +1455,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testHasAcceptableEfficiency(self) -> None:
         """hasAcceptableEfficiency checks if TaskChain has acceptable efficiency"""
-        response = self.taskChainWfController.request._hasAcceptableEfficiency()
+        response = self.redigiTaskChainWfController.request._hasAcceptableEfficiency()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
 
@@ -1352,7 +1464,7 @@ class WorkflowControllerTest(unittest.TestCase):
 
     def testGetTimeInfo(self) -> None:
         """_getTimeInfo gets the time info for a task chain request"""
-        response = self.taskChainWfController.request._getTimeInfo()
+        response = self.redigiTaskChainWfController.request._getTimeInfo()
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
 
@@ -1360,8 +1472,23 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isValueDict)
 
         total = sum([v["timePerEvent"] for v in response.values()])
-        isEqual = math.isclose(total, self.taskChainParams.get("totalTimePerEvent"))
+        isEqual = math.isclose(total, self.redigiTaskChainParams.get("totalTimePerEvent"))
         self.assertTrue(isEqual)
+
+    def testGetChainValues(self) -> None:
+        """getChainValues gets the values in the chain"""
+        response = self.relvalTaskChainWfController.request.getChainValues("Campaign")
+        isDict = isinstance(response, dict)
+        self.assertTrue(isDict)
+
+        isKeyStr = all(isinstance(k, str) for k in response)
+        self.assertTrue(isKeyStr)
+
+        isValueStr = all(isinstance(v, str) for v in response.values())
+        self.assertTrue(isValueStr)
+
+        isFound = self.relvalTaskChainParams.get("campaign") in response.values()
+        self.assertTrue(isFound)
 
 
 if __name__ == "__main__":

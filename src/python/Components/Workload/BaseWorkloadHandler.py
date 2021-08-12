@@ -161,6 +161,13 @@ class BaseWorkloadHandler(object):
         """
         return [(self.getCampaigns(), self.getProcessingString())]
 
+    def getLumiWhiteList(self) -> dict:
+        """
+        The function to get the workflow's lumi white list
+        :return: lumi white list
+        """
+        return self.get("LumiList", {})
+
     def getParamList(self, key: str) -> list:
         """
         The function to get the workflow's param list

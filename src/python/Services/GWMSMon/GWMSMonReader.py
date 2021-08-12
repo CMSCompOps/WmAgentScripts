@@ -12,7 +12,7 @@ class GWMSMonReader(object):
     General API for reading data from GWMSMon
     """
 
-    def __init__(self, logger: Optional[Logger] = None, **contact):
+    def __init__(self, logger: Optional[Logger] = None):
         try:
             self.gwmsUrl = "https://cms-gwmsmon.cern.ch"
             self.gwmsEndpoint = {
@@ -38,5 +38,5 @@ class GWMSMonReader(object):
             return data
 
         except Exception as error:
-            print("Failed to get summary for workflow %s", wf)
-            print(str(error))
+            self.logger.error("Failed to get summary for workflow %s", wf)
+            self.logger.error(str(error))

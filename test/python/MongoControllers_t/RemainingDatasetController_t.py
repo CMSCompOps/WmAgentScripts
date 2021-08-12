@@ -6,6 +6,7 @@ Unit test for RemainingDatasetController helper class.
 
 import unittest
 from unittest.mock import patch
+from time import struct_time, mktime, asctime
 from pymongo.collection import Collection
 
 from MongoControllers.RemainingDatasetController import RemainingDatasetController
@@ -20,6 +21,7 @@ class RemainingDatasetControllerTest(unittest.TestCase):
         "dataset": "/DYJetsToLL_Pt-50To100_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/Integ_Test-SC_MultiPU_Agent136_Val_Alanv19-v20/GEN-SIM",
         "docKeys": ["reasons", "size"],
         "doc": {"reasons": ["unlock"], "size": 0.5},
+        "now": struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0)),
     }
 
     def setUp(self) -> None:
@@ -44,6 +46,32 @@ class RemainingDatasetControllerTest(unittest.TestCase):
 
         rightName = self.remainingDatasetController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
+
+    def testBuildMongoDocument(self) -> None:
+        """_buildMongoDocument builds the document to store on Mongo"""
+        result = self.remainingDatasetController._buildMongoDocument(
+            self.params.get("site"), self.params.get("dataset"), self.params.get("doc"), now=self.params.get("now")
+        )
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
+
+        isSiteEqual = result.get("site") == self.params.get("site")
+        self.assertTrue(isSiteEqual)
+
+        isDatasetEqual = result.get("dataset") == self.params.get("dataset")
+        self.assertTrue(isDatasetEqual)
+
+        isReasonsEqual = result.get("reasons") == self.params.get("doc").get("reasons")
+        self.assertTrue(isReasonsEqual)
+
+        isSizeEqual = result.get("size") == self.params.get("doc").get("size")
+        self.assertTrue(isSizeEqual)
+
+        isTimeEqual = result.get("time") == mktime(self.params.get("now"))
+        self.assertTrue(isTimeEqual)
+
+        isDateEqual = result.get("date") == asctime(self.params.get("now"))
+        self.assertTrue(isDateEqual)
 
     def testGetSites(self):
         """getSites gets list of sites"""

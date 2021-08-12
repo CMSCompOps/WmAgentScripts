@@ -20,7 +20,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
             super().__init__(wfSchema, logger=logger)
 
             self.logMsg = {
-                "wfUrl": f"Workflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=task_{self.getParamList('PrepID')[0]}",
+                "wfUrl": "Workflow URL: https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=task_%s",
                 "smallEventsPerLumi": "Possible events per lumi of this wf (min(%s)) is smaller than %s evt/lumi of the input dataset",
                 "smallEventsPerLumi": "Task will get %s events per lumi in output. Smaller than %s is troublesome.",
                 "largeOutputSize": "The output size task is expected to be too large: %.2f GB > %f GB even for one lumi (effective lumi size is ~%d). It should go as low as %d",
@@ -41,7 +41,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
 
         if eventsPerLumi < minEventsPerLumi:
             self.logger.critical(self.logMsg["smallEventsPerLumi"], eventsPerLumi, minEventsPerLumi)
-            self.logger.critical(self.logMsg["wfUrl"])
+            self.logger.critical(self.logMsg["wfUrl"], self.getParamList("PrepID")[0])
 
             return True
 
@@ -338,7 +338,7 @@ class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
             if maxEventsPerLumi:
                 if inputEventsPerLumi and min(maxEventsPerLumi) < inputEventsPerLumi:
                     self.logger.critical(self.logMsg["smallEventsPerLumi"], maxEventsPerLumi, inputEventsPerLumi)
-                    self.logger.critical(self.logMsg["wfUrl"])
+                    self.logger.critical(self.logMsg["wfUrl"], self.getParamList("PrepID")[0])
                     hold = True
 
                 elif not inputEventsPerLumi:

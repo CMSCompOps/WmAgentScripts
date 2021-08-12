@@ -6,6 +6,7 @@ Unit test for ModuleLockController helper class.
 
 import unittest
 from unittest.mock import patch
+from time import struct_time, mktime, asctime
 from pymongo.collection import Collection
 
 from MongoControllers.ModuleLockController import ModuleLockController
@@ -16,7 +17,10 @@ class ModuleLockControllerTest(unittest.TestCase):
 
     # ModuleLock is always changing.
     # For now, only test output types and content keys.
-    params = {"docKeys": ["component", "pid", "host", "time", "date"]}
+    params = {
+        "docKeys": ["component", "pid", "host", "time", "date"],
+        "now": struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0)),
+    }
 
     def setUp(self) -> None:
         self.moduleLockController = ModuleLockController()
@@ -40,6 +44,21 @@ class ModuleLockControllerTest(unittest.TestCase):
 
         rightName = self.moduleLockController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
+
+    def testBuildMongoDocument(self) -> None:
+        """_buildMongoDocument builds the document to store in Mongo"""
+        result = self.moduleLockController._buildMongoDocument(now=self.params.get("now"))
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
+
+        hasAllKeys = all(k in result for k in self.params.get("docKeys"))
+        self.assertTrue(hasAllKeys)
+
+        isTimeEqual = result.get("time") == mktime(self.params.get("now"))
+        self.assertTrue(isTimeEqual)
+
+        isDateEqual = result.get("date") == asctime(self.params.get("now"))
+        self.assertTrue(isDateEqual)
 
     def testGet(self):
         """get gets the module locks"""

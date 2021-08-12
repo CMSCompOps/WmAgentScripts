@@ -5,6 +5,7 @@ Unit test for StartStopTimeController helper class.
 """
 
 import unittest
+from time import struct_time, mktime
 from pymongo.collection import Collection
 
 from MongoControllers.StartStopTimeController import StartStopTimeController
@@ -15,7 +16,11 @@ class StartStopTimeControllerTest(unittest.TestCase):
 
     # StartStopInfo is always changing.
     # For now, only test output types for a unified component.
-    params = {"component": "htmlor"}
+    params = {
+        "component": "htmlor",
+        "start": mktime(struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0))),
+        "stop": mktime(struct_time((2021, 12, 1, 0, 0, 0, 0, 0, 0))),
+    }
 
     def setUp(self) -> None:
         self.startStopTimeController = StartStopTimeController()
@@ -36,6 +41,26 @@ class StartStopTimeControllerTest(unittest.TestCase):
 
         rightName = self.startStopTimeController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
+
+    def testBuildMongoDocument(self) -> None:
+        """_buildMongoDocument builds the document to store on Mongo"""
+        result = self.startStopTimeController._buildMongoDocument(
+            self.params.get("component"), self.params.get("start"), self.params.get("stop")
+        )
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
+
+        isComponentEqual = result.get("component") == self.params.get("component")
+        self.assertTrue(isComponentEqual)
+
+        isStartEqual = result.get("start") == self.params.get("start")
+        self.assertTrue(isStartEqual)
+
+        isStopEqual = result.get("stop") == self.params.get("stop")
+        self.assertTrue(isStopEqual)
+
+        hasLapKey = "lap" in result
+        self.assertTrue(hasLapKey)
 
     def testGet(self):
         """get gets the start/stop info"""
