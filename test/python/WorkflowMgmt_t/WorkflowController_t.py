@@ -254,7 +254,7 @@ class WorkflowControllerTest(unittest.TestCase):
         isFalse = not response
         self.assertTrue(isFalse)
 
-    @patch("Components.WorkflowController.WorkflowController._saveInFile")
+    @patch("WorkflowMgmt.WorkflowController.WorkflowController._saveInFile")
     def testGetWMStats(self, mockSave: MagicMock) -> None:
         """getWMStats gets the wmstats"""
         # Test when wmstats exists and no cache is allowed. This request is quite heavy, so only test this.

@@ -31,7 +31,7 @@ class CampaignControllerTest(unittest.TestCase):
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.campaignController.collection, Collection)
         self.assertTrue(isCollection)
@@ -51,7 +51,7 @@ class CampaignControllerTest(unittest.TestCase):
         isFound = result.get("name") == self.campaignParam.get("campaign")
         self.assertTrue(isFound)
 
-    def testGet(self):
+    def testGet(self) -> None:
         """get gets the campaigns info"""
         result = self.campaignController.get()
         isDict = isinstance(result, dict)
@@ -67,7 +67,7 @@ class CampaignControllerTest(unittest.TestCase):
                 break
         self.assertTrue(isFound)
 
-    def testGetCampaigns(self):
+    def testGetCampaigns(self) -> None:
         """getCampaigns gets the campaigns names"""
         # Test when campaign type is empty
         result = self.campaignController.getCampaigns()
@@ -88,7 +88,7 @@ class CampaignControllerTest(unittest.TestCase):
         isListOfStr = isinstance(result[0], str)
         self.assertTrue(isListOfStr)
 
-    def testGetCampaignValue(self):
+    def testGetCampaignValue(self) -> None:
         """getCampaignValue gets the value of a given campaign"""
         # Test when the key exists, will use resize in this case
         result = self.campaignController.getCampaignValue(self.campaignParam.get("campaign"), "resize", "default")
@@ -106,13 +106,13 @@ class CampaignControllerTest(unittest.TestCase):
         isDefault = result == "default"
         self.assertTrue(isDefault)
 
-    def testGetCampaignParameters(self):
+    def testGetCampaignParameters(self) -> None:
         """getCampaignParameters gets the parameters of a given campaign"""
         result = self.campaignController.getCampaignParameters(self.campaignParam.get("campaign"))
         isDict = isinstance(result, dict)
         self.assertTrue(isDict)
 
-    def testGetSecondaries(self):
+    def testGetSecondaries(self) -> None:
         """getSecondaries gets the campaigns secondaries"""
         result = self.campaignController.getSecondaries()
         isList = isinstance(result, list)
@@ -132,6 +132,7 @@ class CampaignControllerTest(unittest.TestCase):
 
         isTrue = result
         self.assertTrue(isTrue)
+
 
 if __name__ == "__main__":
     unittest.main()

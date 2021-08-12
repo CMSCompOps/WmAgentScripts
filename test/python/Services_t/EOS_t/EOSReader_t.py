@@ -6,7 +6,7 @@ Unit test for EOSReader helper class.
 
 import json
 import unittest
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open, MagicMock
 
 from Services.EOS.EOSReader import EOSReader
 
@@ -27,7 +27,7 @@ class EOSReaderTest(unittest.TestCase):
         super().tearDown()
         return
 
-    def testFilename(self):
+    def testFilename(self) -> None:
         """filename must be a valid eos path"""
         # Test when filename is valid
         isValid = self.eosReader.filename == self.params.get("validFilename")
@@ -40,7 +40,7 @@ class EOSReaderTest(unittest.TestCase):
 
     @patch("os.system")
     @patch("builtins.open", create=True)
-    def testRead(self, mockOpen, mockSystem):
+    def testRead(self, mockOpen: MagicMock, mockSystem: MagicMock) -> None:
         """read gets the content of an EOS file"""
         # Test behavior when file is found locally
         mockOpen.return_value = mock_open(read_data=json.dumps(self.params.get("mockContent"))).return_value

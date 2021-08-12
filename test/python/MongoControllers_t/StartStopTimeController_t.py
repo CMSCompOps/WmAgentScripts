@@ -31,7 +31,7 @@ class StartStopTimeControllerTest(unittest.TestCase):
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.startStopTimeController.collection, Collection)
         self.assertTrue(isCollection)
@@ -62,7 +62,7 @@ class StartStopTimeControllerTest(unittest.TestCase):
         hasLapKey = "lap" in result
         self.assertTrue(hasLapKey)
 
-    def testGet(self):
+    def testGet(self) -> None:
         """get gets the start/stop info"""
         # Test valid component and metric
         result = self.startStopTimeController.get(self.params.get("component"))

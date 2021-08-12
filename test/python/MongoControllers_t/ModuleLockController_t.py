@@ -5,7 +5,7 @@ Unit test for ModuleLockController helper class.
 """
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from time import struct_time, mktime, asctime
 from pymongo.collection import Collection
 
@@ -28,13 +28,13 @@ class ModuleLockControllerTest(unittest.TestCase):
         return
 
     @patch("MongoControllers.ModuleLockController.ModuleLockController.clean")
-    def tearDown(self, mockClean) -> None:
+    def tearDown(self, mockClean: MagicMock) -> None:
         mockClean.return_value = None
         del self.moduleLockController
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.moduleLockController.collection, Collection)
         self.assertTrue(isCollection)
@@ -60,7 +60,7 @@ class ModuleLockControllerTest(unittest.TestCase):
         isDateEqual = result.get("date") == asctime(self.params.get("now"))
         self.assertTrue(isDateEqual)
 
-    def testGet(self):
+    def testGet(self) -> None:
         """get gets the module locks"""
         result = self.moduleLockController.get()
         isList = isinstance(result, list)
@@ -78,7 +78,7 @@ class ModuleLockControllerTest(unittest.TestCase):
         self.assertTrue(hasAllKeys)
 
     @patch("MongoControllers.ModuleLockController.ModuleLockController.get")
-    def testGo(self, mockGet):
+    def testGo(self, mockGet: MagicMock) -> None:
         """go checks if a module is locked or not"""
         # Test when there is no locks
         mockGet.return_value = []

@@ -39,7 +39,7 @@ class CloseoutControllerTest(unittest.TestCase):
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.closeoutController.collection, Collection)
         self.assertTrue(isCollection)
@@ -62,7 +62,7 @@ class CloseoutControllerTest(unittest.TestCase):
         isFound = result.get("test") == "ok"
         self.assertTrue(isFound)
 
-    def testGet(self):
+    def testGet(self) -> None:
         """get gets the closeout info for a given workflow"""
         # Test when workflow exists
         result = self.closeoutController.get(self.params.get("workflow"))
@@ -80,7 +80,7 @@ class CloseoutControllerTest(unittest.TestCase):
         isNone = result is None
         self.assertTrue(isNone)
 
-    def testGetWorkflows(self):
+    def testGetWorkflows(self) -> None:
         """get gets all workflow names"""
         result = self.closeoutController.getWorkflows()
         isList = isinstance(result, list)

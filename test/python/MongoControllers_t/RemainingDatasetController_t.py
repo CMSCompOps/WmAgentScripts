@@ -5,7 +5,7 @@ Unit test for RemainingDatasetController helper class.
 """
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from time import struct_time, mktime, asctime
 from pymongo.collection import Collection
 
@@ -30,13 +30,13 @@ class RemainingDatasetControllerTest(unittest.TestCase):
         return
 
     @patch("MongoControllers.RemainingDatasetController.RemainingDatasetController.purge")
-    def tearDown(self, mockPurge) -> None:
+    def tearDown(self, mockPurge: MagicMock) -> None:
         mockPurge.return_value = None
         del self.remainingDatasetController
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.remainingDatasetController.collection, Collection)
         self.assertTrue(isCollection)
@@ -73,7 +73,7 @@ class RemainingDatasetControllerTest(unittest.TestCase):
         isDateEqual = result.get("date") == asctime(self.params.get("now"))
         self.assertTrue(isDateEqual)
 
-    def testGetSites(self):
+    def testGetSites(self) -> None:
         """getSites gets list of sites"""
         result = self.remainingDatasetController.getSites()
         isList = isinstance(result, list)
@@ -85,7 +85,7 @@ class RemainingDatasetControllerTest(unittest.TestCase):
         isFound = self.params.get("site") in result
         self.assertTrue(isFound)
 
-    def testGet(self):
+    def testGet(self) -> None:
         """get gets the data of a given site"""
         result = self.remainingDatasetController.get(self.params.get("site"))
         isDict = isinstance(result, dict)
@@ -108,7 +108,7 @@ class RemainingDatasetControllerTest(unittest.TestCase):
         self.assertTrue(hasAllKeys)
 
     @patch("MongoControllers.RemainingDatasetController.RemainingDatasetController.get")
-    def testTell(self, mockGet):
+    def testTell(self, mockGet: MagicMock) -> None:
         """tell prints the data for a given site"""
         with self.assertLogs(self.remainingDatasetController.logger, level="INFO") as result:
             mockGet.return_value = self.params.get("doc")

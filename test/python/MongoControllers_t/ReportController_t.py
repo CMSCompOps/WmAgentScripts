@@ -42,7 +42,7 @@ class ReportControllerTest(unittest.TestCase):
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.reportController.collection, Collection)
         self.assertTrue(isCollection)
@@ -53,7 +53,7 @@ class ReportControllerTest(unittest.TestCase):
         rightName = self.reportController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
-    def testConvertValues(self):
+    def testConvertValues(self) -> None:
         """_convertValues converts Mongo document values to required types"""
         # Test when value is set
         result = self.reportController._convertValues({"test"})
@@ -91,7 +91,7 @@ class ReportControllerTest(unittest.TestCase):
         isFound = result.get("test") == "ok"
         self.assertTrue(isFound)
 
-    def testGet(self):
+    def testGet(self) -> None:
         """get gets the report info for a given workflow"""
         # Test when the workflow exists
         result = self.reportController.get(self.params.get("workflow"))

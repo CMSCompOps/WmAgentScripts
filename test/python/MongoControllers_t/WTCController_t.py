@@ -25,7 +25,7 @@ class WTCControllerTest(unittest.TestCase):
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.wtcController.collection, Collection)
         self.assertTrue(isCollection)
@@ -59,7 +59,7 @@ class WTCControllerTest(unittest.TestCase):
         isDateEqual = result.get("date") == asctime(self.params.get("now"))
         self.assertTrue(isDateEqual)
 
-    def testGetHold(self):
+    def testGetHold(self) -> None:
         """getHold gets all data in hold"""
         result = self.wtcController.getHold()
         isDict = isinstance(result, dict)
@@ -71,7 +71,7 @@ class WTCControllerTest(unittest.TestCase):
         isValueList = all(isinstance(v, list) for v in result.values())
         self.assertTrue(isValueList)
 
-    def testGetBypass(self):
+    def testGetBypass(self) -> None:
         """getBypass gets all data in bypass"""
         result = self.wtcController.getBypass()
         isDict = isinstance(result, dict)
@@ -83,7 +83,7 @@ class WTCControllerTest(unittest.TestCase):
         isValueList = all(isinstance(v, list) for v in result.values())
         self.assertTrue(isValueList)
 
-    def testGetForce(self):
+    def testGetForce(self) -> None:
         """getForce gets all data in force"""
         result = self.wtcController.getForce()
         isDict = isinstance(result, dict)
@@ -95,7 +95,7 @@ class WTCControllerTest(unittest.TestCase):
         isValueList = all(isinstance(v, list) for v in result.values())
         self.assertTrue(isValueList)
 
-    def testGet(self):
+    def testGet(self) -> None:
         """get gets all data with a given action"""
         # Test when action is invalid, since valid actions are tested by the other get methods
         result = self.wtcController.get("test")

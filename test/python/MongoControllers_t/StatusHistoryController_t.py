@@ -27,7 +27,7 @@ class StatusHistoryControllerTest(unittest.TestCase):
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.statusHistoryController.collection, Collection)
         self.assertTrue(isCollection)
@@ -53,7 +53,7 @@ class StatusHistoryControllerTest(unittest.TestCase):
         isFound = result.get("test") == "ok"
         self.assertTrue(isFound)
 
-    def testGet(self):
+    def testGet(self) -> None:
         """get gets the data in status history"""
         result = self.statusHistoryController.get()
         isDict = isinstance(result, dict)
