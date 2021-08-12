@@ -4,11 +4,11 @@ _CacheManager_t_
 Unit test for CacheManager helper class.
 """
 
+import json
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, mock_open, MagicMock
+from time import struct_time, mktime
 from pymongo.collection import Collection
-
-from typing import Optional
 
 from Cache.CacheManager import CacheManager
 from Databases.Mongo.MongoClient import MongoClient
@@ -35,6 +35,7 @@ class CacheManagerTest(unittest.TestCase):
         "docWithData": mockMongoClient._getOne(data={"$exists": True}),
         "docWithoutData": mockMongoClient._getOne(data={"$exists": False}),
         "docKeys": ["key", "time", "expire", "lifetime"],
+        "time": struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0)),
     }
 
     def setUp(self) -> None:
@@ -46,7 +47,7 @@ class CacheManagerTest(unittest.TestCase):
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.cache.collection, Collection)
         self.assertTrue(isCollection)
@@ -57,7 +58,30 @@ class CacheManagerTest(unittest.TestCase):
         rightName = self.cache.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
-    def testGetKeyFilePath(self):
+    def testBuildMongoDocument(self) -> None:
+        """_buildMongoDocument builds the document to store in Mongo"""
+        result = self.cache._buildMongoDocument(
+            self.params.get("key"), self.params.get("fileData"), now=self.params.get("time")
+        )
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
+
+        hasAllKeys = all(k in result for k in self.params.get("docKeys"))
+        self.assertTrue(hasAllKeys)
+
+        isKeyEqual = result.get("key") == self.params.get("key")
+        self.assertTrue(isKeyEqual)
+
+        isTimeEqual = result.get("time") == int(mktime(self.params.get("time")))
+        self.assertTrue(isTimeEqual)
+
+        isExpireEqual = result.get("expire") == int(mktime(self.params.get("time"))) + 600
+        self.assertTrue(isExpireEqual)
+
+        isDataEqual = result.get("data") == self.params.get("fileData")
+        self.assertTrue(isDataEqual)
+
+    def testGetKeyFilePath(self) -> None:
         """_getKeyFilePath gets the cache file path"""
         path = self.cache._getKeyFilePath(self.params.get("key"))
         isStr = isinstance(path, str)
@@ -66,9 +90,28 @@ class CacheManagerTest(unittest.TestCase):
         rightPath = path == self.params.get("cacheFilePath")
         self.assertTrue(rightPath)
 
+    @patch("os.path.isfile")
+    @patch("builtins.open", mock_open(read_data=json.dumps(params.get("fileData"))))
+    def testGetFromFile(self, mockIsFile: MagicMock) -> None:
+        """_getFromFile gets the data from file"""
+        # Test behavior when the file does not exist
+        mockIsFile.return_value = False
+        result = self.cache._getFromFile(self.params.get("key"))
+        isNone = result is None
+        self.assertTrue(isNone)
+
+        # Test behavior when the file exists
+        mockIsFile.return_value = True
+        result = self.cache._getFromFile(self.params.get("key"))
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
+
+        isEqual = result == self.params.get("fileData")
+        self.assertTrue(isEqual)
+
     @patch("Cache.CacheManager.CacheManager._getFromFile")
     @patch("Databases.Mongo.MongoClient.MongoClient._getOne")
-    def testGet(self, mockGetOne, mockGetFromFile):
+    def testGet(self, mockGetOne: MagicMock, mockGetFromFile: MagicMock) -> None:
         """get gets the data in cache for a given key"""
         # Test when key does not exist
         mockGetOne.return_value = None

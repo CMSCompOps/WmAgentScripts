@@ -9,13 +9,13 @@ import sys
 
 
 class ConfigurationHandler:
-    def __init__(self, configFile="serviceConfiguration.json"):
+    def __init__(self, configFile="config/serviceConfiguration.json"):
         self.configFile = configFile
         if self.configFile is None:
             self.configs = self.configFile
         else:
             try:
-                with open(self.configFile) as file:
+                with open(self.configFile, "r") as file:
                     self.configs = json.loads(file.read())
             except Exception as ex:
                 print(("Could not read configuration file: %s\nException: %s" % (self.configFile, str(ex))))

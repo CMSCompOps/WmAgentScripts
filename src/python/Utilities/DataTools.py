@@ -1,5 +1,4 @@
 from collections import defaultdict
-
 from typing import Optional, List, Tuple
 
 from Utilities.IteratorTools import mapValues, filterKeys
@@ -133,4 +132,34 @@ def sortByWakeUpPriority(agents: dict) -> list:
 
     except Exception as error:
         print("Failed to sort agents by wake up metric")
+        print(str(error))
+
+
+def flattenTaskTree(task: str, **selectParam) -> list:
+    """
+    The function to flatten a task tree into a list
+    :param task: task
+    :param selectParam: optional selection params
+    :return: list of tasks
+    """
+    try:
+        allTasks = []
+        if selectParam:
+            for k, v in selectParam.items():
+                if (isinstance(v, list) and getattr(task, k) in v) or (
+                    not isinstance(v, list) and getattr(task, k) == v
+                ):
+                    allTasks.append(task)
+                    break
+        else:
+            allTasks.append(task)
+
+        for child in task.tree.childNames:
+            childSpec = getattr(task.tree.children, child)
+            allTasks.extend(flattenTaskTree(childSpec, **selectParam))
+
+        return allTasks
+
+    except Exception as error:
+        print("Failed to flatten task tree to list")
         print(str(error))

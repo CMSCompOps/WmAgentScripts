@@ -5,8 +5,9 @@ Unit test for AgentController helper class.
 """
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from pymongo.collection import Collection
+from time import struct_time, mktime, asctime
 
 from MongoControllers.AgentController import AgentController
 
@@ -16,11 +17,15 @@ class AgentControllerTest(unittest.TestCase):
 
     # AgentInfo is always changing.
     # For now, only test output types and content keys for a given agent.
-    params = {"agent": "vocms0284.cern.ch", "docKeys": ["status", "version", "update", "date"]}
+    params = {
+        "agent": "vocms0284.cern.ch",
+        "docKeys": ["status", "version", "update", "date"],
+        "now": struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0)),
+    }
 
     @patch("MongoControllers.AgentController.AgentController.syncToProduction")
     @patch("Services.Trello.TrelloClient.TrelloClient.__init__")
-    def setUp(self, mockTrello, mockSync) -> None:
+    def setUp(self, mockTrello: MagicMock, mockSync: MagicMock) -> None:
         mockSync.return_value = True
         mockTrello.return_value = None
         self.agentController = AgentController()
@@ -31,7 +36,7 @@ class AgentControllerTest(unittest.TestCase):
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.agentController.collection, Collection)
         self.assertTrue(isCollection)
@@ -42,8 +47,29 @@ class AgentControllerTest(unittest.TestCase):
         rightName = self.agentController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
-    def testGetAgents(self):
+    def testBuildMongoDocument(self) -> None:
+        """_buildMongoDocument builds the document to store on Mongo"""
+        result = self.agentController._buildMongoDocument(
+            self.params.get("agent"), {"test": "ok"}, now=self.params.get("now")
+        )
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
+
+        isNameEqual = result.get("name") == self.params.get("agent")
+        self.assertTrue(isNameEqual)
+
+        isUpdateEqual = result.get("update") == mktime(self.params.get("now"))
+        self.assertTrue(isUpdateEqual)
+
+        isDateEqual = result.get("date") == asctime(self.params.get("now"))
+        self.assertTrue(isDateEqual)
+
+        isFound = result.get("test") == "ok"
+        self.assertTrue(isFound)
+
+    def testGetAgents(self) -> None:
         """get gets the agents names"""
+        # Test without query params
         result = self.agentController.getAgents()
         isList = isinstance(result, list)
         self.assertTrue(isList)
@@ -54,7 +80,12 @@ class AgentControllerTest(unittest.TestCase):
         isFound = self.params.get("agent") in result
         self.assertTrue(isFound)
 
-    def testGet(self):
+        # Test with query params
+        result = self.agentController.getAgents(speeddrain=True)
+        isList = isinstance(result, list)
+        self.assertTrue(isList)
+
+    def testGet(self) -> None:
         """get gets the info of a given agent"""
         # Test when agent exists
         result = self.agentController.get(self.params.get("agent"))

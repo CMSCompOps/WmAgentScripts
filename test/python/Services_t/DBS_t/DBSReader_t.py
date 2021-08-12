@@ -5,7 +5,7 @@ Unit test for the DBS helper class.
 """
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from Services.DBS.DBSReader import DBSReader
 
 
@@ -41,7 +41,7 @@ class DBSReaderTest(unittest.TestCase):
         "parent": "/MET/Run2018A-v1/RAW",
     }
 
-    def setUp(self):
+    def setUp(self) -> None:
         """
         _setUp_
         Initialize the API to point at the test server.
@@ -51,14 +51,14 @@ class DBSReaderTest(unittest.TestCase):
         super(DBSReaderTest, self).setUp()
         return
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """
         _tearDown_
         """
         super(DBSReaderTest, self).tearDown()
         return
 
-    def testGetDBSStatus(self):
+    def testGetDBSStatus(self) -> None:
         """getDBSStatus gets DBS Status of a dataset"""
         dbsReader = DBSReader(self.url)
         status = dbsReader.getDBSStatus(self.invalidDataset.get("dataset"))
@@ -68,7 +68,7 @@ class DBSReaderTest(unittest.TestCase):
         isFound = status == self.invalidDataset.get("status")
         self.assertTrue(isFound)
 
-    def testGetFilesWithLumiInRun(self):
+    def testGetFilesWithLumiInRun(self) -> None:
         """getFilesWithLumiInRun gets DBS files with lumi of a dataset and run"""
         # Test when run is 1
         dbsReader = DBSReader(self.url)
@@ -103,7 +103,7 @@ class DBSReaderTest(unittest.TestCase):
                 break
         self.assertTrue(isFound)
 
-    def testgetBlockName(self):
+    def testGetBlockName(self) -> None:
         """getBlockName gets the block name of a file"""
         dbsReader = DBSReader(self.url)
         block = dbsReader.getBlockName(self.validDataset.get("logical_file_name"))
@@ -115,11 +115,11 @@ class DBSReaderTest(unittest.TestCase):
 
     @patch("Cache.CacheManager.CacheManager.get")
     @patch("Cache.CacheManager.CacheManager.set")
-    def testGetDatasetFiles(self, mock_set, mock_get):
+    def testGetDatasetFiles(self, mockSet: MagicMock, mockGet: MagicMock) -> None:
         """getDatasetFiles gets files of a dataset"""
         # Test when details is False and validFileOnly is False
-        mock_set.return_value = True
-        mock_get.return_value = None
+        mockSet.return_value = True
+        mockGet.return_value = None
         dbsReader = DBSReader(self.url)
         files = dbsReader.getDatasetFiles(self.invalidDataset.get("dataset"))
         isList = isinstance(files, list)
@@ -144,8 +144,8 @@ class DBSReaderTest(unittest.TestCase):
         self.assertTrue(isFound)
 
         # Test when details is False and validFileOnly is True
-        mock_set.return_value = True
-        mock_get.return_value = None
+        mockSet.return_value = True
+        mockGet.return_value = None
         files = dbsReader.getDatasetFiles(self.invalidDataset.get("dataset"), validFileOnly=True)
         isList = isinstance(files, list)
         self.assertTrue(isList)
@@ -153,7 +153,7 @@ class DBSReaderTest(unittest.TestCase):
         isEmpty = len(files) == 0
         self.assertTrue(isEmpty)
 
-    def testGetDatasetBlockNamesByRuns(self):
+    def testGetDatasetBlockNamesByRuns(self) -> None:
         """getDatasetBlockNamesByRuns gets the blocks names for a dataset filtered by runs"""
         # Test when run is 1
         dbsReader = DBSReader(self.url)
@@ -189,7 +189,7 @@ class DBSReaderTest(unittest.TestCase):
                 break
         self.assertTrue(isFound)
 
-    def testGetDatasetBlockNamesByLumis(self):
+    def testGetDatasetBlockNamesByLumis(self) -> None:
         """getDatasetBlockNamesByLumis gets the blocks names for a dataset filtered by lumi sections"""
         dbsReader = DBSReader(self.url)
         blocks = dbsReader.getDatasetBlockNamesByLumis(
@@ -209,7 +209,7 @@ class DBSReaderTest(unittest.TestCase):
                 break
         self.assertTrue(isFound)
 
-    def testGetDatasetBlockNames(self):
+    def testGetDatasetBlockNames(self) -> None:
         """getDatasetBlockNames gets the blocks names for a dataset"""
         dbsReader = DBSReader(self.url)
         blocks = dbsReader.getDatasetBlockNames(self.validDataset.get("dataset"))
@@ -226,14 +226,21 @@ class DBSReaderTest(unittest.TestCase):
                 break
         self.assertTrue(isFound)
 
-    def testGetDatasetSize(self):
+    def testGetDatasetSize(self) -> None:
         """getDatasetSize gets the size of a dataset"""
         dbsReader = DBSReader(self.url)
         size = dbsReader.getDatasetSize(self.validDataset.get("dataset"))
         isFloat = isinstance(size, float)
         self.assertTrue(isFloat)
 
-    def testGetDatasetEventsAndLumis(self):
+    def testGetDatasetEventsPerLumi(self) -> None:
+        """getDatasetEventsPerLumi gets the number of events per lumis of a dataset"""
+        dbsReader = DBSReader(self.url)
+        eventsPerLumis = dbsReader.getDatasetEventsPerLumi(self.validDataset.get("dataset"))
+        isFloat = isinstance(eventsPerLumis, float)
+        self.assertTrue(isFloat)
+
+    def testGetDatasetEventsAndLumis(self) -> None:
         """getDatasetEventsAndLumis gets number of events and lumis of a dataset"""
         dbsReader = DBSReader(self.url)
         events, lumis = dbsReader.getDatasetEventsAndLumis(self.validDataset.get("dataset"))
@@ -241,7 +248,7 @@ class DBSReaderTest(unittest.TestCase):
             isInt = isinstance(i, int)
             self.assertTrue(isInt)
 
-    def testGetBlocksEventsAndLumis(self):
+    def testGetBlocksEventsAndLumis(self) -> None:
         """getBlocksEventsAndLumis gets number of events and lumis of blocks"""
         dbsReader = DBSReader(self.url)
         events, lumis = dbsReader.getBlocksEventsAndLumis([self.validDataset.get("block_name")])
@@ -249,7 +256,7 @@ class DBSReaderTest(unittest.TestCase):
             isInt = isinstance(i, int)
             self.assertTrue(isInt)
 
-    def testGetDatasetRuns(self):
+    def testGetDatasetRuns(self) -> None:
         """getDatasetRuns gets the runs of a dataset"""
         dbsReader = DBSReader(self.url)
         runs = dbsReader.getDatasetRuns(self.validDataset.get("dataset"))
@@ -262,7 +269,7 @@ class DBSReaderTest(unittest.TestCase):
         isFound = runs[0] == self.validDataset.get("run")
         self.assertTrue(isFound)
 
-    def testGetDatasetParent(self):
+    def testGetDatasetParent(self) -> None:
         """getDatasetParent gets the parents of a dataset"""
         dbsReader = DBSReader(self.url)
         parents = dbsReader.getDatasetParent(self.validDatasetNotRun1.get("dataset"))
@@ -275,7 +282,7 @@ class DBSReaderTest(unittest.TestCase):
         isFound = parents[0] == self.validDatasetNotRun1.get("parent")
         self.assertTrue(isFound)
 
-    def testGetDatasetNames(self):
+    def testGetDatasetNames(self) -> None:
         """getDatasetNames gets the name of a dataset"""
         # Test when details is True
         dbsReader = DBSReader(self.url)
@@ -305,7 +312,7 @@ class DBSReaderTest(unittest.TestCase):
         isFound = self.validDataset.get("dataset") in names
         self.assertTrue(isFound)
 
-    def testGetLFNBase(self):
+    def testGetLFNBase(self) -> None:
         """getLFNBase gets the base of the filenames of a dataset"""
         dbsReader = DBSReader(self.url)
         name = dbsReader.getLFNBase(self.validDataset.get("dataset"))
@@ -317,10 +324,10 @@ class DBSReaderTest(unittest.TestCase):
 
     @patch("Cache.CacheManager.CacheManager.get")
     @patch("Cache.CacheManager.CacheManager.set")
-    def testGetDatasetLumisAndFiles(self, mock_set, mock_get):
+    def testGetDatasetLumisAndFiles(self, mockSet: MagicMock, mockGet: MagicMock) -> None:
         """getDatasetLumisAndFiles gets lumi sections and files of a dataset"""
-        mock_set.return_value = True
-        mock_get.return_value = None
+        mockSet.return_value = True
+        mockGet.return_value = None
         dbsReader = DBSReader(self.url)
         results = dbsReader.getDatasetLumisAndFiles(self.validDataset.get("dataset"), withCache=False)
         isDict = all(isinstance(result, dict) for result in results)
@@ -354,7 +361,7 @@ class DBSReaderTest(unittest.TestCase):
                 break
         self.assertTrue(isFound)
 
-    def testGetBlocksLumisAndFilesForCaching(self):
+    def testGetBlocksLumisAndFilesForCaching(self) -> None:
         """getBlocksLumisAndFilesForCaching gets lumi sections and files of blocks for caching"""
         dbsReader = DBSReader(self.url)
         blocks = [{"block_name": self.validDataset.get("block_name")}]

@@ -1,0 +1,436 @@
+{
+ "email_destination" : { 
+   "value" : ["h.ozturk@cern.ch","optimistcynic@gmail.com","jen_a@fnal.gov","sharad.agarwal@cern.ch","cmsunified@cern.ch","wangzqe@mit.edu"],
+   "description" : "The list of people that get the emails notifications"
+ },
+ "busy_agent_fraction" : {
+   "value" : 0.9,
+   "description" : "Running/MaxRunning job fraction above which to consider an agent busy. Default 0.9"
+ },
+ "idle_agent_fraction" : {
+   "value" : 0.1,
+   "description" : "Running/MaxRunning job fraction below which to consider an agent idling. Default 0.1"
+ },
+ "full_task_path_name_limit" : {
+   "value" : 1250,
+   "description" : "Maximum number of characters allowed for full task path name in a workflow"
+ },
+ "site_out_of_overflow": {
+   "value" : [
+               "NONO_T1_UK_RAL",
+               "NONO_T1_IT_CNAF",
+               "T0_CH_CSCS_HPC"],
+   "description" : "The sites that should be taken out completely from the overflow mapping"
+ },
+ "site_for_overflow": {
+   "value" : ["T2_CH_CERN_HLT",
+	     "T0_CH_CERN"],
+   "description" : "The sites that we set to overflow and require a specific treatment"
+ },
+ "overflow_pressure": {
+   "value" : 0.5,
+   "description" : "The ratio pending/running over which to consider overflowing"
+ },
+ "PU_overflow_overflow_reco":{
+   "value" : false,
+   "descrition" : "Whether or not to overflow the second step (reco) for workfow with PU_overflow enabled"
+ },
+ "warning_short_time" : { 
+    "value" : 60,
+    "description" : "Time in minutes per core below which jobs are considered too short and a warning is issued."
+ },
+ "warning_long_time" : {
+    "value" : 1440,
+    "description" : "Time in minutes per core above which jobs are considered too long and have a chance at timing out."
+ },
+ "warning_mem" : {
+    "value" : 2500,
+    "description" : "Value in MB/core over which to consider a workflow from using/configured too much memory"
+ },
+ "tune_min_stats" :{
+    "value" : 300,
+    "description" : "The number of finished jobs required before making a performance estimate"
+ },
+ "mem_quanta": {
+    "value" : 1000,
+    "description" : "The quanta of memory in MB for the JobRouter"
+ },
+ "time_quanta": {
+    "value" : 60,
+    "description" : "The quanta of time in min for the JobRouter"
+ },
+ "slope_quanta": {
+    "value" : 100,
+    "description" : "The quanta of the slope of memory/core in MB for the JobRouter"
+ },
+ "read_quanta": {
+    "value" : 100,
+    "description" : "The quanta of read requirements in kb/something for the JobRouter"
+ },
+ "htcondor_binning": {
+    "value" : 5,
+    "description" : "The number of bins to use for quantizing values used for tuning job requirements"
+ },
+ "min_core_for_resize": {
+     "value" : 4,
+     "description" : "The minimum of original core requested to allow resizing"
+ },
+ "DDM_buffer_level": {
+   "value" : 0.8,
+   "description" : "The fraction of the DDM quota we are allowed to use"
+ },
+ "sites_banned": {
+   "value" : ["T2_CH_CERN_AI",
+	      "T2_TH_CUNSTDA",
+	      "T0_CH_CERN",
+	      "T0_CH_CSCS_HPC"
+ 	      ],
+   "description" : "The sites that are banned from production"
+ },		 
+ "sites_auto_approve": {
+   "value" : ["T0_CH_CERN_MSS","T1_FR_CCIN2P3_MSS","T1_IT_CNAF_MSS", "T1_RU_JINR_MSS"],
+   "description" : "The sites we can autoapprove tape request to"
+ },
+ "sites_space_override": {	
+   "value" : { 
+	       },
+   "description" : "Over-ride the available space at a phedex end point"
+ },
+ "sites_with_goodIO": {
+    "value" : ["T2_CH_CSCS","T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3","T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome","T2_UK_London_Brunel", "T2_UK_London_IC","T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_BE_IIHE","T2_EE_Estonia","T2_PL_Swierk","T2_CH_CERN","T2_CH_CERN_HLT","T2_KR_KISTI","T2_UK_SGrid_RALPP","T2_BR_SPRACE","T2_UA_KIPT","T2_BR_UERJ","T2_BE_UCL","T2_RU_JINR"],
+    "description" : "The sites identified as having good storage bandwidth"
+ },
+ "sites_with_goodAAA": {
+    "value" : ["T2_CH_CSCS","T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3","T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome","T2_UK_London_Brunel", "T2_UK_London_IC","T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_BE_IIHE","T2_EE_Estonia","T2_PL_Swierk","T2_CH_CERN","T2_CH_CERN_HLT","T2_TW_NCHC","T2_IN_TIFR","T2_HU_Budapest","T2_KR_KISTI","T2_BR_SPRACE","T2_RU_JINR","T2_UK_SGrid_RALPP","T2_US_Vanderbilt","T2_BE_UCL","T2_CN_Beijing","T2_UA_KIPT","T2_AT_Vienna","T2_ES_IFCA","T3_US_Baylor","T3_US_Colorado","T3_UK_London_RHUL","T3_UK_SGrid_Oxford"],
+    "description" : "The sites identified as having good AAA bandwidth"
+ },
+ "blow_up_limits" : {
+   "value" : [5,10],
+   "description" : "Pair of Blow up factor for taskchain above which to act, and needed amount of cores to receive large such taskchain. Probably deprecated now with GQ taking this into account. Was (5,4000) before"
+ },
+ "GB_space_limit" : {
+   "value" : 20,
+   "description" : "The value in GB that we allow the output size to be before adapting the splitting"
+ },
+  "output_size_correction": {
+   "value" : { "Phase" : 1 },
+   "description" : "The correction factor to be applied to SizePerEvent per keyword."
+ },
+ "memory_correction": {
+   "value" : { "RunIIFall17DRPremix" : 14900 },
+   "description" : "The memory setting to be set for task with that keyword in"
+ },
+ "max_cpuh_block" : {
+   "value" : 40000000,
+   "description" : "Value of CPUh above which a wf is blocked from assigning"
+ },
+ "block_repositionning": {
+   "value" : true,
+   "description" : "Whether or not to retransfer block from WQE without location"
+ },
+ "allowed_bypass": {
+   "description" : "Who is allowed to bypass and force complete",
+   "value" : [
+              ["vlimant","vlimant@cern.ch"],
+	      ["sagarwal","sharad.agarwal@cern.ch"],
+	      ["knaskar","kousik.naskar@cern.ch"],
+	      ["jen_a","jen_a@fnal.gov"],
+	      ["wangz","wangzqe@mit.edu"],
+	      ["haozturk","h.ozturk@cern.ch"]
+             ]
+ },
+ "max_tail_priority" : {
+   "value" : 5,
+   "description" : "Number of workflow to increase the priority of at a time"
+ },
+ "injection_delay_threshold" : {
+   "value" : 50,
+   "description" : "Number of days after wich to increase the priority of a workflow"
+ },  
+ "delay_priority_increase" : {
+   "value" : 10000,
+   "description" : "Priority from original increase per week over the delay threshold"
+ },
+ "injection_delay_priority" : {
+   "value" : 2000000,
+   "description" : "Priority above which we can increase the priority of a workflow after running too long"
+ },
+ "max_force_complete" : {
+   "value" : 50,
+   "description" : "Number of workflow that can be forced complete at a time"
+ },
+ "max_per_round" : {
+   "description" : "limitation on the number of wf to process per module",
+   "value" : {
+    "transferor" : 500,
+    "assignor" : null,
+    "actor" : 10,
+    "closor" : null,
+    "checkor" : 500,
+    "completor" : null
+    }
+ },
+ "default_fraction_overdoing" :{
+   "value" : 1.05,
+   "description" : "Completion fraction above which a workflow will force complete"
+ },
+ "default_fraction_pass" : {
+   "value" : 1.0,
+   "description" : "completion fraction above which to announce dataset"
+ },
+ "min_events_per_lumi_output" : {
+   "value" : 50,
+   "description": "minimum of events per lumisection allowed in the output"
+ },    
+ "cumulative_fraction_pass": {
+   "value" : false,
+   "description" : "Whether or not the pass threshold per campaign are counted as is, or cumulatively."
+ },
+ "onhold_timeout": {
+   "value" : 30,
+   "description" : "Number of days from completed after which a workflow onhold gets by-passed automatically."
+ },
+ "damping_fraction_pass" : {
+   "value" : 10,
+   "description" : "Time in days (since completed) after which to start reducing the pass threshold."
+ },
+ "damping_fraction_pass_rate" : {
+   "value" : 7,
+   "description" : "Time in days (since started running) after which to reduce the passing fration by 1%, every such time."
+ },
+ "damping_fraction_pass_max" :	{
+   "value" : 5,
+   "description" : "Value in % of the max damping of passing fraction"
+ },
+ "acdc_rank_for_truncate" : {
+   "value" : 2,
+   "description" : "Rank of the acdc after which we truncate at the pass threshold (-1 means any order, 0 means after first round,... )"
+ },
+ "pattern_fraction_pass": {
+   "value" : { },
+   "description" : "overide of the completion fraction of dataset with keyword"
+ },
+ "tiers_with_no_custodial": {
+   "value" : ["DQM","DQMIO","RECO","RAWAODSIM","NANOAOD","NANOAODSIM"],
+   "description": "The data tiers that do not go to tape. Can be overidden by custodial overide at campaign level"
+ },
+ "use_parent_custodial": {
+   "value" : false,
+   "description": "Use the location of the parent dataset for custodial copy"
+ },
+ "tape_size_limit" : {
+   "value" : 300,
+   "description" : "Size over which to prevent transfer to tape automatically"
+ },
+ "tiers_with_no_check": {
+   "value" : ["DQM","DQMIO"],
+   "description": "The data tiers that do not pass closeout checks. Can be overidden by custodial overide at campaign level"
+ },
+ "tiers_no_DDM": {
+   "value" : ["GEN-SIM","GEN","SIM","DQM","DQMIO","GEN-SIM-DIGI-RAW","RAW","GEN-SIM-DIGI"],
+   "description": "The data tiers that do not go to AnaOps"
+ },
+ "tiers_to_DDM": {
+   "value" : ["LHE", "GEN-SIM-DIGI-RAW-MINIAOD","AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM","NANOAOD","NANOAODSIM","FEVT","PREMIX"],
+   "description": "The data tiers that go to AnaOps"
+ },
+ "tiers_to_rucio_relval": {
+   "value" : ["NANOAOD", "NANOAODSIM"],
+   "description": "The data tiers not to be considered for output data placement - RelVal workflows."
+ },
+ "tiers_to_rucio_nonrelval": {
+   "value" : ["NANOAOD", "NANOAODSIM"],
+   "description": "The data tiers not to be considered for output data placement - NonRelVal workflows."
+ },
+ "secondary_lock_timeout": {
+   "value" : 30,
+   "description": "The number of days to keep a secondary input locked"
+ },
+ "tiers_keep_on_disk": {
+   "value" : ["LHE"],
+   "description": "the data tier not unlocked until used again"
+ },
+ "check_fullcopy_to_announce": {
+  "value" : false,
+  "description": "Whether to check for a full copy being present prior to announcing a dataset"
+ },
+ "check_parentage_to_announce": {
+  "value" : true,
+  "description": "Whether to check if all blocks are having their parentage dependencies resolved before announcing a dataset"
+ },
+ "stagor_sends_back": {
+   "value" : true,
+   "description": "Whether the stagor module can send workflow back to considered"
+ },
+  "max_handled_workflows": {
+   "value" : 8000,
+   "description": "The total number of workflows that we allow to handle at a time (transfer, running, assistance)"
+  },
+  "max_staging_workflows": {
+   "value" : 700,
+   "description": "The total number of workflows that we allow to stage at a time"
+  }, 
+  "max_staging_workflows_per_site": {
+   "value" : 700,
+   "description": "The total number of workflows that we allow to stage at a time per site"
+  },
+  "max_transfer_in_GB": {
+   "value" : 2000000,
+   "description": "The total size of the input datasets that can be transfered at a given time. Default value: 800000. Removed for now."
+  },
+  "transfer_timeout": {
+   "value" : 7,
+   "description": "Time in days after which to consider a transfer to be stuck"
+  },
+  "transfer_lowrate": {
+   "value" : 0.004,
+   "description": "Rate in GB/s under which to consider a transfer to be stuck, after transfer_timeout days"
+  },
+  "less_copies_than_requested": {
+   "value" : 1,
+   "description": "Decrease the number of requested copies by that number, floored to 1"
+  },
+  "chopping_threshold_in_GB": {
+  "value" : 4000,
+  "description": "The threshold before choping an input dataset in chunk of that size for spreading to sites"
+  },
+  "retrieve_errors_timeout": {
+    "value" : 10,
+    "description" : "Time in minute that we allow to get logs from where they are before shutting retrieval down."
+  },
+  "full_report_top_N":{
+    "value" : 10,
+    "description" : "The number of top N workflows with failures and cooloff to show."
+  },
+  "expose_top_N":{
+    "value" : 3,
+    "description" :"The number of top N error code to expose logs of."
+  },
+  "n_error_exposed":{
+    "value" : 2,
+    "description" :"The default number of job cmsrun logs to retrieve"
+  },
+  "expose_archive_code":{
+    "value" : [134,139,99109,99303,60450,50513,50660,8001,8002,8004,8026,11003,73,74,87,84,85,92],
+    "description" : "The error codes that should get a cmsrun log exposed"
+  },
+  "expose_condor_code":{
+    "value" : [99109,99303,60450,61202,50513,50660,11003,84,85,92],
+    "description" :  "The error codes that should get a condor lot exposed."
+  },
+  "use_recoveror":{
+    "value" : false,
+    "description" : "Whethe automatic recovery can be tried."
+  },
+  "error_codes_to_recover": {
+  "value" : { "50664" : [ { "legend" : "time-out",
+  	           "solution" : "split-2" ,
+                   "details" : null,
+                   "rate" : 20 
+                  } ],
+        "50660" : [ { "legend" : "memory excess",
+                  "solution" : "mem-+1000" ,
+                  "details" : null,
+                  "rate" : 20
+                  } ],
+        "61104" : [ { "legend" : "failed submit",
+                  "solution" : "recover" ,
+                  "details" : null,
+                  "rate" : 20 
+                  } ],
+        "8028" : [ { "legend" : "read error",
+                 "solution" : "recover" ,
+                 "details" : null,
+                 "rate" : 20 
+                 } ],
+        "8021" : [ { "legend" : "cmssw failure",
+                 "solution" : "recover" , 
+                 "details" : "FileReadError",
+                 "rate" : 20
+                 } ],
+        "71305" : [ { "legend" : "long pending",
+                 "solution" : "recover" , 
+                 "details" : null,
+                 "rate" : 20
+                 } ],
+        "8001" : [ { "legend" : "lhe failure",
+                 "solution" : "split-4" , 
+                 "details" : "No lhe event found in ExternalLHEProducer::produce()",
+                 "rate" : 20
+                 } ]
+        },
+  "description" : "The error code, threshold and rules for auto-recovery"
+  },
+  "error_codes_to_block" : {
+  "value" : 
+      {
+        "99109" : [{ "legend" : "stage-out",
+                   "solution" : "recover",
+                   "details" : null,
+                   "rate" : 20
+                   }]
+    },
+  "description" : "The error code, threshold and rules to prevent auto-recovery"
+  },
+  "error_codes_to_notify" : {
+  "value" : {
+   "8021" : { "message" : "Please take a look and come back to Ops." }
+  },
+  "description" : "The error code, threshold and rules to notify the user of an error in production"
+  },
+  "user_rereco":{
+   "description" : "The users from which we expect ReReco requests",
+   "value" : ["cerminar","fabozzi","prebello","amaltaro","pgunnell"]
+  },
+  "convert_to_stepchain":{	
+   "description" : "A list of keywords to match workflow campaigns and processing strings, and convert to StepChain if technical constraints are met",
+   "value" : [ "StepChainTest","NOTYETENABLED_RunIIFall17wmLHEGS","UL" ]
+  },
+  "user_relval":{
+   "description" : "The users from which we expect relval requests",
+   "value" : ["shundal","jinfeng","moanwar","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob"]
+  },
+  "user_storeresults":{
+   "description" : "The users from which we expect StoreResults requests",
+   "value" : ["cmsunified", "haozturk", "sagarwal", "wangz","snorberg"]
+  },
+  "relval_routing":{
+   "description" : "Set of keywords and special settings for relvals",
+   "value" : { "highPU" : {"parameters" : { "SiteWhitelist" : ["T1_US_FNAL"]}},
+	       "highIO" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}},
+	       "pLHE" : {"parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}},
+	       "ALCA_" : { "primary_AAA" : true , 
+	       	       	   "parameters" : { "SiteWhitelist" : ["T1_US_FNAL"]}
+			},
+	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50, "LumisPerJob" : 1000 }}
+             }
+  },
+  "batch_goodness":{
+   "description" : "Level below which to include a note in the batch report",
+   "value" : 90
+  },
+  "efficiency_threshold_for_stepchain":{
+   "description" : "Minimum efficiency threshold for step chain conversion",
+   "value" : 0.90
+  },
+  "sites_for_DQMHarvest": {
+    "value" : ["T2_CH_CERN","T1_US_FNAL"],
+    "description" : "The sites to assign DQM/DMQIO harvesting workflows"
+  },
+  "HEPCloud_sites": {
+    "value" : ["T3_US_NERSC","T3_US_PSC","T3_US_SDSC","T3_US_TACC"],
+    "description" : "HEPCloud sites"
+  },
+  "acdc_console_url": {
+    "value" : "https://wfrecovery.cern.ch",
+    "description" : "Base url to the ACDC console"
+  },
+  "max_nCores_for_stepchain": {
+    "value" : 4,
+    "description" : "Maximum number of cores(Multicore) for stepchain workflows"
+  },
+  "max_memory_for_stepchain": {
+    "value" : 7900,
+    "description" : "Maximum memory for stepchain workflows"
+  }
+}

@@ -23,15 +23,48 @@ class WMStatsReader(object):
 
     def __init__(self, logger: Optional[Logger] = None, **contact):
         try:
-            configurationHandler = ConfigurationHandler()
-            self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
-            self.wmstatsEndpoint = {"agentInfo": "/couchdb/wmstats/_design/WMStats/_view/agentInfo?stale=update_after"}
-
+            super().__init__()
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
 
+            configurationHandler = ConfigurationHandler()
+            self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
+            self.wmstatsEndpoint = {
+                "request": "/wmstatsserver/data/request/",
+                "jobdetail": "/wmstatsserver/data/jobdetail/",
+                "agentInfo": "/couchdb/wmstats/_design/WMStats/_view/agentInfo?stale=update_after",
+            }
+
         except Exception as error:
             raise Exception(f"Error initializing WMStatsReader\n{str(error)}")
+
+    def getWMStats(self, wf: str) -> dict:
+        """
+        The function to get the WMStats for a given workflow
+        :param wf: workflow name
+        :return: WMStats
+        """
+        try:
+            result = getResponse(self.reqmgrUrl, self.wmstatsEndpoint["request"] + wf)
+            return result["result"][0].get(wf, {})
+
+        except Exception as error:
+            self.logger.error("Failed to get wmstats for %s", wf)
+            self.logger.error(str(error))
+
+    def getWMErrors(self, wf: str) -> dict:
+        """
+        The function to get the WMErrors for a given workflow
+        :param wf: workflow name
+        :return: WMErrors
+        """
+        try:
+            result = getResponse(url=self.reqmgrUrl, endpoint=self.wmstatsEndpoint["jobdetail"] + wf)
+            return result["result"][0].get(wf, {})
+
+        except Exception as error:
+            self.logger.error("Failed to get wmerrors for %s", wf)
+            self.logger.error(str(error))
 
     def getAgents(self) -> dict:
         """

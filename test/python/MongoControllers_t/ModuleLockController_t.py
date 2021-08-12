@@ -5,7 +5,8 @@ Unit test for ModuleLockController helper class.
 """
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+from time import struct_time, mktime, asctime
 from pymongo.collection import Collection
 
 from MongoControllers.ModuleLockController import ModuleLockController
@@ -16,7 +17,10 @@ class ModuleLockControllerTest(unittest.TestCase):
 
     # ModuleLock is always changing.
     # For now, only test output types and content keys.
-    params = {"docKeys": ["component", "pid", "host", "time", "date"]}
+    params = {
+        "docKeys": ["component", "pid", "host", "time", "date"],
+        "now": struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0)),
+    }
 
     def setUp(self) -> None:
         self.moduleLockController = ModuleLockController()
@@ -24,13 +28,13 @@ class ModuleLockControllerTest(unittest.TestCase):
         return
 
     @patch("MongoControllers.ModuleLockController.ModuleLockController.clean")
-    def tearDown(self, mockClean) -> None:
+    def tearDown(self, mockClean: MagicMock) -> None:
         mockClean.return_value = None
         del self.moduleLockController
         super().tearDown()
         return
 
-    def testMongoSettings(self):
+    def testMongoSettings(self) -> None:
         """MongoClient gets the connection to MongoDB"""
         isCollection = isinstance(self.moduleLockController.collection, Collection)
         self.assertTrue(isCollection)
@@ -41,7 +45,22 @@ class ModuleLockControllerTest(unittest.TestCase):
         rightName = self.moduleLockController.collection.name == self.mongoSettings.get("collection")
         self.assertTrue(rightName)
 
-    def testGet(self):
+    def testBuildMongoDocument(self) -> None:
+        """_buildMongoDocument builds the document to store in Mongo"""
+        result = self.moduleLockController._buildMongoDocument(now=self.params.get("now"))
+        isDict = isinstance(result, dict)
+        self.assertTrue(isDict)
+
+        hasAllKeys = all(k in result for k in self.params.get("docKeys"))
+        self.assertTrue(hasAllKeys)
+
+        isTimeEqual = result.get("time") == mktime(self.params.get("now"))
+        self.assertTrue(isTimeEqual)
+
+        isDateEqual = result.get("date") == asctime(self.params.get("now"))
+        self.assertTrue(isDateEqual)
+
+    def testGet(self) -> None:
         """get gets the module locks"""
         result = self.moduleLockController.get()
         isList = isinstance(result, list)
@@ -59,7 +78,7 @@ class ModuleLockControllerTest(unittest.TestCase):
         self.assertTrue(hasAllKeys)
 
     @patch("MongoControllers.ModuleLockController.ModuleLockController.get")
-    def testGo(self, mockGet):
+    def testGo(self, mockGet: MagicMock) -> None:
         """go checks if a module is locked or not"""
         # Test when there is no locks
         mockGet.return_value = []

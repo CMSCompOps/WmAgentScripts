@@ -267,6 +267,20 @@ class DBSReader(object):
             self.logger.error("Failed to get size of dataset %s from DBS", dataset)
             self.logger.error(str(error))
 
+    def getDatasetEventsPerLumi(self, dataset: str) -> float:
+        """
+        The function to get the number of events per lumi
+        :param dataset: dataset name
+        :return: events per lumi
+        """
+        try:
+            events, lumis = self.getDatasetEventsAndLumis(dataset)
+            return events / float(lumis) if lumis else 0.0
+
+        except Exception as error:
+            self.logger.error("Failed to get events per lumis from DBS")
+            self.logger.error(str(error))
+
     def getDatasetEventsAndLumis(self, dataset: str) -> Tuple[int, int]:
         """
         The function to get the total number of events and lumi sections for a given dataset

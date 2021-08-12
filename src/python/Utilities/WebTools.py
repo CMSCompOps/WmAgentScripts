@@ -6,18 +6,16 @@ Description: Useful functions while interacting different services
 
 import os
 import json
+import pickle
 
-from typing import Dict, Optional, Union, Any
+from typing import Optional, Union, Any
 
-from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.Authenticate import getX509Conn
 
-# Get necessary parameters
-configurationHandler = ConfigurationHandler()
-reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
 
-
-def getResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None) -> Any:
+def getResponse(
+    url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None, isJson: bool = True
+) -> Any:
     """
     The function to get the response for a given request
     :param url: url
@@ -26,7 +24,6 @@ def getResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: 
     :param headers: optional request headers
     :return: request response
     """
-
     if headers == None:
         headers = {"Accept": "application/json"}
 
@@ -43,8 +40,9 @@ def getResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: 
         conn = getX509Conn(url)
         _ = conn.request("GET", endpoint + param, headers=headers)
         response = conn.getresponse()
-        data = json.loads(response.read())
-        return data
+        data = response.read()
+        conn.close()
+        return json.loads(data) if isJson else pickle.loads(data)
 
     except Exception as error:
         print(f"Failed to get response from {url + endpoint + param}\n{str(error)}")
@@ -70,8 +68,9 @@ def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers:
         conn = getX509Conn(url)
         _ = conn.request("PUT", endpoint, param, headers=headers)
         response = conn.getresponse()
-        data = json.loads(response.read())
-        return data
+        data = response.read()
+        conn.close()
+        return json.loads(data)
 
     except Exception as error:
         print(f"Failed to send response to {url + endpoint + param}\n{str(error)}")
