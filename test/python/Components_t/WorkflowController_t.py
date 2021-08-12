@@ -106,7 +106,7 @@ class WorkflowControllerTest(unittest.TestCase):
     }
 
     # This workflow is a task chain / redigi request. Use it for testing function depending on the request type.
-    taskChainParams = {
+    redigiTaskChainParams = {
         "workflow": "pdmvserv_task_BPH-RunIIFall18GS-00350__v1_T_201021_154340_8354",
         "requestType": "TaskChain",
         "scramArch": "slc6_amd64_gcc700",
@@ -533,7 +533,7 @@ class WorkflowControllerTest(unittest.TestCase):
         isDict = isinstance(lumiList, dict)
         self.assertTrue(isDict)
 
-        isFound = len(lumiList) == self.relvalTaskChainParams.get("lumiList")
+        isFound = lumiList == self.relvalTaskChainParams.get("lumiList")
         self.assertTrue(isFound)
 
     def testGetBlockWhiteList(self) -> None:
