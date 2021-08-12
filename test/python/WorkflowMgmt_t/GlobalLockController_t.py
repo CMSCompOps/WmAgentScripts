@@ -7,8 +7,6 @@ Unit test for GlobalLockController helper class.
 import unittest
 from unittest.mock import patch, MagicMock
 
-from sqlalchemy.sql.operators import isfalse
-
 from WorkflowMgmt.GlobalLockController import GlobalLockController
 
 

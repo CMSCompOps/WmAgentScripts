@@ -10,11 +10,7 @@ from Services.ServicesChecker import ServicesChecker
 
 
 class ServicesCheckerTess(unittest.TestCase):
-    @patch("MongoControllers.AgentController.AgentController.syncToProduction")
-    @patch("Services.Trello.TrelloClient.TrelloClient.__init__")
-    def setUp(self, mockTrello: MagicMock, mockSync: MagicMock) -> None:
-        mockSync.return_value = True
-        mockTrello.return_value = None
+    def setUp(self) -> None:
         self.servicesChecker = ServicesChecker()
         super().setUp()
         return
@@ -22,7 +18,7 @@ class ServicesCheckerTess(unittest.TestCase):
     def tearDown(self) -> None:
         super().tearDown()
         return
-    
+
     def testCheckOracle(self) -> None:
         """checkOracle checks if the service is working properly"""
         response = self.servicesChecker.checkOracle()
@@ -50,8 +46,12 @@ class ServicesCheckerTess(unittest.TestCase):
         isTrue = response
         self.assertTrue(isTrue)
 
-    def testCheckMongo(self) -> None:
+    @patch("MongoControllers.AgentController.AgentController.syncToProduction")
+    @patch("Services.Trello.TrelloClient.TrelloClient.__init__")
+    def testCheckMongo(self, mockTrello: MagicMock, mockSync: MagicMock) -> None:
         """checkMongo checks if the service is working properly"""
+        mockSync.return_value = True
+        mockTrello.return_value = None
         response = self.servicesChecker.checkMongo()
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
@@ -59,9 +59,13 @@ class ServicesCheckerTess(unittest.TestCase):
         isTrue = response
         self.assertTrue(isTrue)
 
+    @patch("MongoControllers.AgentController.AgentController.syncToProduction")
+    @patch("Services.Trello.TrelloClient.TrelloClient.__init__")
     @patch("Services.ServicesChecker.ServicesChecker.checkEOS")
-    def testCheck(self, mockEOS: MagicMock) -> None:
+    def testCheck(self, mockEOS: MagicMock, mockTrello: MagicMock, mockSync: MagicMock) -> None:
         """check checks if the services are working properly"""
+        mockSync.return_value = True
+        mockTrello.return_value = None
         mockEOS.return_value = True
         response = self.servicesChecker.check()
         isBool = isinstance(response, bool)
@@ -69,6 +73,7 @@ class ServicesCheckerTess(unittest.TestCase):
 
         isTrue = response
         self.assertTrue(isTrue)
+
 
 if __name__ == "__main__":
     unittest.main()
