@@ -10,11 +10,11 @@ import unittest
 from unittest.mock import patch, mock_open, MagicMock
 from collections import Counter
 
-from Components.WorkflowController import WorkflowController
+from WorkflowMgmt.WorkflowController import WorkflowController
 
-from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
-from Components.Workload.StepChainWorkloadHandler import StepChainWorkloadHandler
-from Components.Workload.TaskChainWorkloadHandler import TaskChainWorkloadHandler
+from WorkflowMgmt.WorkflowSchemaHandlers.BaseWfSchemaHandler import BaseWfSchemaHandler
+from WorkflowMgmt.WorkflowSchemaHandlers.StepChainWfSchemaHandler import StepChainWfSchemaHandler
+from WorkflowMgmt.WorkflowSchemaHandlers.TaskChainWfSchemaHandler import TaskChainWfSchemaHandler
 
 
 class WorkflowControllerTest(unittest.TestCase):
@@ -185,15 +185,15 @@ class WorkflowControllerTest(unittest.TestCase):
     def testGetWorkloadHandler(self) -> None:
         """_getWorkloadHandler gets the workload handler"""
         ### Test when base handler
-        isBase = isinstance(self.mcWfController.request, BaseWorkloadHandler)
+        isBase = isinstance(self.mcWfController.request, BaseWfSchemaHandler)
         self.assertTrue(isBase)
 
         ### Test when step chain handler
-        isStepChain = isinstance(self.stepChainWfController.request, StepChainWorkloadHandler)
+        isStepChain = isinstance(self.stepChainWfController.request, StepChainWfSchemaHandler)
         self.assertTrue(isStepChain)
 
         ### Test when task chain handler
-        isTaskChain = isinstance(self.redigiTaskChainWfController.request, TaskChainWorkloadHandler)
+        isTaskChain = isinstance(self.redigiTaskChainWfController.request, TaskChainWfSchemaHandler)
         self.assertTrue(isTaskChain)
 
     @patch("os.path.isfile")

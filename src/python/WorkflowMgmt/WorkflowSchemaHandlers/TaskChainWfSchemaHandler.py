@@ -6,12 +6,12 @@ from collections import defaultdict
 from typing import Optional, Tuple
 
 from Utilities.IteratorTools import filterKeys
-from Components.Workload.BaseChainWorkloadHandler import BaseChainWorkloadHandler
+from WorkflowMgmt.WorkflowSchemaHandlers.StepChainWfSchemaHandler import StepChainWfSchemaHandler
 
 
-class TaskChainWorkloadHandler(BaseChainWorkloadHandler):
+class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
     """
-    __TaskChainWorkloadHandler__
+    __TaskChainWfSchemaHandler__
     General API for handling the request data of task chain request type
     """
 

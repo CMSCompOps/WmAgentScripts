@@ -10,9 +10,9 @@ from Utilities.ConfigurationHandler import ConfigurationHandler
 from typing import Optional, Any, Union, Tuple, List
 
 
-class BaseWorkloadHandler(object):
+class BaseWfSchemaHandler(object):
     """
-    __BaseWorkloadHandler__
+    __BaseWfSchemaHandler__
     General API for handling the request data of a given workflow
     """
 

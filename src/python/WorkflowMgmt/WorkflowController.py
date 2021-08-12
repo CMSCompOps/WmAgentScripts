@@ -7,9 +7,10 @@ from collections import defaultdict
 from time import mktime, gmtime
 
 from MongoControllers.CampaignController import CampaignController
-from Components.Workload.BaseWorkloadHandler import BaseWorkloadHandler
-from Components.Workload.StepChainWorkloadHandler import StepChainWorkloadHandler
-from Components.Workload.TaskChainWorkloadHandler import TaskChainWorkloadHandler
+
+from WorkflowMgmt.WorkflowSchemaHandlers.BaseWfSchemaHandler import BaseWfSchemaHandler
+from WorkflowMgmt.WorkflowSchemaHandlers.StepChainWfSchemaHandler import StepChainWfSchemaHandler
+from WorkflowMgmt.WorkflowSchemaHandlers.TaskChainWfSchemaHandler import TaskChainWfSchemaHandler
 
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.DBS.DBSReader import DBSReader
@@ -68,7 +69,7 @@ class WorkflowController(object):
         except Exception as error:
             raise Exception(f"Error initializing WorkflowController\n{str(error)}")
 
-    def _getWorkloadHandler(self, wfSchema: Optional[dict] = None) -> BaseWorkloadHandler:
+    def _getWorkloadHandler(self, wfSchema: Optional[dict] = None) -> BaseWfSchemaHandler:
         """
         The function to set the proper workload handler for a given workflow based on its request type
         :param wfSchema: optional workflow schema
@@ -77,10 +78,10 @@ class WorkflowController(object):
         wfSchema = wfSchema or self.reqmgrReader.getWorkflowSchema(self.wf, makeCopy=True)
 
         if wfSchema.get("RequestType") == "TaskChain":
-            return TaskChainWorkloadHandler(wfSchema)
+            return TaskChainWfSchemaHandler(wfSchema)
         if wfSchema.get("RequestType") == "StepChain":
-            return StepChainWorkloadHandler(wfSchema)
-        return BaseWorkloadHandler(wfSchema)
+            return StepChainWfSchemaHandler(wfSchema)
+        return BaseWfSchemaHandler(wfSchema)
 
     def _getFromFile(self, filename: str) -> Optional[dict]:
         """
