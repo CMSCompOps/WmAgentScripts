@@ -54,7 +54,7 @@ def runWithMultiThreading(mtParam: str, maxThreads: int = 10, timeout: Optional[
 
             result = []
             with ThreadPoolExecutor(
-                max_workers=min(params["maxThreads"], len(mtThreaded)),
+                max_workers=min(params["maxThreads"], len(mtThreaded)) or 1,
                 thread_name_prefix=f.__name__,
             ) as threadPool:
                 threads = {threadPool.submit(f, *args, **kwargs, **{params["mtParam"]: i}): i for i in mtThreaded}

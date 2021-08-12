@@ -59,7 +59,7 @@ class UserLockCheckerTest(unittest.TestCase):
         isBool = isinstance(response, bool)
         self.assertTrue(isBool)
 
-        isFalse = response
+        isFalse = not response
         self.assertTrue(isFalse)
 
 if __name__ == "__main__":

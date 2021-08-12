@@ -39,7 +39,7 @@ class GlobalLockController(OracleClient):
         """
         try:
             lock = self.session.query(Lock).filter(Lock.item == item).first()
-            return lock and lock.lock
+            return bool(lock and lock.lock)
 
         except Exception as error:
             self.logger.error("Failed to check if %s is locked", item)

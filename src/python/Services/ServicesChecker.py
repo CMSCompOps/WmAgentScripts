@@ -200,7 +200,7 @@ class ServicesChecker(object):
             if self.keepTrying:
                 self.logger.info("Re-checking on %s", services)
                 sleep(30)
-                return self._checkService(components=[services])
+                return self._checkService(services=[services])
             if self.block and services.lower() not in self.softServices:
                 return False
 
@@ -217,7 +217,7 @@ class ServicesChecker(object):
         :return: True if ok, False o/w
         """
         try:
-            checks = self._checkService(components=sorted(self.status))
+            checks = self._checkService(services=sorted(self.status))
             if not all(checks):
                 self.code = 120 + sum(checks)
                 self.go = False
