@@ -2705,16 +2705,25 @@
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
-    "SecondaryLocation": [
-       "T1_IT_CNAF_Disk",
-       "T1_US_FNAL_Disk"
-    ],
     "SiteBlacklist": [
        "T2_CH_CERN",
        "T2_CH_CERN_HLT"
     ],
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/PREMIX": {}
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/PREMIX": 
+      {
+              "SecondaryLocation": [
+                 "T1_IT_CNAF_Disk",
+                 "T1_US_FNAL_Disk"
+               ]
+      },
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX":
+      {
+          "SecondaryLocation": [
+              "T1_US_FNAL_Disk",
+              "T1_FR_CCIN2P3_Disk"
+           ]
+      }
     },
     "secondary_AAA": true
   },
@@ -2723,16 +2732,25 @@
     "go": false,
     "lumisize": -1,
     "maxcopies": 1,
-    "SecondaryLocation": [
-       "T1_IT_CNAF_Disk",
-       "T1_US_FNAL_Disk"
-    ],
     "SiteBlacklist": [
        "T2_CH_CERN",
        "T2_CH_CERN_HLT"
     ],
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/PREMIX" : {}
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/PREMIX":
+      {
+             "SecondaryLocation": [
+                "T1_IT_CNAF_Disk",
+                "T1_US_FNAL_Disk"
+             ]
+      },
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX":
+      {
+             "SecondaryLocation": [
+                 "T1_US_FNAL_Disk",
+                 "T1_FR_CCIN2P3_Disk"
+              ]
+      }    
     },
     "secondary_AAA": true
   },
@@ -2741,16 +2759,25 @@
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
-    "SecondaryLocation": [
-       "T1_DE_KIT_Disk",
-       "T1_US_FNAL_Disk"
-     ],
      "SiteBlacklist": [
         "T2_CH_CERN",
         "T2_CH_CERN_HLT"
     ],
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17_106X_mc2017_realistic_v9-v1/PREMIX" : {}
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17_106X_mc2017_realistic_v9-v1/PREMIX" : 
+      {
+              "SecondaryLocation": [
+                 "T1_DE_KIT_Disk",
+                 "T1_US_FNAL_Disk"
+                   ]
+      },
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
+      {
+              "SecondaryLocation": [
+                 "T1_DE_KIT_Disk",
+                 "T1_US_FNAL_Disk"
+                  ]
+      }
     },
     "secondary_AAA": true
   },
@@ -2759,16 +2786,25 @@
     "go": false,
     "lumisize": -1,
     "maxcopies": 1,
-    "SecondaryLocation": [
-       "T1_DE_KIT_Disk",
-       "T1_US_FNAL_Disk"
-    ],
     "SiteBlacklist": [
        "T2_CH_CERN",
        "T2_CH_CERN_HLT"
      ],
     "secondaries": {
-       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17_106X_mc2017_realistic_v9-v1/PREMIX" : {}
+          "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17_106X_mc2017_realistic_v9-v1/PREMIX" :
+          {
+                  "SecondaryLocation": [
+                     "T1_DE_KIT_Disk",
+                     "T1_US_FNAL_Disk"
+                      ]
+          },
+          "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
+          { 
+                 "SecondaryLocation": [
+                    "T1_DE_KIT_Disk",
+                    "T1_US_FNAL_Disk"
+                     ]
+         }
     },
     "secondary_AAA": true
   },
@@ -2777,16 +2813,25 @@
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
-    "SecondaryLocation": [
-       "T1_ES_PIC_Disk",
-       "T1_US_FNAL_Disk"
-    ],
     "SiteBlacklist": [
        "T2_CH_CERN",
        "T2_CH_CERN_HLT"
     ],
-    "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/PREMIX" : {}
+    "secondaries": {    
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
+                {
+                  "SecondaryLocation": [
+                     "T1_ES_PIC_Disk",
+                     "T1_US_FNAL_Disk"
+                       ]
+                 },
+       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
+                {
+                  "SecondaryLocation": [
+                     "T1_RU_JINR_Disk",
+                     "T1_US_FNAL_Disk"
+                       ]
+                 }
     },
     "secondary_AAA": true
   },
@@ -2795,16 +2840,25 @@
     "go": false,
     "lumisize": -1,
     "maxcopies": 1,
-    "SecondaryLocation": [
-       "T1_ES_PIC_Disk",
-       "T1_US_FNAL_Disk"
-    ],
     "SiteBlacklist": [
        "T2_CH_CERN",
        "T2_CH_CERN_HLT"
     ],
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/PREMIX" : {}
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/PREMIX" : 
+      {
+              "SecondaryLocation": [
+                 "T1_ES_PIC_Disk",
+                 "T1_US_FNAL_Disk"
+                   ]
+      },
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" : 
+      {
+              "SecondaryLocation": [
+                 "T1_RU_JINR_Disk",
+                 "T1_US_FNAL_Disk"
+                   ]
+      }
     },
     "secondary_AAA": true
   },
