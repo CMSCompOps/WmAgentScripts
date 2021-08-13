@@ -2,10 +2,10 @@ import copy
 from logging import Logger
 from pymongo.collection import Collection
 
-from typing import Optional, Any
-
 from Databases.Mongo.MongoClient import MongoClient
 from WorkflowMgmt.SiteController import SiteController
+
+from typing import Optional, Any
 
 
 class CampaignController(MongoClient):

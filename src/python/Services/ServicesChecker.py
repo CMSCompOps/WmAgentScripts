@@ -10,7 +10,6 @@ from MongoControllers.AgentController import AgentController
 from Services.EOS.EOSWriter import EOSWriter
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.DBS.DBSReader import DBSReader
-
 from Utilities.Decorators import runWithMultiThreading
 from Utilities.Logging import getLogger
 from Utilities.ConfigurationHandler import ConfigurationHandler

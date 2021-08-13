@@ -1,14 +1,13 @@
-from time import struct_time, gmtime, mktime
-import logging
 from logging import Logger
 import pymongo
 from pymongo.collection import Collection
-
 from abc import ABC, abstractmethod
-
-from typing import Optional, Union
+from time import struct_time, gmtime, mktime
 
 from Utilities.ConfigurationHandler import ConfigurationHandler
+from Utilities.Logging import getLogger
+
+from typing import Optional, Union
 
 
 class MongoClient(ABC):
@@ -20,8 +19,7 @@ class MongoClient(ABC):
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
+            self.logger = logger or getLogger(self.__class__.__name__)
 
             configurationHandler = ConfigurationHandler()
             self.mongoUrl = configurationHandler.get("mongo_db_url")

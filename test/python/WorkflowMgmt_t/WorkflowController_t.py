@@ -161,7 +161,7 @@ class WorkflowControllerTest(unittest.TestCase):
     }
 
     @patch("MongoControllers.CampaignController.CampaignController.__init__")
-    @patch("MongoControllers.SiteController.SiteController.__init__")
+    @patch("WorkflowMgmt.SiteController.SiteController.__init__")
     def setUp(self, mockSite: MagicMock, mockCampaign: MagicMock) -> None:
         mockCampaign.side_effect = [None] * 5
         mockSite.side_effect = [None] * 5
@@ -938,10 +938,10 @@ class WorkflowControllerTest(unittest.TestCase):
         isFound = response.get("campaign") == self.mcParams.get("campaign")
         self.assertTrue(isFound)
 
-    def testCheckSplittingsSize(self) -> None:
-        """checkSplitting checks the splittings"""
+    def testcheckSplittingss(self) -> None:
+        """checkSplittings checks the splittings"""
         ### Test when base request
-        response = self.mcWfController.checkSplitting()
+        response = self.mcWfController.checkSplittings()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
 
@@ -956,7 +956,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEmpty)
 
         ### Test when step chain request
-        response = self.stepChainWfController.checkSplitting()
+        response = self.stepChainWfController.checkSplittings()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
 
@@ -971,7 +971,7 @@ class WorkflowControllerTest(unittest.TestCase):
         self.assertTrue(isEmpty)
 
         ### Test when task chain request
-        response = self.redigiTaskChainWfController.checkSplitting()
+        response = self.redigiTaskChainWfController.checkSplittings()
         isTuple = isinstance(response, tuple)
         self.assertTrue(isTuple)
 

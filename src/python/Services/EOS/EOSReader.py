@@ -1,12 +1,13 @@
 import os
 import json
-import logging
 from logging import Logger
+
+from Utilities.Logging import getLogger
+from Utilities.ConfigurationHandler import ConfigurationHandler
+from Utilities.Decorators import runWithRetries
 
 from typing import Optional
 
-from Utilities.ConfigurationHandler import ConfigurationHandler
-from Utilities.Decorators import runWithRetries
 
 
 class EOSReader(object):
@@ -18,8 +19,7 @@ class EOSReader(object):
     def __init__(self, filename: str, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
+            self.logger = logger or getLogger(self.__class__.__name__)
 
             configurationHandler = ConfigurationHandler()
             self.cacheDirectory = configurationHandler.get("cache_dir")

@@ -6,10 +6,10 @@ from bson.objectid import ObjectId
 from pymongo.collection import Collection
 from time import struct_time, gmtime, mktime, asctime, sleep
 
-from typing import Optional, List
-
 from Utilities.Logging import displayTime
 from Databases.Mongo.MongoClient import MongoClient
+
+from typing import Optional, List
 
 
 class ModuleLockController(MongoClient):

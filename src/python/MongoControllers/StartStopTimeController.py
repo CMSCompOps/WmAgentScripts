@@ -1,9 +1,9 @@
 from time import localtime
 from pymongo.collection import Collection
 
-from typing import Optional
-
 from Databases.Mongo.MongoClient import MongoClient
+
+from typing import Optional
 
 
 class StartStopTimeController(MongoClient):

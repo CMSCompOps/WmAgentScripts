@@ -5,14 +5,14 @@ from time import gmtime, localtime, asctime
 from pymongo.collection import Collection
 from jinja2 import Template
 
-from typing import List, Optional, Tuple
-
 from Utilities.Logging import displayNumber
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Services.EOS.EOSWriter import EOSWriter
 from Databases.Mongo.MongoClient import MongoClient
 from Databases.Oracle.OracleClient import OracleClient
 from Databases.Oracle.OracleDB import Workflow
+
+from typing import List, Optional, Tuple
 
 
 class CloseoutController(MongoClient, OracleClient):

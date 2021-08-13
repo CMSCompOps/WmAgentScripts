@@ -1,11 +1,10 @@
 from logging import Logger
 
-from typing import Optional, Any
-
 from Cache import DocumentCache
 from Cache.CacheManager import CacheManager
-
 from Utilities.Logging import getLogger
+
+from typing import Optional, Any
 
 
 class DataCacheLoader(object):

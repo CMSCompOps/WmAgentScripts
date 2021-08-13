@@ -3,10 +3,10 @@ import socket
 from logging import Logger
 from time import mktime, gmtime
 
-from typing import Optional
-
 from Databases.Oracle.OracleClient import OracleClient
 from Databases.Oracle.OracleDB import Lock, LockOfLock
+
+from typing import Optional
 
 
 class GlobalLockController(OracleClient):

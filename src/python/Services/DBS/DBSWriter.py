@@ -23,6 +23,7 @@ class DBSWriter(object):
 
     def __init__(self, url: Optional[str] = None, logger: Optional[Logger] = None, **contact):
         try:
+            super().__init__()
             self.logger = logger or getLogger(self.__class__.__name__)
 
             if url:

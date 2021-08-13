@@ -123,9 +123,9 @@ class MCoreReady(BaseDocumentCache):
     General API for building the chaching document of key mcore_ready
     """
 
-    def get(self) -> list:
+    def get(self) -> dict:
         gwmsmonReader = GWMSMonReader()
-        return gwmsmonReader.getMCoreReady() or []
+        return gwmsmonReader.getMCoreReady() or {}
 
 
 class DetoxSites(BaseDocumentCache):

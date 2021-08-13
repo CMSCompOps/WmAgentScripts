@@ -4,7 +4,6 @@ Author     : Hasan Ozturk <haozturk AT cern dot com>
 Description: Useful functions while interacting different services
 """
 
-import os
 import json
 import pickle
 

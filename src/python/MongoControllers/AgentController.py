@@ -1,11 +1,8 @@
 import random
-
 from logging import Logger
 from collections import defaultdict
 from time import struct_time, gmtime, mktime, asctime
 from pymongo.collection import Collection
-
-from typing import Optional
 
 from Utilities.Logging import displayTime
 from Utilities.DataTools import sortByWakeUpPriority
@@ -16,6 +13,8 @@ from Services.Trello.TrelloClient import TrelloClient
 from Services.WMStats.WMStatsReader import WMStatsReader
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.ReqMgr.ReqMgrWriter import ReqMgrWriter
+
+from typing import Optional
 
 
 class AgentController(MongoClient, TrelloClient):

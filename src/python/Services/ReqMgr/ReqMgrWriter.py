@@ -14,7 +14,7 @@ class ReqMgrWriter(object):
     General API for writing data in ReqMgr
     """
 
-    def __init__(self, logger: Optional[Logger] = None, **contact):
+    def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
             self.logger = logger or getLogger(self.__class__.__name__)

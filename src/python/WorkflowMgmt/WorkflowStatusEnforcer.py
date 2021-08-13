@@ -1,12 +1,11 @@
 from logging import Logger
 
-from Utilities.Decorators import runWithRetries
-
 from WorkflowMgmt.WorkflowController import WorkflowController
 from Services.ReqMgr.ReqMgrWriter import ReqMgrWriter
 from Services.DBS.DBSWriter import DBSWriter
 from Services.DBS.DBSReader import DBSReader
 from Utilities.Logging import getLogger
+from Utilities.Decorators import runWithRetries
 
 from typing import Optional
 

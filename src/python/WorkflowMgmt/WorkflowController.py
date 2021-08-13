@@ -1,7 +1,6 @@
 import os
 import json
 import math
-import logging
 from logging import Logger
 from collections import defaultdict
 from time import mktime, gmtime
@@ -24,6 +23,7 @@ from Services.GWMSMon.GWMSMonReader import GWMSMonReader
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.IteratorTools import mapValues
 from Utilities import DataTools
+from Utilities.Logging import getLogger
 
 
 from typing import Optional, Tuple, List, Union
@@ -38,6 +38,8 @@ class WorkflowController(object):
     def __init__(self, wf: str, logger: Optional[Logger] = None, **kwargs) -> None:
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             self.unifiedConfiguration = ConfigurationHandler("config/unifiedConfiguration.json")
 
             configurationHandler = ConfigurationHandler()
@@ -63,9 +65,6 @@ class WorkflowController(object):
 
             self.recoveryDocs = []
             self.summary = None
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing WorkflowController\n{str(error)}")
@@ -781,15 +780,15 @@ class WorkflowController(object):
         :return: summary
         """
         if not self.summary:
-            self.summary = self.reqmgrReader.getWorkloadSummary(self.wf)
+            self.summary = self.reqmgrReader.getWorkflowSummary(self.wf)
         return self.summary
 
-    def checkSplitting(self) -> Tuple[bool, list]:
+    def checkSplittings(self) -> Tuple[bool, list]:
         """
         The function to check the splittings
         :return: if to hold and a list of modified splittings
         """
-        return self.request.checkSplitting(self.getSplittingsSchema(strip=True))
+        return self.request.checkSplittings(self.getSplittingsSchema(strip=True))
 
     def go(self, silent: bool = False) -> bool:
         """

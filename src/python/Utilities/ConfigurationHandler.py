@@ -7,6 +7,8 @@ Description: Class for Unified configuration
 import json
 import sys
 
+from typing import Any
+
 
 class ConfigurationHandler(object):
     """
@@ -14,7 +16,7 @@ class ConfigurationHandler(object):
     General API for handling a configuration
     """
 
-    def __init__(self, configFile: str = "config/serviceConfiguration.json"):
+    def __init__(self, configFile: str = "config/serviceConfiguration.json") -> None:
         super().__init__()
 
         self.configFile = configFile
@@ -25,12 +27,14 @@ class ConfigurationHandler(object):
                 with open(self.configFile, "r") as file:
                     self.configs = json.loads(file.read())
             except Exception as ex:
-                print(("Could not read configuration file: %s\nException: %s" % (self.configFile, str(ex))))
+                print(f"Could not read configuration file: {self.configFile}\nException: {str(ex)}")
                 sys.exit(124)
 
-    def get(self, parameter: str):
+    def get(self, parameter: str) -> Any:
         """
         The function to get a given parameter from the configuration
+        :param parameter: parameter name
+        :return: configuration
         """
         if self.configs:
             if parameter in self.configs:

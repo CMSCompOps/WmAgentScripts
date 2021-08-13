@@ -21,7 +21,7 @@ class WMStatsReader(object):
     General API for reading data from WMStats
     """
 
-    def __init__(self, logger: Optional[Logger] = None):
+    def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
             self.logger = logger or getLogger(self.__class__.__name__)

@@ -8,7 +8,6 @@ from Utilities.IteratorTools import mapValues, filterKeys
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Services.WMStats.WMStatsReader import WMStatsReader
 
-
 from typing import List, Optional, Tuple, Union
 
 
