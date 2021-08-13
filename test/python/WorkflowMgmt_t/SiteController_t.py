@@ -5,7 +5,6 @@ Unit test for SiteController helper class.
 """
 
 import unittest
-from unittest.mock import patch
 from collections import defaultdict
 
 from WorkflowMgmt.SiteController import SiteController

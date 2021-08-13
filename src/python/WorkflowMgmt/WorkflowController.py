@@ -179,14 +179,12 @@ class WorkflowController(object):
         notAllowedSites = set()
 
         for campaign in self.request.getCampaigns(details=False):
-            campaignParam = self.campaignController.getCampaignParameters(campaign)
-
-            allowedCampaignSites = set(campaignParam.get("SiteWhitelist", []))
+            allowedCampaignSites = set(self.campaignController.getCampaignValue(campaign, "SiteWhitelist", []))
             if allowedCampaignSites:
                 self.logger.info("Restricting site white list by campaign %s", campaign)
                 allowedSites = allowedSites & allowedCampaignSites or allowedCampaignSites
 
-            notAllowedCampaignSites = set(campaignParam.get("SiteBlacklist", []))
+            notAllowedCampaignSites = set(self.campaignController.getCampaignValue(campaign, "SiteBlacklist", []))
             if notAllowedCampaignSites:
                 self.logger.info("Restricting site white list by black list in campaign %s", campaign)
                 notAllowedSites.update(sorted(notAllowedCampaignSites))
