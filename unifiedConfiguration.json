@@ -411,7 +411,7 @@
   },
   "efficiency_threshold_for_stepchain":{
    "description" : "Minimum efficiency threshold for step chain conversion",
-   "value" : 0.80
+   "value" : 0.75
   },
   "stepchain_threshold_for_high_priority_requests":{
    "description" : "Minimum efficiency threshold for step chain conversion of high priority requests",
