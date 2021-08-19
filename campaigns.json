@@ -995,6 +995,16 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
+  },
+  "RunIILowPUSpring18wmLHEGS": {
+    "lumisize": -1, 
+    "resize": "auto", 
+    "fractionpass": 0.95, 
+    "SiteBlacklist": [
+       "T3_US_NERSC"
+    ], 
+    "go": true, 
+    "tune": true
   }, 
   "RunIISummer15GS": {
     "SiteBlacklist": [
@@ -2764,13 +2774,6 @@
         "T2_CH_CERN_HLT"
     ],
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17_106X_mc2017_realistic_v9-v1/PREMIX" : 
-      {
-              "SecondaryLocation": [
-                 "T1_DE_KIT_Disk",
-                 "T1_US_FNAL_Disk"
-                   ]
-      },
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
       {
               "SecondaryLocation": [
@@ -2791,13 +2794,6 @@
        "T2_CH_CERN_HLT"
      ],
     "secondaries": {
-          "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17_106X_mc2017_realistic_v9-v1/PREMIX" :
-          {
-                  "SecondaryLocation": [
-                     "T1_DE_KIT_Disk",
-                     "T1_US_FNAL_Disk"
-                      ]
-          },
           "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
           { 
                  "SecondaryLocation": [
@@ -2810,7 +2806,7 @@
   },
   "RunIISpring21UL16FSGSPremix": {
     "fractionpass": 0.95,
-    "go": true,
+    "go": false,
     "lumisize": -1,
     "maxcopies": 1,
     "SiteBlacklist": [
