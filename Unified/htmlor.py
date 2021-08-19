@@ -26,7 +26,8 @@ def htmlor( caller = ""):
         boost = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['modifications']
     except:
         boost = {}
-    cache = getWorkflows(reqmgr_url,'assignment-approved', details=True)
+    #cache = getWorkflows(reqmgr_url,'assignment-approved', details=True)
+    cache = []
     def getWL( wfn ):
         cached = filter(lambda d : d['RequestName']==wfn, cache)
         if cached:
