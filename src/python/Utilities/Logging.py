@@ -150,15 +150,18 @@ class EmailHandler(logging.Handler):
         The function to get the log email message from a record
         :param record: log record
         """
-        msg = MIMEMultipart()
-        msg["From"] = record.sender if hasattr(record, "sender") else self.defaultsender
-        msg["To"] = COMMASPACE.join(
+        sender = record.sender if hasattr(record, "sender") else self.defaultsender
+        emailDestination = (
             record.emailDestination if hasattr(record, "emailDestination") else self.defaultEmailDestination
         )
+
+        msg = MIMEMultipart()
+        msg["From"] = sender
+        msg["To"] = COMMASPACE.join(emailDestination)
         msg["Date"] = formatdate(localtime=True)
         msg["Subject"] = f"[Ops] {record.name}"
         msg.attach(MIMEText(record.msg))
-        return msg
+        return (msg, sender, emailDestination)
 
     def emit(self, record: LogRecord) -> None:
         """
@@ -181,10 +184,10 @@ class EmailHandler(logging.Handler):
         """
         try:
             while self.logs:
-                msg = self.logs.pop(0)
+                msg, sender, emailDestination = self.logs.pop(0)
                 smtpObj = SMTP()
                 smtpObj.connect()
-                smtpObj.sendmail(self.sender, self.emailDestination, msg.as_string())
+                smtpObj.sendmail(sender, emailDestination, msg.as_string())
                 smtpObj.quit()
 
         except Exception as error:
@@ -218,10 +221,11 @@ def getLogger(name: str, level: str = "INFO", flushEveryLog: bool = True, **kwar
     :return: a logger
     """
     logger = logging.getLogger(name)
+    logger.setLevel(level)
 
     streamHandler = logging.StreamHandler()
     streamHandler.setLevel(level=level)
-    streamHandler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(module)s:%(message)s"))
+    streamHandler.setFormatter(logging.Formatter("[%(asctime)s:%(name)s:%(module)s] %(levelname)s: %(message)s"))
     logger.addHandler(streamHandler)
 
     if kwargs.get("addWfLevel"):
