@@ -1,6 +1,8 @@
 import os
+import traceback
 import logging
 from logging import Logger, LogRecord
+from copy import deepcopy
 from time import gmtime, mktime, asctime, struct_time
 from urllib.parse import urlencode
 from base64 import encodestring
@@ -113,6 +115,23 @@ class ElasticSearchHandler(logging.Handler):
         except Exception as error:
             print("Failed to send log to Elastic Search")
             print(str(error))
+
+    def handleError(self, record: LogRecord) -> None:
+        """
+        The function to handle log errors
+        :param record: log record
+        """
+        try:
+            emailRecord = deepcopy(record)
+            emailRecord.name += " - Failed logging"
+            emailRecord.msg += f"\n{traceback.format_exc()}"
+            EmailHandler().emit(emailRecord)
+
+        except Exception as error:
+            print("Failed to emit log error to email")
+            print(str(error))
+
+        return super().handleError(record)
 
     def close(self) -> None:
         """
