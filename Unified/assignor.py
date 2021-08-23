@@ -64,7 +64,10 @@ def assignor(url ,specific = None, talk=True, options=None):
     max_per_round = UC.get('max_per_round').get('assignor',None)
     max_cpuh_block = UC.get('max_cpuh_block')
 
+    # Temporarily switch off prioritization
+    random.shuffle(wfos)
     ##order by priority instead of random
+    """
     if options.early:
         cache = sorted(getWorkflows(url, 'assignment-approved', details=True), key = lambda r : r['RequestPriority'])
         cache = [r['RequestName'] for r in cache]
@@ -76,8 +79,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         print "10 last",[wfo.name for wfo in wfos[-10:]]
     else:
         random.shuffle( wfos )
-
-
+    """
 
     for wfo in wfos:
         
