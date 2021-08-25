@@ -1035,7 +1035,24 @@
     ], 
     "go": true, 
     "tune": true
-  }, 
+  },
+  "RunIILowPUSpring18DR": {
+    "secondary_AAA": false, 
+    "maxcopies": 1, 
+    "lumisize": -1, 
+    "fractionpass": 0.95, 
+    "go": true, 
+    "tune": true, 
+    "secondaries": {
+      "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_FR_CCIN2P3_Disk", 
+          "T1_DE_KIT_Disk" 
+        ]
+      }
+    }, 
+    "resize": "auto"
+  },  
   "RunIISummer15GS": {
     "SiteBlacklist": [
       "T2_US_Caltech", 
