@@ -641,7 +641,37 @@
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
-  }, 
+  },
+  "Run3Summer21PrePremix": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "Run3Summer21MiniAOD": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "Run3Summer21DRPremix": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "Run3Summer21wmLHEGS": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "Run3Summer21GS": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -2527,8 +2557,16 @@
           "T2_US_UCSD",
           "T2_US_Wisconsin"
         ]
-     }
-  },
+     },
+    "secondaries": {
+       "/MinBias_TuneCP5_5TeV-pythia8/RunIISummer20UL17pp5TeVGS-106X_mc2017_realistic_forppRef5TeV_v3-v1/GEN-SIM": {
+          "SiteWhitelist": [
+             "T2_US_Nebraska",
+             "T2_DE_DESY"
+                      ]
+              }
+       }
+    },
   "RunIISummer20UL17pp5TeVGS": {
     "fractionpass": 0.95,
     "go": true,
@@ -2903,4 +2941,6 @@
 
      }
   }
+
+
 }
