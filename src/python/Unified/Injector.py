@@ -10,7 +10,7 @@ from Services.ServicesChecker import ServicesChecker
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Services.DBS.DBSReader import DBSReader
 from Databases.Oracle.OracleClient import OracleClient
-from Databases.Oracle.OracleDB import Workflow, TransferImp
+from Databases.Oracle.OracleDB import Workflow
 from WorkflowMgmt.WorkflowController import WorkflowController
 
 from typing import Optional, List, Tuple
@@ -27,29 +27,29 @@ class Injector(OracleClient):
             super().__init__(self)
             self.logger = logger or getLogger(self.__class__.__name__)
 
-            self.options, self.spec = kwargs.get("options"), kwargs.get("spec")
+            self.options, self.specificWf = kwargs.get("options"), kwargs.get("specificWf")
             if self.options is None:
-                self.options, self.spec = self.parseOptions()
+                self.options, self.specificWf = self.parseOptions()
 
             unifiedConfiguration = ConfigurationHandler("config/unifiedConfiguration.json")
             self.users = {
-                "rereco": unifiedConfiguration.get("user_rereco"),
-                "relval": self.options.get("user_relval").split(",") or unifiedConfiguration.get("user_relval"),
-                "storeResults": self.options.get("user_storeresults").split(",")
-                or unifiedConfiguration.get("user_storeresults"),
+                "pnr": unifiedConfiguration.get("pnr_users"),
+                "rereco": unifiedConfiguration.get("rereco_users"),
+                "relval": self.options.get("relval_users").split(",") or unifiedConfiguration.get("relval_users"),
             }
 
             self.reqmgrReader = ReqMgrReader()
             self.dbsReader = DBSReader()
 
             self.statusCache = defaultdict(str)
-            self.useMcm = False
 
             self.logMsg = {
                 "family": "%s has %d family members and %d true family members: %s",
                 "badFamilyStatus": "Should not put %s because of %s %s",
                 "badInputStatus": "One of the inputs of %s is not VALID: %s %s",
                 "nWfs": "%d in line",
+                "addWf": "Adding %s",
+                "duplicate": "The workflow %s cannot be added in because of duplicates",
                 "noReplacement": "The workflow was found in trouble with no replacement",
                 "manyReplacements": "Multiple wfs for replacement, will take the last one for %s",
                 "foundReplacement": "The workflow was found in trouble and has a replacement: %s",
@@ -63,8 +63,8 @@ class Injector(OracleClient):
     @staticmethod
     def parseOptions() -> Tuple[dict, Optional[str]]:
         """
-        The function to parse the Injector's options and specific pattern in workflow
-        :return: options and spec, if any
+        The function to parse the Injector's options and specific workflow
+        :return: options and the specific workflow, if any
         """
         parser = optparse.OptionParser()
 
@@ -74,10 +74,7 @@ class Injector(OracleClient):
         parser.add_option(
             "-r", "--replace", help="The workflow name that should be used for replacement", default=None
         )
-        parser.add_option("--user_relval", help="The user that can inject workflows for relvals", default=None)
-        parser.add_option(
-            "--user_storeresults", help="The user that can inject workflows for store results", default=None
-        )
+        parser.add_option("--relval_users", help="The user that can inject workflows for relvals", default=None)
         parser.add_option("--no_convert", help="Prevent the conversion to stepchain", default=False)
         parser.add_option(
             "-m",
@@ -212,26 +209,6 @@ class Injector(OracleClient):
             not in ["None", "new", "rejected", "rejected-archived", "aborted", "aborted-archived"]
         )
 
-    def _updateWorkflowTransfer(self, currentWfId: str, replacementWf: Workflow) -> None:
-        """
-        The function to update the workflow transfer working by the workflow replacement
-        :param currentWfId: current workflow id
-        :param replacementWf: replacement workflow
-        """
-        transfers = self.session.query(TransferImp).filter(TransferImp.workflow_id == currentWfId).all()
-
-        for transfer in transfers:
-            transfer.active = False
-            if (
-                not self.session.query(TransferImp)
-                .filter(TransferImp.phedexid == transfer.phedexid)
-                .filter(TransferImp.workflow_id == replacementWf.id)
-                .all()
-            ):
-                self.session.add(TransferImp(phedexid=transfer.phedexid, workflow=replacementWf))
-
-            self.session.commit()
-
     def go(self) -> bool:
         """
         The function to check if the injector can go
@@ -239,12 +216,9 @@ class Injector(OracleClient):
         """
         try:
             moduleLockController = ModuleLockController()
-
             servicesChecker = ServicesChecker(softServices=["mcm", "wtc", "jira"])
-            checkedServices = servicesChecker.check()
-            self.useMcm = servicesChecker.status.get("mcm")
 
-            return (self.options.get("manual") or not moduleLockController.isLocked()) and checkedServices
+            return (self.options.get("manual") or not moduleLockController.isLocked()) and servicesChecker.check()
 
         except Exception as error:
             self.logger.error("Failed to check if Injector can go")
@@ -252,7 +226,7 @@ class Injector(OracleClient):
 
     def getWorkflowsByWMStatus(self) -> List[str]:
         """
-        The function to get the list of workflows by defined by wmstatus
+        The function to get the list of workflows by defined wmstatus and allowed users
         :return: workflows names
         """
         try:
@@ -263,7 +237,8 @@ class Injector(OracleClient):
             for users, requestType in [
                 (self.users["rereco"], "ReReco"),
                 (self.users["relval"], "TaskChain"),
-                (self.users["storeResults"], "StoreResults"),
+                (self.users["pnr"], "TaskChain"),
+                (self.users["pnr"], "StepChain"),
             ]:
                 workflows.extend(
                     self.reqmgrReader.getWorkflowsByStatus(
@@ -293,19 +268,6 @@ class Injector(OracleClient):
             self.logger.error("Failed to run rejector to convert workflows %s to stepchain", workflows)
             self.logger.error(str(error))
 
-    def invalidate(self) -> None:
-        """
-        The function to invalidate what needs to be invalidated
-        """
-        try:
-            if self.useMcm:
-                # TODO:  implement invalidator
-                pass
-
-        except Exception as error:
-            self.logger.error("Failed to run invalidator")
-            self.logger.error(str(error))
-
     def replaceTroubleWorkflows(self) -> None:
         """
         The function to replace trouble workflows
@@ -313,7 +275,7 @@ class Injector(OracleClient):
         try:
             troubleWorkflows = self.session.query(Workflow).filter(Workflow.status == "trouble").all()
             for wf in troubleWorkflows:
-                if self.spec and self.spec not in wf.name:
+                if self.specificWf and self.specificWf not in wf.name:
                     continue
 
                 workflowController = WorkflowController(wf.name)
@@ -333,8 +295,6 @@ class Injector(OracleClient):
                     continue
 
                 self.logger.info(self.logMsg["putReplacement"], replacement["RequestName"], wf.name)
-
-                self._updateWorkflowTransfer(wf.id, replacementWf)
                 wf.status = "forget"
 
             self.session.commit()
@@ -350,27 +310,26 @@ class Injector(OracleClient):
         try:
             workflowsToConvert = set()
             for wf in self.getWorkflowsByWMStatus():
-                if self.spec and self.spec not in wf:
+                if self.specificWf and self.specificWf not in wf:
                     continue
 
                 wfExists = self.session.query(Workflow).filter(Workflow.name == wf).first()
                 if not wfExists:
                     wfController = WorkflowController(wf)
                     if not self._canInjectWorkflow(wfController):
-                        self.logger.critical("The workflow %s cannot be added in because of duplicates", wf)
+                        self.logger.critical(self.logMsg["duplicate"], wf)
                         continue
 
                     if self._canConvertWorkflowToStepChain(wfController):
                         workflowsToConvert.add(wf)
 
-                    self.logger.info("Considering %s", wf)
+                    self.logger.info(self.logMsg["addWf"], wf)
                     self.session.add(
                         Workflow(name=wf, status=self.options.get("setstatus"), wm_status=self.options.get("wmstatus"))
                     )
                     self.session.commit()
 
             self.convertWorkflowsToStepChain(workflowsToConvert)
-            self.invalidate()
             self.replaceTroubleWorkflows()
 
         except Exception as error:
@@ -379,7 +338,7 @@ class Injector(OracleClient):
 
 
 if __name__ == "__main__":
-    options, spec = Injector.parseOptions()
-    injector = Injector(options=options, spec=spec)
+    options, specificWf = Injector.parseOptions()
+    injector = Injector(options=options, specificWf=specificWf)
     if injector.go():
         injector.run()

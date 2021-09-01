@@ -147,22 +147,6 @@ class OracleClientTest(unittest.TestCase):
         isTransfer = isinstance(response, transfer)
         self.assertTrue(isTransfer)
 
-    def testTransferImp(self) -> None:
-        """TransferImp is a model to the table in OracleDB"""
-        transferImp = OracleDB.TransferImp
-        isDeclarativeMeta = isinstance(transferImp, DeclarativeMeta)
-        self.assertTrue(isDeclarativeMeta)
-
-        hasAllCols = all(
-            col in self.oracleDBParams.get("transferImp").get("columns")
-            for col in transferImp.__table__.columns.keys()
-        )
-        self.assertTrue(hasAllCols)
-
-        response = self.oracleClient.session.query(transferImp).first()
-        isTransferImp = isinstance(response, transferImp)
-        self.assertTrue(isTransferImp)
-
     def testLockOfLock(self) -> None:
         """LockOfLock is a model to the table in OracleDB"""
         lockOfLock = OracleDB.LockOfLock
