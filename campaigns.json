@@ -662,13 +662,13 @@
   },
   "Run3Summer21wmLHEGS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1
   },
   "Run3Summer21GS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1
   },
@@ -2674,7 +2674,7 @@
     "overflow": {
       "PRIM": {}
     }
-  }, 
+  },
   "UltraLegacy2018": {
     "custodial_override": [
       "DQMIO"
