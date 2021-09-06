@@ -2,12 +2,12 @@ import os
 import json
 import pycurl
 from pycurl import Curl
-from http.client import HTTPConnection
-from io import StringIO
+from http.client import HTTPConnection, HTTPSConnection
+from io import BytesIO
 from logging import Logger
 
 from Utilities.Authenticate import getX509Conn
-from Utilities.Logging import getLogger
+from logging import getLogger  # from Utilities.Logging import getLogger
 
 from typing import Optional, Union
 
@@ -30,13 +30,13 @@ class McMClient(object):
             self.id = kwargs.get("id") or "sso"
             self.cookie = kwargs.get("cookie")
 
-            self.response = StringIO().write
+            self.response = BytesIO()
             self.connection = self._getConnection()
 
         except Exception as error:
             raise Exception(f"Error initializing McMClient\n{str(error)}")
 
-    def _getConnection(self) -> Union[HTTPConnection, Curl]:
+    def _getConnection(self) -> Union[HTTPConnection, HTTPSConnection, Curl]:
         """
         The function to set the connection to McM
         :return: curl if id is sso, http connection o/w
@@ -50,7 +50,7 @@ class McMClient(object):
             curl.setopt(pycurl.SSL_VERIFYPEER, 1)
             curl.setopt(pycurl.SSL_VERIFYHOST, 2)
             curl.setopt(pycurl.CAPATH, "/etc/pki/tls/certs")
-            curl.setopt(pycurl.WRITEFUNCTION, self.response)
+            curl.setopt(pycurl.WRITEFUNCTION, self.response.write)
             return curl
 
         return getX509Conn(self.url) if self.id == "cert" else HTTPConnection(self.url)
@@ -75,8 +75,8 @@ class McMClient(object):
     def _getResponse(self) -> dict:
         if self.id == "sso":
             response = self.response.getvalue()
-            self.response = StringIO().write
-            self.connection.setopt(pycurl.WRITEFUNCTION, self.response)
+            self.response = BytesIO()
+            self.connection.setopt(pycurl.WRITEFUNCTION, self.response.write)
 
         else:
             response = self.connection.getresponse().read()
@@ -92,8 +92,8 @@ class McMClient(object):
         :return: response, if any
         """
         try:
-            data = self.get(f"search/?db_name={name}&page={page}&{query}")
-            return data["results"] if data else None
+            data = self.get(f"search/?db_name={name}&page={page}&{query}") or {}
+            return data.get("results")
 
         except Exception as error:
             self.logger.error("Failed to search %s", name)
@@ -108,7 +108,7 @@ class McMClient(object):
         try:
             if self.id == "sso":
                 self.connection.setopt(pycurl.HTTPGET, 1)
-                self.connection.setopt(pycurl.URL, f"https://{self.url}{endpoint}".replace("//", "/"))
+                self.connection.setopt(pycurl.URL, "https://" + f"{self.url}{endpoint}".replace("//", "/"))
                 self.connection.perform()
 
             else:
@@ -131,9 +131,9 @@ class McMClient(object):
             data = json.dumps(data)
 
             if self.id == "sso":
-                self.connection.setopt(pycurl.URL, f"https://{self.url}{endpoint}".replace("//", "/"))
+                self.connection.setopt(pycurl.URL, "https://" + f"{self.url}{endpoint}".replace("//", "/"))
                 self.connection.setopt(pycurl.UPLOAD, 1)
-                self.connection.setopt(pycurl.READFUNCTION, StringIO(data).read)
+                self.connection.setopt(pycurl.READFUNCTION, BytesIO(data).read)
                 self.connection.perform()
 
             else:
@@ -154,7 +154,7 @@ class McMClient(object):
         try:
             if self.id == "sso":
                 self.connection.setopt(pycurl.CUSTOMREQUEST, "DELETE")
-                self.connection.setopt(pycurl.URL, f"https://{self.url}{endpoint}".replace("//", "/"))
+                self.connection.setopt(pycurl.URL, "https://" + f"{self.url}{endpoint}".replace("//", "/"))
                 self.connection.perform()
 
             else:
