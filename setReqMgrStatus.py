@@ -23,7 +23,7 @@ def main():
     parser.add_option('-w', '--workflow', help='Workflow name')
     parser.add_option('-f', '--file', help='A file name which contains the workflows (One workflow in each line)')
     parser.add_option('-c', '--cascade', help='Set the workflow state in cascade mode', default=False)
-    parser.add_option('-s', '--status', help='The new status', choices=['staged', 'closed-out', 'announced'])
+    parser.add_option('-s', '--status', help='The new status', choices=['staging', 'staged', 'closed-out', 'announced'])
     (options, args) = parser.parse_args()
 
     if not options.status:
