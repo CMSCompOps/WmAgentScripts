@@ -11,6 +11,8 @@ def setStatus(url, workflowname, newstatus, cascade):
         return reqmgr.announceWorkflow(url, workflowname, cascade)
     elif newstatus == "staged":
         return reqmgr.setStatusToStaged(url, workflowname, cascade)
+    elif newstatus == "staging":
+        return reqmgr.setStatusToStaging(url, workflowname, cascade)
     else:
         print "ERROR: Cannot set status to ", newstatus
 
