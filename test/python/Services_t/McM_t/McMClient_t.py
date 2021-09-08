@@ -18,7 +18,7 @@ class McMClientTest(unittest.TestCase):
     }
 
     def setUp(self) -> None:
-        self.mcmClientSSO = McMClient(dev=True)
+        self.mcmClient = McMClient(dev=True)
         super().setUp()
         return
 
@@ -28,18 +28,18 @@ class McMClientTest(unittest.TestCase):
 
     def testGetConnection(self) -> None:
         """_getConnection gets the connection to McM"""
-        isCurl = isinstance(self.mcmClientSSO.connection, Curl)
+        isCurl = isinstance(self.mcmClient.connection, Curl)
         self.assertTrue(isCurl)
 
     def testGet(self) -> None:
         """get gets the values of a given request"""
-        response = self.mcmClientSSO.get(self.params.get("endpoint"))
+        response = self.mcmClient.get(self.params.get("endpoint"))
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
 
     def testSearch(self) -> None:
         """search gets the values of a given request"""
-        response = self.mcmClientSSO.search(self.params.get("dbName"), query=f"contains={self.params.get('wf')}")
+        response = self.mcmClient.search(self.params.get("dbName"), query=f"contains={self.params.get('wf')}")
         isList = isinstance(response, list)
         self.assertTrue(isList)
 

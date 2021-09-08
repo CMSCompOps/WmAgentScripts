@@ -1,15 +1,13 @@
 import os
 import json
 import pycurl
-from pycurl import Curl
-from http.client import HTTPConnection, HTTPSConnection
 from io import BytesIO
 from logging import Logger
 
-from Utilities.Authenticate import getX509Conn
+import logging
 from logging import getLogger  # from Utilities.Logging import getLogger
 
-from typing import Optional, Union
+from typing import Optional
 
 
 class McMClient(object):
@@ -21,65 +19,57 @@ class McMClient(object):
     def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
         try:
             super().__init__()
+            logging.basicConfig(level=logging.INFO)
             self.logger = logger or getLogger(self.__class__.__name__)
 
             self.devMode = os.getenv("UNIFIED_MCM") == "dev" or kwargs.get("dev") or False
             self.intMode = kwargs.get("int") or False
 
-            self.url = f"cms-pdmv{'-dev' if self.devMode else '-int' if self.intMode else ''}.cern.ch/mcm/"
-            self.id = kwargs.get("id") or "sso"
-            self.cookie = kwargs.get("cookie")
-
             self.response = BytesIO()
-            self.connection = self._getConnection()
+            self.url = f"cms-pdmv{'-dev' if self.devMode else '-int' if self.intMode else ''}.cern.ch/mcm/"
+
+            self._setCookie(kwargs.get("cookie"))
+            self._setConnection()
 
         except Exception as error:
             raise Exception(f"Error initializing McMClient\n{str(error)}")
 
-    def _getConnection(self) -> Union[HTTPConnection, HTTPSConnection, Curl]:
+    def _setCookie(self, cookie: Optional[str] = None) -> None:
         """
-        The function to set the connection to McM
-        :return: curl if id is sso, http connection o/w
+        The function to set the sso cookie file
+        :param cookie: optional cookie filename
         """
-        if self.id == "sso":
-            self.cookie = self._getSSOCookie()
-            self.logger.info(f"Using sso cookie file: {self.cookie}")
+        self.cookie = cookie or os.environ.get("MCM_SSO_COOKIE")
+        if self.cookie is None:
+            self.cookie = f"{os.getenv('HOME')}/private/{'dev' if self.devMode else 'int' if self.intMode else 'prod'}-cookie.txt"
 
-            curl = pycurl.Curl()
-            curl.setopt(pycurl.COOKIEFILE, self.cookie)
-            curl.setopt(pycurl.SSL_VERIFYPEER, 1)
-            curl.setopt(pycurl.SSL_VERIFYHOST, 2)
-            curl.setopt(pycurl.CAPATH, "/etc/pki/tls/certs")
-            curl.setopt(pycurl.WRITEFUNCTION, self.response.write)
-            return curl
-
-        return getX509Conn(self.url) if self.id == "cert" else HTTPConnection(self.url)
-
-    def _getSSOCookie(self) -> str:
-        """
-        The function to get the sso cookie file
-        :return: sso cookie file name
-        """
-        cookie = self.cookie or os.environ.get("MCM_SSO_COOKIE")
-        if cookie is None:
-            cookie = f"{os.getenv('HOME')}/private/{'dev' if self.devMode else 'int' if self.intMode else 'prod'}-cookie.txt"
-
-        if not os.path.isfile(cookie):
+        if not os.path.isfile(self.cookie):
             self.logger.info("The required sso cookie file does not exist. Trying to make one")
-            os.system(f"cern-get-sso-cookie -u https://{self.url} -o {cookie} --krb")
-            if not os.path.isfile(cookie):
+            os.system(f"cern-get-sso-cookie -u https://{self.url} -o {self.cookie} --krb")
+            if not os.path.isfile(self.cookie):
                 raise ValueError("The required sso cookie file cannot be made")
 
-        return cookie
+        self.logger.info(f"Using sso cookie file: {self.cookie}")
+
+    def _setConnection(self) -> None:
+        """
+        The function to set the connection to McM
+        """
+        self.connection = pycurl.Curl()
+        self.connection.setopt(pycurl.COOKIEFILE, self.cookie)
+        self.connection.setopt(pycurl.SSL_VERIFYPEER, 1)
+        self.connection.setopt(pycurl.SSL_VERIFYHOST, 2)
+        self.connection.setopt(pycurl.CAPATH, "/etc/pki/tls/certs")
+        self.connection.setopt(pycurl.WRITEFUNCTION, self.response.write)
 
     def _getResponse(self) -> dict:
-        if self.id == "sso":
-            response = self.response.getvalue()
-            self.response = BytesIO()
-            self.connection.setopt(pycurl.WRITEFUNCTION, self.response.write)
-
-        else:
-            response = self.connection.getresponse().read()
+        """
+        The function to get the response from request
+        :return: response
+        """
+        response = self.response.getvalue()
+        self.response = BytesIO()
+        self.connection.setopt(pycurl.WRITEFUNCTION, self.response.write)
 
         return json.loads(response)
 
@@ -88,16 +78,10 @@ class McMClient(object):
         The function to search data
         :param name: db name
         :param page: page number
-        :param query: query params
+        :param query: optional query params
         :return: response, if any
         """
-        try:
-            data = self.get(f"search/?db_name={name}&page={page}&{query}") or {}
-            return data.get("results")
-
-        except Exception as error:
-            self.logger.error("Failed to search %s", name)
-            self.logger.error(str(error))
+        return (self.get(f"search/?db_name={name}&page={page}&{query}") or {}).get("results")
 
     def get(self, endpoint: str) -> dict:
         """
@@ -106,18 +90,14 @@ class McMClient(object):
         :return: response
         """
         try:
-            if self.id == "sso":
-                self.connection.setopt(pycurl.HTTPGET, 1)
-                self.connection.setopt(pycurl.URL, "https://" + f"{self.url}{endpoint}".replace("//", "/"))
-                self.connection.perform()
-
-            else:
-                self.connection.request("GET", endpoint, headers={})
+            self.connection.setopt(pycurl.HTTPGET, 1)
+            self.connection.setopt(pycurl.URL, "https://" + f"{self.url}{endpoint}".replace("//", "/"))
+            self.connection.perform()
 
             return self._getResponse()
 
         except Exception as error:
-            self.logger.error("Failed to get data from %s", endpoint)
+            self.logger.error("Failed to get data from %s", f"{self.url}{endpoint}")
             self.logger.error(str(error))
 
     def set(self, endpoint: str, data: dict) -> dict:
@@ -128,16 +108,10 @@ class McMClient(object):
         :return: response
         """
         try:
-            data = json.dumps(data)
-
-            if self.id == "sso":
-                self.connection.setopt(pycurl.URL, "https://" + f"{self.url}{endpoint}".replace("//", "/"))
-                self.connection.setopt(pycurl.UPLOAD, 1)
-                self.connection.setopt(pycurl.READFUNCTION, BytesIO(data).read)
-                self.connection.perform()
-
-            else:
-                self.connection.request("PUT", endpoint, data, headers={})
+            self.connection.setopt(pycurl.URL, "https://" + f"{self.url}{endpoint}".replace("//", "/"))
+            self.connection.setopt(pycurl.UPLOAD, 1)
+            self.connection.setopt(pycurl.READFUNCTION, BytesIO(json.dumps(data)).read)
+            self.connection.perform()
 
             return self._getResponse()
 
@@ -152,13 +126,9 @@ class McMClient(object):
         :return: response
         """
         try:
-            if self.id == "sso":
-                self.connection.setopt(pycurl.CUSTOMREQUEST, "DELETE")
-                self.connection.setopt(pycurl.URL, "https://" + f"{self.url}{endpoint}".replace("//", "/"))
-                self.connection.perform()
-
-            else:
-                self.connection.request("DELETE", endpoint, headers={})
+            self.connection.setopt(pycurl.CUSTOMREQUEST, "DELETE")
+            self.connection.setopt(pycurl.URL, "https://" + f"{self.url}{endpoint}".replace("//", "/"))
+            self.connection.perform()
 
             return self._getResponse()
 
