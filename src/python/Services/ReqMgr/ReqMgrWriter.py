@@ -19,7 +19,7 @@ class ReqMgrWriter(object):
             super().__init__()
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
-            self.reqmgrEndpoint = {"agentConfig": "/reqmgr2/data/wmagentconfig/"}
+            self.reqmgrEndpoint = {"agentConfig": "/reqmgr2/data/wmagentconfig/", "request": "/reqmgr2/data/request"}
 
             logging.basicConfig(level=logging.INFO)
             self.logger = logger or logging.getLogger(self.__class__.__name__)
@@ -42,4 +42,18 @@ class ReqMgrWriter(object):
 
         except Exception as error:
             self.logger.error("Failed to set configuration in reqmgr for agent %s", agent)
+            self.logger.error(str(error))
+
+    def submitWorkflow(self, wfSchema: dict) -> dict:
+        """
+        The function to submit a workflow (for cloning or resubmition)
+        :param wfSchema: workflow schema
+        :return: True if succeeded, False o/w
+        """
+        try:
+            result = sendResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"], param=wfSchema)
+            return result["result"][0]["ok"]
+
+        except Exception as error:
+            self.logger.error("Failed to submit workflow in reqmgr")
             self.logger.error(str(error))

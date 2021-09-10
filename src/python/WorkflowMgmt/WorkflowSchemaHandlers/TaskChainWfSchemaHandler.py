@@ -3,7 +3,7 @@ import copy
 from logging import Logger
 from collections import defaultdict
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Any
 
 from Utilities.IteratorTools import filterKeys
 from WorkflowMgmt.WorkflowSchemaHandlers.StepChainWfSchemaHandler import StepChainWfSchemaHandler
@@ -251,6 +251,28 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             self.logger.error("Failed to check if good to convert to step chain")
             self.logger.error(str(error))
 
+    def convertToStepChain(self) -> object:
+        """
+        The function to convert the request to step chain
+        :return: a StepChainWfSchemaHandler if the convertion is possible, itself o/w
+        """
+        try:
+            convertedWfSchema = self.wfSchema.copy()
+            convertedWfSchema["RequestType"] = "StepChain"
+            convertedWfSchema["StepChain"] = convertedWfSchema.pop("TaskChain")
+
+            for key in self.chainKeys:
+                stepName = f"Step{re.findall(r'\d+', key)[0]}"
+                convertedWfSchema[stepName] = convertedWfSchema.pop(key)
+
+                #TODO
+
+            return StepChainWfSchemaHandler(convertedWfSchema)
+
+        except Exception as error:
+            self.logger.error("Failed to convert workflow to step chain")
+            self.logger.error(str(error))
+
     def getRequestNumEvents(self) -> int:
         """
         The function to get the number of events in the request
@@ -368,3 +390,93 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         except Exception as error:
             self.logger.error("Failed to write dataset pattern name for %s", elements)
             self.logger.error(str(error))
+
+    def setMemory(self, memory: int) -> None:
+        """
+        The function to set a given memory value to the workflow schema
+        :param memory: new memory value
+        """
+        try:
+            for key in self.chainKeys:
+                self.wfSchema[key]["Memory"] = memory
+        
+        except Exception as error:
+            self.logger.error("Failed to set memory to schema")
+            self.logger.error(str(error))
+
+    def setMulticore(self, multicore: int, tasks: Optional[List[str]] = None) -> None:
+        """
+        The function to set a given multicore value to the workflow schema
+        :param multicore: new multicore value
+        :param tasks: tasks names
+        """
+        try:
+            for key, task in filterKeys(self.chainKeys, self.wfSchema).items():
+                if key not in tasks and task.get("TaskName") not in tasks:
+                    continue
+                
+                memoryPerCore = int(0.6 * task.get("Memory") / task.get("Multicore"))
+                self.logger.info("%s: %s of memory per core, %s of base memory", key, memoryPerCore, task.get("Memory"))
+
+                self.wfSchema[key]["Memory"] += (multicore - task.get("Multicore")) * memoryPerCore
+                self.wfSchema[key]["TimePerEvent"] /= (multicore / task.get("Multicore"))
+                self.wfSchema[key]["Multicore"] = multicore
+
+        except Exception as error:
+            self.logger.error("Failed to set multicore to schema")
+            self.logger.error(str(error))
+
+    def setParamValue(self, key: str, value: Any, task: Optional[str] = None) -> None:
+        """
+        The function to set a value for a given param
+        :param key: key name
+        :param value: new value
+        :param task: optional task name
+        """
+        try:
+            if task is None:
+                self.wfSchema[key] = value
+            elif task in self.wfSchema:
+                self.wfSchema[task][key] = value
+        
+        except Exception as error:
+            self.logger.error("Failed to set value to %s on schema", key)
+            self.logger.error(str(error))
+
+    def setNoOutput(self) -> None:
+        """
+        The function to set not keeping the output in the schema
+        """
+        try:
+            for key in self.chainKeys:
+                self.wfSchema[key]["KeepOutput"] = False
+            
+            self.wfSchema["TaskChain"] = len(self.chainKeys) - 1
+            self.wfSchema.pop(self.chainKeys.pop())
+        
+        except Exception as error:
+            self.logger.error("Failed to set no output to schema")
+            self.logger.error(str(error))
+
+    def shortenTaskName(self) -> None:
+        """
+        The function to shorten the tasks names
+        """
+        try:
+            newShortNames = {}
+            for key, task in filterKeys(self.chainKeys, self.wfSchema).items():
+                taskName = task.get("TaskName")
+                shortName = f"T{re.findall(r'\d+', taskName)[0]}"
+
+                newShortNames[taskName] = shortName
+                self.wfSchema[key]["TaskName"] = shortName
+
+            for param in ["ProcessingString", "AcquisitionEra"]:
+                for key in self.wfSchema.get(param, {}).keys():
+                    self.wfSchema[param][newShortNames[key]] = self.wfSchema[param].pop(key)
+            
+        except Exception as error:
+            self.logger.error("Failed to shorten the tasks names")
+            self.logger.error(str(error))
+    
+    
