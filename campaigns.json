@@ -1,4 +1,10 @@
 {
+  "Commissioning2021": {
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "fractionpass": 1
+  }
   "Commissioning2020": {
     "custodial_override": [
       "DQMIO"
@@ -637,7 +643,7 @@
   }, 
   "Run3Winter21wmLHEGS": {
     "fractionpass": 0.95, 
-    "go": true, 
+    "go": true,
     "lumisize": -1, 
     "maxcopies": 1, 
     "resize": "auto"
@@ -646,6 +652,19 @@
     "fractionpass": 0.95,
     "go": false,
     "lumisize": -1,
+    "SiteBlacklist": [
+        "T2_CH_CERN",
+        "T2_CH_CERN_HLT"
+      ],
+    "secondary_AAA": false,
+    "secondaries": {
+       "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer21GS-120X_mcRun3_2021_realistic_v5-v1/GEN-SIM": {
+           "SiteWhitelist": [
+              "T1_US_FNAL_Disk",
+              "T1_DE_KIT_Disk"
+                ]
+           }
+    },
     "maxcopies": 1
   },
   "Run3Summer21MiniAOD": {
@@ -658,10 +677,24 @@
       "fractionpass": 0.95,
       "go": false,
       "lumisize": -1,
-      "maxcopies": 1
+      "SiteBlacklist": [
+         "T2_CH_CERN",
+         "T2_CH_CERN_HLT"
+        ],      
+      "maxcopies": 1,
+      "secondary_AAA": false,
+      "secondaries": {
+          "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer21GS-120X_mcRun3_2021_realistic_v5-v1/GEN-SIM": {
+              "SiteWhitelist": [
+                  "T1_US_FNAL_Disk",
+                  "T1_DE_KIT_Disk"
+                      ]
+          }
+      }
   },
   "Run3Summer21DRPremix": {
     "fractionpass": 0.95,
+    "custodial": "T1_US_FNAL_Disk",
     "go": false,
     "lumisize": -1,
     "maxcopies": 1
@@ -669,11 +702,19 @@
   "Run3Summer21wmLHEGS": {
     "fractionpass": 0.95,
     "go": true,
+    "SiteBlacklist": [
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+        ],
     "lumisize": -1,
     "maxcopies": 1
   },
   "Run3Summer21GS": {
     "fractionpass": 0.95,
+    "SiteBlacklist": [
+       "T2_CH_CERN",
+       "T2_CH_CERN_HLT"
+        ],
     "go": true,
     "lumisize": -1,
     "maxcopies": 1
@@ -1159,6 +1200,10 @@
   "RunIISummer16FSPremix": {
     "fractionpass": 0.95, 
     "go": true, 
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+      ],
     "lumisize": -1, 
     "parameters": {
       "EventsPerLumi": "x2"
@@ -2799,6 +2844,25 @@
       },
       "secondary_AAA": false
   },
+  "RunIISpring21UL18FSwmLHEGSDR": {
+      "fractionpass": 0.95,
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "SiteBlacklist": [
+         "T2_CH_CERN",
+         "T2_CH_CERN_HLT"
+              ],
+      "secondaries": {
+          "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO" : {
+               "SecondaryLocation": [
+                                "T1_RU_JINR_Disk",
+                                "T1_US_FNAL_Disk"                                                            
+               ]
+            }
+        },
+      "secondary_AAA": false
+  }, 
   "RunIISpring21UL18FSGSPremix": {
     "fractionpass": 0.95,
     "go": true,
@@ -2854,6 +2918,26 @@
     "secondary_AAA": true
   },
   "RunIISpring21UL17FSGSDR": {
+      "fractionpass": 0.95,
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "SiteBlacklist": [
+          "T2_CH_CERN",
+          "T2_CH_CERN_HLT"
+              ],
+      "secondaries": {
+          "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
+          {
+              "SecondaryLocation": [
+                  "T1_DE_KIT_Disk",
+                  "T1_RU_JINR_Disk"
+                      ]
+          }
+      },
+     "secondary_AAA": false
+  },
+  "RunIISpring21UL17FSwmLHEGSDR": {
       "fractionpass": 0.95,
       "go": false,
       "lumisize": -1,
@@ -2930,7 +3014,26 @@
                 ]
         }
       },
-        "secondary_AAA": false
+      "secondary_AAA": false
+  },
+  "RunIISpring21UL16FSwmLHEGSDR": {
+      "fractionpass": 0.95,
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "SiteBlacklist": [
+          "T2_CH_CERN",
+          "T2_CH_CERN_HLT"
+              ],
+      "secondaries": {
+        "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO" :
+        {
+            "SecondaryLocation": [
+                "T1_RU_JINR_Disk"
+                ]
+        }
+      },
+      "secondary_AAA": false
   },
   "RunIISpring21UL16FSGSPremix": {
     "fractionpass": 0.95,
