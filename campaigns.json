@@ -669,7 +669,7 @@
   },
   "Run3Summer21MiniAOD": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1
   },
