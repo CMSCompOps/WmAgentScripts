@@ -179,7 +179,7 @@ def singleRecovery(url, task, initial, actions, do=False, priority_change=False)
         return None
 
     print "ACDC payload"
-#    print json.dumps( payload , indent=2)
+    print json.dumps( payload , indent=2)
     print actions
 
     ## submit here
