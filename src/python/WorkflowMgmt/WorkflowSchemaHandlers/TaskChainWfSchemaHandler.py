@@ -26,6 +26,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                 "largeOutputSize": "The output size task is expected to be too large: %.2f GB > %f GB even for one lumi (effective lumi size is ~%d). It should go as low as %d",
                 "largeOutputTime": "The running time of task is expected to be too large even for one lumi section: %s x %.2f s = %.2f h. It should go as low as %s",
                 "reduceLargeOutput": "The output size of task is expected to be too large : %d x %.2f kB * %.4f = %.2f GB > %f GB. Reducing to %d",
+                "diffMulticoreConversion": "The conversion to StepChain encoutered different value of Multicore: %s != %s"
             }
 
         except Exception as error:
@@ -257,6 +258,9 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         :return: a StepChainWfSchemaHandler if the convertion is possible, itself o/w
         """
         try:
+            multicore, memory = 0, 0
+            stepNames = {}
+
             convertedWfSchema = self.wfSchema.copy()
             convertedWfSchema["RequestType"] = "StepChain"
             convertedWfSchema["StepChain"] = convertedWfSchema.pop("TaskChain")
@@ -265,7 +269,43 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                 stepName = f"Step{re.findall(r'\d+', key)[0]}"
                 convertedWfSchema[stepName] = convertedWfSchema.pop(key)
 
-                #TODO
+                stepMulticore = convertedWfSchema[stepName].get("Multicore")
+                if stepMulticore != 1:
+                    stepMulticore = convertedWfSchema[stepName].pop("Multicore")
+
+                if multicore and stepMulticore != multicore:
+                    self.logger.info(self.logMsg["diffMulticoreConversion"], stepMulticore, multicore)
+                
+                multicore = max(multicore, stepMulticore)
+                memory = max(memory, convertedWfSchema[stepName].pop("Memory"))
+
+                convertedWfSchema[stepName]["StepName"] = convertedWfSchema[stepName].pop("TaskName")
+                stepNames[convertedWfSchema[stepName]["StepName"]] = stepName
+
+                if "InputTask" in convertedWfSchema[stepName]:
+                    convertedWfSchema[stepName]["InputStep"] = convertedWfSchema[stepName].pop("InputTask")
+
+                filterEfficiency = 1.
+                step = stepName
+                while True:
+                    step = stepNames.get(convertedWfSchema[step].get("InputStep"))
+                    if step:
+                        filterEfficiency *= convertedWfSchema[step].get("FilterEfficiency", 1)
+                    else:
+                        break
+                
+                convertedWfSchema["TimePerEvent"] += filterEfficiency * convertedWfSchema[stepName].pop("TimePerEvent")
+                convertedWfSchema["SizePerEvent"] += filterEfficiency * convertedWfSchema[stepName].pop("SizePerEvent")
+
+                if "KeepOutput" not in convertedWfSchema[stepName]:
+                    convertedWfSchema[stepName]["KeepOutput"] = False
+                    
+            if multicore > self.unifiedConfiguration.get("max_nCores_for_stepchain") or memory > self.unifiedConfiguration.get("max_memory_for_stepchain"):
+                multicore = self.unifiedConfiguration.get("max_nCores_for_stepchain")
+                memory = memory > self.unifiedConfiguration.get("max_memory_for_stepchain")
+            
+            convertedWfSchema["Multicore"] = multicore
+            convertedWfSchema["Memory"] = memory
 
             return StepChainWfSchemaHandler(convertedWfSchema)
 

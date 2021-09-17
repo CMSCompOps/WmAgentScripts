@@ -198,6 +198,7 @@ class Rejector(OracleClient):
 
         clonedWfSchema = filterWorkflowSchemaParam(clonedWfSchemaHandler.wfSchema)
         self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
+        # TODO: setWorkflowApproved
 
     def _buildClonedWorkflowSchema(self, wfSchemaHandler: BaseWfSchemaHandler) -> BaseWfSchemaHandler:
         """
