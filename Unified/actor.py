@@ -23,14 +23,13 @@ def singleRecovery(url, task, initial, actions, do=False, priority_change=False)
     print "Inside single recovery!"
     payload = {
         "Requestor" : os.getenv('USER'),
-        "Group" : 'DATAOPS',
         "RequestType" : "Resubmission",
         "ACDCServer" : initial['ConfigCacheUrl'],
         "ACDCDatabase" : "acdcserver",
         "OriginalRequestName" : initial['RequestName'],
         "OpenRunningTimeout" : 0
     }
-    copy_over = ['PrepID','Campaign','RequestPriority', 'TimePerEvent', 'SizePerEvent', 'Group', 'Memory', 'RequestString' ,'CMSSWVersion']
+    copy_over = ['RequestPriority', 'RequestString' ,'CMSSWVersion']
     for c in copy_over:
         if c in initial:
             payload[c] = copy.deepcopy(initial[c])
