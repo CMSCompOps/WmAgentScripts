@@ -268,37 +268,26 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             for key in self.chainKeys:
                 stepName = f"Step{re.findall(r'\d+', key)[0]}"
                 convertedWfSchema[stepName] = convertedWfSchema.pop(key)
-
-                stepMulticore = convertedWfSchema[stepName].get("Multicore")
-                if stepMulticore != 1:
-                    stepMulticore = convertedWfSchema[stepName].pop("Multicore")
-
-                if multicore and stepMulticore != multicore:
-                    self.logger.info(self.logMsg["diffMulticoreConversion"], stepMulticore, multicore)
-                
-                multicore = max(multicore, stepMulticore)
-                memory = max(memory, convertedWfSchema[stepName].pop("Memory"))
-
                 convertedWfSchema[stepName]["StepName"] = convertedWfSchema[stepName].pop("TaskName")
                 stepNames[convertedWfSchema[stepName]["StepName"]] = stepName
+
+                efficiencyFactor = self._getTaskEfficiencyFactor(self.wfSchema[key])
+                convertedWfSchema["TimePerEvent"] += efficiencyFactor * convertedWfSchema[stepName].pop("TimePerEvent")
+                convertedWfSchema["SizePerEvent"] += efficiencyFactor * convertedWfSchema[stepName].pop("SizePerEvent")
 
                 if "InputTask" in convertedWfSchema[stepName]:
                     convertedWfSchema[stepName]["InputStep"] = convertedWfSchema[stepName].pop("InputTask")
 
-                filterEfficiency = 1.
-                step = stepName
-                while True:
-                    step = stepNames.get(convertedWfSchema[step].get("InputStep"))
-                    if step:
-                        filterEfficiency *= convertedWfSchema[step].get("FilterEfficiency", 1)
-                    else:
-                        break
-                
-                convertedWfSchema["TimePerEvent"] += filterEfficiency * convertedWfSchema[stepName].pop("TimePerEvent")
-                convertedWfSchema["SizePerEvent"] += filterEfficiency * convertedWfSchema[stepName].pop("SizePerEvent")
-
                 if "KeepOutput" not in convertedWfSchema[stepName]:
                     convertedWfSchema[stepName]["KeepOutput"] = False
+
+                stepMulticore = convertedWfSchema[stepName].get("Multicore")
+                if stepMulticore != 1:
+                    stepMulticore = convertedWfSchema[stepName].pop("Multicore")
+                if multicore and stepMulticore != multicore:
+                    self.logger.info(self.logMsg["diffMulticoreConversion"], stepMulticore, multicore)
+                multicore = max(multicore, stepMulticore)
+                memory = max(memory, convertedWfSchema[stepName].pop("Memory"))
                     
             if multicore > self.unifiedConfiguration.get("max_nCores_for_stepchain") or memory > self.unifiedConfiguration.get("max_memory_for_stepchain"):
                 multicore = self.unifiedConfiguration.get("max_nCores_for_stepchain")
@@ -488,7 +477,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         The function to set not keeping the output in the schema
         """
         try:
-            for key in self.chainKeys:
+            for key in self.chainKeys[:-1]:
                 self.wfSchema[key]["KeepOutput"] = False
             
             self.wfSchema["TaskChain"] = len(self.chainKeys) - 1

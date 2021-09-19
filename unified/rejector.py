@@ -6,7 +6,6 @@ from logging import Logger
 from Databases.Oracle.OracleClient import OracleClient
 from Databases.Oracle.OracleDB import Workflow
 from MongoControllers.BatchController import BatchController
-from MongoControllers.ModuleLockController import ModuleLockController
 from Services.ServicesChecker import ServicesChecker
 from Services.DBS.DBSWriter import DBSWriter
 from Services.DBS.DBSReader import DBSReader
@@ -52,6 +51,7 @@ class Rejector(OracleClient):
                 "invalidate": f"Invalidating the workflow {'' if self.options.keep else 'and outputs'} by unified operator {self.user}, reason: {self.options.comment}",
                 "reject": f"Rejected the workflow by unified operator {self.user}",
                 "return": "Rejector was finished by user",
+                "failure": "Failed to %s workflow %s",
             }
 
         except Exception as error:
@@ -68,24 +68,24 @@ class Rejector(OracleClient):
         parser.add_option("-m", "--manual", help="bypass JIRA check", action="store_true", default=False)
         parser.add_option("-k", "--keep", help="keep the output current status", action="store_true", default=False)
         parser.add_option(
-            "-t", "--set_trouble", help="set status to trouble instead of forget", action="store_true", default=False
+            "-t", "--setTrouble", help="set status to trouble instead of forget", action="store_true", default=False
         )
         parser.add_option("-c", "--clone", help="clone the workflow", action="store_true", default=False)
         parser.add_option("--comments", help="comment about the clone", default="-")
         parser.add_option("--memory", help="change the memory of the clone", default=0, type=int)
         parser.add_option("--multicore", help="change the number of cores in the clone", default=None)
-        parser.add_option("--processing_string", help="change the processing string of the clone", default=None)
-        parser.add_option("--acquisition_era", help="change the acquisition era of the clone", default=None)
-        parser.add_option("--prep_id", help="change the prepid of the clone", default=None)
-        parser.add_option("--events_per_job", help="change the events/job of the clone", default=0, type=int)
+        parser.add_option("--processingString", help="change the processing string of the clone", default=None)
+        parser.add_option("--acquisitionEra", help="change the acquisition era of the clone", default=None)
+        parser.add_option("--prepId", help="change the prep id of the clone", default=None)
+        parser.add_option("--eventsPerJob", help="change the events/job of the clone", default=0, type=int)
         parser.add_option("--priority", help="change the priority of the clone", default=0, type=int)
         parser.add_option(
-            "--event_aware_lumi_based",
-            help="change the splitting algo of the clone",
+            "--eventAwareLumiBased",
+            help="change the splitting algorithm of the clone",
             action="store_true",
             default=False,
         )
-        parser.add_option("--time_per_event", help="change the time/event of the clone", default=0, type=float)
+        parser.add_option("--timePerEvent", help="change the time/event of the clone", default=0, type=float)
         parser.add_option(
             "--deterministic",
             help="change the splitting to deterministic in the clone",
@@ -93,18 +93,25 @@ class Rejector(OracleClient):
             default=False,
         )
         parser.add_option("--runs", help="change the run whitelist in the clone", default=None)
-        parser.add_option("--file_list", help="a file with a list of workflows", default=None)
+        parser.add_option("--fileList", help="a file with a list of workflows", default=None)
         parser.add_option(
-            "--no_output",
+            "--noOutput",
             help="keep only the output of the last task of TaskChain",
             action="store_true",
             default=False,
         )
         parser.add_option(
-            "--short_task", help="Reduce the TaskName to a minimal value", default=False, action="store_true"
+            "--shortTask",
+            help="Reduce the TaskName to a minimal value",
+            action="store_true",
+            default=False,
         )
         parser.add_option(
-            "-s", "--to_stepchain", help="transform a TaskChain into StepChain", default=False, action="store_true"
+            "-s",
+            "--toStepchain",
+            help="transform a TaskChain into StepChain",
+            action="store_true",
+            default=False,
         )
 
         options, args = parser.parse_args()
@@ -115,21 +122,21 @@ class Rejector(OracleClient):
         The function to get the workflows to reject
         :return: list of workflows names
         """
-        if self.options.file_list:
+        if self.options.fileList:
             return self._getWorkflowsByFilelist()
         if self.specificType == "workflow":
             return self._getWorkflowsByName()
 
-        raise ValueError("Cannot get list of workflows to reject")
+        raise ValueError("Cannot get list of workflows to reject, provide file or specific workflow name")
 
     def _getWorkflowsByFilelist(self) -> list:
         """
-        The function to get the workflows by given file list
+        The function to get the workflows by a given file list
         :return: list of workflows names
         """
         wfs = set()
 
-        with open(self.options.file_list, "r") as file:
+        with open(self.options.fileList, "r") as file:
             for item in filter(None, file.read().split("\n")):
                 wfs.update(self.session.query(Workflow).filter(Workflow.name.contains(item)).all())
 
@@ -137,7 +144,7 @@ class Rejector(OracleClient):
 
     def _getWorkflowsByName(self) -> list:
         """
-        The function to get the workflows by given specific name
+        The function to get the workflows by a given specific name
         :return: list of workflows names
         """
         wfs = set()
@@ -154,33 +161,33 @@ class Rejector(OracleClient):
 
         return list(wfs)
 
-    def _rejectDataset(self, dataset: Optional[str] = None) -> None:
+    def _rejectDataset(self) -> bool:
         """
         The function to reject a given dataset
-        :param dataset: optional dataset name
+        :return: True if the dataset was properly rejected, False o/w
         """
-        dataset = dataset or self.specific
-        currentStatus = self.dbs["reader"].getDBSStatus(dataset)
+        currentStatus = self.dbs["reader"].getDBSStatus(self.specific)
 
-        rejected = self.dbs["writer"].setDatasetStatus(dataset, currentStatus, "INVALID")
+        rejected = self.dbs["writer"].setDatasetStatus(self.specific, currentStatus, "INVALID")
+        self.logger.info(self.logMsg["dataset"], self.specific, rejected)
 
-        self.logger.info(self.logMsg["dataset"], dataset, rejected)
+        return rejected
 
-    def _rejectWorkflow(self, wfController: WorkflowController) -> bool:
+    def _rejectWorkflow(self, wf: Workflow, wfController: WorkflowController) -> bool:
         """
         The function to reject a given workflow
+        :param wf: workflow
         :param wfController: workflow controller
-        :return: True if the workflow was rejected, False o/w
+        :return: True if the workflow was properly rejected, False o/w
         """
-        wf = wfController.request.get("RequestName")
-        wfStatusEnforcer = WorkflowStatusEnforcer(wf)
+        wfStatusEnforcer = WorkflowStatusEnforcer(wf.name)
         rejected = wfStatusEnforcer.invalidate(onlyResubmissions=True, invalidateOutputDatasets=not self.options.keep)
 
         wfController.logger.info(self.logMsg["invalidate"])
-        self.logger.info(self.logMsg["wf"], wf, rejected)
+        self.logger.info(self.logMsg["wf"], wf.name, rejected)
 
         if rejected:
-            wf.status = "trouble" if self.options.set_trouble or self.options.clone else "forget"
+            wf.status = "trouble" if self.options.setTrouble or self.options.clone else "forget"
             self.session.commit()
 
             wfController.logger.info(self.logMsg["reject"])
@@ -193,7 +200,7 @@ class Rejector(OracleClient):
         :param wfSchemaHandler: original workflow schema handler
         """
         clonedWfSchemaHandler = self._buildClonedWorkflowSchema(wfSchemaHandler)
-        if self.options.to_stepchain:
+        if self.options.toStepchain:
             clonedWfSchemaHandler = clonedWfSchemaHandler.convertToStepChain()
 
         clonedWfSchema = filterWorkflowSchemaParam(clonedWfSchemaHandler.wfSchema)
@@ -230,37 +237,37 @@ class Rejector(OracleClient):
             )
             wfSchemaHandler.setMulticore(int(multicore), tasks.split(","))
 
-        if self.options.short_task:
+        if self.options.shortTask:
             wfSchemaHandler.shortenTaskName()
 
-        if self.options.events_per_job:
-            wfSchemaHandler.setParamValue("EventsPerJob", self.options.events_per_job, task="Task1")
+        if self.options.eventsPerJob:
+            wfSchemaHandler.setParamValue("EventsPerJob", self.options.eventsPerJob, task="Task1")
+
+        if self.options.eventAwareLumiBased:
+            wfSchemaHandler.setParamValue("SplittingAlgo", "EventAwareLumiBased")
+
+        if self.options.timePerEvent:
+            wfSchemaHandler.setParamValue("TimePerEvent", self.options.timePerEvent)
 
         if self.options.deterministic:
             wfSchemaHandler.setParamValue("DeterministicPileup", True, task="Task1")
 
-        if self.options.event_aware_lumi_based:
-            wfSchemaHandler.setParamValue("SplittingAlgo", "EventAwareLumiBased")
+        if self.options.processingString:
+            wfSchemaHandler.setParamValue("ProcessingString", self.options.processingString)
 
-        if self.options.time_per_event:
-            wfSchemaHandler.setParamValue("TimePerEvent", self.options.time_per_event)
+        if self.options.acquisitionEra:
+            wfSchemaHandler.setParamValue("AcquisitionEra", self.options.acquisitionEra)
 
-        if self.options.processing_string:
-            wfSchemaHandler.setParamValue("ProcessingString", self.options.processing_string)
-
-        if self.options.acquisition_era:
-            wfSchemaHandler.setParamValue("AcquisitionEra", self.options.acquisition_era)
-
-        if self.options.prep_id:
-            wfSchemaHandler.setParamValue("PrepID", self.options.prep_id)
-
-        if self.options.runs:
-            wfSchemaHandler.setParamValue("RunWhitelist", [*map(int, self.options.runs)])
+        if self.options.prepId:
+            wfSchemaHandler.setParamValue("PrepID", self.options.prepId)
 
         if self.options.priority:
             wfSchemaHandler.setParamValue("RequestPriority", self.options.priority)
 
-        if self.options.no_output:
+        if self.options.runs:
+            wfSchemaHandler.setParamValue("RunWhitelist", [*map(int, self.options.runs)])
+
+        if self.options.noOutput:
             wfSchemaHandler.setNoOutput()
 
         return wfSchemaHandler
@@ -275,10 +282,8 @@ class Rejector(OracleClient):
         :return: True if it can go, False o/w
         """
         try:
-            moduleLockController = ModuleLockController()
             servicesChecker = ServicesChecker(softServices=["wtc", "jira"])
-
-            return (self.options.get("manual") or not moduleLockController.isLocked()) and servicesChecker.check()
+            return self.options.get("manual") or servicesChecker.check()
 
         except Exception as error:
             self.logger.error("Failed to check if Rejector can go")
@@ -301,9 +306,17 @@ class Rejector(OracleClient):
 
             for wf in wfsToReject:
                 wfController = WorkflowController(wf.name)
-                rejected = self._rejectWorkflow(wfController)
-                if rejected and self.options.clone:
-                    self._cloneWorkflow(wfController.request)
+                try:
+                    rejected = self._rejectWorkflow(wf, wfController)
+                    if rejected and self.options.clone:
+                        self._cloneWorkflow(wfController.request)
+
+                except Exception as error:
+                    wfController.logger.critical(
+                        self.logMsg["failure"], "clone" if self.options.clone else "reject", wf.name
+                    )
+                    self.logger.error(self.logMsg["failure"], "reject", wf.name)
+                    self.logger.error(str(error))
 
         except Exception as error:
             self.logger.error("Failed to run rejection")
