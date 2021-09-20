@@ -56,7 +56,7 @@ class Injector(OracleClient):
                 "foundReplacement": "The workflow was found in trouble and has a replacement: %s",
                 "putReplacement": "Putting %s as replacement of %s",
                 "forgetRelval": "As a relval, there is no clean way to handle this. Setting forget",
-                "convertionError": "Error in converting %s",
+                "conversionError": "Error in converting %s",
             }
 
         except Exception as error:
@@ -239,8 +239,8 @@ class Injector(OracleClient):
                 Rejector(options=options, specific=wfController["RequestName"])
 
             except Exception as error:
-                wfController.logger.critical(self.logMsg["convertionError"], wfController["RequestName"])
-                self.logger.error(self.logMsg["convertionError"], wfController["RequestName"])
+                wfController.logger.critical(self.logMsg["conversionError"], wfController["RequestName"])
+                self.logger.error(self.logMsg["conversionError"], wfController["RequestName"])
                 self.logger.error(str(error))
 
     def _canReplaceWorkflow(self, candidate: str, wf: str) -> bool:
