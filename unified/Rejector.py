@@ -43,12 +43,13 @@ class Rejector(OracleClient):
             self.reqmgr = {"writer": ReqMgrWriter(), "reader": ReqMgrReader()}
 
             self.user = os.getenv("USER")
+
             self.logMsg = {
                 "dataset": "Rejected dataset %s: %s",
                 "wf": "Rejected workflow %s: %s",
                 "nWfs": "%s workflows to reject: %s",
                 "schema": "Original schema: %s",
-                "invalidate": f"Invalidating the workflow {'' if self.options.keep else 'and outputs'} by unified operator {self.user}, reason: {self.options.comment}",
+                "invalidate": f"Invalidating the workflow {'' if self.options.get('keep') else 'and outputs'} by unified operator {self.user}, reason: {self.options.get('comment')}",
                 "reject": f"Rejected the workflow by unified operator {self.user}",
                 "return": "Rejector was finished by user",
                 "failure": "Failed to %s workflow %s",
@@ -123,7 +124,7 @@ class Rejector(OracleClient):
         The function to get the workflows to reject
         :return: list of workflows names
         """
-        if self.options.fileList:
+        if self.options.get("fileList"):
             return self._getWorkflowsByFilelist()
         if self.specificType == "workflow":
             return self._getWorkflowsByName()
@@ -137,7 +138,7 @@ class Rejector(OracleClient):
         """
         wfs = set()
 
-        with open(self.options.fileList, "r") as file:
+        with open(self.options.get("fileList"), "r") as file:
             for item in filter(None, file.read().split("\n")):
                 wfs.update(self.session.query(Workflow).filter(Workflow.name.contains(item)).all())
 
@@ -182,13 +183,15 @@ class Rejector(OracleClient):
         :return: True if the workflow was properly rejected, False o/w
         """
         wfStatusEnforcer = WorkflowStatusEnforcer(wf.name)
-        rejected = wfStatusEnforcer.invalidate(onlyResubmissions=True, invalidateOutputDatasets=not self.options.keep)
+        rejected = wfStatusEnforcer.invalidate(
+            onlyResubmissions=True, invalidateOutputDatasets=not self.options.get("keep")
+        )
 
         wfController.logger.info(self.logMsg["invalidate"])
         self.logger.info(self.logMsg["wf"], wf.name, rejected)
 
         if rejected:
-            wf.status = "trouble" if self.options.setTrouble or self.options.clone else "forget"
+            wf.status = "trouble" if self.options.get("setTrouble") or self.options.get("clone") else "forget"
             self.session.commit()
 
             wfController.logger.info(self.logMsg["reject"])
@@ -201,11 +204,11 @@ class Rejector(OracleClient):
         :param wfSchemaHandler: original workflow schema handler
         """
         clonedWfSchemaHandler = self._buildClonedWorkflowSchema(wfSchemaHandler)
-        if self.options.toStepchain:
+
+        if self.options.get("toStepchain"):
             clonedWfSchemaHandler = clonedWfSchemaHandler.convertToStepChain()
 
         clonedWfSchema = filterWorkflowSchemaParam(clonedWfSchemaHandler.wfSchema)
-
         submitted = self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
         if not submitted:
             raise ValueError(self.logMsg["cloneError"], clonedWfSchema["RequestName"])
@@ -231,48 +234,48 @@ class Rejector(OracleClient):
             if not k.startswith("Team") and not k.startswith("checkbox")
         )
 
-        if self.options.memory:
+        if self.options.get("memory"):
             wfSchemaHandler.setMemory(self.options.memory)
 
-        if self.options.multicore:
+        if self.options.get("multicore"):
             tasks, multicore = (
-                self.options.multicore.split(":")
-                if ":" in self.options.multicore
-                else ("Task1", self.options.multicore)
+                self.options.get("multicore").split(":")
+                if ":" in self.options.get("multicore")
+                else ("Task1", self.options.get("multicore"))
             )
             wfSchemaHandler.setMulticore(int(multicore), tasks.split(","))
 
-        if self.options.shortTask:
+        if self.options.get("shortTask"):
             wfSchemaHandler.shortenTaskName()
 
-        if self.options.eventsPerJob:
+        if self.options.get("eventsPerJob"):
             wfSchemaHandler.setParamValue("EventsPerJob", self.options.eventsPerJob, task="Task1")
 
-        if self.options.eventAwareLumiBased:
+        if self.options.get("eventAwareLumiBased"):
             wfSchemaHandler.setParamValue("SplittingAlgo", "EventAwareLumiBased")
 
-        if self.options.timePerEvent:
+        if self.options.get("timePerEvent"):
             wfSchemaHandler.setParamValue("TimePerEvent", self.options.timePerEvent)
 
-        if self.options.deterministic:
+        if self.options.get("deterministic"):
             wfSchemaHandler.setParamValue("DeterministicPileup", True, task="Task1")
 
-        if self.options.processingString:
+        if self.options.get("processingString"):
             wfSchemaHandler.setParamValue("ProcessingString", self.options.processingString)
 
-        if self.options.acquisitionEra:
+        if self.options.get("acquisitionEra"):
             wfSchemaHandler.setParamValue("AcquisitionEra", self.options.acquisitionEra)
 
-        if self.options.prepId:
+        if self.options.get("prepId"):
             wfSchemaHandler.setParamValue("PrepID", self.options.prepId)
 
-        if self.options.priority:
+        if self.options.get("priority"):
             wfSchemaHandler.setParamValue("RequestPriority", self.options.priority)
 
-        if self.options.runs:
+        if self.options.get("runs"):
             wfSchemaHandler.setParamValue("RunWhitelist", [*map(int, self.options.runs.split(","))])
 
-        if self.options.noOutput:
+        if self.options.get("noOutput"):
             wfSchemaHandler.setNoOutput()
 
         return wfSchemaHandler
@@ -313,12 +316,12 @@ class Rejector(OracleClient):
                 wfController = WorkflowController(wf.name)
                 try:
                     rejected = self._rejectWorkflow(wf, wfController)
-                    if rejected and self.options.clone:
+                    if rejected and self.options.get("clone"):
                         self._cloneWorkflow(wfController.request)
 
                 except Exception as error:
                     wfController.logger.critical(
-                        self.logMsg["failure"], "clone" if self.options.clone else "reject", wf.name
+                        self.logMsg["failure"], "clone" if self.options.get("clone") else "reject", wf.name
                     )
                     self.logger.error(self.logMsg["failure"], "reject", wf.name)
                     self.logger.error(str(error))
