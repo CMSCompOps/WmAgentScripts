@@ -52,6 +52,7 @@ class Rejector(OracleClient):
                 "reject": f"Rejected the workflow by unified operator {self.user}",
                 "return": "Rejector was finished by user",
                 "failure": "Failed to %s workflow %s",
+                "cloneError": "Error in cloning workflow %s",
             }
 
         except Exception as error:
@@ -204,7 +205,11 @@ class Rejector(OracleClient):
             clonedWfSchemaHandler = clonedWfSchemaHandler.convertToStepChain()
 
         clonedWfSchema = filterWorkflowSchemaParam(clonedWfSchemaHandler.wfSchema)
-        self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
+
+        submitted = self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
+        if not submitted:
+            raise ValueError(self.logMsg["cloneError"], clonedWfSchema["RequestName"])
+
         self.reqmgr["writer"].approveWorkflow(clonedWfSchema["RequestName"])
 
     def _buildClonedWorkflowSchema(self, wfSchemaHandler: BaseWfSchemaHandler) -> BaseWfSchemaHandler:
@@ -265,7 +270,7 @@ class Rejector(OracleClient):
             wfSchemaHandler.setParamValue("RequestPriority", self.options.priority)
 
         if self.options.runs:
-            wfSchemaHandler.setParamValue("RunWhitelist", [*map(int, self.options.runs)])
+            wfSchemaHandler.setParamValue("RunWhitelist", [*map(int, self.options.runs.split(","))])
 
         if self.options.noOutput:
             wfSchemaHandler.setNoOutput()
