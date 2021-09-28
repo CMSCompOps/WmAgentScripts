@@ -35,10 +35,10 @@ class Invalidator(OracleClient):
         except Exception as error:
             raise Exception(f"Error initializing Rejector\n{str(error)}")
 
-    def _getInvalids(self) -> Optional[List[dict]]:
+    def _getInvalidations(self) -> Optional[List[dict]]:
         """
         The function to get the workflows and datasets to invalidate
-        :return: invalids
+        :return: invalidations
         """
         return self.mcmClient.search("invalidations", query="status=announced")
 
@@ -104,13 +104,13 @@ class Invalidator(OracleClient):
         The function to run invalidator
         """
         try:
-            invalids = self._getInvalids()
-            if not invalids:
+            invalidations = self._getInvalidations()
+            if not invalidations:
                 return
 
-            self.logger.info("%s objects to be invalidated", len(invalids))
+            self.logger.info("%s objects to be invalidated", len(invalidations))
 
-            for invalid in invalids:
+            for invalid in invalidations:
                 try:
                     if invalid.get("type") == "request":
                         invalidated = self._invalidateWorkflow(invalid.get("object"))
