@@ -2822,7 +2822,7 @@
   },
   "RunIISpring21UL18FSGSDR": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "SiteBlacklist": [
@@ -2915,7 +2915,7 @@
   },
   "RunIISpring21UL17FSGSDR": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "SiteBlacklist": [
@@ -2995,7 +2995,7 @@
   },
   "RunIISpring21UL16FSGSDR": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "SiteBlacklist": [
