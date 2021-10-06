@@ -26,11 +26,22 @@ class Invalidator(OracleClient):
             self.logger = logger or getLogger(self.__class__.__name__)
 
             self.invalidStatus = kwargs.get("invalidStatus") or "INVALID"
-            self.invalidatedBatches = defaultdict(str)
-            self.invalidatedRequests = defaultdict(str)
+            self.invalidatedDatasets = defaultdict(str)
+            self.invalidatedWorkflows = defaultdict(str)
 
             self.mcmClient = McMClient()
             self.dbs = {"writer": DBSWriter(), "reader": DBSReader()}
+
+            self.logMsg = {
+                "wfStatus": "Setting the status of %s to forget",
+                "datasetStatus": "Setting the status of %s to %s",
+                "wfAcknowlegment": "The workflow {} ({}) was rejected due to invalidation in McM",
+                "datasetAcknowledgment": "The dataset {} ({}) was set INVALID due to invalidation in McM",
+                "mcmRequest": "Rejection is performed from McM invalidations request",
+                "failure": "Could not invalidate %s. Please consider contacting data management team for manual intervention.",
+                "nInvalidations": "%s objects to be invalidated",
+                "autoMsg": "\n This is an automated message",
+            }
 
         except Exception as error:
             raise Exception(f"Error initializing Rejector\n{str(error)}")
@@ -50,7 +61,7 @@ class Invalidator(OracleClient):
         """
         workflow = self.session.query(Workflow).filter(Workflow.name == wf).first()
         if workflow:
-            self.logger.info("Setting the status of %s to forget", wf)
+            self.logger.info(self.logMsg["wfStatus"], wf)
             workflow.status = "forget"
             self.session.commit()
 
@@ -58,7 +69,7 @@ class Invalidator(OracleClient):
         invalidated = wfStatusEnforcer.invalidate(onlyResubmissions=True, invalidateOutputDatasets=False)
 
         wfController = WorkflowController(wf)
-        wfController.logger.info("Rejection is performed from McM invalidations request")
+        wfController.logger.info(self.logMsg["mcmRequest"])
 
         return invalidated
 
@@ -71,20 +82,44 @@ class Invalidator(OracleClient):
         if any(word in dataset for word in ["?", "None", "FAKE-"]):
             return False
 
-        self.logger.info("Setting the status of %s to %s", dataset, self.invalidStatus)
+        self.logger.info(self.logMsg["datasetStatus"], dataset, self.invalidStatus)
 
         currentStatus = self.dbs["reader"].getDBSStatus(dataset)
         invalidated = self.dbs["writer"].setDatasetStatus(dataset, currentStatus, self.invalidStatus)
         if not invalidated:
-            self.logger.critical(
-                "Could not invalidate %s. Please consider contacting data management team for manual intervention.",
-                dataset,
-            )
+            self.logger.critical(self.logMsg["failure"], dataset)
 
         return invalidated
 
-    def _writeInvalidationAcknowledgement(self) -> None:
-        pass
+    def _writeInvalidationAcknowledgement(self, prepId: str, keyword: str, msg: str) -> None:
+        """
+        The function to acknowledge invalidation in McM
+        :param prepId: invalid prep id
+        :param keyword: invalidation keyword
+        :param msg: invalidation message
+        """
+        batches = self.mcmClient.search("batches", query=f"contains={keyword}")
+        batches = [*filter(lambda x: x["status"] in ["announced", "done", "reset"]), batches]
+
+        if batches:
+            self.invalidatedDatasets[batches[-1].get("prepid")] += msg + "\n\n"
+        self.invalidatedWorkflows[prepId] += msg + "\n\n"
+
+    def _acknowledgeWorkflowsInvalidation(self) -> None:
+        """
+        The function to acknowledge all workflow invalidations to McM
+        """
+        for prepId, msg in self.invalidatedWorkflows.items():
+            self.mcmClient.set(
+                "/restapi/requests/notify", {"message": msg + self.logMsg["autoMsg"], "prepids": [prepId]}
+            )
+
+    def _acknowledgeDatasetsInvalidation(self) -> None:
+        """
+        The function to acknowledge all dataset invalidations to McM
+        """
+        for batchId, msg in self.invalidatedDatasets.items():
+            self.mcmClient.set("/restapi/batches/notify", {"notes": msg + self.logMsg["autoMsg"], "prepid": batchId})
 
     def go(self) -> bool:
         """
@@ -108,24 +143,35 @@ class Invalidator(OracleClient):
             if not invalidations:
                 return
 
-            self.logger.info("%s objects to be invalidated", len(invalidations))
+            self.logger.info(self.logMsg["nInvalidations"], len(invalidations))
 
             for invalid in invalidations:
+                name, type = invalid.get("object"), invalid.get("type")
+                prepId = invalid.get("prepid")
                 try:
-                    if invalid.get("type") == "request":
-                        invalidated = self._invalidateWorkflow(invalid.get("object"))
-                    elif invalid.get("type") == "dataset":
-                        invalidated = self._invalidateDataset(invalid.get("object"))
+                    if type == "request":
+                        invalidated = self._invalidateWorkflow(name)
+                    elif type == "dataset":
+                        invalidated = self._invalidateDataset(name)
                     else:
-                        self.logger.info("%s type not recognized", invalid.get("type"))
+                        self.logger.info("%s type not recognized", type)
                         continue
 
                     if invalidated:
-                        pass
+                        self._writeInvalidationAcknowledgement(
+                            prepId,
+                            name if type == "request" else prepId,
+                            self.logMsg[f"{'wf' if type == 'request' else 'dataset'}Acknowlegment"].format(
+                                name, prepId
+                            ),
+                        )
 
                 except Exception as error:
-                    self.logger.error("Failed to invalidate %s", invalid.get("object"))
+                    self.logger.error("Failed to invalidate %s", name)
                     self.logger.error(str(error))
+
+                self._acknowledgeWorkflowsInvalidation()
+                self._acknowledgeDatasetsInvalidation()
 
         except Exception as error:
             self.logger.error("Failed to run invalidation")
