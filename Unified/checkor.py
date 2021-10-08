@@ -494,7 +494,7 @@ class CheckBuster(threading.Thread):
         assistance_tags = set()
 
         is_closing = True
-        stop_duplicate_check = False
+        stop_duplicate_check = True
 
         ## get it from somewhere
         bypass_checks = False
