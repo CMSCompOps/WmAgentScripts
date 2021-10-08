@@ -2737,7 +2737,8 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
         lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items() if int(k) in runs])
         files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items() if int(k.split(':')[0]) in runs])
     elif lumilist:
-        runs = map(int(lumilist.keys()))
+        #runs = map(int(lumilist.keys()))
+        runs = [int(r) for r in lumilist.keys()]
         lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items() if int(k) in runs])
         # This file json is only necessary for duplicate check in checkor. It's disabled.
         #files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items() if map(int,k.split(":")) in lumis])
