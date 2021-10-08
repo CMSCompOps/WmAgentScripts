@@ -2668,10 +2668,10 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
     if runs and lumilist:
         print "should not be used that way"
         return {},{}
-    lumis =set()
-    if lumilist:
-        for r in lumilist:
-            lumis.update( [(r,l) for l in lumilist[r]])
+    #lumis =set()
+    #if lumilist:
+    #    for r in lumilist:
+    #        lumis.update( [(r,l) for l in lumilist[r]])
 
     now = time.mktime(time.gmtime())
     dbsapi = DbsApi(url=dbs_url)
@@ -2739,7 +2739,8 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
     elif lumilist:
         runs = map(int(lumilist.keys()))
         lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items() if int(k) in runs])
-        files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items() if map(int,k.split(":")) in lumis])
+        # This file json is only necessary for duplicate check in checkor. It's disabled.
+        #files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items() if map(int,k.split(":")) in lumis])
 
     return lumi_json,files_json
 
