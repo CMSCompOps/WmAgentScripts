@@ -701,7 +701,7 @@
                       ]
           }
     },
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1
   },
