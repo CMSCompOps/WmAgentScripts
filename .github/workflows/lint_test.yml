@@ -1,0 +1,49 @@
+name: syntax check
+
+on:
+  schedule:
+    - cron:  '* 9 * * *'
+
+jobs:
+  python-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 2.7
+    - name: Install Pylint
+      run: |
+        python2 -m pip install pylint
+    - name: Lint with pylint
+      run: |
+        pylint **/*.py
+
+  shell-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Install ShellCheck
+      run: |
+        sudo apt-get install shellcheck
+    - name: Lint with ShellCheck
+      run: |
+        shellcheck --shell=bash -x $(find ./ -iname "*.sh")
+
+  json-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Install node
+      run: |
+        sudo apt install nodejs
+    - name: Install jsonlint
+      run: |
+        sudo npm install -g jsonlint
+    - name: Lint with jsonlint
+      run: |
+        for file in $(find ./ -iname "*.json"); do jsonlint $file; done
