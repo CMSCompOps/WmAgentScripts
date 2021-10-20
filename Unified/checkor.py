@@ -947,6 +947,8 @@ class CheckBuster(threading.Thread):
                 sendLog('checkor','%s is not completed, but has nothing to be recovered, passing along ?'%wfo.name, level='critical')
                 ## do not bypass for now, until Alan understands why we are loosing ACDC docs 
                 bypass_checks = True
+                is_closing = False
+                assistance_tags.add('noRecoveryDoc')
             else:
                 wfi.sendLog('checkor','%s is not completed.\nCurrent stats:\n%s \nRequired stats:\n%s'%( 
                         wfo.name, json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
