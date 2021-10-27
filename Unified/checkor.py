@@ -996,12 +996,6 @@ class CheckBuster(threading.Thread):
                 
             lumi_upper_limit[output] = upper_limit
             if wfi.request['RequestType'] in ['ReDigi','ReReco']: lumi_upper_limit[output] = -1
-        
-        if (not wfi.isRelval()) and (not prim) and any([ (events_per_lumi[out] <= lumi_lower_limit) for out in events_per_lumi if not out.endswith(('DQMIO','ALCARECO'))]):
-            wfi.sendLog('checkor',"%s has very small lumisections\n%s"%( wfo.name, json.dumps(events_per_lumi, indent=2)))
-            assistance_tags.add('smalllumi')
-            is_closing = False
-            stop_duplicate_check = True
 
         if any([ (lumi_upper_limit[out]>0 and events_per_lumi[out] >= lumi_upper_limit[out]) for out in events_per_lumi]):
             wfi.sendLog('checkor',"%s has large lumisections\n%s"%( wfo.name, json.dumps(events_per_lumi, indent=2)))
