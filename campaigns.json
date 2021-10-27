@@ -2748,7 +2748,7 @@
     "custodial": "T1_FR_CCIN2P3_MSS", 
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": 400, 
+    "lumisize": -1, 
     "parameters": {
       "MergedLFNBase": "/store/himc", 
       "SiteBlacklist": [
@@ -2784,7 +2784,7 @@
     "custodial": "T1_FR_CCIN2P3_MSS", 
     "fractionpass": 0.95, 
     "go": true, 
-    "lumisize": 400, 
+    "lumisize": -1, 
     "parameters": {
       "MergedLFNBase": "/store/himc", 
       "SiteBlacklist": [
