@@ -396,11 +396,11 @@
   },
   "relval_routing":{
    "description" : "Set of keywords and special settings for relvals",
-   "value" : { "highPU" : {"parameters" : { "SiteWhitelist" : ["T1_US_FNAL"]}},
-	       "highIO" : {"parameters" : { "SiteWhitelist" : ["T2_US_Nebraska","T2_US_Purdue"]}},
+   "value" : { "highPU" : {"parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}},
+	       "highIO" : {"parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}},
 	       "pLHE" : {"parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}},
 	       "ALCA_" : { "primary_AAA" : true , 
-	       	       	   "parameters" : { "SiteWhitelist" : ["T1_US_FNAL"]}
+	       	       	   "parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}
 			},
 	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50, "LumisPerJob" : 1000 }}
              }
