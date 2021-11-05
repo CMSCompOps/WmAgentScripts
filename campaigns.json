@@ -725,6 +725,18 @@
     "lumisize": -1,
     "maxcopies": 1
   },
+  "Run3Autumn21GS": {
+    "fractionpass": 0.95,   
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "Run3Autumn21wmLHEGS": {
+      "fractionpass": 0.95,
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1
+  },
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -1607,7 +1619,13 @@
     }, 
     "secondary_AAA": true, 
     "tune": true
-  }, 
+  },
+  "RunIISummer20UL16GENSIM": {
+     "fractionpass": 0.95,
+     "go": false,
+     "lumisize": -1,
+     "maxcopies": 1
+  },
   "RunIISummer20UL16GEN": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -1622,7 +1640,13 @@
     }, 
     "resize": "auto", 
     "tune": true
-  }, 
+  },
+  "RunIISummer20UL16GENSIMAPV": {
+     "fractionpass": 0.95,
+     "go": false,
+     "lumisize": -1,
+     "maxcopies": 1
+  },
   "RunIISummer20UL16GENAPV": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -1974,6 +1998,12 @@
     "resize": "auto",
     "tune": true
   },
+  "RunIISummer20UL18GENSIM": {
+      "fractionpass": 0.95,
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1
+  },
   "RunIISummer20UL18wmLHENanoGEN": {
     "fractionpass": 0.95,
     "go": false,
@@ -2035,7 +2065,13 @@
     }, 
     "secondary_AAA": true, 
     "tune": true
-  }, 
+  },
+  "RunIISummer20UL17GENSIM": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1
+  },    
   "RunIISummer20UL17GEN": {
     "fractionpass": 0.95, 
     "go": true, 
