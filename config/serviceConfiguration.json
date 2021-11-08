@@ -11,10 +11,6 @@
         "value": "https://cmsweb.cern.ch/dbs/prod/global/DBSWriter",
         "description": "The base Url for DBS Writer."
     },
-    "dynamo_url": {
-        "value": "dynamo.mit.edu",
-        "description": "The base Url for dynamo."
-    },
     "phedex_url": {
         "value": "cmsweb.cern.ch",
         "description": "The base url for PhEDEx service."
