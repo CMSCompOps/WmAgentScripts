@@ -1,9 +1,0 @@
-export UNIFIED_DBS3_READER=https://cmsweb-testbed.cern.ch/dbs/int/global/DBSReader
-export UNIFIED_DBS3_WRITER=https://cmsweb-testbed.cern.ch/dbs/int/global/DBSWriter
-export UNIFIED_PHEDEX=cmsweb-testbed.cern.ch
-export UNIFIED_REQMGR=cmsweb-testbed.cern.ch
-export UNIFIED_MON=/var/www/html/unified-testbed/
-export UNIFIED_DIR=/data/unified-testbed/
-export UNIFIED_SUBMIT=reqmgr2
-export UNIFIED_MCM=dev
-export UNIFIED_TEAM=testbed-vocms009
