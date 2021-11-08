@@ -727,13 +727,13 @@
   },
   "Run3Autumn21GS": {
     "fractionpass": 0.95,   
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1
   },
   "Run3Autumn21wmLHEGS": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1
   },
@@ -1622,7 +1622,7 @@
   },
   "RunIISummer20UL16GENSIM": {
      "fractionpass": 0.95,
-     "go": false,
+     "go": true,
      "lumisize": -1,
      "maxcopies": 1
   },
@@ -1643,7 +1643,7 @@
   },
   "RunIISummer20UL16GENSIMAPV": {
      "fractionpass": 0.95,
-     "go": false,
+     "go": true,
      "lumisize": -1,
      "maxcopies": 1
   },
@@ -2000,7 +2000,7 @@
   },
   "RunIISummer20UL18GENSIM": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1
   },
@@ -2068,7 +2068,7 @@
   },
   "RunIISummer20UL17GENSIM": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1
   },    
