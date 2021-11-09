@@ -57,6 +57,7 @@ class Injector(OracleClient):
                 "putReplacement": "Putting %s as replacement of %s",
                 "forgetRelval": "As a relval, there is no clean way to handle this. Setting forget",
                 "conversionError": "Error in converting %s",
+                "backfill": "Keeping only backfill workflows (i.e. running in test mode)"
             }
 
         except Exception as error:
@@ -81,9 +82,21 @@ class Injector(OracleClient):
         parser.add_option(
             "-m", "--manual", help="Manual inject, bypassing lock check", action="store_true", default=False
         )
+        parse.add_option("--backfill", help="To run in test mode (only with backfill workflows)", action="store_true", default=False)
 
         options, args = parser.parse_args()
         return vars(options), args[0] if args else None
+
+    def _filterBackfills(self, workflows: List[str]) -> List[str]:
+        """
+        The function to filter only backfill workflows
+        :workflows: workflows names
+        :return: backfill workflows names
+        """
+        if self.options.get("backfill"):
+            self.logger.info(self.logMsg["backfill"])
+            return [wf for wf in workflows if "backfill" in wf.lower()]
+        return workflows
 
     def _getWorkflowsByWMStatus(self) -> List[str]:
         """
@@ -104,7 +117,7 @@ class Injector(OracleClient):
                 )
                 for user in users
             )
-
+        
         self.logger.info(self.logMsg["nWfs"], len(workflows))
         return workflows
 
@@ -313,7 +326,8 @@ class Injector(OracleClient):
         try:
             wfsToConvert = set()
 
-            for wf in self._getWorkflowsByWMStatus():
+            workflows = self._filterBackfills(self._getWorkflowsByWMStatus())
+            for wf in workflows:
                 if self.specificWf and self.specificWf not in wf:
                     continue
 
