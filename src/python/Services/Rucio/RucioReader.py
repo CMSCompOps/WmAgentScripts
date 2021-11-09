@@ -1,9 +1,10 @@
 import json
-import logging
 from logging import Logger
 
 from rucio.client import Client
 from WMCore.Services.CRIC.CRIC import CRIC
+
+from Utilities.Logging import getLogger
 
 from typing import List, Optional
 
@@ -17,15 +18,14 @@ class RucioReader(object):
     def __init__(self, logger: Optional[Logger] = None, **config) -> None:
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             self.scope = "cms"
 
             with open("config/rucioConfiguration.json", "r") as file:
                 defaultConfig = json.loads(file.read())
             config = {**defaultConfig, **config}
             self.rucio = Client(**config)
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing RucioClient\n{str(error)}")

@@ -1,10 +1,10 @@
 from time import struct_time, gmtime, mktime, asctime
 from pymongo.collection import Collection
 
-from typing import Any
-
 from Utilities.IteratorTools import mapKeys, mapValues
 from Databases.Mongo.MongoClient import MongoClient
+
+from typing import Any
 
 
 class ReportController(MongoClient):
@@ -23,7 +23,11 @@ class ReportController(MongoClient):
         :return: converted value
         """
         return (
-            list(value) if isinstance(value, set) else mapValues(self._convertValues, value) if isinstance(value, dict) else value
+            list(value)
+            if isinstance(value, set)
+            else mapValues(self._convertValues, value)
+            if isinstance(value, dict)
+            else value
         )
 
     def _buildMongoDocument(self, data: dict, now: struct_time = gmtime()) -> dict:

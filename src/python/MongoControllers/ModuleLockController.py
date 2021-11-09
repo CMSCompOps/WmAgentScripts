@@ -6,10 +6,10 @@ from bson.objectid import ObjectId
 from pymongo.collection import Collection
 from time import struct_time, gmtime, mktime, asctime, sleep
 
-from typing import Optional, List
-
 from Utilities.Logging import displayTime
 from Databases.Mongo.MongoClient import MongoClient
+
+from typing import Optional, List
 
 
 class ModuleLockController(MongoClient):
@@ -40,13 +40,6 @@ class ModuleLockController(MongoClient):
         except Exception as error:
             raise Exception(f"Error initializing ModuleLockController\n{str(error)}")
 
-    def __call__(self) -> bool:
-        self.logger.info("Module lock for component %s from MongoDB", self.component)
-        go = self.go()
-        if go:
-            self.set()
-        return not go
-
     def __del__(self) -> None:
         self.clean(component=self.component, pid=self.pid, host=self.host)
 
@@ -61,6 +54,17 @@ class ModuleLockController(MongoClient):
             "time": int(mktime(now)),
             "date": asctime(now),
         }
+
+    def isLocked(self) -> bool:
+        """
+        The function to check if the component is locked
+        :return: True if locked, False o/w
+        """
+        self.logger.info("Module lock for component %s from MongoDB", self.component)
+        go = self.go()
+        if go:
+            self.set()
+        return not go
 
     def set(self) -> None:
         """

@@ -4,7 +4,6 @@ Author     : Hasan Ozturk <haozturk AT cern dot com>
 Description: Useful functions while interacting different services
 """
 
-import os
 import json
 import pickle
 
@@ -57,7 +56,6 @@ def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers:
     :param headers: request headers
     :return: request response
     """
-
     if headers is None:
         headers = {"Accept": "application/json", "Content-type": "application/json", "Host": "cmsweb.cern.ch"}
 

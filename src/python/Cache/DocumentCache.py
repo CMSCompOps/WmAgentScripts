@@ -1,12 +1,17 @@
 import os
-import json
 import csv
 import random
-import logging
 from logging import Logger
 from abc import ABC, abstractmethod
 
+from Services.CRIC.CRICReader import CRICReader
+from Services.GWMSMon.GWMSMonReader import GWMSMonReader
+from Services.MONIT.MONITReader import MONITReader
+from Services.WMStats.WMStatsReader import WMStatsReader
+from Utilities.Logging import getLogger
+
 from typing import Optional, Any
+
 
 class BaseDocumentCache(ABC):
 
@@ -18,8 +23,7 @@ class BaseDocumentCache(ABC):
     def __init__(self, defaultValue: Any = {}, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
+            self.logger = logger or getLogger(self.__class__.__name__)
 
             self.defaultValue = defaultValue
             self.lifeTimeMinutes = int(20 + random.random() * 10)
@@ -30,7 +34,8 @@ class BaseDocumentCache(ABC):
     @abstractmethod
     def get(self) -> Any:
         """
-        The function to get the caching data
+        The function to get the cached data
+        :return: cached data
         """
         pass
 
@@ -42,7 +47,8 @@ class SSBProdStatus(BaseDocumentCache):
     """
 
     def get(self) -> dict:
-        return None  # TODO: implement get_dashbssb() or drop this
+        monitReader = MONITReader()
+        return monitReader.getDashbssb("sts15min", "prod_status")
 
 
 class SSBCoreMaxUsed(BaseDocumentCache):
@@ -52,7 +58,8 @@ class SSBCoreMaxUsed(BaseDocumentCache):
     """
 
     def get(self) -> list:
-        return None  # TODO: implement get_dashbssb() or drop this
+        monitReader = MONITReader()
+        return monitReader.getDashbssb("scap15min", "core_max_used")
 
 
 class SSBCoreProduction(BaseDocumentCache):
@@ -62,7 +69,8 @@ class SSBCoreProduction(BaseDocumentCache):
     """
 
     def get(self) -> list:
-        return None  # TODO: implement get_dashbssb() or drop this
+        monitReader = MONITReader()
+        return monitReader.getDashbssb("scap15min", "core_production")
 
 
 class SSBCoreCpuIntensive(BaseDocumentCache):
@@ -72,7 +80,8 @@ class SSBCoreCpuIntensive(BaseDocumentCache):
     """
 
     def get(self) -> list:
-        return None  # TODO: implement get_dashbssb() or drop this
+        monitReader = MONITReader()
+        return monitReader.getDashbssb("scap15min", "core_cpu_intensive")
 
 
 class GWMSMonTotals(BaseDocumentCache):
@@ -82,9 +91,8 @@ class GWMSMonTotals(BaseDocumentCache):
     """
 
     def get(self) -> dict:
-        with os.popen("curl --retry 5 -s https://cms-gwmsmon.cern.ch/poolview/json/totals") as file:
-            data = json.loads(file.read())
-        return data
+        gwmsmonReader = GWMSMonReader()
+        return gwmsmonReader.getViewByKey("pool", "totals") or {}
 
 
 class GWMSMonProdSiteSummary(BaseDocumentCache):
@@ -94,9 +102,8 @@ class GWMSMonProdSiteSummary(BaseDocumentCache):
     """
 
     def get(self) -> dict:
-        with os.popen("curl --retry 5 -s https://cms-gwmsmon.cern.ch/prodview//json/site_summary") as file:
-            data = json.loads(file.read())
-        return data
+        gwmsmonReader = GWMSMonReader()
+        return gwmsmonReader.getViewByKey("prod", "site_summary") or {}
 
 
 class GWMSMonProdMaxUsed(BaseDocumentCache):
@@ -106,9 +113,8 @@ class GWMSMonProdMaxUsed(BaseDocumentCache):
     """
 
     def get(self) -> dict:
-        with os.popen("curl --retry 5 -s https://cms-gwmsmon.cern.ch/prodview//json/maxusedcpus") as file:
-            data = json.loads(file.read())
-        return data
+        gwmsmonReader = GWMSMonReader()
+        return gwmsmonReader.getViewByKey("prod", "maxusedcpus") or {}
 
 
 class MCoreReady(BaseDocumentCache):
@@ -118,11 +124,8 @@ class MCoreReady(BaseDocumentCache):
     """
 
     def get(self) -> dict:
-        with os.popen(
-            "curl --retry 5 -s http://cmsgwms-frontend-global.cern.ch/vofrontend/stage/mcore_siteinfo.json"
-        ) as file:
-            data = json.loads(file.read())
-        return data
+        gwmsmonReader = GWMSMonReader()
+        return gwmsmonReader.getMCoreReady() or {}
 
 
 class DetoxSites(BaseDocumentCache):
@@ -137,16 +140,6 @@ class DetoxSites(BaseDocumentCache):
         return data
 
 
-class SiteQueues(BaseDocumentCache):
-    """
-    __SiteQueues__
-    General API for building the chaching document of key site_queues
-    """
-
-    def get(self) -> dict:
-        return None  # TODO: implement getNodesQueue() or drop this
-
-
 class SiteStorage(BaseDocumentCache):
     """
     __SiteStorage__
@@ -154,7 +147,8 @@ class SiteStorage(BaseDocumentCache):
     """
 
     def get(self) -> dict:
-        return None  # TODO: implement getSiteStorage() or drop this
+        cricReader = CRICReader()
+        return cricReader.getSiteStorage() or []
 
 
 class FileInvalidation(BaseDocumentCache):
@@ -178,4 +172,5 @@ class WMStats(BaseDocumentCache):
     """
 
     def get(self) -> dict:
-        return None  # TODO: implement getWMStats() or drop this
+        wmstatsReader = WMStatsReader()
+        return wmstatsReader.getCachedWMStats() or {}
