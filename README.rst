@@ -31,3 +31,11 @@ To run only one test file::
 To run all of the test files::
 
     > coverage run --source=./src/python/  -m unittest discover ./test/python/ -p "*_t.py"
+    
+    
+Deployment
+~~~~~~~~~~~~~~
+
+*Secrets:*
+
+1. OracleDB secrets are located under `src/python/Utilities/`
