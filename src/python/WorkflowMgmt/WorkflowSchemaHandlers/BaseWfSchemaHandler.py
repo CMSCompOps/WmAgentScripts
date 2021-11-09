@@ -102,6 +102,16 @@ class BaseWfSchemaHandler(object):
         self.logger.info("Convertion is supported only from TaskChain to StepChain")
         return False
 
+    def convertToStepChain(self) -> object:
+        """
+        The function to convert the request to step chain
+        :return: a StepChainWfSchemaHandler if the convertion is possible, itself o/w
+        """
+        self.logger.info(
+            "Only a task chain request can be converted to step chain, will continue w/o changing the request type"
+        )
+        return self
+
     def getAcquisitionEra(self) -> Union[str, dict]:
         """
         The function to get the workflow acquisition era
@@ -278,3 +288,53 @@ class BaseWfSchemaHandler(object):
         except Exception as error:
             self.logger.error("Failed to write dataset pattern name for %s", elements)
             self.logger.error(str(error))
+
+    def setMemory(self, memory: int) -> None:
+        """
+        The function to set a given memory value to the workflow schema
+        :param memory: new memory value
+        """
+        try:
+            self.wfSchema["Memory"] = memory
+
+        except Exception as error:
+            self.logger.error("Failed to set memory to schema")
+            self.logger.error(str(error))
+
+    def setMulticore(self, multicore: int, tasks: Optional[str] = None) -> None:
+        """
+        The function to set a given multicore value to the workflow schema
+        :param multicore: new multicore value
+        """
+        try:
+            self.wfSchema["Multicore"] = multicore
+
+        except Exception as error:
+            self.logger.error("Failed to set multicore to schema")
+            self.logger.error(str(error))
+
+    def setParamValue(self, key: str, value: Any, task: Optional[str] = None) -> None:
+        """
+        The function to set a value for a given param
+        :param key: key name
+        :param value: new value
+        """
+        try:
+            if task is None:
+                self.wfSchema[key] = value
+
+        except Exception as error:
+            self.logger.error("Failed to set value to %s on schema", key)
+            self.logger.error(str(error))
+
+    def setNoOutput(self) -> None:
+        """
+        The function to set not keeping the output in the schema
+        """
+        pass
+
+    def shortenTaskName(self) -> None:
+        """
+        The function to shorten the tasks names
+        """
+        pass

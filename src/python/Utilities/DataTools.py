@@ -1,3 +1,4 @@
+import re
 from collections import defaultdict
 from Utilities.IteratorTools import mapValues, filterKeys
 
@@ -136,6 +137,90 @@ def filterSplittingsParam(splittings: List[dict]) -> List[dict]:
                 splt["splitParams"].pop(param, None)
         cleanSplittings.append(splt)
     return cleanSplittings
+
+
+def filterWorkflowSchemaParam(wfSchema: dict) -> dict:
+    """
+    The function to drop params from a given workflow schema
+    :param wfSchema: workflow schema
+    :return: cleaned workflow schema
+    """
+    try:
+        paramsToDrop = [
+            "BlockCloseMaxEvents",
+            "BlockCloseMaxFiles",
+            "BlockCloseMaxSize",
+            "BlockCloseMaxWaitTime",
+            "CouchWorkloadDBName",
+            "CustodialGroup",
+            "CustodialSubType",
+            "Dashboard",
+            "GracePeriod",
+            "HardTimeout",
+            "InitialPriority",
+            "inputMode",
+            "MaxMergeEvents",
+            "MaxMergeSize",
+            "MaxRSS",
+            "MaxVSize",
+            "MinMergeSize",
+            "NonCustodialGroup",
+            "NonCustodialSubType",
+            "OutputDatasets",
+            "ReqMgr2Only",
+            "RequestDate" "RequestorDN",
+            "RequestName",
+            "RequestStatus",
+            "RequestTransition",
+            "RequestWorkflow",
+            "SiteWhitelist",
+            "SoftTimeout",
+            "SoftwareVersions",
+            "SubscriptionPriority",
+            "Team",
+            "timeStamp",
+            "TrustSitelists",
+            "TrustPUSitelists",
+            "TotalEstimatedJobs",
+            "TotalInputEvents",
+            "TotalInputLumis",
+            "TotalInputFiles",
+            "DN",
+            "AutoApproveSubscriptionSites",
+            "NonCustodialSites",
+            "CustodialSites",
+            "OriginalRequestName",
+            "IgnoredOutputModules",
+            "OutputModulesLFNBases",
+            "SiteBlacklist",
+            "AllowOpportunistic",
+            "_id",
+            "min_merge_size",
+            "events_per_lumi",
+            "max_merge_size",
+            "max_events_per_lumi",
+            "max_merge_events",
+            "max_wait_time",
+            "events_per_job",
+            "SiteBlacklist",
+            "AllowOpportunistic",
+            "Override",
+        ]
+        paramsToKeep = set(wfSchema.keys()) - set(paramsToDrop)
+        wfSchema = filterKeys(paramsToKeep, wfSchema)
+
+        if wfSchema.get("RequestType") == "TaskChain":
+            taskParamsToDrop = ["EventsPerJob"]
+            taskKeys = sorted(filter(re.compile(f"^Task\d+$").search, wfSchema))
+            for key, task in filterKeys(taskKeys, wfSchema).items():
+                taskParamsToKeep = set(task.keys()) - set(taskParamsToDrop)
+                wfSchema[key] = filterKeys(taskParamsToKeep, task)
+
+        return wfSchema
+
+    except Exception as error:
+        print("Failed to clean workflow schema")
+        print(str(error))
 
 
 def sortByWakeUpPriority(agents: dict) -> list:

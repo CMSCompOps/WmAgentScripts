@@ -92,3 +92,33 @@ class ReqMgrWriter(object):
         except Exception as error:
             self.logger.error("Failed to set configuration in reqmgr for agent %s", agent)
             self.logger.error(str(error))
+
+    def submitWorkflow(self, wfSchema: dict) -> bool:
+        """
+        The function to submit a workflow (for cloning or resubmition)
+        :param wfSchema: workflow schema
+        :return: True if succeeded, False o/w
+        """
+        try:
+            result = sendResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"], param=wfSchema)
+            return result["result"][0]["ok"]
+
+        except Exception as error:
+            self.logger.error("Failed to submit workflow in reqmgr")
+            self.logger.error(str(error))
+
+    def approveWorkflow(self, wf: str) -> bool:
+        """
+        The function to approve a workflow
+        :param wf: workflow name
+        :return: True if succeeded, False o/w
+        """
+        try:
+            result = sendResponse(
+                url=self.reqmgrUrl, endpoint=f"{self.reqmgrEndpoint['request']}/{wf}", param={"RequestStatus": "assignment-approved"}
+            )
+            return result["result"][0]["ok"]
+
+        except Exception as error:
+            self.logger.error("Failed to approve workflow in reqmgr")
+            self.logger.error(str(error))
