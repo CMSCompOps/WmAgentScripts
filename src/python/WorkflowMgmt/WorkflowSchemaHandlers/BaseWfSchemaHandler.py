@@ -21,7 +21,7 @@ class BaseWfSchemaHandler(object):
             super().__init__()
             self.logger = logger or getLogger(self.__class__.__name__)
 
-            self.unifiedConfiguration = ConfigurationHandler("unifiedConfiguration.json")
+            self.unifiedConfiguration = ConfigurationHandler("config/unifiedConfiguration.json")
             self.dbsReader = DBSReader()
             self.reqmgrReader = ReqMgrReader()
 

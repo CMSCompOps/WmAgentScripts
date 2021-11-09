@@ -12,7 +12,7 @@ from Services.WMStats.WMStatsReader import WMStatsReader
 class WMStatsReaderTest(unittest.TestCase):
     params = {
         "team": "production",
-        "agentUrl": "vocms0283.cern.ch",
+        "agentUrl": "vocms0243.cern.ch",
         "task": "/kaura_EXPRESS_newco_RelVal_344068_210803_171336_8221/Task1",
     }
 
