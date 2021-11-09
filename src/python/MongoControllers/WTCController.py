@@ -3,10 +3,10 @@ from time import struct_time, gmtime, mktime, asctime
 from pymongo.collection import Collection
 from collections import defaultdict
 
-from typing import Optional
-
 from Databases.Mongo.MongoClient import MongoClient
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
+
+from typing import Optional
 
 
 class WTCController(MongoClient):

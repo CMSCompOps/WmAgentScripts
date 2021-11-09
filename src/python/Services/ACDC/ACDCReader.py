@@ -1,7 +1,7 @@
 import os
-import logging
 from logging import Logger
 
+from Utilities.Logging import getLogger
 from Utilities.WebTools import getResponse
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
@@ -14,14 +14,14 @@ class ACDCReader(object):
     General API for reading data from ACDC server
     """
 
-    def __init__(self, logger: Optional[Logger] = None, **contact):
+    def __init__(self, logger: Optional[Logger] = None):
         try:
+            super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
             self.acdcEndpoint = "/couchdb/acdcserver/_design/ACDC/_view/"
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing ACDCReader\n{str(error)}")

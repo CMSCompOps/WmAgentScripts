@@ -16,7 +16,7 @@ class StepChainWfSchemaHandler(BaseWfSchemaHandler):
 
     def __init__(self, wfSchema: dict, logger: Optional[Logger] = None) -> None:
         try:
-            super().__init__(wfSchema, logger)
+            super().__init__(wfSchema, logger=logger)
             self.includeHEPCloudInSiteWhiteList = True
 
             self.base = self.wfSchema["RequestType"].replace("Chain", "")
@@ -270,7 +270,7 @@ class StepChainWfSchemaHandler(BaseWfSchemaHandler):
             self.logger.error("Failed to get the computing time")
             self.logger.error(str(error))
 
-    def checkSplitting(self, splittings: dict) -> Tuple[bool, list]:
+    def checkSplittings(self, splittings: dict) -> Tuple[bool, list]:
         """
         The function to check the splittings sizes and if any action is required
         :param splittings: splittings schema
@@ -307,21 +307,4 @@ class StepChainWfSchemaHandler(BaseWfSchemaHandler):
 
         except Exception as error:
             self.logger.error("Failed to check splittings")
-            self.logger.error(str(error))
-
-    def writeDatasetPatternName(self, elements: list) -> str:
-        """
-        The function to write the dataset pattern name from given elements
-        :param elements: dataset name elements — name, acquisition era, processing string, version, tier
-        :return: dataset name
-        """
-        try:
-            if (elements[3] == "v*" and all(element == "*" for element in elements[1:3])) or (
-                elements[3] != "v*" and elements[2] == "*"
-            ):
-                return None
-            return f"/{elements[0]}/{'-'.join(elements[1:4])}/{elements[4]}"
-
-        except Exception as error:
-            self.logger.error("Failed to write dataset pattern name for %s", elements)
             self.logger.error(str(error))

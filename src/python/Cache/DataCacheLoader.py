@@ -1,23 +1,22 @@
-import logging
 from logging import Logger
-
-from typing import Optional, Any
 
 from Cache import DocumentCache
 from Cache.CacheManager import CacheManager
+from Utilities.Logging import getLogger
+
+from typing import Optional, Any
 
 
 class DataCacheLoader(object):
     """
     __DataCacheLoader__
-    General API for loading caching data
+    General API for loading cached data
     """
 
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
+            self.logger = logger or getLogger(self.__class__.__name__)
 
             self.cacheManager = CacheManager()
             self.cache = {}
@@ -27,7 +26,7 @@ class DataCacheLoader(object):
 
     def load(self, key: str) -> bool:
         """
-        The function to load the caching data for a given key
+        The function to load the cached data for a given key
         :param key: key name
         :return: True if succeeded, False o/w
         """
@@ -50,8 +49,6 @@ class DataCacheLoader(object):
                 self.cache[key] = DocumentCache.MCoreReady()
             elif key == "detox_sites":
                 self.cache[key] = DocumentCache.DetoxSites([])
-            elif key == "site_queues":
-                self.cache[key] = DocumentCache.SiteQueues()
             elif key == "site_storage":
                 self.cache[key] = DocumentCache.SiteStorage()
             elif key == "file_invalidation":
@@ -93,6 +90,8 @@ class DataCacheLoader(object):
                 if cached:
                     self.logger.info("Returning the last doc in cache")
                     return cached
+                else:
+                    self.logger.info("Returning the default value")
 
             self.cacheManager.set(key, data, lifeTimeMinutes=self.cache[key].lifeTimeMinutes)
             return data

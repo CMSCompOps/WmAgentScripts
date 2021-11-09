@@ -12,7 +12,8 @@ from Services.WMStats.WMStatsReader import WMStatsReader
 class WMStatsReaderTest(unittest.TestCase):
     params = {
         "team": "production",
-        "agent_url": "vocms0283.cern.ch",
+        "agentUrl": "vocms0243.cern.ch",
+        "task": "/kaura_EXPRESS_newco_RelVal_344068_210803_171336_8221/Task1",
     }
 
     wmstatsParams = {
@@ -60,8 +61,17 @@ class WMStatsReaderTest(unittest.TestCase):
         isValueDict = all(isinstance(v, dict) for v in result.values())
         self.assertTrue(isValueDict)
 
-        isFound = self.params.get("agent_url") in result
+        isFound = self.params.get("agentUrl") in result
         self.assertTrue(isFound)
+
+    def testGetFailedJobs(self) -> None:
+        """getFailedJobs gets the number of failed jobs"""
+        result = self.wmstatsReader.getFailedJobs(self.params.get("task"))
+        isInt = isinstance(result, int)
+        self.assertTrue(isInt)
+
+        isZero = result == 0
+        self.assertTrue(isZero)
 
     def testGetWMStats(self) -> None:
         """getWMStats gets the wmstats"""

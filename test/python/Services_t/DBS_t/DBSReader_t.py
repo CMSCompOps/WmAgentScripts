@@ -58,6 +58,16 @@ class DBSReaderTest(unittest.TestCase):
         super(DBSReaderTest, self).tearDown()
         return
 
+    def testCheck(self) -> None:
+        """check checks if dbs is responding"""
+        dbsReader = DBSReader(self.url)
+        response = dbsReader.check()
+        isBool = isinstance(response, bool)
+        self.assertTrue(isBool)
+
+        isTrue = response
+        self.assertTrue(isTrue)
+
     def testGetDBSStatus(self) -> None:
         """getDBSStatus gets DBS Status of a dataset"""
         dbsReader = DBSReader(self.url)

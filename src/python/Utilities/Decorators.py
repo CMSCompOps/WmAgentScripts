@@ -1,4 +1,4 @@
-import time
+from time import sleep
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -25,7 +25,7 @@ def runWithRetries(tries: int = 10, wait: int = 5, default: Optional[Any] = None
                 except Exception as error:
                     print(f"Failed running function {f.__name__} on try #{i+1} of {params['tries']}")
                     print(str(error))
-                    time.sleep(params["wait"])
+                    sleep(params["wait"])
 
             if default is not None:
                 return default
@@ -36,29 +36,32 @@ def runWithRetries(tries: int = 10, wait: int = 5, default: Optional[Any] = None
     return decorator
 
 
-def runWithMultiThreading(mtParam: str, maxThreads: int = 10) -> list:
+def runWithMultiThreading(mtParam: str, maxThreads: int = 10, timeout: Optional[float] = None, wait: int = 0) -> list:
     """
     The function to define a decorator to run a given function with multi threading
     :param mtParam: multi threaded param
     :param maxThreads: max number of threads
+    :param timeout: seconds to stop waiting for result if any, unlimited if None
+    :param wait: seconds to wait between results checks
     :return: a list of function outputs
     """
 
     def decorator(f: Callable) -> list:
         @wraps(f)
         def wrapper(*args, **kwargs) -> list:
-            params = {"mtParam": mtParam, "maxThreads": maxThreads}
+            params = {"mtParam": mtParam, "maxThreads": maxThreads, "timeout": timeout, "wait": wait}
             mtThreaded = kwargs.pop(params["mtParam"], [])
 
             result = []
             with ThreadPoolExecutor(
-                max_workers=min(params["maxThreads"], len(mtThreaded)),
+                max_workers=min(params["maxThreads"], len(mtThreaded)) or 1,
                 thread_name_prefix=f.__name__,
             ) as threadPool:
                 threads = {threadPool.submit(f, *args, **kwargs, **{params["mtParam"]: i}): i for i in mtThreaded}
                 for thread in as_completed(threads):
-                    threadResult = thread.result()
+                    threadResult = thread.result(timeout=params["timeout"])
                     if threadResult is None:
+                        sleep(params["wait"])
                         continue
                     if isinstance(threadResult, list):
                         result.extend(threadResult)

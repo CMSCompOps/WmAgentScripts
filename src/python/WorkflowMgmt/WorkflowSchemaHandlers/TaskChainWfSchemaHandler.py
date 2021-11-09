@@ -345,7 +345,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             self.logger.error("Failed to get blowup factors")
             self.logger.error(str(error))
 
-    def checkSplitting(self, splittings: dict) -> Tuple[bool, list]:
+    def checkSplittings(self, splittings: dict) -> Tuple[bool, list]:
         """
         The function to check the splittings sizes and if any action is required
         :param splittings: splittings schema

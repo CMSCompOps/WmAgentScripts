@@ -5,25 +5,17 @@ Description: Module which takes care of all authentication to different services
 """
 
 import os
-import http.client
-from Utilities.ConfigurationHandler import ConfigurationHandler
-from Utilities.Decorators import runWithRetries
+from http.client import HTTPSConnection
 
-# Get necessary parameters
-configurationHandler = ConfigurationHandler()
-reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
+from Utilities.Decorators import runWithRetries
 
 
 @runWithRetries(tries=5, wait=0, default=False)
-def getX509Conn(url=reqmgrUrl):
+def getX509Conn(url: str) -> HTTPSConnection:
     """
     The function to get the X509 http connection
     :param url: url
-    :return: http connection
+    :return: https connection
     """
-    conn = http.client.HTTPSConnection(
-        url,
-        cert_file=os.getenv("X509_USER_PROXY"),
-        key_file=os.getenv("X509_USER_PROXY"),
-    )
+    conn = HTTPSConnection(url, cert_file=os.getenv("X509_USER_PROXY"), key_file=os.getenv("X509_USER_PROXY"))
     return conn

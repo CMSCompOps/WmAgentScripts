@@ -3,12 +3,12 @@ File       : ReqMgrReader.py
 Author     : Hasan Ozturk <haozturk AT cern dot com>
 Description: General API for reading data from ReqMgr
 """
-
-import logging
 from logging import Logger
 import os
 import copy
+
 from Utilities.WebTools import getResponse
+from Utilities.Logging import getLogger
 from Utilities.IteratorTools import mapKeys, filterKeys
 from Utilities.Decorators import runWithRetries
 from Utilities.ConfigurationHandler import ConfigurationHandler
@@ -22,8 +22,11 @@ class ReqMgrReader(object):
     General API for reading data from ReqMgr
     """
 
-    def __init__(self, logger: Optional[Logger] = None, **contact):
+    def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
+            super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             configurationHandler = ConfigurationHandler()
             self.reqmgrUrl = os.getenv("REQMGR_URL", configurationHandler.get("reqmgr_url"))
             self.reqmgrEndpoint = {
@@ -34,9 +37,6 @@ class ReqMgrReader(object):
                 "cache": "/couchdb/reqmgr_workload_cache/",
                 "summary": "/couchdb/workloadsummary/",
             }
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing ReqMgrReader\n{str(error)}")
@@ -220,9 +220,9 @@ class ReqMgrReader(object):
             print("Failed to get workflow specification")
             print(str(error))
 
-    def getWorkloadSummary(self, wf: str) -> dict:
+    def getWorkflowSummary(self, wf: str) -> dict:
         """
-        The function to get the workload summary for a given workflow
+        The function to get the summary for a given workflow
         :param wf: workflow name
         :return: workload summary
         """

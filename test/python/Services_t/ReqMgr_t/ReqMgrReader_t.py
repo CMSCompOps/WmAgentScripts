@@ -245,9 +245,9 @@ class ReqMgrReaderTest(unittest.TestCase):
         )
         self.assertTrue(isFound)
 
-    def testGetWorkloadSummary(self) -> None:
-        """getWorkloadSummary gets the workload summary for a given workflow"""
-        response = self.reqMgrReader.getWorkloadSummary(self.outputParams.get("workflow"))
+    def testGetWorkflowSummary(self) -> None:
+        """getWorkflowSummary gets the workload summary for a given workflow"""
+        response = self.reqMgrReader.getWorkflowSummary(self.outputParams.get("workflow"))
         isDict = isinstance(response, dict)
         self.assertTrue(isDict)
 
