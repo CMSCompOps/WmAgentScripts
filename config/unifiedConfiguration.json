@@ -505,7 +505,7 @@
     },
     "description": "The error code, threshold and rules to notify the user of an error in production"
   },
-  "user_rereco": {
+  "rereco_users": {
     "description": "The users from which we expect ReReco requests",
     "value": [
       "cerminar",
@@ -523,7 +523,13 @@
       "UL"
     ]
   },
-  "user_relval": {
+  "pnr_users": {
+    "value": [
+      "haozturk"
+    ],
+    "description": "PnR users"
+  },
+  "relval_users": {
     "description": "The users from which we expect relval requests",
     "value": [
       "shundal",
@@ -539,16 +545,6 @@
       "mmeena",
       "pdmvserv",
       "srimanob"
-    ]
-  },
-  "user_storeresults": {
-    "description": "The users from which we expect StoreResults requests",
-    "value": [
-      "cmsunified",
-      "haozturk",
-      "sagarwal",
-      "wangz",
-      "snorberg"
     ]
   },
   "relval_routing": {

@@ -62,20 +62,6 @@ class Transfer(Base):
     workflows_id = Column(PickleType)
 
 
-class TransferImp(Base):
-    """
-    __TransferImp__
-    Oracle TransferImp Table Model
-    """
-
-    __tablename__ = "TRANSFERIMP"
-    id = Column(Integer, Sequence("TRANSFERIMP_ID_SEQ", schema=Base.schema), primary_key=True)
-    phedexid = Column(Integer)
-    workflow_id = Column(Integer, ForeignKey(Base.schema + ".WORKFLOW.id"))
-    workflow = relationship(Workflow)
-    active = Column(Boolean, default=True)
-
-
 class LockOfLock(Base):
     """
     __LockOfLock__
