@@ -54,6 +54,7 @@ class Rejector(OracleClient):
                 "return": "Rejector was finished by user",
                 "failure": "Failed to %s workflow %s",
                 "cloneError": "Error in cloning workflow %s",
+                "backfill": "Keeping only backfill workflows (i.e. running in test mode)"
             }
 
         except Exception as error:
@@ -115,9 +116,21 @@ class Rejector(OracleClient):
             action="store_true",
             default=False,
         )
+        parse.add_option("--backfill", help="To run in test mode (only with backfill workflows)", action="store_true", default=False)
 
         options, args = parser.parse_args()
         return vars(options), args[0] if args else None
+
+    def _filterBackfills(self, workflows: List[str]) -> List[str]:
+        """
+        The function to filter only backfill workflows
+        :workflows: workflows names
+        :return: backfill workflows names
+        """
+        if self.options.get("backfill"):
+            self.logger.info(self.logMsg["backfill"])
+            return [wf for wf in workflows if "backfill" in wf.lower()]
+        return workflows
 
     def _getWorkflowsToReject(self) -> list:
         """
@@ -139,7 +152,7 @@ class Rejector(OracleClient):
         wfs = set()
 
         with open(self.options.get("fileList"), "r") as file:
-            for item in filter(None, file.read().split("\n")):
+            for item in self._filterBackfills(filter(None, file.read().split("\n"))):
                 wfs.update(self.session.query(Workflow).filter(Workflow.name.contains(item)).all())
 
         return list(wfs)
@@ -150,14 +163,15 @@ class Rejector(OracleClient):
         :return: list of workflows names
         """
         wfs = set()
-        wfs.update(self.session.query(Workflow).filter(Workflow.name.contains(self.specific)).all())
+        if not self.options.get("backfill") or "backfill" in self.specific.lower():
+            wfs.update(self.session.query(Workflow).filter(Workflow.name.contains(self.specific)).all())
 
         if not wfs:
             batchController = BatchController()
             batches = batchController.get()
 
             for prepId in batches.get(self.specific, []):
-                batchWfs = self.reqmgr["reader"].getWorkflowsByPrepId(prepId)
+                batchWfs = self._filterBackfills(self.reqmgr["reader"].getWorkflowsByPrepId(prepId))
                 for wf in batchWfs:
                     wfs.add(self.session.query(Workflow).filter(Workflow.name == wf).first())
 
