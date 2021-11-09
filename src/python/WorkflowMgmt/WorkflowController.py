@@ -1,13 +1,13 @@
 import os
 import json
 import math
-import logging
 from logging import Logger
 from collections import defaultdict
 from time import mktime, gmtime
 
 from MongoControllers.CampaignController import CampaignController
 
+from WorkflowMgmt.SiteController import SiteController
 from WorkflowMgmt.WorkflowSchemaHandlers.BaseWfSchemaHandler import BaseWfSchemaHandler
 from WorkflowMgmt.WorkflowSchemaHandlers.StepChainWfSchemaHandler import StepChainWfSchemaHandler
 from WorkflowMgmt.WorkflowSchemaHandlers.TaskChainWfSchemaHandler import TaskChainWfSchemaHandler
@@ -23,6 +23,7 @@ from Services.GWMSMon.GWMSMonReader import GWMSMonReader
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.IteratorTools import mapValues
 from Utilities import DataTools
+from Utilities.Logging import getLogger
 
 
 from typing import Optional, Tuple, List, Union
@@ -37,6 +38,8 @@ class WorkflowController(object):
     def __init__(self, wf: str, logger: Optional[Logger] = None, **kwargs) -> None:
         try:
             super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             self.unifiedConfiguration = ConfigurationHandler("config/unifiedConfiguration.json")
 
             configurationHandler = ConfigurationHandler()
@@ -51,7 +54,7 @@ class WorkflowController(object):
             self.rucioReader = RucioReader(**kwargs.get("rucioConfig"))
 
             self.campaignController = CampaignController()
-            self.siteInfo = None  # TODO: implement siteInfo
+            self.siteController = SiteController()
 
             self.wf = wf
             self.request = self._getWorkloadHandler(kwargs.get("request"))
@@ -62,9 +65,6 @@ class WorkflowController(object):
 
             self.recoveryDocs = []
             self.summary = None
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing WorkflowController\n{str(error)}")
@@ -128,19 +128,19 @@ class WorkflowController(object):
 
         lhe, _, _, secondaries = self.request.getIO()
         if lhe:
-            return set(sorted(self.siteInfo.EOSSites))
+            return set(sorted(self.siteController.EOSSites))
 
         if secondaries and self.isHeavyToRead(secondaries):
             for secondary in secondaries:
                 allowedSites.update(self.rucioReader.getDatasetLocationsByAccount(secondary, "wmcore_transferor"))
             return set(sorted(allowedSites))
 
-        sites = ["T0Sites", "T1Sites", "GoodAAASites" if secondaries else "T2Sites"]
+        sites = ["T0Sites", "T1Sites", "goodAAASites" if secondaries else "T2Sites"]
         for site in sites:
-            allowedSites.update(getattr(self.siteInfo, site))
+            allowedSites.update(getattr(self.siteController, site))
 
         if self.request.includeHEPCloudInSiteWhiteList:
-            allowedSites.update(self.siteInfo.HEPCloudSites)
+            allowedSites.update(self.siteController.hepCloudSites)
             self.logger.info("Including HEPCloud in the site white list of %s", self.wf)
 
         return set(sorted(allowedSites))
@@ -156,7 +156,7 @@ class WorkflowController(object):
 
         if blowUp > maxBlowUp:
             allowedSitesWithNeededCores = set(
-                [site for site in allowedSites if self.siteInfo.cpuPledges[site] > neededCores]
+                [site for site in allowedSites if self.siteController.cpuPledges[site] > neededCores]
             )
 
             if allowedSitesWithNeededCores:
@@ -179,14 +179,12 @@ class WorkflowController(object):
         notAllowedSites = set()
 
         for campaign in self.request.getCampaigns(details=False):
-            campaignParam = self.campaignController.getCampaignParameters(campaign)
-
-            allowedCampaignSites = set(campaignParam.get("SiteWhitelist", []))
+            allowedCampaignSites = set(self.campaignController.getCampaignValue(campaign, "SiteWhitelist", []))
             if allowedCampaignSites:
                 self.logger.info("Restricting site white list by campaign %s", campaign)
                 allowedSites = allowedSites & allowedCampaignSites or allowedCampaignSites
 
-            notAllowedCampaignSites = set(campaignParam.get("SiteBlacklist", []))
+            notAllowedCampaignSites = set(self.campaignController.getCampaignValue(campaign, "SiteBlacklist", []))
             if notAllowedCampaignSites:
                 self.logger.info("Restricting site white list by black list in campaign %s", campaign)
                 notAllowedSites.update(sorted(notAllowedCampaignSites))
@@ -515,7 +513,7 @@ class WorkflowController(object):
         try:
             allowedSites = self._getAllowedSites()
             if pickOne:
-                allowedSites = set(sorted(self.siteInfo.pickCE(allowedSites)))
+                allowedSites = set(sorted(self.siteController.pickCE(allowedSites)))
 
             self.logger.info("Initially allow %s", allowedSites)
 
@@ -780,15 +778,15 @@ class WorkflowController(object):
         :return: summary
         """
         if not self.summary:
-            self.summary = self.reqmgrReader.getWorkloadSummary(self.wf)
+            self.summary = self.reqmgrReader.getWorkflowSummary(self.wf)
         return self.summary
 
-    def checkSplitting(self) -> Tuple[bool, list]:
+    def checkSplittings(self) -> Tuple[bool, list]:
         """
         The function to check the splittings
         :return: if to hold and a list of modified splittings
         """
-        return self.request.checkSplitting(self.getSplittingsSchema(strip=True))
+        return self.request.checkSplittings(self.getSplittingsSchema(strip=True))
 
     def go(self, silent: bool = False) -> bool:
         """

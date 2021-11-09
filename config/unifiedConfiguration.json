@@ -10,6 +10,21 @@
     ],
     "description": "The list of people that get the emails notifications"
   },
+  "email_sender": {
+    "value": {
+      "mcremone": "matteoc@fnal.gov",
+      "qnguyen": "thong.nguyen@cern.ch"
+    },
+    "description": "The dictionary of people to send email notifications"
+  },
+  "locker_users": {
+    "value": [
+      "dmytro",
+      "mcremone",
+      "vlimant"
+    ],
+    "description": "The list of people who can disable/lock a component"
+  },
   "busy_agent_fraction": {
     "value": 0.9,
     "description": "Running/MaxRunning job fraction above which to consider an agent busy. Default 0.9"
@@ -696,15 +711,6 @@
       "T1_US_FNAL"
     ],
     "description": "The sites to assign DQM/DMQIO harvesting workflows"
-  },
-  "HEPCloud_sites": {
-    "value": [
-      "T3_US_NERSC",
-      "T3_US_PSC",
-      "T3_US_SDSC",
-      "T3_US_TACC"
-    ],
-    "description": "HEPCloud sites"
   },
   "acdc_console_url": {
     "value": "https://wfrecovery.cern.ch",

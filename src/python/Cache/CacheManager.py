@@ -5,10 +5,10 @@ from logging import Logger
 from pymongo.errors import WriteError, DocumentTooLarge
 from pymongo.collection import Collection
 
-from typing import Optional
-
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Databases.Mongo.MongoClient import MongoClient
+
+from typing import Optional
 
 
 class CacheManager(MongoClient):

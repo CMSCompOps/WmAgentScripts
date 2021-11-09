@@ -5,13 +5,13 @@ Description: General API for reading data from DBS
 """
 
 import os
-import logging
 from logging import Logger
 from collections import defaultdict
 from dbs.apis.dbsClient import DbsApi
 
 from Utilities.ConfigurationHandler import ConfigurationHandler
 from Utilities.IteratorTools import mapValues, mapKeys, filterKeys
+from Utilities.Logging import getLogger
 from Utilities.Decorators import runWithMultiThreading, runWithRetries
 from Cache.CacheManager import CacheManager
 
@@ -26,6 +26,9 @@ class DBSReader(object):
 
     def __init__(self, url: Optional[str] = None, logger: Optional[Logger] = None, **contact):
         try:
+            super().__init__()
+            self.logger = logger or getLogger(self.__class__.__name__)
+
             if url:
                 self.dbsUrl = url.replace("cmsweb.cern.ch", "cmsweb-prod.cern.ch")
             else:
@@ -33,9 +36,6 @@ class DBSReader(object):
                 self.dbsUrl = os.getenv("DBS_READER_URL", configurationHandler.get("dbs_url"))
             self.dbs = DbsApi(self.dbsUrl, **contact)
             self.cache = CacheManager()
-
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
 
         except Exception as error:
             raise Exception(f"Error initializing DBSReader\n{str(error)}")

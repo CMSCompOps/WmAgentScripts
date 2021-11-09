@@ -1,11 +1,11 @@
-import logging
 from logging import Logger
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from typing import Optional
-
 from Databases.Oracle import OracleDB
+from Utilities.Logging import getLogger
+
+from typing import Optional
 
 
 class OracleClient(object):
@@ -17,8 +17,7 @@ class OracleClient(object):
     def __init__(self, adminMode: bool = False, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
+            self.logger = logger or getLogger(self.__class__.__name__)
 
             self.base = OracleDB.Base
             self.adminMode = adminMode

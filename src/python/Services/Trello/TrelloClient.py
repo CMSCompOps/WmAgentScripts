@@ -1,7 +1,8 @@
 import os
 import json
-import logging
 from logging import Logger
+
+from Utilities.Logging import getLogger
 
 from typing import Optional
 
@@ -15,11 +16,10 @@ class TrelloClient(object):
     def __init__(self, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
+            self.logger = logger or getLogger(self.__class__.__name__)
 
             self.configs = {}
-            with open("src/python/Utilities/secret_trello.txt") as file:
+            with open("config/secret_trello.txt") as file:
                 for line in file:
                     try:
                         k, v = line.replace("\n", "").split(":")

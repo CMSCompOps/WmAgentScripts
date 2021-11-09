@@ -1,4 +1,3 @@
-import logging
 from logging import Logger
 from collections import defaultdict
 
@@ -6,6 +5,7 @@ from Services.DBS.DBSReader import DBSReader
 from Services.ReqMgr.ReqMgrReader import ReqMgrReader
 from Utilities.IteratorTools import mapValues
 from Utilities.ConfigurationHandler import ConfigurationHandler
+from Utilities.Logging import getLogger
 
 from typing import Optional, Any, Union, Tuple, List
 
@@ -19,10 +19,9 @@ class BaseWfSchemaHandler(object):
     def __init__(self, wfSchema: dict, logger: Optional[Logger] = None) -> None:
         try:
             super().__init__()
-            logging.basicConfig(level=logging.INFO)
-            self.logger = logger or logging.getLogger(self.__class__.__name__)
+            self.logger = logger or getLogger(self.__class__.__name__)
 
-            self.unifiedConfiguration = ConfigurationHandler("unifiedConfiguration.json")
+            self.unifiedConfiguration = ConfigurationHandler("config/unifiedConfiguration.json")
             self.dbsReader = DBSReader()
             self.reqmgrReader = ReqMgrReader()
 
@@ -254,7 +253,7 @@ class BaseWfSchemaHandler(object):
         self.logger.info("Blow up factor only exists for TaskChain")
         return 1.0
 
-    def checkSplitting(self, splittings: List[dict]) -> Tuple[bool, list]:
+    def checkSplittings(self, splittings: List[dict]) -> Tuple[bool, list]:
         """
         The function to check the splittings sizes and if any action is required
         :param splittings: splittings schema
