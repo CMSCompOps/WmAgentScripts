@@ -266,7 +266,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             convertedWfSchema["StepChain"] = convertedWfSchema.pop("TaskChain")
 
             for key in self.chainKeys:
-                stepName = f"Step{re.findall(r'\d+', key)[0]}"
+                stepName = "Step{}".format(re.findall(r'\d+', key)[0])
                 convertedWfSchema[stepName] = convertedWfSchema.pop(key)
                 convertedWfSchema[stepName]["StepName"] = convertedWfSchema[stepName].pop("TaskName")
                 stepNames[convertedWfSchema[stepName]["StepName"]] = stepName
@@ -495,7 +495,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             newShortNames = {}
             for key, task in filterKeys(self.chainKeys, self.wfSchema).items():
                 taskName = task.get("TaskName")
-                shortName = f"T{re.findall(r'\d+', taskName)[0]}"
+                shortName = T.format(re.findall(r'\d+', taskName)[0])
 
                 newShortNames[taskName] = shortName
                 self.wfSchema[key]["TaskName"] = shortName
