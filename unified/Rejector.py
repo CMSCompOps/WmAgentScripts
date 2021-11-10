@@ -116,7 +116,7 @@ class Rejector(OracleClient):
             action="store_true",
             default=False,
         )
-        parse.add_option("--backfill", help="To run in test mode (only with backfill workflows)", action="store_true", default=False)
+        parser.add_option("--backfill", help="To run in test mode (only with backfill workflows)", action="store_true", default=False)
 
         options, args = parser.parse_args()
         return vars(options), args[0] if args else None

@@ -12,7 +12,7 @@ from Databases.Oracle.OracleClient import OracleClient
 from Databases.Oracle.OracleDB import Workflow
 from WorkflowMgmt.WorkflowController import WorkflowController
 
-from unified.Rejector import Rejector
+from Unified.Rejector import Rejector
 
 from typing import Optional, List, Tuple
 
@@ -82,7 +82,7 @@ class Injector(OracleClient):
         parser.add_option(
             "-m", "--manual", help="Manual inject, bypassing lock check", action="store_true", default=False
         )
-        parse.add_option("--backfill", help="To run in test mode (only with backfill workflows)", action="store_true", default=False)
+        parser.add_option("--backfill", help="To run in test mode (only with backfill workflows)", action="store_true", default=False)
 
         options, args = parser.parse_args()
         return vars(options), args[0] if args else None
