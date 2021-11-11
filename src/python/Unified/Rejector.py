@@ -17,7 +17,7 @@ from WorkflowMgmt.WorkflowController import WorkflowController
 from WorkflowMgmt.WorkflowStatusEnforcer import WorkflowStatusEnforcer
 from WorkflowMgmt.WorkflowSchemaHandlers.BaseWfSchemaHandler import BaseWfSchemaHandler
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 
 class Rejector(OracleClient):
