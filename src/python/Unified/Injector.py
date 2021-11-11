@@ -36,7 +36,7 @@ class Injector(OracleClient):
             self.users = {
                 "pnr": unifiedConfiguration.get("pnr_users"),
                 "rereco": unifiedConfiguration.get("rereco_users"),
-                "relval": self.options.get("relvalUsers").split(",") or unifiedConfiguration.get("relval_users"),
+                "relval": unifiedConfiguration.get("relval_users"),
             }
 
             self.reqmgrReader = ReqMgrReader()
@@ -74,7 +74,6 @@ class Injector(OracleClient):
         parser.add_option("-w", "--wmStatus", help="From which status in req-mgr", default="assignment-approved")
         parser.add_option("-s", "--setStatus", help="What status to set locally", default="staged")
         parser.add_option("-u", "--user", help="What user to fetch workflow from", default="pdmvserv")
-        parser.add_option("--relvalUsers", help="The user that can inject workflows for relvals", default=None)
         parser.add_option("--noConvert", help="Prevent the conversion to stepchain", default=False)
         parser.add_option(
             "-r", "--replace", help="The workflow name that should be used for replacement", default=None
