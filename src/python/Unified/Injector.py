@@ -104,7 +104,7 @@ class Injector(OracleClient):
         """
         workflows = self.reqmgrReader.getWorkflowsByStatus(self.options.get("wmStatus"), user=self.options.get("user"))
 
-        userRequestTypePairs: [
+        userRequestTypePairs = [
             (self.users["rereco"], "ReReco"),
             (self.users["relval"], "TaskChain"),
             (self.users["pnr"], "TaskChain"),
