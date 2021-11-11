@@ -15,7 +15,7 @@ from WorkflowMgmt.WorkflowController import WorkflowController
 from Unified.Rejector import Rejector
 
 from typing import Optional, List, Tuple
-
+from pprint import pformat
 
 class Injector(OracleClient):
     """
@@ -104,18 +104,20 @@ class Injector(OracleClient):
         """
         workflows = self.reqmgrReader.getWorkflowsByStatus(self.options.get("wmStatus"), user=self.options.get("user"))
 
-        for users, requestType in [
+        userRequestTypePairs: [
             (self.users["rereco"], "ReReco"),
             (self.users["relval"], "TaskChain"),
             (self.users["pnr"], "TaskChain"),
             (self.users["pnr"], "StepChain"),
-        ]:
-            workflows.extend(
-                self.reqmgrReader.getWorkflowsByStatus(
-                    self.options.get("wmStatus"), user=user, requestType=requestType
+        ]
+
+        for users, requestType in userRequestTypePairs:
+            for user in users:
+                workflows.extend(
+                    self.reqmgrReader.getWorkflowsByStatus(
+                        self.options.get("wmStatus"), user=user, requestType=requestType
+                    )
                 )
-                for user in users
-            )
         
         self.logger.info(self.logMsg["nWfs"], len(workflows))
         return workflows
@@ -326,6 +328,7 @@ class Injector(OracleClient):
             wfsToConvert = set()
 
             workflows = self._filterBackfills(self._getWorkflowsByWMStatus())
+            self.logger.info(f"Workflows to process: \n {pformat(workflows)}")
             for wf in workflows:
                 if self.specificWf and self.specificWf not in wf:
                     continue
