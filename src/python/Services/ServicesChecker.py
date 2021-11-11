@@ -192,6 +192,7 @@ class ServicesChecker(object):
             isOk = getattr(self, f"check{services}")()
             if isOk:
                 self.status[services] = True
+                self.logger.info("%s is reachable", services)
                 return True
 
             self.logger.critical("The service %s is unreachable from %s", services, self.host)

@@ -359,3 +359,6 @@ if __name__ == "__main__":
     injector = Injector(options=options, specificWf=specificWf)
     if injector.go():
         injector.run()
+    else:
+        logger = getLogger("Injector")
+        logger.critical("Injector isn't allowed run") # Improve logging: explain why
