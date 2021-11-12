@@ -201,7 +201,7 @@ class Injector(OracleClient):
         :param wfController: workflow controller
         :return: True if any bad family status, False o/w
         """
-        family = self._getWorkflowFamily(self, wfController)
+        family = self._getWorkflowFamily(wfController)
         for member in family:
             if member and member.status not in ["forget", "trouble", "forget-unlock", "forget-out-unlock"]:
                 self.logger.critical(
