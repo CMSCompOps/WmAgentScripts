@@ -136,7 +136,7 @@ class Injector(OracleClient):
 
             possibleFamily = []
             for prepId in prepIds:
-                possibleFamily.extend(self.reqmgrReader.getWorkflowsByPrepId(prepId, deatils=True))
+                possibleFamily.extend(self.reqmgrReader.getWorkflowsByPrepId(prepId, details=True))
 
             for member in possibleFamily:
                 memberWfController = WorkflowController(member.get("RequestName"), request=member)
