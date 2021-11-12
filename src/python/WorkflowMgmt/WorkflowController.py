@@ -41,8 +41,9 @@ class WorkflowController(object):
             self.logger = logger or getLogger(self.__class__.__name__)
 
             self.unifiedConfiguration = ConfigurationHandler("config/unifiedConfiguration.json")
-
             configurationHandler = ConfigurationHandler()
+            rucioConfig = {"account": os.getenv("RUCIO_ACCOUNT")}
+
             self.cacheDirectory = configurationHandler.get("cache_dir")
 
             self.acdcReader = ACDCReader()
@@ -51,7 +52,7 @@ class WorkflowController(object):
             self.reqmgrReader = ReqMgrReader()
             self.wmstatsReader = WMStatsReader()
             self.wqReader = WorkQueueReader()
-            self.rucioReader = RucioReader(**kwargs.get("rucioConfig"))
+            self.rucioReader = RucioReader(rucioConfig)
 
             self.campaignController = CampaignController()
             self.siteController = SiteController()
