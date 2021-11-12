@@ -16,6 +16,7 @@ from Unified.Rejector import Rejector
 
 from typing import Optional, List, Tuple
 from pprint import pformat
+import traceback
 
 class Injector(OracleClient):
     """
@@ -355,6 +356,7 @@ class Injector(OracleClient):
         except Exception as error:
             self.logger.error("Failed to run injection")
             self.logger.error(str(error))
+            self.logger.error(traceback.format_exc())
 
 
 if __name__ == "__main__":
