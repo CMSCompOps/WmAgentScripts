@@ -251,11 +251,11 @@ class Injector(OracleClient):
 
         for wfController in wfControllers:
             try:
-                Rejector(options=options, specific=wfController["RequestName"])
+                Rejector(options=options, specific=wfController.request.get("RequestName"))
 
             except Exception as error:
-                wfController.logger.critical(self.logMsg["conversionError"], wfController["RequestName"])
-                self.logger.error(self.logMsg["conversionError"], wfController["RequestName"])
+                wfController.logger.critical(self.logMsg["conversionError"], wfController.request.get("RequestName"))
+                self.logger.error(self.logMsg["conversionError"], wfController.request.get("RequestName"))
                 self.logger.error(str(error))
 
     def _canReplaceWorkflow(self, candidate: str, wf: str) -> bool:
