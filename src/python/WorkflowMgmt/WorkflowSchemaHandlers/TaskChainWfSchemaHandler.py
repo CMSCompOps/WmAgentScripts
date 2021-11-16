@@ -250,7 +250,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             archCheck = len(set(map(lambda x: x[:4], self.getParamList("ScramArch")))) == 1 # All steps should have the same architecture
             keywordCheck = any(keyword in processingString + self.wf for keyword in keywords) if keywords else True
             nTaskCheck = self.get("TaskChain", 0) > 1
-            eventStreamCheck = self._hasNonZeroEventStreams()
+            eventStreamCheck = not self._hasNonZeroEventStreams()
 
             self.logger.info(f"Stepchain criteria: RelVal check: {relValCheck}")
             self.logger.info(f"Stepchain criteria: Efficiency check: {efficiencyCheck}")
