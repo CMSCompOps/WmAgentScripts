@@ -61,14 +61,29 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             totalTimePerEvent += info["timePerEvent"]
             efficiency += info["timePerEvent"] * min(info["cores"], maxCores)
 
-        self.logger.debug("Total time per event for TaskChain: %0.1f", totalTimePerEvent)
+        self.logger.info("Total time per event for TaskChain: %0.1f", totalTimePerEvent)
 
         if totalTimePerEvent:
             efficiency /= totalTimePerEvent * maxCores
-            self.logger.debug("CPU efficiency of StepChain with %u cores: %0.1f%%", maxCores, efficiency * 100)
-            return efficiency > self.unifiedConfiguration.get("efficiency_threshold_for_stepchain")
+            self.logger.info("CPU efficiency of StepChain with %u cores: %0.1f%%", maxCores, efficiency * 100)
+            return efficiency > self._getStepchainConversionThreshold()
 
         return False
+
+    def _getStepchainConversionThreshold(self) -> float:
+
+        try:
+
+            priority = self.get("RequestPriority")
+            if priority >= self.unifiedConfiguration.get("block1_priority"):
+                return self.unifiedConfiguration.get("efficiency_threshold_for_stepchain_high_priority")
+            else:
+                return self.unifiedConfiguration.get("efficiency_threshold_for_stepchain_low_priority")
+
+        except Exception as error:
+            self.logger.error("Failed to get the stepchain conversion threshold")
+            self.logger.error(str(error))
+
 
     def _hasNonZeroEventStreams(self) -> bool:
         """
@@ -224,28 +239,35 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         :return: True if good, False o/w
         """
         try:
-            if self._hasNonZeroEventStreams():
-                self.logger.info("Convertion is supported only when EventStreams are zero")
-                return False
-
-            moreThanOneTask = self.get("TaskChain", 0) > 1
 
             tiers = [*map(lambda x: x.split("/")[-1], self.get("OutputDatasets", []))]
-            allUniqueTiers = len(tiers) == len(set(tiers))
-
-            allSameArches = len(set(map(lambda x: x[:4], self.getParamList("ScramArch")))) == 1
-
-            allSameCores = len(set(self.getMulticore(maxOnly=False))) == 1
-
             processingString = "".join(f"{k}{v}" for k, v in self.getProcessingString().items())
             foundKeywords = any(keyword in processingString + self.wf for keyword in keywords) if keywords else True
 
+            relValCheck = not self.isRelVal()
+            efficiencyCheck = self._hasAcceptableEfficiency()
+            dataTierCheck = len(tiers) == len(set(tiers))
+            archCheck = len(set(map(lambda x: x[:4], self.getParamList("ScramArch")))) == 1 # All steps should have the same architecture
+            keywordCheck = any(keyword in processingString + self.wf for keyword in keywords) if keywords else True
+            nTaskCheck = self.get("TaskChain", 0) > 1
+            eventStreamCheck = self._hasNonZeroEventStreams()
+
+            self.logger.info(f"Stepchain criteria: RelVal check: {relValCheck}")
+            self.logger.info(f"Stepchain criteria: Efficiency check: {efficiencyCheck}")
+            self.logger.info(f"Stepchain criteria: Data tier check: {dataTierCheck}")
+            self.logger.info(f"Stepchain criteria: Architecture check: {archCheck}")
+            self.logger.info(f"Stepchain criteria: Keyword check: {keywordCheck}")
+            self.logger.info(f"Stepchain criteria: # of tasks check: {nTaskCheck}")
+            self.logger.info(f"Stepchain criteria: Event Stream check: {eventStreamCheck}")
+
             return (
-                moreThanOneTask
-                and allUniqueTiers
-                and allSameArches
-                and (allSameCores or self._hasAcceptableEfficiency())
-                and foundKeywords
+                relValCheck
+                and efficiencyCheck
+                and dataTierCheck
+                and archCheck
+                and keywordCheck
+                and nTaskCheck
+                and eventStreamCheck
             )
 
         except Exception as error:

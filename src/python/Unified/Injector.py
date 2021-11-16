@@ -240,7 +240,8 @@ class Injector(OracleClient):
         :return: True if workflow can be converted, False o/w
         """
         goodForStepChain = wfController.request.isGoodToConvertToStepChain()
-        return not self.options.get("noConvert") and not wfController.request.isRelVal() and goodForStepChain
+        self.logger.info(f"Stepchain criteria: General conversion flag: { not self.options.get('noConvert')}")
+        return not self.options.get("noConvert") and goodForStepChain
 
     def _convertWorkflowsToStepChain(self, wfControllers: set) -> None:
         """
@@ -350,6 +351,7 @@ class Injector(OracleClient):
                     )
                     self.session.commit()
 
+            self.logger.info(f"Workflows to convert into Stepchain: \n {pformat(wfsToConvert)}")
             self._convertWorkflowsToStepChain(wfsToConvert)
             self._replaceTroubleWorkflows()
 
