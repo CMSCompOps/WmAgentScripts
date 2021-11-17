@@ -299,7 +299,9 @@ class Rejector(OracleClient):
         try:
 
             wfsToReject = self._getWorkflowsToReject()
-            self.logger.info(self.logMsg["nWfs"], len(wfsToReject), ", ".join(wfsToReject))
+            self.logger.info(self.logMsg["nWfs"], len(wfsToReject))
+            for wf in wfsToReject:
+                self.logger.info(wf.name)
 
             if len(wfsToReject) > 1 and not self._proceedWithRejector():
                 self.logger.info(self.logMsg["return"])
