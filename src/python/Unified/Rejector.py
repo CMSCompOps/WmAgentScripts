@@ -204,6 +204,8 @@ class Rejector(OracleClient):
             clonedWfSchemaHandler = clonedWfSchemaHandler.convertToStepChain()
 
         clonedWfSchema = filterWorkflowSchemaParam(clonedWfSchemaHandler.wfSchema)
+        self.logger.info("clonedWfSchema")
+        self.logger.info(clonedWfSchema)
         submitted = self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
         if not submitted:
             raise ValueError(self.logMsg["cloneError"], clonedWfSchema["RequestName"])

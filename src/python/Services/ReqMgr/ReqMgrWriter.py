@@ -6,6 +6,7 @@ from Utilities.Logging import getLogger
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
 from typing import Optional
+import traceback
 
 
 class ReqMgrWriter(object):
@@ -101,11 +102,13 @@ class ReqMgrWriter(object):
         """
         try:
             result = sendResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"], param=wfSchema)
+            self.logger.info(f"result: {result}")
             return result["result"][0]["ok"]
 
         except Exception as error:
             self.logger.error("Failed to submit workflow in reqmgr")
             self.logger.error(str(error))
+            self.logger.error(traceback.format_exc())
 
     def approveWorkflow(self, wf: str) -> bool:
         """
