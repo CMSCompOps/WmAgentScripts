@@ -8,6 +8,7 @@ import json
 import pickle
 from typing import Optional, Union, Any
 from logging import Logger
+from Utilities.Logging import getLogger
 import traceback
 
 from Utilities.Authenticate import getX509Conn
