@@ -252,7 +252,8 @@ class Injector(OracleClient):
 
         for wfController in wfControllers:
             try:
-                Rejector(options=options, specific=wfController.request.get("RequestName"))
+                rejector = Rejector(options=options, specific=wfController.request.get("RequestName"))
+                rejector.run()
 
             except Exception as error:
                 wfController.logger.critical(self.logMsg["conversionError"], wfController.request.get("RequestName"))
@@ -353,7 +354,7 @@ class Injector(OracleClient):
 
             self.logger.info(f"Workflows to convert into Stepchain: \n {pformat(wfsToConvert)}")
             self._convertWorkflowsToStepChain(wfsToConvert)
-            self._replaceTroubleWorkflows()
+            #self._replaceTroubleWorkflows()
 
         except Exception as error:
             self.logger.error("Failed to run injection")
