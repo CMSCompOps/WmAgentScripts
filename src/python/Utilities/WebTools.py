@@ -6,8 +6,9 @@ Description: Useful functions while interacting different services
 
 import json
 import pickle
-
 from typing import Optional, Union, Any
+from logging import Logger
+import traceback
 
 from Utilities.Authenticate import getX509Conn
 
@@ -56,6 +57,7 @@ def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers:
     :param headers: request headers
     :return: request response
     """
+    logger = getLogger("WebTools")
     if headers is None:
         headers = {"Accept": "application/json", "Content-type": "application/json", "Host": "cmsweb.cern.ch"}
 
@@ -71,4 +73,5 @@ def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers:
         return json.loads(data)
 
     except Exception as error:
-        print(f"Failed to send response to {url + endpoint + param}\n{str(error)}")
+        logger.error(f"Failed to send response to {url + endpoint + param}\n{str(error)}")
+        self.logger.error(traceback.format_exc())
