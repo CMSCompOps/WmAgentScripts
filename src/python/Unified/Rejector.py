@@ -34,7 +34,7 @@ class Rejector(OracleClient):
             self.options = kwargs.get("options")
             self.logger.info(f"Options: {self.options}") #  remove this line later
             if self.options is None:
-                self.options, self.specific = self.parseOptions()
+                self.options = self.parseOptions()
                 self.logger.info(f"Options: {self.options}") # remove this line later
 
             self.dbs = {"writer": DBSWriter(), "reader": DBSReader()}
@@ -164,7 +164,7 @@ class Rejector(OracleClient):
         :return: list of workflows names
         """
         wfs = set()
-        wfs.update(self.session.query(Workflow).filter(Workflow.name.contains(self.specific)).all())
+        wfs.update(self.session.query(Workflow).filter(Workflow.name.contains(self.options.get("specific"))).all())
 
         return list(wfs)
 
@@ -325,6 +325,6 @@ class Rejector(OracleClient):
 
 if __name__ == "__main__":
     options, specific = Rejector.parseOptions()
-    rejector = Rejector(options=options, specific=specific)
+    rejector = Rejector(options=options)
     if rejector.go():
         rejector.run()
