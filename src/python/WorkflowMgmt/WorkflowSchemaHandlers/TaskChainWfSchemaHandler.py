@@ -291,7 +291,6 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                 stepName = "Step{}".format(re.findall(r'\d+', key)[0])
                 self.logger.info(f"stepName: {stepName}")
                 self.logger.info(f"key: {key}")
-                self.logger.info(f"convertedWfSchema[stepName]: {convertedWfSchema[stepName]}")
                 convertedWfSchema[stepName] = convertedWfSchema.pop(key)
                 self.logger.info(f"convertedWfSchema[stepName]: {convertedWfSchema[stepName]}")
                 convertedWfSchema[stepName]["StepName"] = convertedWfSchema[stepName].pop("TaskName")
@@ -321,6 +320,8 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             
             convertedWfSchema["Multicore"] = multicore
             convertedWfSchema["Memory"] = memory
+
+            self.logger.info("Updated Schema", json.dumps(convertedWfSchema, indent=2))
 
             return StepChainWfSchemaHandler(convertedWfSchema)
 

@@ -273,8 +273,6 @@ class Rejector(OracleClient):
         if self.options.get("noOutput"):
             wfSchemaHandler.setNoOutput()
 
-        self.logger.info("Updated Schema", json.dumps(wfSchemaHandler.wfSchema, indent=2))
-
         return wfSchemaHandler
 
     def _proceedWithRejector(self) -> bool:
