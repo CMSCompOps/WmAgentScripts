@@ -2,8 +2,8 @@ import re
 import copy
 from logging import Logger
 from collections import defaultdict
-
 from typing import Optional, Tuple, List, Any
+import traceback
 
 from Utilities.IteratorTools import filterKeys
 from WorkflowMgmt.WorkflowSchemaHandlers.StepChainWfSchemaHandler import StepChainWfSchemaHandler
@@ -289,7 +289,11 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
 
             for key in self.chainKeys:
                 stepName = "Step{}".format(re.findall(r'\d+', key)[0])
+                self.logger.info(f"stepName: {stepName}")
+                self.logger.info(f"key: {key}")
+                self.logger.info(f"convertedWfSchema[stepName]: {convertedWfSchema[stepName]}")
                 convertedWfSchema[stepName] = convertedWfSchema.pop(key)
+                self.logger.info(f"convertedWfSchema[stepName]: {convertedWfSchema[stepName]}")
                 convertedWfSchema[stepName]["StepName"] = convertedWfSchema[stepName].pop("TaskName")
                 stepNames[convertedWfSchema[stepName]["StepName"]] = stepName
 
@@ -323,6 +327,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         except Exception as error:
             self.logger.error("Failed to convert workflow to step chain")
             self.logger.error(str(error))
+            self.logger.error(traceback.format_exc())
 
     def getRequestNumEvents(self) -> int:
         """

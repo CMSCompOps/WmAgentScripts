@@ -273,6 +273,8 @@ class Rejector(OracleClient):
         if self.options.get("noOutput"):
             wfSchemaHandler.setNoOutput()
 
+        self.logger.info("Updated Schema", json.dumps(wfSchemaHandler.wfSchema, indent=2))
+
         return wfSchemaHandler
 
     def _proceedWithRejector(self) -> bool:
@@ -299,7 +301,7 @@ class Rejector(OracleClient):
         try:
 
             wfsToReject = self._getWorkflowsToReject()
-            self.logger.info(self.logMsg["nWfs"], len(wfsToReject))
+            self.logger.info(f"Workflows to reject {len(wfsToReject)}")
             for wf in wfsToReject:
                 self.logger.info(wf.name)
 
