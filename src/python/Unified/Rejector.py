@@ -18,6 +18,7 @@ from WorkflowMgmt.WorkflowStatusEnforcer import WorkflowStatusEnforcer
 from WorkflowMgmt.WorkflowSchemaHandlers.BaseWfSchemaHandler import BaseWfSchemaHandler
 
 from typing import Optional, Tuple, List
+import traceback
 
 
 class Rejector(OracleClient):
@@ -321,6 +322,7 @@ class Rejector(OracleClient):
         except Exception as error:
             self.logger.error("Failed to run rejection")
             self.logger.error(str(error))
+            self.logger.error(traceback.format_exc())
 
 
 if __name__ == "__main__":
