@@ -31,9 +31,11 @@ class Rejector(OracleClient):
             super().__init__(self)
             self.logger = logger or getLogger(self.__class__.__name__)
 
-            self.options, self.specific = kwargs.get("options"), kwargs.get("specific")
+            self.options = kwargs.get("options")
+            self.logger.info(f"Options: {self.options}") #  remove this line later
             if self.options is None:
                 self.options, self.specific = self.parseOptions()
+                self.logger.info(f"Options: {self.options}") # remove this line later
 
             self.dbs = {"writer": DBSWriter(), "reader": DBSReader()}
             self.reqmgr = {"writer": ReqMgrWriter(), "reader": ReqMgrReader()}

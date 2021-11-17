@@ -17,6 +17,7 @@ from Unified.Rejector import Rejector
 from typing import Optional, List, Tuple
 from pprint import pformat
 import traceback
+import os
 
 class Injector(OracleClient):
     """
@@ -252,7 +253,8 @@ class Injector(OracleClient):
 
         for wfController in wfControllers:
             try:
-                rejector = Rejector(options=options, specific=wfController.request.get("RequestName"))
+                options["specific"] = wfController.request.get("RequestName")
+                rejector = Rejector(options=options)
                 rejector.run()
 
             except Exception as error:
