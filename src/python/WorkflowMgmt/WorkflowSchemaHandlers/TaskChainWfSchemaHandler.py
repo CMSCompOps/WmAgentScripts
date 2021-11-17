@@ -104,9 +104,9 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         :return: efficiency factor
         """
         if "InputTask" in schema:
-            dataset = self._getTaskSchema(schema["InputTask"])
-            efficiencyFactor *= dataset.get("FilterEfficiency", 1.0)
-            return self._getTaskEfficiencyFactor(dataset, efficiencyFactor)
+            inputTaskSchema = self._getTaskSchema(schema["InputTask"])
+            efficiencyFactor *= inputTaskSchema.get("FilterEfficiency", 1.0)
+            return self._getTaskEfficiencyFactor(inputTaskSchema, efficiencyFactor)
 
         return efficiencyFactor
 
@@ -117,6 +117,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         :return: task schema
         """
         for _, schema in filterKeys(self.chainKeys, self.wfSchema).items():
+            self.logger.info("Inner Schema", json.dumps(schema, indent=2))
             if schema[f"{self.base}Name"] == task:
                 return copy.deepcopy(schema)
         return {}
