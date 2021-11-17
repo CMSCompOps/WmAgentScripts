@@ -119,7 +119,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         """
         for _, schema in filterKeys(self.chainKeys, self.wfSchema).items():
             self.logger.info("Inner Schema", json.dumps(schema, indent=2))
-            if schema[f"{self.base}Name"] == task:
+            if schema[f"StepName"] == task:
                 return copy.deepcopy(schema)
         return {}
 
