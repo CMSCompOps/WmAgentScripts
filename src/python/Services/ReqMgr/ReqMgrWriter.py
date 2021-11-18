@@ -75,6 +75,7 @@ class ReqMgrWriter(object):
         except Exception as error:
             self.logger.error("Failed to set %s for %s", param, wf)
             self.logger.error(str(error))
+            self.logger.error(traceback.format_exc())
             return False
 
     def setAgentConfig(self, agent: str, config: dict) -> bool:

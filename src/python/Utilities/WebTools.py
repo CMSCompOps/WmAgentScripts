@@ -69,6 +69,11 @@ def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers:
         response = conn.getresponse()
         data = response.read()
         conn.close()
+        print ("WebTools: data")
+        print (response)
+        print ("===")
+        print (data)
+
         return json.loads(data)
 
     except Exception as error:
