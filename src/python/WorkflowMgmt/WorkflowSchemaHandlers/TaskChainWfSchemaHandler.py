@@ -308,7 +308,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                 if stepMulticore != 1:
                     stepMulticore = convertedWfSchema[stepName].pop("Multicore")
                 if multicore and stepMulticore != multicore:
-                    self.logger.info(self.logMsg["diffMulticoreConversion"], stepMulticore, multicore)
+                    self.logger.debug(self.logMsg["diffMulticoreConversion"], stepMulticore, multicore)
                 multicore = max(multicore, stepMulticore)
                 memory = max(memory, convertedWfSchema[stepName].pop("Memory"))
                     

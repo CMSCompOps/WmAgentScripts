@@ -45,7 +45,6 @@ class Rejector(OracleClient):
                 "dataset": "Rejected dataset %s: %s",
                 "wf": "Rejected workflow %s: %s",
                 "nWfs": "%s workflows to reject: %s",
-                "invalidate": f"Invalidating the workflow {'' if self.options.get('keep') else 'and outputs'} by unified operator {self.user}, reason: {self.options.get('comment')}",
                 "reject": f"Rejected the workflow by unified operator {self.user}",
                 "return": "Rejector was finished by user",
                 "failure": "Failed to %s workflow %s",
@@ -179,14 +178,12 @@ class Rejector(OracleClient):
             onlyResubmissions=True, invalidateOutputDatasets=not self.options.get("keep")
         )
 
-        wfController.logger.info(self.logMsg["invalidate"])
         self.logger.info(self.logMsg["wf"], wf.name, rejected)
 
         if rejected:
             wf.status = "trouble" if self.options.get("setTrouble") or self.options.get("clone") else "forget"
+            self.logger.info(f"Setting the unified status to {wf.status}")
             self.session.commit()
-
-            wfController.logger.info(self.logMsg["reject"])
 
         return rejected
 
