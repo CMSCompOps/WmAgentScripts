@@ -161,7 +161,7 @@ class ReqMgrReader(object):
         if details and data:
             data = [*data[0].values()]
 
-        self.logger.info("%s workflows retrieved for %s", len(data), param)
+        self.logger.debug("%s workflows retrieved for %s", len(data), param)
 
         return data
 

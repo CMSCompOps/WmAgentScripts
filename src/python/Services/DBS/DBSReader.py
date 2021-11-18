@@ -104,7 +104,7 @@ class DBSReader(object):
         try:
             response = self.dbs.listDatasets(dataset=dataset, dataset_access_type="*", detail=True)
             dbsStatus = response[0]["dataset_access_type"]
-            self.logger.info(f"{dataset} is {dbsStatus}")
+            self.logger.debug(f"{dataset} is {dbsStatus}")
             return dbsStatus
 
         except Exception as error:

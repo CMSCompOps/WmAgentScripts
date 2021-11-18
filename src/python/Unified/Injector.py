@@ -346,16 +346,21 @@ class Injector(OracleClient):
                         self.logger.critical(self.logMsg["duplicate"], wf)
                         continue
 
+                    self.logger.info(f"Stepchain eligibility check for {wf}")
                     if self._canConvertWorkflowToStepChain(wfController):
                         wfsToConvert.add(wfController)
+                        self.logger.info(f"The following workflow is eligible to be a stepchain: {wf}")
+                    else:
+                        self.logger.info(f"The following workflow is NOT eligible to be a stepchain: {wf}")
 
-                    self.logger.info(self.logMsg["addWf"], wf)
+                    self.logger.info("Inserting the workflow into OracleDB")
                     self.session.add(
                         Workflow(name=wf, status=self.options.get("setStatus"), wm_status=self.options.get("wmStatus"))
                     )
                     self.session.commit()
+                    self.logger.info("Insertion is successful")
 
-            self.logger.info(f"Workflows to convert into Stepchain: \n {pformat(wfsToConvert)}")
+            self.logger.info("Injection process has ended for all workflows. Conversion process starts for eligible ones")
             self._convertWorkflowsToStepChain(wfsToConvert)
             #self._replaceTroubleWorkflows()
 
