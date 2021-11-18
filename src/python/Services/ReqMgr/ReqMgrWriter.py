@@ -122,7 +122,7 @@ class ReqMgrWriter(object):
             result = sendResponse(
                 method="PUT", url=self.reqmgrUrl, endpoint=f"{self.reqmgrEndpoint['request']}/{wf}", param={"RequestStatus": "assignment-approved"}
             )
-            return result["result"][0]["ok"]
+            return result
 
         except Exception as error:
             self.logger.error("Failed to approve workflow in reqmgr")
