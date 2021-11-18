@@ -340,6 +340,7 @@ class Injector(OracleClient):
 
                 wfExists = self.session.query(Workflow).filter(Workflow.name == wf).first()
                 if not wfExists:
+                    self.logger.info(f"Current workflow to inject: {wf}")
                     wfController = WorkflowController(wf)
                     if not self._canInjectWorkflow(wfController):
                         self.logger.critical(self.logMsg["duplicate"], wf)

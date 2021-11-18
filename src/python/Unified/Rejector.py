@@ -304,10 +304,12 @@ class Rejector(OracleClient):
                 return
 
             for wf in wfsToReject:
+                self.logger.info(f"Current workflow to reject: {wf.name}")
                 wfController = WorkflowController(wf.name)
                 try:
                     rejected = self._rejectWorkflow(wf, wfController)
                     if rejected and self.options.get("clone"):
+                        self.logger.info(f"Current workflow to clone: {wf.name}")
                         self._cloneWorkflow(wfController.request)
 
                 except Exception as error:
