@@ -69,7 +69,7 @@ class ReqMgrWriter(object):
         :return: True if succeeded, False o/w
         """
         try:
-            result = sendResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"] + wf, param=param)
+            result = sendResponse(method="PUT", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"] + wf, param=param)
             return any(item.get(wf) == "OK" for item in result["result"])
 
         except Exception as error:
@@ -87,7 +87,7 @@ class ReqMgrWriter(object):
         """
         try:
             result = sendResponse(
-                url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["agentConfig"] + agent, param=config
+                method= "PUT", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["agentConfig"] + agent, param=config
             )
             return result["result"][0]["ok"]
 
@@ -103,7 +103,7 @@ class ReqMgrWriter(object):
         """
         try:
             self.logger.info(f"Type in submit workflow: {type(wfSchema)}")
-            result = sendResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"], param=wfSchema)
+            result = sendResponse(method= "POST", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"], param=wfSchema)
             self.logger.info(f"result: {result}")
             return result["result"][0]["ok"]
 
@@ -120,7 +120,7 @@ class ReqMgrWriter(object):
         """
         try:
             result = sendResponse(
-                url=self.reqmgrUrl, endpoint=f"{self.reqmgrEndpoint['request']}/{wf}", param={"RequestStatus": "assignment-approved"}
+                method="PUT", url=self.reqmgrUrl, endpoint=f"{self.reqmgrEndpoint['request']}/{wf}", param={"RequestStatus": "assignment-approved"}
             )
             return result["result"][0]["ok"]
 

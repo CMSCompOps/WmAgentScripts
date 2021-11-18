@@ -47,7 +47,7 @@ def getResponse(
         print(f"Failed to get response from {url + endpoint + param}\n{str(error)}")
 
 
-def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None) -> dict:
+def sendResponse(method: str, url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None) -> dict:
     """
     The function to send data to a given url
     :param url: request url
@@ -65,7 +65,8 @@ def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers:
     try:
         conn = getX509Conn(url)
         print ("Type, param: %s", str(type(param)))
-        _ = conn.request("PUT", endpoint, param, headers=headers)
+        print (param)
+        _ = conn.request(method, endpoint, param, headers=headers)
         response = conn.getresponse()
         data = response.read()
         conn.close()
