@@ -181,7 +181,7 @@ class Rejector(OracleClient):
         self.logger.info(self.logMsg["wf"], wf.name, rejected)
 
         if rejected:
-            wf.status = "trouble" if self.options.get("setTrouble") or self.options.get("clone") else "forget"
+            wf.status = "forget"
             self.logger.info(f"Setting the unified status to {wf.status}")
             self.session.commit()
 

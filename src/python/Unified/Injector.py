@@ -48,7 +48,7 @@ class Injector(OracleClient):
 
             self.logMsg = {
                 "family": "%s has %d family members and %d true family members: %s",
-                "badFamilyStatus": "Should not put %s because of %s %s",
+                "badFamilyStatus": "Duplicate check is failed. The following workflow %s cannot be injected because of %s %s",
                 "badInputStatus": "One of the inputs of %s is not VALID: %s %s",
                 "nWfs": "%d in line",
                 "addWf": "Adding %s",
