@@ -45,7 +45,6 @@ class Rejector(OracleClient):
                 "dataset": "Rejected dataset %s: %s",
                 "wf": "Rejected workflow %s: %s",
                 "nWfs": "%s workflows to reject: %s",
-                "schema": "Original schema: %s",
                 "invalidate": f"Invalidating the workflow {'' if self.options.get('keep') else 'and outputs'} by unified operator {self.user}, reason: {self.options.get('comment')}",
                 "reject": f"Rejected the workflow by unified operator {self.user}",
                 "return": "Rejector was finished by user",
@@ -202,11 +201,12 @@ class Rejector(OracleClient):
             clonedWfSchemaHandler = clonedWfSchemaHandler.convertToStepChain()
 
         clonedWfSchema = filterWorkflowSchemaParam(clonedWfSchemaHandler.wfSchema)
-        stepchainWorkflow = self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
-        if not stepchainWorkflow:
-            raise ValueError(self.logMsg["cloneError"], stepchainWorkflow)
+        newWorkflow = self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
+        if not newWorkflow:
+            raise ValueError(self.logMsg["cloneError"], newWorkflow)
 
         self.reqmgr["writer"].approveWorkflow(stepchainWorkflow)
+        self.logger.info(f"Workflow is cloned successfully. The clone: {stepchainWorkflow}")
 
     def _buildClonedWorkflowSchema(self, wfSchemaHandler: BaseWfSchemaHandler) -> BaseWfSchemaHandler:
         """
@@ -214,8 +214,6 @@ class Rejector(OracleClient):
         :param wfSchemaHandler: original workflow schema handler
         :return: cloned workflow schema handler
         """
-        self.logger.info(self.logMsg["schema"], json.dumps(wfSchemaHandler.wfSchema, indent=2))
-
         wfSchemaHandler.setParamValue("Requestor", self.user)
         wfSchemaHandler.setParamValue("Group", "DATAOPS")
         wfSchemaHandler.setParamValue("OriginalRequestName", wfSchemaHandler.get("RequestName"))
