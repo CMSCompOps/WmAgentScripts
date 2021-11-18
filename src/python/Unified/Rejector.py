@@ -209,11 +209,11 @@ class Rejector(OracleClient):
         self.logger.info("After filtering clonedWfSchema")
         self.logger.info(type(clonedWfSchema))
         self.logger.info(clonedWfSchema)
-        submitted = self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
-        if not submitted:
-            raise ValueError(self.logMsg["cloneError"], clonedWfSchema["RequestName"])
+        stepchainWorkflow = self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
+        if not stepchainWorkflow:
+            raise ValueError(self.logMsg["cloneError"], stepchainWorkflow)
 
-        self.reqmgr["writer"].approveWorkflow(clonedWfSchema["RequestName"])
+        self.reqmgr["writer"].approveWorkflow(stepchainWorkflow)
 
     def _buildClonedWorkflowSchema(self, wfSchemaHandler: BaseWfSchemaHandler) -> BaseWfSchemaHandler:
         """
@@ -325,6 +325,7 @@ class Rejector(OracleClient):
                     )
                     self.logger.error(self.logMsg["failure"], "reject", wf.name)
                     self.logger.error(str(error))
+                    self.logger.error(traceback.format_exc())
 
         except Exception as error:
             self.logger.error("Failed to run rejection")
