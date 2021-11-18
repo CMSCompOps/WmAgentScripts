@@ -205,8 +205,8 @@ class Rejector(OracleClient):
         if not newWorkflow:
             raise ValueError(self.logMsg["cloneError"], newWorkflow)
 
-        self.reqmgr["writer"].approveWorkflow(stepchainWorkflow)
-        self.logger.info(f"Workflow is cloned successfully. The clone: {stepchainWorkflow}")
+        self.reqmgr["writer"].approveWorkflow(newWorkflow)
+        self.logger.info(f"Workflow is cloned successfully. The clone: {newWorkflow}")
 
     def _buildClonedWorkflowSchema(self, wfSchemaHandler: BaseWfSchemaHandler) -> BaseWfSchemaHandler:
         """
