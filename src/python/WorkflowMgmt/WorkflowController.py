@@ -54,9 +54,8 @@ class WorkflowController(object):
             self.wqReader = WorkQueueReader()
             self.rucioReader = RucioReader(rucioConfig)
 
-            # Temporary switch off due to recurrent logging
-            #self.campaignController = CampaignController()
-            #self.siteController = SiteController()
+            self.campaignController = None
+            self.siteController = None
 
             self.wf = wf
             self.request = self._getWorkloadHandler(kwargs.get("request"))
@@ -513,6 +512,11 @@ class WorkflowController(object):
         :return: site white list, site black list
         """
         try:
+            if self.siteController is None:
+                self.siteController = SiteController()
+            if self.campaignController is None:
+                self.campaignController = CampaignController()
+            
             allowedSites = self._getAllowedSites()
             if pickOne:
                 allowedSites = set(sorted(self.siteController.pickCE(allowedSites)))
@@ -813,6 +817,8 @@ class WorkflowController(object):
                     self.logger.info("pilot keyword in SubRequestType, assigning the workflow")
                 return True
 
+            if self.campaignController is None:
+                self.campaignController = CampaignController()
             for campaign, label in campaignsAndLabels:
                 if not self.campaignController.go(campaign, label):
                     if not silent:
