@@ -326,6 +326,8 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             self.logger.info("Updated Schema", json.dumps(convertedWfSchema, indent=2))
 
             return StepChainWfSchemaHandler(convertedWfSchema)
+            self.logger.info("type of convertedWfSchema: %s", str(type(convertedWfSchema)))
+            #return convertedWfSchema
 
         except Exception as error:
             self.logger.error("Failed to convert workflow to step chain")

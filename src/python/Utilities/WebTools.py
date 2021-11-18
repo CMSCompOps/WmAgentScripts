@@ -64,6 +64,7 @@ def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers:
 
     try:
         conn = getX509Conn(url)
+        print ("Type, param: %s", str(type(param)))
         _ = conn.request("PUT", endpoint, param, headers=headers)
         response = conn.getresponse()
         data = response.read()
