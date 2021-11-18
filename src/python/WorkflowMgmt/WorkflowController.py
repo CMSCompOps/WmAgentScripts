@@ -54,8 +54,8 @@ class WorkflowController(object):
             self.wqReader = WorkQueueReader()
             self.rucioReader = RucioReader(rucioConfig)
 
-            self.campaignController = CampaignController()
-            self.siteController = SiteController()
+            #self.campaignController = CampaignController()
+            #self.siteController = SiteController()
 
             self.wf = wf
             self.request = self._getWorkloadHandler(kwargs.get("request"))
