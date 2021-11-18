@@ -105,7 +105,7 @@ class ReqMgrWriter(object):
             self.logger.info(f"Type in submit workflow: {type(wfSchema)}")
             result = sendResponse(method= "POST", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"], param=wfSchema)
             self.logger.info(f"result: {result}")
-            return result["result"][0]["ok"]
+            return result['result'][0]['request']
 
         except Exception as error:
             self.logger.error("Failed to submit workflow in reqmgr")
