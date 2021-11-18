@@ -54,6 +54,7 @@ class WorkflowController(object):
             self.wqReader = WorkQueueReader()
             self.rucioReader = RucioReader(rucioConfig)
 
+            # Temporary switch off due to recurrent logging
             #self.campaignController = CampaignController()
             #self.siteController = SiteController()
 

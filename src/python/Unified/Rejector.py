@@ -33,10 +33,8 @@ class Rejector(OracleClient):
             self.logger = logger or getLogger(self.__class__.__name__)
 
             self.options = kwargs.get("options")
-            self.logger.info(f"Options: {self.options}") #  remove this line later
             if self.options is None:
                 self.options = self.parseOptions()
-                self.logger.info(f"Options: {self.options}") # remove this line later
 
             self.dbs = {"writer": DBSWriter(), "reader": DBSReader()}
             self.reqmgr = {"writer": ReqMgrWriter(), "reader": ReqMgrReader()}
@@ -203,12 +201,7 @@ class Rejector(OracleClient):
         if self.options.get("toStepchain"):
             clonedWfSchemaHandler = clonedWfSchemaHandler.convertToStepChain()
 
-        self.logger.info("clonedWfSchemaHandler.wfSchema")
-        self.logger.info(type(clonedWfSchemaHandler.wfSchema))
         clonedWfSchema = filterWorkflowSchemaParam(clonedWfSchemaHandler.wfSchema)
-        self.logger.info("After filtering clonedWfSchema")
-        self.logger.info(type(clonedWfSchema))
-        self.logger.info(clonedWfSchema)
         stepchainWorkflow = self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
         if not stepchainWorkflow:
             raise ValueError(self.logMsg["cloneError"], stepchainWorkflow)

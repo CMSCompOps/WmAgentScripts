@@ -118,7 +118,6 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         :return: task schema
         """
         for _, schema in filterKeys(self.chainKeys, self.wfSchema).items():
-            self.logger.info("Inner Schema", json.dumps(schema, indent=2))
             if schema[f"StepName"] == task:
                 return copy.deepcopy(schema)
         return {}
@@ -291,10 +290,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
 
             for key in self.chainKeys:
                 stepName = "Step{}".format(re.findall(r'\d+', key)[0])
-                self.logger.info(f"stepName: {stepName}")
-                self.logger.info(f"key: {key}")
                 convertedWfSchema[stepName] = convertedWfSchema.pop(key)
-                self.logger.info(f"convertedWfSchema[stepName]: {convertedWfSchema[stepName]}")
                 convertedWfSchema[stepName]["StepName"] = convertedWfSchema[stepName].pop("TaskName")
                 stepNames[convertedWfSchema[stepName]["StepName"]] = stepName
 
@@ -323,11 +319,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             convertedWfSchema["Multicore"] = multicore
             convertedWfSchema["Memory"] = memory
 
-            self.logger.info("Updated Schema", json.dumps(convertedWfSchema, indent=2))
-
             return StepChainWfSchemaHandler(convertedWfSchema)
-            self.logger.info("type of convertedWfSchema: %s", str(type(convertedWfSchema)))
-            #return convertedWfSchema
 
         except Exception as error:
             self.logger.error("Failed to convert workflow to step chain")

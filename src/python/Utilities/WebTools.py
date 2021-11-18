@@ -64,17 +64,10 @@ def sendResponse(method: str, url: str, endpoint: str, param: Union[str, dict] =
 
     try:
         conn = getX509Conn(url)
-        print ("Type, param: %s", str(type(param)))
-        print (param)
         _ = conn.request(method, endpoint, param, headers=headers)
         response = conn.getresponse()
         data = response.read()
         conn.close()
-        print ("WebTools: data")
-        print (response)
-        print ("===")
-        print (data)
-
         return json.loads(data)
 
     except Exception as error:
