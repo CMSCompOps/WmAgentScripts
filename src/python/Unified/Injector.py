@@ -84,6 +84,7 @@ class Injector(OracleClient):
             "-m", "--manual", help="Manual inject, bypassing lock check", action="store_true", default=False
         )
         parser.add_option("--backfill", help="To run in test mode (only with backfill workflows)", action="store_true", default=False)
+        parser.add_option("--noDuplicateCheck", help="If true, stop duplicate workflow check)", action="store_true", default=False)
 
         options, args = parser.parse_args()
         return vars(options), args[0] if args else None
@@ -195,7 +196,17 @@ class Injector(OracleClient):
         :param wfController: workflow controller
         :return: True if workflow can be injected, False o/w
         """
-        return not self._hasBadFamilyStatus(wfController) and not self._hasBadInputStatus(wfController)
+        canInject = True
+        if not self.options.get("noDuplicateCheck"):
+            self.logger.info("Performing a duplicate workflow check")
+            canInject = canInject and (not self._hasBadFamilyStatus(wfController))
+            self.logger.info(f"Result of the duplicate workflow check: {canInject}")
+
+        self.logger.info("Performing an input validity check")
+        canInject = canInject and (not self._hasBadInputStatus(wfController))
+        self.logger.info(f"Result of the input validity check: {canInject}")
+
+        return canInject
 
     def _hasBadFamilyStatus(self, wfController: WorkflowController) -> bool:
         """
