@@ -314,7 +314,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                     
             if multicore > self.unifiedConfiguration.get("max_nCores_for_stepchain") or memory > self.unifiedConfiguration.get("max_memory_for_stepchain"):
                 multicore = self.unifiedConfiguration.get("max_nCores_for_stepchain")
-                memory = memory > self.unifiedConfiguration.get("max_memory_for_stepchain")
+                memory = self.unifiedConfiguration.get("max_memory_for_stepchain")
             
             convertedWfSchema["Multicore"] = multicore
             convertedWfSchema["Memory"] = memory
