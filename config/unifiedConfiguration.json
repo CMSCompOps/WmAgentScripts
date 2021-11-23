@@ -593,9 +593,17 @@
     "description": "Level below which to include a note in the batch report",
     "value": 90
   },
-  "efficiency_threshold_for_stepchain": {
+  "efficiency_threshold_for_stepchain_low_priority": {
+    "description": "Minimum efficiency threshold for step chain conversion for ",
+    "value": 0.80
+  },
+  "efficiency_threshold_for_stepchain_high_priority": {
     "description": "Minimum efficiency threshold for step chain conversion",
-    "value": 0.90
+    "value": 0.50
+  },
+  "block1_priority": {
+    "description": "Workflows whose priority is greater than or equal to this value are considered as Block 1, i.e. high priority",
+    "value": 110000
   },
   "sites_for_DQMHarvest": {
     "value": [

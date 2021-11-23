@@ -6,6 +6,7 @@ from Utilities.Logging import getLogger
 from Utilities.ConfigurationHandler import ConfigurationHandler
 
 from typing import Optional
+import traceback
 
 
 class ReqMgrWriter(object):
@@ -68,12 +69,13 @@ class ReqMgrWriter(object):
         :return: True if succeeded, False o/w
         """
         try:
-            result = sendResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"] + wf, param=param)
+            result = sendResponse(method="PUT", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"] + wf, param=param)
             return any(item.get(wf) == "OK" for item in result["result"])
 
         except Exception as error:
             self.logger.error("Failed to set %s for %s", param, wf)
             self.logger.error(str(error))
+            self.logger.error(traceback.format_exc())
             return False
 
     def setAgentConfig(self, agent: str, config: dict) -> bool:
@@ -85,7 +87,7 @@ class ReqMgrWriter(object):
         """
         try:
             result = sendResponse(
-                url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["agentConfig"] + agent, param=config
+                method= "PUT", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["agentConfig"] + agent, param=config
             )
             return result["result"][0]["ok"]
 
@@ -100,12 +102,13 @@ class ReqMgrWriter(object):
         :return: True if succeeded, False o/w
         """
         try:
-            result = sendResponse(url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"], param=wfSchema)
-            return result["result"][0]["ok"]
+            result = sendResponse(method= "POST", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"], param=wfSchema)
+            return result['result'][0]['request']
 
         except Exception as error:
             self.logger.error("Failed to submit workflow in reqmgr")
             self.logger.error(str(error))
+            self.logger.error(traceback.format_exc())
 
     def approveWorkflow(self, wf: str) -> bool:
         """
@@ -115,9 +118,9 @@ class ReqMgrWriter(object):
         """
         try:
             result = sendResponse(
-                url=self.reqmgrUrl, endpoint=f"{self.reqmgrEndpoint['request']}/{wf}", param={"RequestStatus": "assignment-approved"}
+                method="PUT", url=self.reqmgrUrl, endpoint=f"{self.reqmgrEndpoint['request']}/{wf}", param={"RequestStatus": "assignment-approved"}
             )
-            return result["result"][0]["ok"]
+            return result
 
         except Exception as error:
             self.logger.error("Failed to approve workflow in reqmgr")

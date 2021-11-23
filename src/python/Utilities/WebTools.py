@@ -6,8 +6,8 @@ Description: Useful functions while interacting different services
 
 import json
 import pickle
-
 from typing import Optional, Union, Any
+import traceback
 
 from Utilities.Authenticate import getX509Conn
 
@@ -47,7 +47,7 @@ def getResponse(
         print(f"Failed to get response from {url + endpoint + param}\n{str(error)}")
 
 
-def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None) -> dict:
+def sendResponse(method: str, url: str, endpoint: str, param: Union[str, dict] = "", headers: Optional[dict] = None) -> dict:
     """
     The function to send data to a given url
     :param url: request url
@@ -64,11 +64,14 @@ def sendResponse(url: str, endpoint: str, param: Union[str, dict] = "", headers:
 
     try:
         conn = getX509Conn(url)
-        _ = conn.request("PUT", endpoint, param, headers=headers)
+        _ = conn.request(method, endpoint, param, headers=headers)
         response = conn.getresponse()
         data = response.read()
         conn.close()
+        print("Response to the %s HTTP call: ", method)
+        print(data)
         return json.loads(data)
 
     except Exception as error:
         print(f"Failed to send response to {url + endpoint + param}\n{str(error)}")
+        print(traceback.format_exc())

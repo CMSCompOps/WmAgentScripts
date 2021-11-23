@@ -17,7 +17,8 @@ from WorkflowMgmt.WorkflowController import WorkflowController
 from WorkflowMgmt.WorkflowStatusEnforcer import WorkflowStatusEnforcer
 from WorkflowMgmt.WorkflowSchemaHandlers.BaseWfSchemaHandler import BaseWfSchemaHandler
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
+import traceback
 
 
 class Rejector(OracleClient):
@@ -31,13 +32,9 @@ class Rejector(OracleClient):
             super().__init__(self)
             self.logger = logger or getLogger(self.__class__.__name__)
 
-            self.options, self.specific = kwargs.get("options"), kwargs.get("specific")
+            self.options = kwargs.get("options")
             if self.options is None:
-                self.options, self.specific = self.parseOptions()
-
-            self.specificType = (
-                None if self.specific is None else "dataset" if self.specific.startswith("/") else "workflow"
-            )
+                self.options = self.parseOptions()
 
             self.dbs = {"writer": DBSWriter(), "reader": DBSReader()}
             self.reqmgr = {"writer": ReqMgrWriter(), "reader": ReqMgrReader()}
@@ -48,8 +45,6 @@ class Rejector(OracleClient):
                 "dataset": "Rejected dataset %s: %s",
                 "wf": "Rejected workflow %s: %s",
                 "nWfs": "%s workflows to reject: %s",
-                "schema": "Original schema: %s",
-                "invalidate": f"Invalidating the workflow {'' if self.options.get('keep') else 'and outputs'} by unified operator {self.user}, reason: {self.options.get('comment')}",
                 "reject": f"Rejected the workflow by unified operator {self.user}",
                 "return": "Rejector was finished by user",
                 "failure": "Failed to %s workflow %s",
@@ -139,7 +134,7 @@ class Rejector(OracleClient):
         """
         if self.options.get("fileList"):
             return self._getWorkflowsByFilelist()
-        if self.specificType == "workflow":
+        if self.options.get("specific"):
             return self._getWorkflowsByName()
 
         raise ValueError("Cannot get list of workflows to reject, provide file or specific workflow name")
@@ -152,7 +147,10 @@ class Rejector(OracleClient):
         wfs = set()
 
         with open(self.options.get("fileList"), "r") as file:
-            for item in self._filterBackfills(filter(None, file.read().split("\n"))):
+            if self.options.get("backfill"):
+                for item in self._filterBackfills(filter(None, file.read().split("\n"))):
+                    wfs.update(self.session.query(Workflow).filter(Workflow.name.contains(item)).all())
+            else:
                 wfs.update(self.session.query(Workflow).filter(Workflow.name.contains(item)).all())
 
         return list(wfs)
@@ -163,31 +161,9 @@ class Rejector(OracleClient):
         :return: list of workflows names
         """
         wfs = set()
-        if not self.options.get("backfill") or "backfill" in self.specific.lower():
-            wfs.update(self.session.query(Workflow).filter(Workflow.name.contains(self.specific)).all())
-
-        if not wfs:
-            batchController = BatchController()
-            batches = batchController.get()
-
-            for prepId in batches.get(self.specific, []):
-                batchWfs = self._filterBackfills(self.reqmgr["reader"].getWorkflowsByPrepId(prepId))
-                for wf in batchWfs:
-                    wfs.add(self.session.query(Workflow).filter(Workflow.name == wf).first())
+        wfs.update(self.session.query(Workflow).filter(Workflow.name.contains(self.options.get("specific"))).all())
 
         return list(wfs)
-
-    def _rejectDataset(self) -> bool:
-        """
-        The function to reject a given dataset
-        :return: True if the dataset was properly rejected, False o/w
-        """
-        currentStatus = self.dbs["reader"].getDBSStatus(self.specific)
-
-        rejected = self.dbs["writer"].setDatasetStatus(self.specific, currentStatus, "INVALID")
-        self.logger.info(self.logMsg["dataset"], self.specific, rejected)
-
-        return rejected
 
     def _rejectWorkflow(self, wf: Workflow, wfController: WorkflowController) -> bool:
         """
@@ -197,18 +173,17 @@ class Rejector(OracleClient):
         :return: True if the workflow was properly rejected, False o/w
         """
         wfStatusEnforcer = WorkflowStatusEnforcer(wf.name)
+        # "Invalidate is not the proper name. It should be "reject". We use invalidate for datasets, not for workflows"
         rejected = wfStatusEnforcer.invalidate(
             onlyResubmissions=True, invalidateOutputDatasets=not self.options.get("keep")
         )
 
-        wfController.logger.info(self.logMsg["invalidate"])
         self.logger.info(self.logMsg["wf"], wf.name, rejected)
 
         if rejected:
-            wf.status = "trouble" if self.options.get("setTrouble") or self.options.get("clone") else "forget"
+            wf.status = "forget"
+            self.logger.info(f"Setting the unified status to {wf.status}")
             self.session.commit()
-
-            wfController.logger.info(self.logMsg["reject"])
 
         return rejected
 
@@ -223,11 +198,12 @@ class Rejector(OracleClient):
             clonedWfSchemaHandler = clonedWfSchemaHandler.convertToStepChain()
 
         clonedWfSchema = filterWorkflowSchemaParam(clonedWfSchemaHandler.wfSchema)
-        submitted = self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
-        if not submitted:
-            raise ValueError(self.logMsg["cloneError"], clonedWfSchema["RequestName"])
+        newWorkflow = self.reqmgr["writer"].submitWorkflow(clonedWfSchema)
+        if not newWorkflow:
+            raise ValueError(self.logMsg["cloneError"], newWorkflow)
 
-        self.reqmgr["writer"].approveWorkflow(clonedWfSchema["RequestName"])
+        self.reqmgr["writer"].approveWorkflow(newWorkflow)
+        self.logger.info(f"Workflow is cloned successfully. The clone: {newWorkflow}")
 
     def _buildClonedWorkflowSchema(self, wfSchemaHandler: BaseWfSchemaHandler) -> BaseWfSchemaHandler:
         """
@@ -235,8 +211,6 @@ class Rejector(OracleClient):
         :param wfSchemaHandler: original workflow schema handler
         :return: cloned workflow schema handler
         """
-        self.logger.info(self.logMsg["schema"], json.dumps(wfSchemaHandler.wfSchema, indent=2))
-
         wfSchemaHandler.setParamValue("Requestor", self.user)
         wfSchemaHandler.setParamValue("Group", "DATAOPS")
         wfSchemaHandler.setParamValue("OriginalRequestName", wfSchemaHandler.get("RequestName"))
@@ -316,22 +290,24 @@ class Rejector(OracleClient):
         The function to run rejector
         """
         try:
-            if self.specificType == "dataset":
-                return self._rejectDataset()
 
             wfsToReject = self._getWorkflowsToReject()
-            self.logger.info(self.logMsg["nWfs"], len(wfsToReject), ", ".join(wfsToReject))
 
             if len(wfsToReject) > 1 and not self._proceedWithRejector():
                 self.logger.info(self.logMsg["return"])
                 return
 
             for wf in wfsToReject:
+                self.logger.info(f"Current workflow to reject: {wf.name}")
+                self.logger.info(f"Clone option is: {self.options.get('clone')}")
                 wfController = WorkflowController(wf.name)
                 try:
                     rejected = self._rejectWorkflow(wf, wfController)
                     if rejected and self.options.get("clone"):
+                        self.logger.info(f"Rejection is successful, cloning starts")
                         self._cloneWorkflow(wfController.request)
+                    else:
+                        self.logger.info(f"Rejection is failed")
 
                 except Exception as error:
                     wfController.logger.critical(
@@ -339,14 +315,16 @@ class Rejector(OracleClient):
                     )
                     self.logger.error(self.logMsg["failure"], "reject", wf.name)
                     self.logger.error(str(error))
+                    self.logger.error(traceback.format_exc())
 
         except Exception as error:
             self.logger.error("Failed to run rejection")
             self.logger.error(str(error))
+            self.logger.error(traceback.format_exc())
 
 
 if __name__ == "__main__":
     options, specific = Rejector.parseOptions()
-    rejector = Rejector(options=options, specific=specific)
+    rejector = Rejector(options=options)
     if rejector.go():
         rejector.run()

@@ -2,8 +2,9 @@ import re
 import copy
 from logging import Logger
 from collections import defaultdict
-
 from typing import Optional, Tuple, List, Any
+import traceback
+import json
 
 from Utilities.IteratorTools import filterKeys
 from WorkflowMgmt.WorkflowSchemaHandlers.StepChainWfSchemaHandler import StepChainWfSchemaHandler
@@ -61,14 +62,29 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             totalTimePerEvent += info["timePerEvent"]
             efficiency += info["timePerEvent"] * min(info["cores"], maxCores)
 
-        self.logger.debug("Total time per event for TaskChain: %0.1f", totalTimePerEvent)
+        self.logger.info("Total time per event for TaskChain: %0.1f", totalTimePerEvent)
 
         if totalTimePerEvent:
             efficiency /= totalTimePerEvent * maxCores
-            self.logger.debug("CPU efficiency of StepChain with %u cores: %0.1f%%", maxCores, efficiency * 100)
-            return efficiency > self.unifiedConfiguration.get("efficiency_threshold_for_stepchain")
+            self.logger.info("CPU efficiency of StepChain with %u cores: %0.1f%%", maxCores, efficiency * 100)
+            return efficiency > self._getStepchainConversionThreshold()
 
         return False
+
+    def _getStepchainConversionThreshold(self) -> float:
+
+        try:
+
+            priority = self.get("RequestPriority")
+            if priority >= self.unifiedConfiguration.get("block1_priority"):
+                return self.unifiedConfiguration.get("efficiency_threshold_for_stepchain_high_priority")
+            else:
+                return self.unifiedConfiguration.get("efficiency_threshold_for_stepchain_low_priority")
+
+        except Exception as error:
+            self.logger.error("Failed to get the stepchain conversion threshold")
+            self.logger.error(str(error))
+
 
     def _hasNonZeroEventStreams(self) -> bool:
         """
@@ -89,9 +105,9 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         :return: efficiency factor
         """
         if "InputTask" in schema:
-            dataset = self._getTaskSchema(schema["InputTask"])
-            efficiencyFactor *= dataset.get("FilterEfficiency", 1.0)
-            return self._getTaskEfficiencyFactor(dataset, efficiencyFactor)
+            inputTaskSchema = self._getTaskSchema(schema["InputTask"])
+            efficiencyFactor *= inputTaskSchema.get("FilterEfficiency", 1.0)
+            return self._getTaskEfficiencyFactor(inputTaskSchema, efficiencyFactor)
 
         return efficiencyFactor
 
@@ -102,7 +118,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         :return: task schema
         """
         for _, schema in filterKeys(self.chainKeys, self.wfSchema).items():
-            if schema[f"{self.base}Name"] == task:
+            if schema[f"StepName"] == task:
                 return copy.deepcopy(schema)
         return {}
 
@@ -224,28 +240,35 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         :return: True if good, False o/w
         """
         try:
-            if self._hasNonZeroEventStreams():
-                self.logger.info("Convertion is supported only when EventStreams are zero")
-                return False
-
-            moreThanOneTask = self.get("TaskChain", 0) > 1
 
             tiers = [*map(lambda x: x.split("/")[-1], self.get("OutputDatasets", []))]
-            allUniqueTiers = len(tiers) == len(set(tiers))
-
-            allSameArches = len(set(map(lambda x: x[:4], self.getParamList("ScramArch")))) == 1
-
-            allSameCores = len(set(self.getMulticore(maxOnly=False))) == 1
-
             processingString = "".join(f"{k}{v}" for k, v in self.getProcessingString().items())
             foundKeywords = any(keyword in processingString + self.wf for keyword in keywords) if keywords else True
 
+            relValCheck = not self.isRelVal()
+            efficiencyCheck = self._hasAcceptableEfficiency()
+            dataTierCheck = len(tiers) == len(set(tiers))
+            archCheck = len(set(map(lambda x: x[:4], self.getParamList("ScramArch")))) == 1 # All steps should have the same architecture
+            keywordCheck = any(keyword in processingString + self.wf for keyword in keywords) if keywords else True
+            nTaskCheck = self.get("TaskChain", 0) > 1
+            eventStreamCheck = not self._hasNonZeroEventStreams()
+
+            self.logger.info(f"Stepchain criteria: RelVal check: {relValCheck}")
+            self.logger.info(f"Stepchain criteria: Efficiency check: {efficiencyCheck}")
+            self.logger.info(f"Stepchain criteria: Data tier check: {dataTierCheck}")
+            self.logger.info(f"Stepchain criteria: Architecture check: {archCheck}")
+            self.logger.info(f"Stepchain criteria: Keyword check: {keywordCheck}")
+            self.logger.info(f"Stepchain criteria: # of tasks check: {nTaskCheck}")
+            self.logger.info(f"Stepchain criteria: Event Stream check: {eventStreamCheck}")
+
             return (
-                moreThanOneTask
-                and allUniqueTiers
-                and allSameArches
-                and (allSameCores or self._hasAcceptableEfficiency())
-                and foundKeywords
+                relValCheck
+                and efficiencyCheck
+                and dataTierCheck
+                and archCheck
+                and keywordCheck
+                and nTaskCheck
+                and eventStreamCheck
             )
 
         except Exception as error:
@@ -266,7 +289,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             convertedWfSchema["StepChain"] = convertedWfSchema.pop("TaskChain")
 
             for key in self.chainKeys:
-                stepName = f"Step{re.findall(r'\d+', key)[0]}"
+                stepName = "Step{}".format(re.findall(r'\d+', key)[0])
                 convertedWfSchema[stepName] = convertedWfSchema.pop(key)
                 convertedWfSchema[stepName]["StepName"] = convertedWfSchema[stepName].pop("TaskName")
                 stepNames[convertedWfSchema[stepName]["StepName"]] = stepName
@@ -285,13 +308,13 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                 if stepMulticore != 1:
                     stepMulticore = convertedWfSchema[stepName].pop("Multicore")
                 if multicore and stepMulticore != multicore:
-                    self.logger.info(self.logMsg["diffMulticoreConversion"], stepMulticore, multicore)
+                    self.logger.debug(self.logMsg["diffMulticoreConversion"], stepMulticore, multicore)
                 multicore = max(multicore, stepMulticore)
                 memory = max(memory, convertedWfSchema[stepName].pop("Memory"))
                     
             if multicore > self.unifiedConfiguration.get("max_nCores_for_stepchain") or memory > self.unifiedConfiguration.get("max_memory_for_stepchain"):
                 multicore = self.unifiedConfiguration.get("max_nCores_for_stepchain")
-                memory = memory > self.unifiedConfiguration.get("max_memory_for_stepchain")
+                memory = self.unifiedConfiguration.get("max_memory_for_stepchain")
             
             convertedWfSchema["Multicore"] = multicore
             convertedWfSchema["Memory"] = memory
@@ -301,6 +324,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         except Exception as error:
             self.logger.error("Failed to convert workflow to step chain")
             self.logger.error(str(error))
+            self.logger.error(traceback.format_exc())
 
     def getRequestNumEvents(self) -> int:
         """
@@ -495,7 +519,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             newShortNames = {}
             for key, task in filterKeys(self.chainKeys, self.wfSchema).items():
                 taskName = task.get("TaskName")
-                shortName = f"T{re.findall(r'\d+', taskName)[0]}"
+                shortName = T.format(re.findall(r'\d+', taskName)[0])
 
                 newShortNames[taskName] = shortName
                 self.wfSchema[key]["TaskName"] = shortName

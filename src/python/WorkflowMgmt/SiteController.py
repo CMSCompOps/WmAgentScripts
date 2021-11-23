@@ -357,6 +357,7 @@ class SiteController(object):
         The function to sync sites data to SSB
         """
         try:
+            self.logger.info("================= syncToSSB started =================")
             ssbInfo = {}
 
             ssb = {"realCPU": "core_max_used", "prodCPU": "core_production", "CPUbound": "core_cpu_intensive"}
