@@ -9,7 +9,7 @@ if [ ! -d $FINAL_HTML_DIR ] ; then
 fi
 cd $BASE_DIR
 
-modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
+modulename=`basename $1 .py`
 mkdir -p $HTML_DIR/logs/$modulename/
 env EOS_MGM_URL=root://eoscms.cern.ch eos mkdir -p $FINAL_HTML_DIR/$modulename/
 
