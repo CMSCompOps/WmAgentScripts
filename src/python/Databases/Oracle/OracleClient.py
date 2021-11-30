@@ -20,7 +20,7 @@ class OracleClient(object):
             self.logger = logger or getLogger(self.__class__.__name__)
             self.base = OracleDB.Base
 
-            with open(f"~/private/unifiedPy3Secrets/secret_cmsr_rw.txt", "r") as file:
+            with open(f"/afs/cern.ch/user/c/cmsunified/private/unifiedPy3Secrets/secret_cmsr_rw.txt", "r") as file:
                 self.oracleUrl = file.read().strip()
 
             self.engine = create_engine(self.oracleUrl)
