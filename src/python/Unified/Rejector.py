@@ -206,7 +206,7 @@ class Rejector(OracleClient):
 
         # Inject the clone right away to OracleDB
         self.session.add(
-            Workflow(name=newWorkflow, status=staged, wm_status="assignment-approved")
+            Workflow(name=newWorkflow, status="staged", wm_status="assignment-approved")
         )
         self.session.commit()
 
