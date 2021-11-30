@@ -1,6 +1,6 @@
 # Define base directories
-BASE_DIR=/data/unified/WmAgentScripts/
-HTML_DIR=/data/unified/www
+BASE_DIR=//data/unifiedPy3/WmAgentScripts
+HTML_DIR=/data/unifiedPy3/www
 FINAL_HTML_DIR=/eos/cms/store/unified/www/py3logs
 
 if [ ! -d $FINAL_HTML_DIR ] ; then
@@ -11,7 +11,7 @@ cd $BASE_DIR
 
 modulename=`echo $1 | sed 's/\.py//' | sed 's/Unified\///'`
 mkdir -p $HTML_DIR/logs/$modulename/
-env EOS_MGM_URL=root://eoscms.cern.ch eos mkdir -p $FINAL_HTML_DIR/logs/$modulename/
+env EOS_MGM_URL=root://eoscms.cern.ch eos mkdir -p $FINAL_HTML_DIR/$modulename/
 
 last_log=$HTML_DIR/logs/$modulename/last.log
 s_dated_log=$modulename/`date +%F_%T`.log
@@ -45,5 +45,5 @@ else
 fi
 
 cp $log $last_log
-env EOS_MGM_URL=root://eoscms.cern.ch eos cp $log $FINAL_HTML_DIR/logs/$modulename/.
-env EOS_MGM_URL=root://eoscms.cern.ch eos cp $log $FINAL_HTML_DIR/logs/$modulename/last.log
+env EOS_MGM_URL=root://eoscms.cern.ch eos cp $log $FINAL_HTML_DIR/$modulename/.
+env EOS_MGM_URL=root://eoscms.cern.ch eos cp $log $FINAL_HTML_DIR/$modulename/last.log
