@@ -1,5 +1,5 @@
 # Define base directories
-BASE_DIR=//data/unifiedPy3/WmAgentScripts
+BASE_DIR=/data/unifiedPy3/WmAgentScripts
 HTML_DIR=/data/unifiedPy3/www
 FINAL_HTML_DIR=/eos/cms/store/unified/www/py3logs
 
