@@ -30,7 +30,6 @@ if [ $? == 0 ]; then
     echo "Finished successfully, halting" >> $log
 else
     echo -e "\nAbnormal termination with exit code $?" >> $log
-    top -n1  -o %MEM -c >> $log
 
     emaillog=$log.txt
     failed_pid=$!
