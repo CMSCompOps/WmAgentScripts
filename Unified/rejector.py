@@ -219,6 +219,8 @@ def rejector(url, specific, options=None):
                         if tt in schema:
                             tmcore = schema[tt].get('Multicore',1)
                             mcore = max(mcore, tmcore)
+                        else:
+                            break
                     if mcore > UC.get("max_nCores_for_stepchain"):
                         mcore = UC.get("max_nCores_for_stepchain")
 
