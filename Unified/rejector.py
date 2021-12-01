@@ -211,6 +211,16 @@ def rejector(url, specific, options=None):
                     ## transform the schema into StepChain schema
                     print "Transforming a TaskChain into a StepChain"
                     mcore = 0
+                    ## find maximum mcore
+                    while True:
+                        tt = 'Task%d'% it
+                        it+=1
+                        if tt in schema:
+                            tmcore = schema[tt].get('Multicore',1)
+                            mcore = max(mcore, tmcore)
+                    if mcore > UC.get("max_nCores_for_stepchain"):
+                        mcore = UC.get("max_nCores_for_stepchain")
+
                     mem = 0
                     schema['RequestType'] = 'StepChain'
                     schema['StepChain'] = schema.pop('TaskChain')
@@ -218,6 +228,7 @@ def rejector(url, specific, options=None):
                     schema['TimePerEvent'] = 0
                     step=1
                     s_n = {}
+                    it = 1
                     while True:
                         if 'Task%d'%step in schema:
                             sname = 'Step%d'%step
@@ -236,7 +247,6 @@ def rejector(url, specific, options=None):
                                 else:
                                     wfi.sendLog('rejector','the conversion to stepchain encoutered different value of Multicore %d != %d'%( tmcore, mcore))
                                     sendLog('rejector','the conversion of %s to stepchain encoutered different value of Multicore %d != %d'%( wfo.name, tmcore, mcore))
-                            mcore = max(mcore, tmcore)
                             mem = max(mem, tmem)
                             schema[sname]['StepName'] = schema[sname].pop('TaskName')
                             s_n[ schema[sname]['StepName'] ] = sname
@@ -257,7 +267,8 @@ def rejector(url, specific, options=None):
                             if not 'KeepOutput' in schema[sname]:
                                 ## this is a weird translation capability. Absence of keepoutput in step means : keep the output. while in TaskChain absence means : drop
                                 schema[sname]['KeepOutput'] = False
-                            schema['TimePerEvent'] += eff*schema[sname].pop('TimePerEvent')
+                            factor = (float(tmcore) / float(mcore))
+                            schema['TimePerEvent'] += eff*schema[sname].pop('TimePerEvent')*factor
                             schema['SizePerEvent'] += eff*schema[sname].pop('SizePerEvent')
                             step+=1
                         else:
