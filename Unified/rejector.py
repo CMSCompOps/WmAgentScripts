@@ -212,6 +212,7 @@ def rejector(url, specific, options=None):
                     print "Transforming a TaskChain into a StepChain"
                     mcore = 0
                     ## find maximum mcore
+                    it=1
                     while True:
                         tt = 'Task%d'% it
                         it+=1
@@ -228,7 +229,6 @@ def rejector(url, specific, options=None):
                     schema['TimePerEvent'] = 0
                     step=1
                     s_n = {}
-                    it = 1
                     while True:
                         if 'Task%d'%step in schema:
                             sname = 'Step%d'%step
