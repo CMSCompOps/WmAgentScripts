@@ -111,6 +111,34 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
 
         return efficiencyFactor
 
+    def _getMulticoreFactor(self, schema: dict) -> float:
+        """
+        The function to get the nCores factor for a given task
+        :param schema: task schema
+        :return: nCores factor
+        """
+        stepchainMulticore, stepchainMemory = self._getStepChainMulticoreMemory()
+        return schema["Multicore"]/stepchainMulticore
+
+
+    def _getStepChainMulticoreMemory(self) -> Tuple[int, int]:
+        """
+        The function to get the multicore and memory values of the stepchain
+        :return: multicore & memory
+        """
+        multicore, memory = 0, 0
+        for key in self.chainKeys:
+            taskName = "Task{}".format(re.findall(r'\d+', key)[0])
+            multicore = max(multicore, self.wfSchema[taskName].get("Multicore"))
+            memory = max(memory, self.wfSchema[taskName].get("Memory"))
+
+        # If either multicore or memory exceeds the threshold, we use the threshold
+        if multicore > self.unifiedConfiguration.get("max_nCores_for_stepchain") or memory > self.unifiedConfiguration.get("max_memory_for_stepchain"):
+            multicore = self.unifiedConfiguration.get("max_nCores_for_stepchain")
+            memory = self.unifiedConfiguration.get("max_memory_for_stepchain")
+
+        return multicore, memory
+
     def _getTaskSchema(self, task: str) -> dict:
         """
         The function to get the schema for a given task
@@ -281,7 +309,6 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         :return: a StepChainWfSchemaHandler if the convertion is possible, itself o/w
         """
         try:
-            multicore, memory = 0, 0
             stepNames = {}
 
             convertedWfSchema = self.wfSchema.copy()
@@ -294,9 +321,11 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                 convertedWfSchema[stepName]["StepName"] = convertedWfSchema[stepName].pop("TaskName")
                 stepNames[convertedWfSchema[stepName]["StepName"]] = stepName
 
+                # TimePerEvent & SizePerEvent Setting
                 efficiencyFactor = self._getTaskEfficiencyFactor(self.wfSchema[key])
-                convertedWfSchema["TimePerEvent"] += efficiencyFactor * convertedWfSchema[stepName].pop("TimePerEvent")
-                convertedWfSchema["SizePerEvent"] += efficiencyFactor * convertedWfSchema[stepName].pop("SizePerEvent")
+                multicoreFactor = self._getMulticoreFactor(self.wfSchema[key])
+                convertedWfSchema["TimePerEvent"] += efficiencyFactor * multicoreFactor * convertedWfSchema[stepName].pop("TimePerEvent")
+                convertedWfSchema["SizePerEvent"] += efficiencyFactor * multicoreFactor * convertedWfSchema[stepName].pop("SizePerEvent")
 
                 if "InputTask" in convertedWfSchema[stepName]:
                     convertedWfSchema[stepName]["InputStep"] = convertedWfSchema[stepName].pop("InputTask")
@@ -304,20 +333,14 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                 if "KeepOutput" not in convertedWfSchema[stepName]:
                     convertedWfSchema[stepName]["KeepOutput"] = False
 
-                stepMulticore = convertedWfSchema[stepName].get("Multicore")
-                if stepMulticore != 1:
-                    stepMulticore = convertedWfSchema[stepName].pop("Multicore")
-                if multicore and stepMulticore != multicore:
-                    self.logger.debug(self.logMsg["diffMulticoreConversion"], stepMulticore, multicore)
-                multicore = max(multicore, stepMulticore)
-                memory = max(memory, convertedWfSchema[stepName].pop("Memory"))
-                    
-            if multicore > self.unifiedConfiguration.get("max_nCores_for_stepchain") or memory > self.unifiedConfiguration.get("max_memory_for_stepchain"):
-                multicore = self.unifiedConfiguration.get("max_nCores_for_stepchain")
-                memory = self.unifiedConfiguration.get("max_memory_for_stepchain")
-            
-            convertedWfSchema["Multicore"] = multicore
-            convertedWfSchema["Memory"] = memory
+                # Get rid of step/task level core and memory values
+                convertedWfSchema[stepName].pop("Multicore")
+                convertedWfSchema[stepName].pop("Memory")
+
+            # Multicore and Memory setting
+            stepchainMulticore, stepchainMemory = self._getStepChainMulticoreMemory()
+            convertedWfSchema["Multicore"] = stepchainMulticore
+            convertedWfSchema["Memory"] = stepchainMemory
 
             return StepChainWfSchemaHandler(convertedWfSchema)
 
