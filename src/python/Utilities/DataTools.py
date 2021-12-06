@@ -255,6 +255,21 @@ def flattenTaskTree(task: str, **selectParam) -> list:
 
     return allTasks
 
+
+def flattenDictKeys(dct: dict, values: set) -> set:
+    """
+    The function to flatten dict keys
+    :param dct: a dict
+    :param values: values
+    :return: set of keys
+    """
+    allValues = set(values)
+    for value in allValues:
+        if value in dct:
+            allValues.update(flattenDictKeys(dct, dct[value]))
+    return allValues
+
+
 def unnestList(lst: list) -> list:
     """
     The function to unnest a list of lists

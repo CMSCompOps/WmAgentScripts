@@ -240,25 +240,27 @@ def getLogger(name: str, level: str = "INFO", flushEveryLog: bool = True, **kwar
     :return: a logger
     """
     logger = logging.getLogger(name)
-    logger.setLevel(level)
 
-    streamHandler = logging.StreamHandler()
-    streamHandler.setLevel(level=level)
-    streamHandler.setFormatter(logging.Formatter("[%(asctime)s:%(name)s:%(module)s] %(levelname)s: %(message)s"))
-    logger.addHandler(streamHandler)
+    if not len(logger.handlers):
+        logger.setLevel(level)
 
-    if kwargs.get("addWfLevel"):
-        logging.addLevelName(100, "WORKFLOW")
-        logging.workflow = getWorkflowLogLevel
-        logging.Logger.workflow = getWorkflowLogLevel
+        streamHandler = logging.StreamHandler()
+        streamHandler.setLevel(level=level)
+        streamHandler.setFormatter(logging.Formatter("[%(asctime)s:%(name)s:%(module)s] %(levelname)s: %(message)s"))
+        logger.addHandler(streamHandler)
 
-    if kwargs.get("elasticSearch"):
-        esHandler = ElasticSearchHandler(level=kwargs.get("elasticSearch") or level, flushEveryLog=flushEveryLog)
-        logger.addHandler(esHandler)
+        if kwargs.get("addWfLevel"):
+            logging.addLevelName(100, "WORKFLOW")
+            logging.workflow = getWorkflowLogLevel
+            logging.Logger.workflow = getWorkflowLogLevel
 
-    if kwargs.get("email"):
-        emailHandler = EmailHandler(level=kwargs.get("email") or level, flushEveryLog=flushEveryLog)
-        logger.addHandler(emailHandler)
+        if kwargs.get("elasticSearch"):
+            esHandler = ElasticSearchHandler(level=kwargs.get("elasticSearch") or level, flushEveryLog=flushEveryLog)
+            logger.addHandler(esHandler)
+
+        if kwargs.get("email"):
+            emailHandler = EmailHandler(level=kwargs.get("email") or level, flushEveryLog=flushEveryLog)
+            logger.addHandler(emailHandler)
 
     return logger
 
