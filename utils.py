@@ -2705,7 +2705,7 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
 
                 else:
                     # New DBS Server response
-                    print "Handling dbsapi.listFileLumis response from NEW DBS server
+                    print "Handling dbsapi.listFileLumis response from NEW DBS server"
                     self.res = aggregateListFileLumis(response)
 
         threads = []
