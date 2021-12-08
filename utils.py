@@ -2699,14 +2699,15 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
             def run(self):
                 response = self.a.listFileLumis( block_name = self.b , validFileOnly=int(not check_with_invalid_files_too))
                 if type(response[0]["lumi_section_num"]) is list:
-                    # New DBS Server response
-                    print "Handling dbsapi.listFileLumis response from NEW DBS server"
-                    self.res = aggregateListFileLumis(response)
-                else:
                     # Old DBS Server response
                     print "Handling dbsapi.listFileLumis response from OLD DBS server"
                     self.res = response
-                            
+
+                else:
+                    # New DBS Server response
+                    print "Handling dbsapi.listFileLumis response from NEW DBS server
+                    self.res = aggregateListFileLumis(response)
+
         threads = []
         all_blocks = dbsapi.listBlocks( dataset = dataset )
         for block in all_blocks:
