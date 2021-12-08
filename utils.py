@@ -2697,7 +2697,15 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
                 self.res = None
             
             def run(self):
-                self.res = self.a.listFileLumis( block_name = self.b , validFileOnly=int(not check_with_invalid_files_too))
+                response = self.a.listFileLumis( block_name = self.b , validFileOnly=int(not check_with_invalid_files_too))
+                if type(response[0]["lumi_section_num"]) is list:
+                    # New DBS Server response
+                    print "Handling dbsapi.listFileLumis response from NEW DBS server"
+                    self.res = aggregateListFileLumis(response)
+                else:
+                    # Old DBS Server response
+                    print "Handling dbsapi.listFileLumis response from OLD DBS server"
+                    self.res = response
                             
         threads = []
         all_blocks = dbsapi.listBlocks( dataset = dataset )
@@ -5349,3 +5357,34 @@ def getFailedJobs(taskname, caller='getFailedJobs'):
                             failed_jobs += numFailures
     
     return failed_jobs
+
+def aggregateListFileLumis(response):
+
+    aggregatedResponse = []
+
+    tmpDict = {}
+
+    for entry in response:
+        run_num = entry["run_num"]
+        lumi_section_num = entry["lumi_section_num"]
+        logical_file_name = entry["logical_file_name"]
+        event_count = entry["event_count"]
+
+        key = (run_num, logical_file_name)
+
+        if key in tmpDict:
+            tmpDict[key]["event_count"].append(event_count)
+
+        else:
+            tmpDict[key] = {"event_count": [event_count], "lumi_section_num": [lumi_section_num]}
+
+
+    for key, value in tmpDict.iteritems():
+        aggregatedResponse.append({'run_num': key[0],'lumi_section_num': value["lumi_section_num"],'logical_file_name': key[1],'event_count': value["event_count"]})
+
+    return aggregatedResponse
+
+
+
+
+
