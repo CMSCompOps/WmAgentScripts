@@ -2,8 +2,7 @@
 from utils import  reqmgr_url, getWorkflowById
 from JIRAClient import JIRAClient
 
-
-JC = JIRAClient() if up.status.get('jira',False) else None
+JC = JIRAClient()
 if JC:
     those = JC.find({'status' : '!CLOSED'})
     for t in those:
