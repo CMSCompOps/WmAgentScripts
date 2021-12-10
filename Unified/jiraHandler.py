@@ -1,10 +1,7 @@
 #!/usr/bin/env python
-from utils import  componentInfo, reqmgr_url, getWorkflowById
-import sys
+from utils import  reqmgr_url, getWorkflowById
 from JIRAClient import JIRAClient
 
-up = componentInfo(soft=['mcm','wtc','jira'])
-if not up.check(): sys.exit(0)
 
 JC = JIRAClient() if up.status.get('jira',False) else None
 if JC:
