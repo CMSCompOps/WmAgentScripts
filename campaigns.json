@@ -2821,6 +2821,86 @@
       ]
     }
   },
+  "RunIISummer20UL17pp5TeVpLHEGS": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
+    }
+  },
+  "RunIISummer20UL17pp5TeVRECO": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
+    }
+  },
+  "RunIISummer20UL17pp5TeVHLT": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
+    }
+  },
+  "RunIISummer20UL17pp5TeVDIGI": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+       "MergedLFNBase": "/store/himc",
+       "SiteBlacklist": [
+          "T1_US_FNAL",
+          "T2_US_Purdue",
+          "T2_US_Caltech",
+          "T2_US_Florida",
+          "T2_US_Nebraska",
+          "T2_US_UCSD",
+          "T2_US_Wisconsin"
+        ]
+     },
+    "secondaries": {
+       "/MinBias_TuneCP5_5TeV-pythia8/RunIISummer20UL17pp5TeVGS-106X_mc2017_realistic_forppRef5TeV_v3-v1/GEN-SIM": {
+          "SiteWhitelist": [
+             "T2_US_Nebraska",
+             "T2_DE_DESY"
+                      ]
+              }
+       }
+    },
   "SnowmassWinter21GEN": {
     "fractionpass": 0.95, 
     "go": true, 
