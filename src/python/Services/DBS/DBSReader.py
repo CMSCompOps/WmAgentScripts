@@ -93,7 +93,48 @@ class DBSReader(object):
         This function runs by default with multithreading on the param blocks, which is a
         list of block names.
         """
-        return self.dbs.listFileLumis(block_name=blocks, validFileOnly=int(validFileOnly))
+        response = self.dbs.listFileLumis(block_name=blocks, validFileOnly=int(validFileOnly))
+
+        if isinstance(response[0]["lumi_section_num"], list):
+            self.logger.debug("Handling dbsapi.listFileLumis response from NEW DBS server")
+            return self._aggregateListFileLumis(response)
+
+        self.logger.debug("Handling dbsapi.listFileLumis response from OLD DBS server")
+        return response
+
+    def _aggregateListFileLumis(self, response: dict) -> List[dict]:
+        """
+        The function to aggregate the list of file lumis
+        :param response: raw response of listFileLumis
+        :return: lumi section files
+        """
+        aggregatedResponse = []
+        tmpDict = {}
+
+        for entry in response:
+            runNum = entry["run_num"]
+            lumiSectionNum = entry["lumi_section_num"]
+            logicalFileName = entry["logical_file_name"]
+            eventCount = entry["event_count"]
+
+            key = (runNum, logicalFileName)
+
+        if key in tmpDict:
+            tmpDict[key]["event_count"].append(eventCount)
+        else:
+            tmpDict[key] = {"event_count": [eventCount], "lumi_section_num": [lumiSectionNum]}
+
+        for key, value in tmpDict.iteritems():
+            aggregatedResponse.append(
+                {
+                    "run_num": key[0],
+                    "lumi_section_num": value["lumi_section_num"],
+                    "logical_file_name": key[1],
+                    "event_count": value["event_count"],
+                }
+            )
+
+        return aggregatedResponse
 
     def getDBSStatus(self, dataset: str) -> str:
         """
