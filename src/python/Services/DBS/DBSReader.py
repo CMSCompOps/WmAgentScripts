@@ -518,3 +518,29 @@ class DBSReader(object):
         except Exception as error:
             self.logger.error("Failed to get lumi sections and files from DBS for given blocks")
             self.logger.error(str(error))
+
+    def countDatasetFiles(self, dataset: str, skipInvalid: bool = False, onlyInvalid: bool = False) -> int:
+        """
+        The function to count the number of files in a given dataset
+        :param dataset: dataset name
+        :param skipInvalid: if True skip invalid files, o/w include them
+        :param onlyInvalid: if True include only invalid files, o/w include all
+        :return: number of files
+        """
+        try:
+            files = self.dbs.listFiles(dataset=dataset, detail=(skipInvalid or onlyInvalid))
+
+            mainLFN = "/".join(files[0]["logical_file_name"].split("/")[:3]) if files else ""
+
+            if skipInvalid:
+                files = [*filter(lambda file: file["is_file_valid"] == 1, files)]
+            elif onlyInvalid:
+                files = [*filter(lambda file: file["is_file_valid"] == 0, files)]
+
+            if (skipInvalid or onlyInvalid) and mainLFN:
+                return [*filter(lambda file: file["logical_file_name"].startswith(mainLFN), files)]
+            return files
+
+        except Exception as error:
+            self.logger.error("Failed to count files in dataset")
+            self.logger.error(str(error))

@@ -115,10 +115,31 @@ class ReqMgrWriter(object):
         """
         try:
             result = sendResponse(
-                url=self.reqmgrUrl, endpoint=f"{self.reqmgrEndpoint['request']}/{wf}", param={"RequestStatus": "assignment-approved"}
+                url=self.reqmgrUrl,
+                endpoint=f"{self.reqmgrEndpoint['request']}/{wf}",
+                param={"RequestStatus": "assignment-approved"},
             )
             return result["result"][0]["ok"]
 
         except Exception as error:
             self.logger.error("Failed to approve workflow in reqmgr")
+            self.logger.error(str(error))
+
+    def closeoutWorkflow(self, wf: str, cascade: bool = False) -> bool:
+        """
+        The function to close out a given workflow
+        :param wf: workflow name
+        :param cascade: if cascade or not
+        :return: True if succeeded, False o/w
+        """
+        try:
+            result = sendResponse(
+                url=self.reqmgrUrl,
+                endpoint=f"{self.reqmgrEndpoint['request']}/{wf}",
+                param={"RequestStatus": "closed-out", "cascade": cascade},
+            )
+            return result["result"][0][wf] == "OK"
+
+        except Exception as error:
+            self.logger.error("Failed to close out workflow in reqmgr")
             self.logger.error(str(error))
