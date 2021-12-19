@@ -9,8 +9,11 @@ Environment:
     ${RUCIO_HOME}/rucio.cfg
 """
 
+import os
+if not os.getenv('RUCIO_HOME'): os.environ['RUCIO_HOME']='/data/unified/WmAgentScripts/Unified/'
 from rucio.client import Client
 from WMCore.Services.CRIC.CRIC import CRIC
+
 
 class RucioClient(Client):
     """
@@ -28,7 +31,7 @@ class RucioClient(Client):
             'auth_host': 'https://cms-rucio-auth.cern.ch',
             'auth_type': 'x509_proxy',
             'ca_cert': '/etc/grid-security/certificates/',
-            'account': 'unified'
+            'account': 'unified' if os.getenv('USER')=='cmsunified' else os.getenv('USER')
         }
 
         defaultConfig.update(kwargs)

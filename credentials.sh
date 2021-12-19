@@ -24,4 +24,3 @@ if [ "$1" == "create" ] ; then
 else
     echo "using grid proxy" $X509_USER_PROXY
 fi
-
