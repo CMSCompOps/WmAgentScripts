@@ -1,421 +1,21 @@
 import os
 import re
-import optparse
-import random
-import math
 from logging import Logger
-from collections import defaultdict
-from time import mktime, asctime, gmtime, struct_time
+from time import mktime, asctime, gmtime
 
-from Utilities.DataTools import unnestList, flattenDictKeys
-from Utilities.Decorators import runWithMultiThreading
+from Utilities.DataTools import flattenDictKeys
 from Utilities.Logging import getLogger
-from Utilities.ConfigurationHandler import ConfigurationHandler
-from Cache.DataCacheLoader import DataCacheLoader
-from Databases.Oracle.OracleClient import OracleClient
 from Databases.Oracle.OracleDB import Workflow
-from MongoControllers.CampaignController import CampaignController
-from MongoControllers.CloseoutController import CloseoutController
-from MongoControllers.WTCController import WTCController
-from Services.ServicesChecker import ServicesChecker
-from Services.McM.McMClient import McMClient
-from Services.ReqMgr.ReqMgrReader import ReqMgrReader
-from Services.ReqMgr.ReqMgrWriter import ReqMgrWriter
-from Services.ACDC.ACDCReader import ACDCReader
-from Services.DBS.DBSReader import DBSReader
-from Services.DBS.DBSWriter import DBSWriter
 from Services.Rucio.RucioReader import RucioReader
-from WorkflowMgmt.SiteController import SiteController
-from WorkflowMgmt.UserLockChecker import UserLockChecker
 from WorkflowMgmt.WorkflowController import WorkflowController
 from WorkflowMgmt.WorkflowStatusEnforcer import WorkflowStatusEnforcer
 
-from typing import Optional, Tuple, Union
-
-
-class Checkor(OracleClient):
-    """
-    __Checkor__
-    General API for checking workflows in completed status
-    """
-
-    def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
-        try:
-            super().__init__(self)
-            self.logger = logger or getLogger(self.__class__.__name__)
-
-            self.options, self.specificWf = kwargs.get("options"), kwargs.get("specificWf")
-            if self.options is None:
-                self.options, self.specificWf = self.parseOptions()
-
-            now = mktime(gmtime())
-            self.timePoint = {"lap": now, "subLap": now, "start": now}
-
-            self.unifiedConfiguration = ConfigurationHandler("config/unifiedConfiguration.json")
-
-            self.acdcReader = ACDCReader()
-            self.dbs = {"reader": DBSReader(), "writer": DBSWriter()}
-            self.reqMgr = {"reader": ReqMgrReader(), "writer": ReqMgrWriter()}
-
-            self.dataCacheLoader = DataCacheLoader()
-
-            self.campaignController = CampaignController()
-            self.closeoutController = CloseoutController()
-            self.siteController = SiteController()
-            self.wtcController = WTCController()
-
-            self.overrideWfs = None
-            self.onHoldWfs = None
-            self.bypassWfs = None
-            self.forceCompleteWfs = None
-
-            self.jiraClient = None
-            self.mcmClient = None
-
-        except Exception as error:
-            raise Exception(f"Error initializing Checkor\n{str(error)}")
-
-    @staticmethod
-    def parseOptions() -> Tuple[dict, Optional[str]]:
-        """
-        The function to parse the Checkor's options and specific workflow
-        :return: options and the specific workflow, if any
-        """
-        parser = optparse.OptionParser()
-
-        parser.add_option("--go", help="Does not check on duplicate process", action="store_true", default=False)
-        parser.add_option(
-            "--update",
-            help="Running workflows that have not yet reached completed",
-            action="store_true",
-            default=False,
-        )
-        parser.add_option(
-            "--strict", help="Only running workflows that reached completed", action="store_true", default=False
-        )
-        parser.add_option(
-            "--clear", help="Only running workflows that have reached custodial", action="store_true", default=False
-        )
-        parser.add_option(
-            "--review",
-            help="Look at the workflows that have already completed and had required actions",
-            action="store_true",
-            default=False,
-        )
-        parser.add_option(
-            "--recovering",
-            help="Look at the workflows that already have on-going acdc",
-            action="store_true",
-            default=False,
-        )
-        parser.add_option("--manual", help='Look at the workflows in "manual"', action="store_true", default=False)
-        parser.add_option("--limit", help="The number of workflows to consider for checking", default=0, type=int)
-        parser.add_option("--threads", help="The number of threads for processing workflows", default=10, type=int)
-        parser.add_option(
-            "--fractionPass", help="The completion fraction that is permitted", default=0.0, type="float"
-        )
-        parser.add_option("--lumiSize", help="Force the upper limit on lumisection", default=0, type="float")
-        parser.add_option(
-            "--ignoreFiles", help="Force ignoring dbs/rucio differences", action="store_true", default=False
-        )
-        parser.add_option(
-            "--ignoreInvalid", help="Force ignoring high level of invalid files", action="store_true", default=False
-        )
-        parser.add_option(
-            "--ignoreDuplicates", help="Force ignoring lumi duplicates", action="store_true", default=False
-        )
-        parser.add_option("--tapeSizeLimit", help="The limit in size of all outputs", default=0, type=int)
-        parser.add_option("--html", help="Build the the monitor page", action="store_true", default=False)
-        parser.add_option(
-            "--noReport", help="Prevent from making the error report", action="store_true", default=False
-        )
-        parser.add_option(
-            "--backfill", help="To run in test mode (only with backfill workflows)", action="store_true", default=False
-        )
-
-        options, args = parser.parse_args()
-        options = vars(options)
-
-        options["manual"] = not options.get("recovering")
-        actions = ["strict", "update", "clear", "review"]
-        if all(not options.get(option) for option in actions):
-            for option in actions + ["recovering", "manual"]:
-                options[option] = True
-
-        return options, args[0] if args else None
-
-    def _setWfs(self) -> None:
-        """
-        The function to set workflows to override, on hold, bypass and force complete.
-        """
-        self.overrideWfs = self._getWorkflowsByAction("force-complete", details=True)
-        self.onHoldWfs = self._getWorkflowsByAction("hold")
-        self.bypassWfs = self._getWorkflowsByAction("bypass") + unnestList(self.overrideWfs)
-        self.forceCompleteWfs = self.mcmClient.get("/restapi/requests/forcecomplete") if self.mcmClient is not None else {}
-
-        if self.jiraClient is not None:
-            # TODO: update wfs by JIRA tickets / migrate JiraClient
-            pass
-
-    def _checkPoint(self, label: str = "", subLap: bool = False, now: struct_time = gmtime()) -> None:
-        """
-        The function to get the check points
-        :label: log message label
-        :subLap: True if for sub lap, False o/w
-        :now: time now
-        """
-        self.logger.info("Time check (%s) point at: %s", label, asctime(now))
-        self.logger.info("Since start: %s [s]", now - self.timePoint.get("start", now))
-
-        self.logger.info(
-            "%s: %s [s]",
-            "Sub lap" if subLap else "Lap",
-            now - self.timePoint.get("subLap" if subLap else "lap", now),
-        )
-        self.timePoint["subLap"] = now
-        if not subLap:
-            self.timePoint["lap"] = now
-
-    def _filterBackfills(self, workflows: list) -> list:
-        """
-        The function to filter only backfill workflows
-        :workflows: workflows
-        :return: backfill workflows
-        """
-        if self.options.get("backfill"):
-            self.logger.info(self.logMsg["backfill"])
-            return [wf for wf in workflows if "backfill" in wf.name.lower()]
-        return workflows
-
-    def _getWorkflowsToCheck(self) -> list:
-        """
-        The function to get the workflows to check
-        :return: workflows
-        """
-        workflows = set()
-
-        awayWfs = self.session.query(Workflow).filter(Workflow.status == "away").all()
-        assistanceWfs = self.session.query(Workflow).filter(Workflow.status.startswith("assistance")).all()
-        completedWfs = self.reqMgr["reader"].getWorkflowsByStatus("completed")
-
-        if self.options.get("strict"):
-            self.logger.info("Strict option is on: checking workflows that freshly completed")
-            workflows.update(filter(lambda wf: wf.name in completedWfs, awayWfs))
-
-        if self.options.get("update"):
-            self.logger.info("Update option is on: checking workflows that have not completed yet")
-            workflows.update(filter(lambda wf: wf.name not in completedWfs, awayWfs))
-
-        if self.options.get("clear"):
-            self.logger.info("Clear option is on: checking workflows that are ready to toggle closed-out")
-            workflows.update(filter(lambda wf: "custodial" in wf.status, assistanceWfs))
-
-        if self.options.get("review"):
-            nonCustodialWfs = [*filter(lambda wf: "custodial" not in wf.status, assistanceWfs)]
-            if self.options.get("recovering"):
-                self.logger.info("Review-recovering option is on: checking only the workflows that had been already acted on")
-                workflows.update(filter(lambda wf: "manual" not in wf.status, nonCustodialWfs))
-            if self.options.get("manual"):
-                self.logger.info("Review-manual option is on: checking the workflows to be acted on")
-                workflows.update(filter(lambda wf: "manual" in wf.status, nonCustodialWfs))
-
-        return list(workflows)
-
-    def _getWorkflowsByAction(self, action: str, details: bool = False) -> Union[list, dict]:
-        """
-        The function to get workflows for a given user action
-        :action: user action
-        :details: if True return dict of workflows by user. O/w return workflows names
-        :return: workflows
-        """
-        workflows = defaultdict(set)
-
-        allowedUsers = [*self.unifiedConfiguration.get("allowed_bypass", {}).keys()]
-
-        userWfs = (
-            self.wtcController.getHold()
-            if action == "hold"
-            else self.wtcController.getBypass()
-            if action == "bypass"
-            else self.wtcController.getForce()
-            if action == "force-complete"
-            else {}
-        )
-        for user, wf in userWfs.items():
-            if user not in allowedUsers:
-                self.logger.info("%s is not allowed to %s", user, action)
-                continue
-
-            self.logger.info("%s allowed to %s %s", user, action, wf)
-            workflows[user].add(wf)
-
-        if details:
-            return workflows
-        return unnestList(workflows)
-
-    def _filterMaxNumberOfWorkflows(self, workflows: list) -> list:
-        """
-        The function to filter the max number of workflows per round
-        :param workflows: list of workflows
-        :return: filtered list of workflows
-        """
-        maxPerRound = self.unifiedConfiguration.get("max_per_round", {}).get("checkor")
-        if self.options.get("limit"):
-            self.logger.info("Command line to limit workflows to %s", self.options.get("limit"))
-            maxPerRound = self.options.get("limit")
-
-        if maxPerRound and not self.specific:
-            self.logger.info("Limiting workflows to %s this round", maxPerRound)
-
-            workflows = self._rankWorkflows(workflows)
-            if self.option.get("update"):
-                random.shuffle(workflows)
-            return workflows[:maxPerRound]
-
-        return workflows
-
-    def _rankWorkflows(self, workflows: list) -> list:
-        """
-        The function to rank the workflows by their priority
-        :param workflows: workflows
-        :return: sorted workflows
-        """
-        completedWfs = self.reqMgr["reader"].getWorkflowsByStatus("completed", details=True)
-        completedWfs = sorted(completedWfs, key=lambda wf: wf.get("RequestPriority", 0))
-        completedWfs = [wf.get("RequestName") for wf in completedWfs]
-
-        return sorted(workflows, key=lambda wf: completedWfs.index(wf) if wf in completedWfs else 0, reverse=True)
-
-    def _updateWorkflowsRecords(self, wfsRecords: dict) -> None:
-        """
-        The function to update the workflows records
-        :param wfsRecords: records
-        """
-        for wf in wfsRecords:
-            if wf.get("record"):
-                self.closeoutController.set(wf.get("wf"), wf.get("record"))
-
-    def _updateWorkflowsStatus(self, wfsStatus: list) -> None:
-        """
-        The function to update the workflows status
-        :param wfsStatus: status
-        """
-        for wf in wfsStatus:
-            if wf.get("newStatus"):
-                newStatus = wf.get("newStatus")
-                wf["workflow"].status = newStatus
-                self.session.commit()
-                
-                if newStatus == "close":
-                    self.closeoutController.clean(wf.get("wf"))
-                    if self.mcmClient is not None and wf.get("mcmForceComplete"):
-                        for prepId in wf.get("prepIds"):
-                            self.mcmClient.clean(f"/restapi/requests/forcecomplete/{prepId}")
-    
-    def _checkExecutionTime(self, nWfs: int, now: struct_time = mktime(gmtime())) -> None:
-        """
-        The function to check the execution time of the module
-        :param nWfs: number of workflows
-        :param now: time now
-        """
-        if nWfs:
-            avgExecutionTime = (now - self.timePoint.get("start")) / nWfs
-            self.logger.info("Average time spend per workflow: %s s", avgExecutionTime)
-            
-            if avgExecutionTime > 120:
-                self.logger.critical("Checkor took %s [s] per workflow", avgExecutionTime)
-
-    def _countAssistanceWorkflowsByStatus(self) -> dict:
-        """
-        The function to count the number of assistance workflows by status
-        :return: count of workflows by status
-        """
-        status = defaultdict(int)
-        for wf in self.session.query(Workflow).filter(Workflow.status.startswith("assistance")).all():
-            status[wf.status] += 1
-        
-        return status
-
-    def _writeSummary(self) -> None:
-        """
-        The function to write a summary of checkor
-        """
-        if not self.specificWf:
-            msg = ""
-            if self.options.get("strict"):
-                msg += "Workflows which just got in completed were looked at. Look in manual.\n"
-            if self.options.get("update"):
-                msg += "Workflows that are still running (and not completed) got looked at.\n"
-            if self.options.get("clear"):
-                msg += "Workflows that just need to close-out were verified. Nothing too new a-priori.\n"
-            if self.options.get("review"):
-                msg += "Workflows under intervention got review.\n"
-            
-            msg += "\n".join([f"{count} in status {status}" for status, count in self._countAssistanceWorkflowsByStatus()])
-
-            self.logger.info(msg)
-
-    def go(self) -> bool:
-        """
-        The function to check if the checkor can go
-        :return: True if it can go, False o/w
-        """
-        try:
-            userLockChecker = UserLockChecker()
-            servicesChecker = ServicesChecker(softServices=["mcm", "wtc"])
-
-            if not userLockChecker.isLocked() and servicesChecker.check():
-                self.mcmClient = McMClient() if servicesChecker.status.get("mcm") else None
-                self.jiraClient = None #JiraClient() if servicesChecker.status.get("jira") else None    TODO: migrate JiraClient
-                return True
-
-            return False
-
-        except Exception as error:
-            self.logger.error("Failed to check if Checkor can go")
-            self.logger.error(str(error))
-
-    def run(self) -> None:
-        """
-        The function to run checkor
-        """
-        try:
-            self._setWfs()
-
-            wfsToCheck = self._filterBackfills(self._getWorkflowsToCheck())
-            random.shuffle(wfsToCheck)
-
-            self.logger.info("Considering %s workflows (before any limitation)", len(wfsToCheck))
-
-            wfsToCheck = self._filterMaxNumberOfWorkflows(wfsToCheck)
-            self._check(wfsToCheck)
-
-            self._writeSummary()
-
-        except Exception as error:
-            self.logger.error("Failed to run checkor")
-            self.logger.error(str(error))
-
-    def _check(self, wfsToCheck: list) -> None:
-        """
-        The wrapper function to check the workflows
-        :param wfsToCheck: workflows to check
-        """
-
-        @runWithMultiThreading(mtParam="wfsToCheck", maxThreads=len(wfsToCheck))
-        def _checkWorkflow(self, wfsToCheck: list) -> dict:
-            return WorkflowCheckor(wfsToCheck, checkor=self).check()
-
-        checkResponses = _checkWorkflow(wfsToCheck)
-        self._updateWorkflowsRecords(checkResponses)
-        self._updateWorkflowsStatus(checkResponses)
-
-        self._checkExecutionTime(len(wfsToCheck))
+from typing import Optional, Tuple
 
 class WorkflowCheckor(object):
     """
     __WorkflowCheckor__
-    General API for checking a fiven workflow
+    General API for checking a given workflow
     """
 
     def __init__(self, wfToCheck: Workflow, logger: Optional[Logger] = None, **kwargs) -> None:
@@ -469,10 +69,10 @@ class WorkflowCheckor(object):
         :return: True if workflow should be skipped, False o/w
         """
         if (
-            (self.checkor.specific and self.checkor.specific not in self.wf)
+            (self.checkor.specificWf and self.checkor.specificWf not in self.wf)
             or os.path.isfile(".checkor_stop")
             or self.wfToCheck.wm_status in ["assigned", "acquired"]
-            or (self.wfToCheck.wm_status != "completed" and self.wf not in self.checkor.exceptions)
+            or self.wfToCheck.wm_status != "completed"
         ):
             self.logger.info("Skipping workflow %s", self.wf)
             return True
@@ -484,7 +84,7 @@ class WorkflowCheckor(object):
         The function to check if a given workflow should be closed
         :return: True if workflow should be closed, False o/w
         """
-        if self.wfToCheck.wm_status in ["closed-out", "announced"] and self.wf not in self.checkor.exceptions:
+        if self.wfToCheck.wm_status in ["closed-out", "announced"]:
             self.logger.info("%s is already %s, setting as close", self.wf, self.wfToCheck.wm_status)
             self.newStatus = "close"
             return True
@@ -535,7 +135,7 @@ class WorkflowCheckor(object):
         """
         for bypassWf in self.checkor.bypassWfs:
             if bypassWf == self.wf:
-                self.logger.info(self.logMsg["bypassCheck"], self.wf, bypassWf)
+                self.logger.info("Bypassing checks %s because of keyword %s", self.wf, bypassWf)
                 self.bypassChecks = True
 
         self.bypassChecks = False
@@ -597,7 +197,7 @@ class WorkflowCheckor(object):
         :param family: workflow family
         :return: if set new status
         """
-        onHoldTimeout = self.unifiedConfiguration.get("onhold_timeout")
+        onHoldTimeout = self.checkor.unifiedConfiguration.get("onhold_timeout")
         minFamilyCompletedDelay = self._getMinFamilyCompletedDelay(family, self.now)
 
         self.logger.info("On hold since %s, timeout at %s", minFamilyCompletedDelay, onHoldTimeout)
@@ -635,19 +235,21 @@ class WorkflowCheckor(object):
         The function yo get the tiers with no check and custodial
         :return: list of tiers with no check, and list of tiers with no custodial
         """
-        tiersWithNoCheck = set(self.unifiedConfiguration.get("tiers_with_no_check"))
+        tiersWithNoCheck = set(self.checkor.unifiedConfiguration.get("tiers_with_no_check"))
         tiersWithNoCustodial = set(
-            self.unifiedConfiguration.get("tiers_with_no_custodial") if not self.wfController.request.isRelVal() else []
+            self.checkor.unifiedConfiguration.get("tiers_with_no_custodial") if not self.wfController.request.isRelVal() else []
         )
 
-        for campaign in self._getWorkflowCampaigns(self.wfController).values():
+        campaigns = self.campaigns or self._setWorkflowCampaigns()
+
+        for campaign in campaigns.values():
             if (
-                campaign in self.campaignController.campaigns
-                and "custodial_override" in self.campaignController.campaigns[campaign]
+                campaign in self.checkor.campaignController.campaigns
+                and "custodial_override" in self.checkor.campaignController.campaigns[campaign]
             ):
-                if isinstance(self.campaignController.campaigns[campaign]["custodial_override"], list):
-                    tiersWithNoCheck -= self.campaignController.campaigns[campaign]["custodial_override"]
-                elif self.campaignController.campaigns[campaign]["custodial_override"] == "notape":
+                if isinstance(self.checkor.campaignController.campaigns[campaign]["custodial_override"], list):
+                    tiersWithNoCheck -= self.checkor.campaignController.campaigns[campaign]["custodial_override"]
+                elif self.checkor.campaignController.campaigns[campaign]["custodial_override"] == "notape":
                     tiersWithNoCustodial = set(
                         sorted([dataset.split("/")[-1] for dataset in self.wfController.request.get("OutputDatasets")])
                     )
@@ -682,9 +284,9 @@ class WorkflowCheckor(object):
         :return: True if to skip, False o/w
         """
         return (
-            wfSchema.get("RequestType") != "Ressubmission"
-            or wfSchema.get("RequestDate") < wfSchema.request.get("RequestDate")
-            or wfSchema.get("PrepID") != wfSchema.request.get("PrepID")
+            wfSchema.get("RequestType") != "Resubmission"
+            or wfSchema.get("RequestDate") < self.wfController.request.get("RequestDate")
+            or wfSchema.get("PrepID") != self.wfController.request.get("PrepID")
             or wfSchema.get("RequestStatus") == None
         )
 
@@ -814,7 +416,11 @@ class WorkflowCheckor(object):
         if (self.bypassChecksByMcMForceComplete or self.bypassChecksByUserForceComplete) and len(self.acdcs.get("healthy")):
             self.wfController.logger.info("%s is being force completed while recovering", self.wf)
             self.wfController.logger.critical("The workflow %s was force completed", self.wf)
-            WorkflowStatusEnforcer(self.wf).forceComplete()
+
+            if self.checkor.options.get("dryRun"):
+                self.checkor.logger.debug("Dry run: force completed workflow %s", self.wf)
+            else:
+                WorkflowStatusEnforcer(self.wf).forceComplete()
 
         if self.acdcs.get("failed"):
             self.logger.critical("For %s, ACDC %s failed", self.wf, ", ".join(self.acdcs.get("failed")))
@@ -842,19 +448,20 @@ class WorkflowCheckor(object):
         fractionDamping = min(
             0.01
             * (
-                max(wfCompletedDelay - self.unifiedConfiguration.get("damping_fraction_pass"), 0)
-                / self.unifiedConfiguration.get("damping_fraction_pass_rate")
+                max(wfCompletedDelay - self.checkor.unifiedConfiguration.get("damping_fraction_pass"), 0)
+                / self.checkor.unifiedConfiguration.get("damping_fraction_pass_rate")
             ),
-            self.unifiedConfiguration.get("damping_fraction_pass_max") / 100.0,
+            self.checkor.unifiedConfiguration.get("damping_fraction_pass_max") / 100.0,
         )
 
         self.logger.info("The passing fraction could be reduced to %s given it has been in for long", fractionDamping)
 
         return fractionDamping
 
-    def _setWorkflowCampaigns(self) -> None:
+    def _setWorkflowCampaigns(self) -> dict:
         """
         The function to set the campaigns
+        :return: campaigns
         """
         campaigns = {}
         wfCampaigns = self.wfController.request.getCampaigns(details=False)
@@ -867,6 +474,8 @@ class WorkflowCheckor(object):
         self.logger.info("Campaigns: %s", campaigns)
         self.campaigns = campaigns
 
+        return campaigns
+
     def _setDatasetsFractionsToAnnounce(self) -> None:
         """
         The function to set the dataset fractions to announce
@@ -877,49 +486,73 @@ class WorkflowCheckor(object):
 
         self.fractions["announce"] = fractionsAnnounce
 
+    def _getFractionPassByCommandLine(self) -> float:
+        """
+        The function to get the fraction pass by the command line
+        :return: fractions to pass if any, else None
+        """
+        if self.checkor.options.get("fractionPass"):
+            fractionPass = self.checkor.options.get("fractionPass")
+            self.wfController.logger.info("Overriding fraction to pass to %s by command line", fractionPass)
+            return fractionPass
+
+    def _getFractionPassByCampaignRequirement(self, campaign: str, dataset: str) -> float:
+        """
+        The function to get the fraction pass by the campaign requirement
+        :param campaign: campaign name
+        :param dataset: dataset name
+        :return: fractions to pass if any, else None
+        """
+        fractionPass = None
+        campaignFractionPass = self.checkor.campaignController.campaigns.get(campaign, {}).get("fractionpass")
+
+        if campaignFractionPass:
+            if isinstance(campaignFractionPass, dict):
+                tier = dataset.split("/")[-1]
+                priority = str(self.wfController.request.get("RequestPriority"))
+                fractionPass = campaignFractionPass.get("all")
+                if campaignFractionPass.get(tier):
+                    tierFractionPass = campaignFractionPass.get(tier)
+                    if isinstance(tierFractionPass, dict):
+                        fractionPass = tierFractionPass.get("all")
+                        for key, passValue in tierFractionPass.items():
+                            if dataset.startswith(key):
+                                fractionPass = passValue
+                    else:
+                        fractionPass = tierFractionPass
+
+                if campaignFractionPass.get(priority):
+                    fractionPass = campaignFractionPass.get("priority")
+            
+            else:
+                fractionPass = campaignFractionPass
+        
+        if fractionPass is not None:
+            self.wfController.logger.info(
+                "Overriding fraction to pass to %s by campaign requirement", fractionPass
+            )
+            return fractionPass
+
+
     def _setDatasetsFractionsToPass(self) -> None:
         """
         The function to set the dataset fractions to pass
         """
         fractionsPass = {}
-        defaultPass = self.unifiedConfiguration.get("default_fraction_pass")
+        defaultPass = self.checkor.unifiedConfiguration.get("default_fraction_pass")
 
         campaigns = self.campaigns or self._setWorkflowCampaigns()
 
         for dataset in self.outputDatasetsToCheck:
             campaign = campaigns.get(dataset)
 
-            if self.options.get("fractionPass"):
-                fractionsPass[dataset] = self.options.get("fractionPass")
-                self.wfController.logger.info(
-                    "Overriding fraction to %s for %s by command line", fractionsPass[dataset], dataset
-                )
-            elif self.campaignController.campaigns.get(campaign, {}).get("fractionpass"):
-                fractionPass = self.campaignController.campaigns.get(campaign).get("fractionpass")
-                if isinstance(fractionPass, dict):
-                    tier = dataset.split("/")[-1]
-                    priority = str(self.wfController.request.get("RequestPriority"))
-                    fractionsPass[dataset] = fractionPass.get("all", defaultPass)
-                    if fractionPass.get(tier):
-                        tierFractionPass = fractionPass.get(tier)
-                        if isinstance(tierFractionPass, dict):
-                            fractionsPass[dataset] = tierFractionPass.get("all", defaultPass)
-                            for key, passValue in tierFractionPass.items():
-                                if dataset.startswith(key):
-                                    fractionsPass[dataset] = passValue
-                        else:
-                            fractionsPass[dataset] = tierFractionPass
-                    if fractionPass.get(priority):
-                        fractionsPass[dataset] = fractionPass.get("priority")
-                else:
-                    fractionsPass[dataset] = fractionPass
-                self.wfController.logger.info(
-                    "Overriding fraction to %s for %s by campaign requirement", fractionsPass[dataset], dataset
-                )
-            else:
+            fractionsPass[dataset] = self._getFractionPassByCommandLine()
+            if not fractionsPass[dataset]:
+                fractionsPass[dataset] = self._getFractionPassByCampaignRequirement(campaign, dataset)
+            if not fractionsPass[dataset]:
                 fractionsPass[dataset] = defaultPass
 
-            for key, passValue in self.unifiedConfiguration.get("pattern_fraction_pass").items():
+            for key, passValue in self.checkor.unifiedConfiguration.get("pattern_fraction_pass").items():
                 if key in dataset:
                     fractionsPass[dataset] = passValue
                     self.wfController.logger.info("Overriding fraction to %s for %s by dataset key", passValue, dataset)
@@ -945,14 +578,14 @@ class WorkflowCheckor(object):
             ) / (weightPass + weightFull * weightUnderPass)
 
             campaign = campaigns.get(dataset)
-            if self.campaignController.campaigns.get(campaign, {}).get("truncaterecovery"):
-                fractionsTruncateRecovery[dataset] = self.campaignController.campaigns.get(campaign).get(
+            if self.checkor.campaignController.campaigns.get(campaign, {}).get("truncaterecovery"):
+                fractionsTruncateRecovery[dataset] = self.checkor.campaignController.campaigns.get(campaign).get(
                     "truncaterecovery"
                 )
                 self.wfController.logger.info(
                     "Allowed to truncate recovery of %s over %.2f by campaign requirement",
                     dataset,
-                    self.campaignController.campaigns.get(campaign).get("truncaterecovery"),
+                    self.checkor.campaignController.campaigns.get(campaign).get("truncaterecovery"),
                 )
 
             if fractionsTruncateRecovery[dataset] < self.fractions["pass"][dataset]:
@@ -970,12 +603,12 @@ class WorkflowCheckor(object):
 
         fractionDamping = self._getFractionDumping()
         for dataset, value in self.fractions["pass"].items():
-            if value != 1.0 and fractionDamping and self.unifiedConfiguration.get("timeout_for_damping_fraction"):
+            if value != 1.0 and fractionDamping and self.checkor.unifiedConfiguration.get("timeout_for_damping_fraction"):
                 self.fractions["pass"][dataset] -= fractionDamping
                 self.fractions["truncate"][dataset] -= fractionDamping
 
-        if self.acdsWfs.get("order") > self.unifiedConfiguration.get("acdc_rank_for_truncate"):
-            self.wfController.logger.info("Truncating at pass threshold because of ACDC at rank %d", self.acdsWfs.get("order"))
+        if self.checkor.acdsWfs.get("order") > self.checkor.unifiedConfiguration.get("acdc_rank_for_truncate"):
+            self.wfController.logger.info("Truncating at pass threshold because of ACDC at rank %d", self.checkor.acdsWfs.get("order"))
             self.fractions["truncate"][dataset] = self.fractions["pass"][dataset]
 
         self._updateFractionsToPassAndToTruncateRecovery()
@@ -995,7 +628,7 @@ class WorkflowCheckor(object):
                 descendingPass *= self.fractions["pass"].get(ancestor, 1.0)
                 descendingTruncate *= self.fractions["truncate"].get(ancestor, 1.0)
 
-            if self.unifiedConfiguration.get("cumulative_fraction_pass"):
+            if self.checkor.unifiedConfiguration.get("cumulative_fraction_pass"):
                 self.fractions["pass"][dataset] = descendingPass
                 self.fractions["truncate"][dataset] = descendingTruncate
                 self.logger.info(
@@ -1012,7 +645,7 @@ class WorkflowCheckor(object):
         :return: number of expected events
         """
         if self.wfController.request.get("RequestType") in ["TaskChain", "StepChain"]:
-            return self.wfController.getRequestNumEvents()
+            return self.wfController.request.getRequestNumEvents()
 
         expectedEvents = self.wfController.request.get("TotalInputEvents")
         if expectedEvents is None:
@@ -1092,8 +725,10 @@ class WorkflowCheckor(object):
         """
         The function to set the pass statistics to over complete
         """
-        defaultFractionOverdoing = self.unifiedConfiguration.get("default_fraction_overdoing")
-        self.passStatsCheckOverCompletion = dict([(dataset, value >= defaultFractionOverdoing) for dataset, value in self.percentCompletions.items()])
+        defaultFractionOverdoing = self.checkor.unifiedConfiguration.get("default_fraction_overdoing")
+        self.passStatsCheckOverCompletion = dict(
+            [(dataset, value >= defaultFractionOverdoing) for dataset, value in self.percentCompletions.items()]
+        )
 
 
     def _checkAvgCompletionStatistics(self) -> None:
@@ -1104,7 +739,7 @@ class WorkflowCheckor(object):
 
         _, primaries, _, _ = self.wfController.request.getIO()
         runWhiteList = self.wfController.getRunWhiteList()
-        lumiWhiteList = self.wfController.getLumiWhiteList()
+        lumiWhiteList = self.wfController.request.getLumiWhiteList()
 
         lumisPerRun = {}
         if not all(self.passStatsCheck.values()):
@@ -1157,7 +792,7 @@ class WorkflowCheckor(object):
         :return: recovery assistance tags
         """
         if not all(self.passStatsCheck.values()):
-            possibleRecoveries = self.acdcReader.getRecoveryDocs()
+            possibleRecoveries = self.checkor.acdcReader.getRecoveryDocs(self.wf)
             if not possibleRecoveries:
                 self.logger.info(
                     "The workflow is not completed/has missing statistics, but nothing is recoverable. Passing through to announcement"
@@ -1165,7 +800,7 @@ class WorkflowCheckor(object):
                 self.bypassChecks = True
 
             if not self.bypassChecks:
-                return ["recovery" if self.unifiedConfiguration.get("use_recoveror") else "manual"]
+                return ["recovery" if self.checkor.unifiedConfiguration.get("use_recoveror") else "manual"]
 
         return []
 
@@ -1204,18 +839,21 @@ class WorkflowCheckor(object):
             self.assistanceTags.add("over100")
 
         if self._forceCompleteWorkflow():
-            WorkflowStatusEnforcer(self.wf).forceComplete()
+            if self.checkor.options.get("dryRun"):
+                self.checkor.logger.debug("Dry run: force completed workflow %s", self.wf)
+            else:
+                WorkflowStatusEnforcer(self.wf).forceComplete()
 
     def _hasSmallLumis(self) -> bool:
         """
         The function to check if the workflow has small lumi sections
         :return: True if it has small lumis, False o/w
         """
-        lumiLowerLimit = self.unifiedConfiguration.get("min_events_per_lumi_output")
+        lumiLowerLimit = self.checkor.unifiedConfiguration.get("min_events_per_lumi_output")
         _, primaries, _, _ = self.wfController.request.getIO()
 
         if (
-            not self.wfController.isRelVal()
+            not self.wfController.request.isRelVal()
             and not primaries
             and any(
                 [
@@ -1252,18 +890,18 @@ class WorkflowCheckor(object):
         The function to set the lumi sections upper limit
         """
         lumiUpperLimit = {}
-        campaigns = self.campaigns or self._getWorkflowCampaigns()
+        campaigns = self.campaigns or self._setWorkflowCampaigns()
 
         for dataset in self.outputDatasetsToCheck:
             campaign = campaigns[dataset]
 
             if self.wfController.request.get("RequestType") in ["ReDigi", "ReReco"]:
                 upperLimit = -1
-            elif self.options.get("lumisize"):
-                upperLimit = self.options.get("lumisize")
+            elif self.checkor.options.get("lumisize"):
+                upperLimit = self.checkor.options.get("lumisize")
                 self.logger.info("Overriding the upper lumi size to %s for %s", upperLimit, campaign)
-            elif self.campaignController.campaigns.get(campaign, {}).get("lumisize"):
-                upperLimit = self.campaignController.campaigns.get(campaign, {}).get("lumisize")
+            elif self.checkor.campaignController.campaigns.get(campaign, {}).get("lumisize"):
+                upperLimit = self.checkor.campaignController.campaigns.get(campaign, {}).get("lumisize")
                 self.logger.info("Overriding the upper lumi size to %s for %s", upperLimit, campaign)
             else:
                 upperLimit = 1001
@@ -1326,7 +964,7 @@ class WorkflowCheckor(object):
         The function to check if there is any file mismatch
         :return: if number of files in DBS in different from Rucio
         """
-        if not self.options.get("ignoreFiles") and not all(
+        if not self.checkor.options.get("ignoreFiles") and not all(
             [self.dbsPresence[dataset] == self.dbsInvalid[dataset] + self.rucioPresence[dataset] for dataset in self.outputDatasetsToCheck]
         ):
             self.logger.info("The workflow has a dbs/rucio mismatch")
@@ -1347,8 +985,7 @@ class WorkflowCheckor(object):
                     for file in self.dbs["reader"].getDatasetFiles(dataset, validFileOnly=True, details=True)
                 ]
             )
-            rucioReader = RucioReader()
-            rucioFilenames = set(rucioReader.getDatasetFileNames(dataset))
+            rucioFilenames = set(self.rucioReader.getDatasetFileNames(dataset))
 
             missingRucioFiles = dbsFilenames - rucioFilenames
             missingDBSFiles = rucioFilenames - dbsFilenames
@@ -1360,7 +997,7 @@ class WorkflowCheckor(object):
                     showOnlyN,
                     "\n".join(missingRucioFiles[:showOnlyN]),
                 )
-                wereInvalidated = sorted(missingRucioFiles & set(self.dataCacheLoader.load("file_invalidation")))
+                wereInvalidated = sorted(missingRucioFiles & set(self.checkor.dataCacheLoader.load("file_invalidation")))
                 if wereInvalidated:
                     self.wfController.logger.info(
                         "These %d files were invalidated globally, showing %d only.\n %s",
@@ -1368,7 +1005,11 @@ class WorkflowCheckor(object):
                         showOnlyN,
                         "\n".join(wereInvalidated[:showOnlyN]),
                     )
-                    self.dbs["writer"].setFileStatus(wereInvalidated, validate=False)
+
+                    if self.checkor.options.get("dryRun"):
+                        self.checkor.logger.debug("Dry run: invalidated %s files", len(wereInvalidated))
+                    else:
+                        self.dbs["writer"].setFileStatus(wereInvalidated, validate=False)
 
             if missingDBSFiles:
                 self.wfController.logger.info(
@@ -1377,7 +1018,7 @@ class WorkflowCheckor(object):
                     showOnlyN,
                     "\n".join(missingDBSFiles[:showOnlyN]),
                 )
-                wereInvalidated = sorted(missingDBSFiles & set(self.dataCacheLoader.load("file_invalidation")))
+                wereInvalidated = sorted(missingDBSFiles & set(self.checkor.dataCacheLoader.load("file_invalidation")))
                 if wereInvalidated:
                     self.wfController.logger.info(
                         "These %d files were invalidated globally, showing %d only.\n %s",
@@ -1396,7 +1037,7 @@ class WorkflowCheckor(object):
         The function to check the invalidations
         """
         fractionInvalid = 0.2
-        if not self.options.get("ignoreinvalid") and not all(
+        if not self.checkor.options.get("ignoreinvalid") and not all(
             [
                 self.dbsInvalid[dataset] <= int(fractionInvalid * self.dbsPresence[dataset])
                 for dataset in self.wfController.request.get("OutputDatasets")
@@ -1431,7 +1072,7 @@ class WorkflowCheckor(object):
             )
             record["dbsFiles"] = self.dbsPresence[dataset]
             record["dbsInvFiles"] = self.dbsInvalid[dataset]
-            record["rucioFiles"] = set(RucioReader().getDatasetFileNames(dataset))
+            record["rucioFiles"] = set(self.rucioReader.getDatasetFileNames(dataset))
             record[
                 "acdc"
             ] = f"{len(self.acdcs.get('healthy', []))} / {len(self.acdcs.get('healthy', []) + self.acdcs.get('inactive', []))}"
@@ -1460,12 +1101,15 @@ class WorkflowCheckor(object):
             self.newStatus = "close"
             return
 
-        response = self.checkor.reqMgr["writer"].closeoutWorkflow(self.wf, cascade=True)
-        if response:
-            self.newStatus =  "close"
-            return
+        if self.checkor.options.get("dryRun"):
+            self.checkor.logger.debug("Dry run: closed out workflow %s", self.wf)
+        else:
+            response = self.checkor.reqMgr["writer"].closeoutWorkflow(self.wf, cascade=True)
+            if response:
+                self.newStatus =  "close"
+                return
 
-        self.logger.info("Could not close-out, will try again next time")
+            self.logger.info("Could not close-out, will try again next time")
 
 
     def _checkAssistanceTags(self) -> None:
@@ -1603,9 +1247,3 @@ class WorkflowCheckor(object):
         }
         return response
 
-
-if __name__ == "__main__":
-    options, specificWf = Checkor.parseOptions()
-    checkor = Checkor(options=options, specificWf=specificWf)
-    if checkor.go():
-        checkor.run()
