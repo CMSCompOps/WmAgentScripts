@@ -19,7 +19,6 @@ from WorkflowMgmt.WorkflowSchemaHandlers.TaskChainWfSchemaHandler import TaskCha
 
 
 class WorkflowControllerTest(unittest.TestCase):
-    rucioConfig = {"account": os.getenv("RUCIO_ACCOUNT")}
     realCampaignController = CampaignController()
 
     # This workflow is a monte carlo request. Use it for testing functions depending on the request type as well as splittings functions.
@@ -166,20 +165,20 @@ class WorkflowControllerTest(unittest.TestCase):
         mockCampaign.side_effect = [None] * 5
         mockSite.side_effect = [None] * 5
 
-        self.mcWfController = WorkflowController(self.mcParams.get("workflow"), rucioConfig=self.rucioConfig)
+        self.mcWfController = WorkflowController(self.mcParams.get("workflow"))
 
-        self.rerecoWfController = WorkflowController(self.rerecoParams.get("workflow"), rucioConfig=self.rucioConfig)
+        self.rerecoWfController = WorkflowController(self.rerecoParams.get("workflow"))
 
         self.stepChainWfController = WorkflowController(
             self.stepChainParams.get("workflow"), rucioConfig=self.rucioConfig
         )
 
         self.redigiTaskChainWfController = WorkflowController(
-            self.redigiTaskChainParams.get("workflow"), rucioConfig=self.rucioConfig
+            self.redigiTaskChainParams.get("workflow")
         )
 
         self.relvalTaskChainWfController = WorkflowController(
-            self.relvalTaskChainParams.get("workflow"), rucioConfig=self.rucioConfig
+            self.relvalTaskChainParams.get("workflow")
         )
 
         super().setUp()
