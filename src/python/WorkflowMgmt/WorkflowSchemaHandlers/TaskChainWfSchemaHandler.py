@@ -315,6 +315,9 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             convertedWfSchema["RequestType"] = "StepChain"
             convertedWfSchema["StepChain"] = convertedWfSchema.pop("TaskChain")
 
+            # Get these values before they're popped from the dictionary
+            stepchainMulticore, stepchainMemory = self._getStepChainMulticoreMemory()
+
             for key in self.chainKeys:
                 stepName = "Step{}".format(re.findall(r'\d+', key)[0])
                 convertedWfSchema[stepName] = convertedWfSchema.pop(key)
@@ -323,8 +326,8 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
 
                 # TimePerEvent & SizePerEvent Setting
                 efficiencyFactor = self._getTaskEfficiencyFactor(self.wfSchema[key])
-                multicoreFactor = self._getMulticoreFactor(self.wfSchema[key])
                 # Suppress multicore factor to avoid undercalculation of TpE in case not multicore friendly tasks
+                # multicoreFactor = self._getMulticoreFactor(self.wfSchema[key])
                 convertedWfSchema["TimePerEvent"] += efficiencyFactor * convertedWfSchema[stepName].pop("TimePerEvent") #* multicoreFactor
                 convertedWfSchema["SizePerEvent"] += efficiencyFactor * convertedWfSchema[stepName].pop("SizePerEvent") #* multicoreFactor
 
@@ -339,7 +342,6 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                 convertedWfSchema[stepName].pop("Memory")
 
             # Multicore and Memory setting
-            stepchainMulticore, stepchainMemory = self._getStepChainMulticoreMemory()
             convertedWfSchema["Multicore"] = stepchainMulticore
             convertedWfSchema["Memory"] = stepchainMemory
 
