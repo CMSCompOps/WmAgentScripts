@@ -324,8 +324,9 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                 # TimePerEvent & SizePerEvent Setting
                 efficiencyFactor = self._getTaskEfficiencyFactor(self.wfSchema[key])
                 multicoreFactor = self._getMulticoreFactor(self.wfSchema[key])
-                convertedWfSchema["TimePerEvent"] += efficiencyFactor * multicoreFactor * convertedWfSchema[stepName].pop("TimePerEvent")
-                convertedWfSchema["SizePerEvent"] += efficiencyFactor * multicoreFactor * convertedWfSchema[stepName].pop("SizePerEvent")
+                # Suppress multicore factor to avoid undercalculation of TpE in case not multicore friendly tasks
+                convertedWfSchema["TimePerEvent"] += efficiencyFactor * convertedWfSchema[stepName].pop("TimePerEvent") #* multicoreFactor
+                convertedWfSchema["SizePerEvent"] += efficiencyFactor * convertedWfSchema[stepName].pop("SizePerEvent") #* multicoreFactor
 
                 if "InputTask" in convertedWfSchema[stepName]:
                     convertedWfSchema[stepName]["InputStep"] = convertedWfSchema[stepName].pop("InputTask")
