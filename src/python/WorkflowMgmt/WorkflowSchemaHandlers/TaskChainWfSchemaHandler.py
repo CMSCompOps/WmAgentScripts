@@ -315,6 +315,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             convertedWfSchema["RequestType"] = "StepChain"
             convertedWfSchema["StepChain"] = convertedWfSchema.pop("TaskChain")
             convertedWfSchema["TimePerEvent"] = 0
+            convertedWfSchema["SizePerEvent"] = 0
 
             # Get these values before they're popped from the dictionary
             stepchainMulticore, stepchainMemory = self._getStepChainMulticoreMemory()
