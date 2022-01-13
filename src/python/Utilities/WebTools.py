@@ -68,8 +68,6 @@ def sendResponse(method: str, url: str, endpoint: str, param: Union[str, dict] =
         response = conn.getresponse()
         data = response.read()
         conn.close()
-        print("Response to the %s HTTP call: ", method)
-        print(data)
         return json.loads(data)
 
     except Exception as error:
