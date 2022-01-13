@@ -104,10 +104,10 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
         :param efficiencyFactor: starting efficiency factor
         :return: efficiency factor
         """
-        if "InputTask" in schema:
-            inputTaskSchema = self._getTaskSchema(schema["InputTask"])
-            efficiencyFactor *= inputTaskSchema.get("FilterEfficiency", 1.0)
-            return self._getTaskEfficiencyFactor(inputTaskSchema, efficiencyFactor)
+        if "InputStep" in schema:
+            inputStepSchema = self._getTaskSchema(schema["InputStep"])
+            efficiencyFactor *= inputStepSchema.get("FilterEfficiency", 1.0)
+            return self._getTaskEfficiencyFactor(inputStepSchema, efficiencyFactor)
 
         return efficiencyFactor
 
@@ -314,6 +314,7 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
             convertedWfSchema = self.wfSchema.copy()
             convertedWfSchema["RequestType"] = "StepChain"
             convertedWfSchema["StepChain"] = convertedWfSchema.pop("TaskChain")
+            convertedWfSchema["TimePerEvent"] = 0
 
             # Get these values before they're popped from the dictionary
             stepchainMulticore, stepchainMemory = self._getStepChainMulticoreMemory()
@@ -323,6 +324,8 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                 convertedWfSchema[stepName] = convertedWfSchema.pop(key)
                 convertedWfSchema[stepName]["StepName"] = convertedWfSchema[stepName].pop("TaskName")
                 stepNames[convertedWfSchema[stepName]["StepName"]] = stepName
+                if "InputTask" in convertedWfSchema[stepName]:
+                    convertedWfSchema[stepName]["InputStep"] = convertedWfSchema[stepName].pop("InputTask")
 
                 # TimePerEvent & SizePerEvent Setting
                 efficiencyFactor = self._getTaskEfficiencyFactor(self.wfSchema[key])
@@ -330,9 +333,6 @@ class TaskChainWfSchemaHandler(StepChainWfSchemaHandler):
                 # multicoreFactor = self._getMulticoreFactor(self.wfSchema[key])
                 convertedWfSchema["TimePerEvent"] += efficiencyFactor * convertedWfSchema[stepName].pop("TimePerEvent") #* multicoreFactor
                 convertedWfSchema["SizePerEvent"] += efficiencyFactor * convertedWfSchema[stepName].pop("SizePerEvent") #* multicoreFactor
-
-                if "InputTask" in convertedWfSchema[stepName]:
-                    convertedWfSchema[stepName]["InputStep"] = convertedWfSchema[stepName].pop("InputTask")
 
                 if "KeepOutput" not in convertedWfSchema[stepName]:
                     convertedWfSchema[stepName]["KeepOutput"] = False
