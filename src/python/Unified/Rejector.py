@@ -203,6 +203,13 @@ class Rejector(OracleClient):
             raise ValueError(self.logMsg["cloneError"], newWorkflow)
 
         self.reqmgr["writer"].approveWorkflow(newWorkflow)
+
+        # Inject the clone right away to OracleDB
+        self.session.add(
+            Workflow(name=newWorkflow, status="staged", wm_status="assignment-approved")
+        )
+        self.session.commit()
+
         self.logger.info(f"Workflow is cloned successfully. The clone: {newWorkflow}")
 
     def _buildClonedWorkflowSchema(self, wfSchemaHandler: BaseWfSchemaHandler) -> BaseWfSchemaHandler:

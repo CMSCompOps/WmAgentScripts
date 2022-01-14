@@ -370,6 +370,8 @@ class Injector(OracleClient):
                     )
                     self.session.commit()
                     self.logger.info("Insertion is successful")
+                else:
+                    self.logger.info(f"The following workflow is already in OracleDB, skipping it: {wf}")
 
             self.logger.info("Injection process has ended for all workflows. Conversion process starts for eligible ones")
             self._convertWorkflowsToStepChain(wfsToConvert)

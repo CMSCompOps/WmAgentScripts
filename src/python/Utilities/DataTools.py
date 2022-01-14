@@ -210,9 +210,10 @@ def filterWorkflowSchemaParam(wfSchema: dict) -> dict:
         paramsToKeep = set(wfSchema.keys()) - set(paramsToDrop)
         wfSchema = filterKeys(paramsToKeep, wfSchema)
 
-        if wfSchema.get("RequestType") == "TaskChain":
+        # EventsPerJob should be dropped for ReqMgr to update it according to TimePerEvent
+        if wfSchema.get("RequestType") == "StepChain":
             taskParamsToDrop = ["EventsPerJob"]
-            taskKeys = sorted(filter(re.compile(f"^Task\d+$").search, wfSchema))
+            taskKeys = sorted(filter(re.compile(f"^Step\d+$").search, wfSchema))
             for key, task in filterKeys(taskKeys, wfSchema).items():
                 taskParamsToKeep = set(task.keys()) - set(taskParamsToDrop)
                 wfSchema[key] = filterKeys(taskParamsToKeep, task)
