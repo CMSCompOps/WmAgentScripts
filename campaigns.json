@@ -2800,8 +2800,7 @@
     "secondaries": {
        "/MinBias_TuneCP5_5TeV-pythia8/RunIISummer20UL17pp5TeVGS-106X_mc2017_realistic_forppRef5TeV_v3-v1/GEN-SIM": {
           "SiteWhitelist": [
-             "T2_US_Nebraska",
-             "T2_DE_DESY"
+             "T2_CH_CERN"
                       ]
               }
        }
@@ -2916,8 +2915,7 @@
     "secondaries": {
        "/MinBias_TuneCP5_5TeV-pythia8/RunIISummer20UL17pp5TeVGS-106X_mc2017_realistic_forppRef5TeV_v3-v1/GEN-SIM": {
           "SiteWhitelist": [
-             "T2_US_Nebraska",
-             "T2_DE_DESY"
+             "T2_CH_CERN"
                       ]
               }
        }
