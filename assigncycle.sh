@@ -5,7 +5,7 @@ lock_name=`echo $BASH_SOURCE | cut -f 1 -d "."`.lock
 source $BASE_DIR/cycle_common.sh $lock_name
 
 ## get the workflow in/out of the system
-$BASE_DIR/cWrap.sh Unified/injector.py
+#$BASE_DIR/cWrap.sh Unified/injector.py
 
 ## get the batches of relval annnounced to HN
 $BASE_DIR/cWrap.sh Unified/batchor.py
