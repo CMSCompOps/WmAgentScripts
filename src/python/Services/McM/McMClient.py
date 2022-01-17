@@ -101,7 +101,7 @@ class McMClient(object):
         try:
             self.connection.setopt(pycurl.URL, "https://" + f"{self.url}{endpoint}".replace("//", "/"))
             self.connection.setopt(pycurl.UPLOAD, 1)
-            self.connection.setopt(pycurl.READFUNCTION, BytesIO(json.dumps(data)).read)
+            self.connection.setopt(pycurl.READFUNCTION, BytesIO(json.dumps(data).encode()).read)
             self.connection.perform()
 
             return self._getResponse()
