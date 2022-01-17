@@ -103,12 +103,21 @@ class Invalidator(OracleClient):
         :param keyword: invalidation keyword
         :param msg: invalidation message
         """
+
+        self.logger.info("Keyword: %s", keyword)
         batches = self.mcmClient.search("batches", query=f"contains={keyword}")
-        batches = [*filter(lambda x: x["status"] in ["announced", "done", "reset"]), batches]
+        self.logger.info("Batches - Before filter:")
+        self.logger.info(batches)
+        batches = [*filter(lambda x: x["status"] in ["announced", "done", "reset"], batches)]
+        self.logger.info("Batches - After filter:")
+        self.logger.info(batches)
 
         if batches:
             self.invalidatedDatasets[batches[-1].get("prepid")] += msg + "\n\n"
         self.invalidatedWorkflows[prepId] += msg + "\n\n"
+
+        self.logger.info("Acknowledgement writing is complete. The text for this Prep-id: ")
+        self.logger.info(self.invalidatedWorkflows[prepId])
 
     def _acknowledgeWorkflowsInvalidation(self) -> None:
         """
@@ -194,9 +203,9 @@ class Invalidator(OracleClient):
                     self.logger.error("Failed to invalidate %s", name)
                     self.logger.error(str(error))
 
-                self.logger.info("RejectionsInvalidation is finished. Starting acknowledgement.")
-                self._acknowledgeWorkflowsInvalidation()
-                self._acknowledgeDatasetsInvalidation()
+                #self.logger.info("RejectionsInvalidation is finished. Starting acknowledgement.")
+                #self._acknowledgeWorkflowsInvalidation()
+                #self._acknowledgeDatasetsInvalidation()
                 self.logger.info("Acknowledgements is complete!")
 
         except Exception as error:
