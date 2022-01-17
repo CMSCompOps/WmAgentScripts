@@ -461,6 +461,30 @@
      "resize": "auto",
      "tune": true
     },
+  "Commissioning900wmLHEGS": {
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "fractionpass": 1
+  },
+  "Commissioning900GS": {
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "fractionpass": 1
+  },
+  "Commissioning900DR": {
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "fractionpass": 1
+  },
+  "Commissioning900MiniAOD": {
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "fractionpass": 1
+  },
   "Phase2HLTTDRSummer20L1T": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -725,17 +749,40 @@
     "lumisize": -1,
     "maxcopies": 1
   },
-  "Run3Autumn21GS": {
-    "fractionpass": 0.95,   
-    "go": true,
+  "Run3Winter22GS": {
+    "fractionpass": 0.95,
+    "go": false,
     "lumisize": -1,
-    "maxcopies": 1
+    "maxcopies": 1,
+    "resize": "auto"
   },
-  "Run3Autumn21wmLHEGS": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1
+  "Run3Winter22wmLHEGS": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "Run3Winter22DR": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "Run3Winter22DRPremix": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "Run3Winter22MiniAOD": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
   },
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
@@ -3257,7 +3304,7 @@
   },
   "RunIISpring21UL17FSSIMDR": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "SiteBlacklist": [
