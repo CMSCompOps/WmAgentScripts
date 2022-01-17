@@ -15,7 +15,7 @@ $BASE_DIR/cWrap.sh Unified/batchor.py
 $BASE_DIR/cWrap.sh Unified/assignor.py --early
 
 ## get the workflow in/out the system
-$BASE_DIR/cWrap.sh Unified/injector.py
+#$BASE_DIR/cWrap.sh Unified/injector.py
 
 ## assigned those that could have passed through directly
 $BASE_DIR/cWrap.sh Unified/assignor.py --from_status staged
