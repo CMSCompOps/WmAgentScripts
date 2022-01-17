@@ -1,5 +1,16 @@
 {
-
+  "Run3Autumn21GS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
+  },
+  "Run3Autumn21wmLHEGS": {
+      "fractionpass": 0.95,
+      "go": true,
+      "lumisize": -1,
+      "maxcopies": 1
+  },
   "RunIISummer19ULPrePremix": {
     "fractionpass": 0.95,
     "go": true,

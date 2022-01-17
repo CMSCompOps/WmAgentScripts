@@ -461,6 +461,30 @@
      "resize": "auto",
      "tune": true
     },
+  "Commissioning900wmLHEGS": {
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "fractionpass": 0.95
+  },
+  "Commissioning900GS": {
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "fractionpass": 0.95
+  },
+  "Commissioning900DR": {
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "fractionpass": 0.95
+  },
+  "Commissioning900MiniAOD": {
+      "go": false,
+      "lumisize": -1,
+      "maxcopies": 1,
+      "fractionpass": 0.95
+  },
   "Phase2HLTTDRSummer20L1T": {
     "fractionpass": 0.95, 
     "go": true, 
@@ -725,17 +749,40 @@
     "lumisize": -1,
     "maxcopies": 1
   },
-  "Run3Autumn21GS": {
-    "fractionpass": 0.95,   
-    "go": true,
+  "Run3Winter22GS": {
+    "fractionpass": 0.95,
+    "go": false,
     "lumisize": -1,
-    "maxcopies": 1
+    "maxcopies": 1,
+    "resize": "auto"
   },
-  "Run3Autumn21wmLHEGS": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1
+  "Run3Winter22wmLHEGS": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "Run3Winter22DR": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "Run3Winter22DRPremix": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "Run3Winter22MiniAOD": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
   },
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
@@ -1232,6 +1279,27 @@
           "T2_US_Purdue", 
           "T1_DE_KIT_Disk"
         ], 
+        "secondary_AAA": true
+      }
+    }
+  },
+  "RunIISpring16FSSIMDRPremix": {
+    "fractionpass": 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT"
+      ],
+    "lumisize": -1,
+    "parameters": {
+      "EventsPerLumi": "x2"
+    },
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIISummer16FSPremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4-v1/GEN-SIM-DIGI-RAW": {
+        "SiteWhitelist": [
+          "T2_US_Purdue",
+          "T1_DE_KIT_Disk"
+        ],
         "secondary_AAA": true
       }
     }
@@ -2779,8 +2847,7 @@
     "secondaries": {
        "/MinBias_TuneCP5_5TeV-pythia8/RunIISummer20UL17pp5TeVGS-106X_mc2017_realistic_forppRef5TeV_v3-v1/GEN-SIM": {
           "SiteWhitelist": [
-             "T2_US_Nebraska",
-             "T2_DE_DESY"
+             "T2_CH_CERN"
                       ]
               }
        }
@@ -2841,7 +2908,7 @@
   },
   "RunIISummer20UL17pp5TeVRECO": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
@@ -2859,7 +2926,7 @@
   },
   "RunIISummer20UL17pp5TeVHLT": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
@@ -2877,7 +2944,7 @@
   },
   "RunIISummer20UL17pp5TeVDIGI": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
@@ -2895,8 +2962,7 @@
     "secondaries": {
        "/MinBias_TuneCP5_5TeV-pythia8/RunIISummer20UL17pp5TeVGS-106X_mc2017_realistic_forppRef5TeV_v3-v1/GEN-SIM": {
           "SiteWhitelist": [
-             "T2_US_Nebraska",
-             "T2_DE_DESY"
+             "T2_CH_CERN"
                       ]
               }
        }
@@ -2991,6 +3057,16 @@
         "SiteWhitelist": [
           "T2_IT_Pisa",
           "T1_IT_CNAF_Disk"
+        ]
+      },
+      "/ReggeGribovPartonMC_EposLHC_PbP_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_IT_CNAF_Disk"
+        ]
+      },
+      "/ReggeGribovPartonMC_EposLHC_pPb_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_US_MIT"
         ]
       }
     }
@@ -3228,7 +3304,7 @@
   },
   "RunIISpring21UL17FSSIMDR": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "SiteBlacklist": [
@@ -3308,7 +3384,7 @@
   },
   "RunIISpring21UL16FSSIMDR": { 
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "SiteBlacklist": [
@@ -3327,7 +3403,7 @@
   },
   "RunIISpring21UL16FSSIMDRPremix": {     
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1, 
       "SiteBlacklist": [
