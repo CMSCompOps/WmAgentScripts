@@ -203,9 +203,9 @@ class Invalidator(OracleClient):
                     self.logger.error("Failed to invalidate %s", name)
                     self.logger.error(str(error))
 
-                #self.logger.info("RejectionsInvalidation is finished. Starting acknowledgement.")
-                #self._acknowledgeWorkflowsInvalidation()
-                #self._acknowledgeDatasetsInvalidation()
+                self.logger.info("RejectionsInvalidation is finished. Starting acknowledgement.")
+                self._acknowledgeWorkflowsInvalidation()
+                self._acknowledgeDatasetsInvalidation()
                 self.logger.info("Acknowledgements is complete!")
 
         except Exception as error:
