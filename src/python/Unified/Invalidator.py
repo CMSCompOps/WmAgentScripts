@@ -35,7 +35,7 @@ class Invalidator(OracleClient):
             self.logMsg = {
                 "wfStatus": "Setting the status of %s to forget",
                 "datasetStatus": "Setting the status of %s to %s",
-                "wfAcknowlegment": "The workflow {} ({}) was rejected due to invalidation in McM",
+                "wfAcknowledgment": "The workflow {} ({}) was rejected due to invalidation in McM",
                 "datasetAcknowledgment": "The dataset {} ({}) was set INVALID due to invalidation in McM",
                 "mcmRequest": "Rejection is performed from McM invalidations request",
                 "failure": "Could not invalidate %s. Please consider contacting data management team for manual intervention.",
@@ -185,7 +185,7 @@ class Invalidator(OracleClient):
                         self._writeInvalidationAcknowledgement(
                             prepId,
                             name if type == "request" else prepId,
-                            self.logMsg[f"{'wf' if type == 'request' else 'dataset'}Acknowlegment"].format(
+                            self.logMsg[f"{'wf' if type == 'request' else 'dataset'}Acknowledgment"].format(
                                 name, prepId
                             ),
                         )
@@ -194,10 +194,10 @@ class Invalidator(OracleClient):
                     self.logger.error("Failed to invalidate %s", name)
                     self.logger.error(str(error))
 
-                self.logger.info("All Rejections/Invalidations are finished. Starting acknowledgement.")
+                self.logger.info("RejectionsInvalidation is finished. Starting acknowledgement.")
                 self._acknowledgeWorkflowsInvalidation()
                 self._acknowledgeDatasetsInvalidation()
-                self.logger.info("All acknowledgements are complete. Halting..")
+                self.logger.info("Acknowledgements is complete!")
 
         except Exception as error:
             self.logger.error("Failed to run invalidation")
