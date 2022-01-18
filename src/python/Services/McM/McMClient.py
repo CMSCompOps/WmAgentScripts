@@ -4,6 +4,7 @@ import pycurl
 from io import BytesIO
 from logging import Logger
 #from logging import getLogger
+import logging
 from Utilities.Logging import getLogger
 
 from typing import Optional
