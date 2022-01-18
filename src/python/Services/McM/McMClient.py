@@ -19,7 +19,6 @@ class McMClient(object):
     def __init__(self, logger: Optional[Logger] = None, **kwargs) -> None:
         try:
             super().__init__()
-            logging.basicConfig(level=logging.INFO)
             self.logger = logger or getLogger(self.__class__.__name__)
 
             self.response = BytesIO()
