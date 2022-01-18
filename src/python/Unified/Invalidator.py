@@ -106,25 +106,18 @@ class Invalidator(OracleClient):
 
         self.logger.info("Keyword: %s", keyword)
         batches = self.mcmClient.search("batches", query=f"contains={keyword}")
-        self.logger.info("Batches - Before filter:")
-        self.logger.info(batches)
         batches = [*filter(lambda x: x["status"] in ["announced", "done", "reset"], batches)]
-        self.logger.info("Batches - After filter:")
-        self.logger.info(batches)
 
         if batches:
             self.invalidatedDatasets[batches[-1].get("prepid")] += msg + "\n\n"
         self.invalidatedWorkflows[prepId] += msg + "\n\n"
-
-        self.logger.info("Acknowledgement writing is complete. The text for this Prep-id: ")
-        self.logger.info(self.invalidatedWorkflows[prepId])
 
     def _acknowledgeWorkflowsInvalidation(self) -> None:
         """
         The function to acknowledge all workflow invalidations to McM
         """
         for prepId, msg in self.invalidatedWorkflows.items():
-            self.logger.info("Following acknowledgement will be sent: ")
+            self.logger.info("Workflow Invalidation: Following acknowledgement will be sent: ")
             self.logger.info({"message": msg + self.logMsg["autoMsg"], "prepids": [prepId]})
             try:
                 self.mcmClient.set(
@@ -140,7 +133,7 @@ class Invalidator(OracleClient):
         The function to acknowledge all dataset invalidations to McM
         """
         for batchId, msg in self.invalidatedDatasets.items():
-            self.logger.info("Following acknowledgement will be sent: ")
+            self.logger.info("Dataset Invalidation: Following acknowledgement will be sent: ")
             self.logger.info({"notes": msg + self.logMsg["autoMsg"], "prepid": batchId})
             try:
                 self.mcmClient.set("/restapi/batches/notify", {"notes": msg + self.logMsg["autoMsg"], "prepid": batchId})
@@ -173,9 +166,6 @@ class Invalidator(OracleClient):
                 return
 
             self.logger.info(self.logMsg["nInvalidations"], len(invalidations))
-            self.logger.info("Invalidations have been fetched: ")
-            self.logger.info(invalidations)
-
 
             for invalid in invalidations:
                 name, type = invalid.get("object"), invalid.get("type")
@@ -203,10 +193,10 @@ class Invalidator(OracleClient):
                     self.logger.error("Failed to invalidate %s", name)
                     self.logger.error(str(error))
 
-                self.logger.info("RejectionsInvalidation is finished. Starting acknowledgement.")
-                self._acknowledgeWorkflowsInvalidation()
-                self._acknowledgeDatasetsInvalidation()
-                self.logger.info("Acknowledgements is complete!")
+            self.logger.info("Rejections/Invalidations are finished. Starting acknowledgement.")
+            self._acknowledgeWorkflowsInvalidation()
+            self._acknowledgeDatasetsInvalidation()
+            self.logger.info("Acknowledgements are complete!")
 
         except Exception as error:
             self.logger.error("Failed to run invalidation")
