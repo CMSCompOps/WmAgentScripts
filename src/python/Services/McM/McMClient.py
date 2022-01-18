@@ -3,9 +3,8 @@ import json
 import pycurl
 from io import BytesIO
 from logging import Logger
-
-import logging
-from logging import getLogger  # from Utilities.Logging import getLogger
+#from logging import getLogger
+from Utilities.Logging import getLogger
 
 from typing import Optional
 
