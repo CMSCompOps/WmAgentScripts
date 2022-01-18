@@ -117,30 +117,30 @@ class Invalidator(OracleClient):
         The function to acknowledge all workflow invalidations to McM
         """
         for prepId, msg in self.invalidatedWorkflows.items():
-            self.logger.info("Workflow Invalidation: Following acknowledgement will be sent: ")
+            #self.logger.info("Workflow Invalidation: Following acknowledgement will be sent: ")
             self.logger.info({"message": msg + self.logMsg["autoMsg"], "prepids": [prepId]})
-            try:
-                self.mcmClient.set(
-                    "/restapi/requests/notify", {"message": msg + self.logMsg["autoMsg"], "prepids": [prepId]}
-                )
-                self.logger.info("Acknowledgement is successful")
-            except Exception as error:
-                self.logger.error("Failed to acknowledge workflow invalidation")
-                self.logger.error(str(error))
+            #try:
+            #    #self.mcmClient.set(
+            #    #    "/restapi/requests/notify", {"message": msg + self.logMsg["autoMsg"], "prepids": [prepId]}
+            #    #)
+            #    #self.logger.info("Acknowledgement is successful")
+            #except Exception as error:
+            #    self.logger.error("Failed to acknowledge workflow invalidation")
+            #    self.logger.error(str(error))
 
     def _acknowledgeDatasetsInvalidation(self) -> None:
         """
         The function to acknowledge all dataset invalidations to McM
         """
         for batchId, msg in self.invalidatedDatasets.items():
-            self.logger.info("Dataset Invalidation: Following acknowledgement will be sent: ")
+            #self.logger.info("Dataset Invalidation: Following acknowledgement will be sent: ")
             self.logger.info({"notes": msg + self.logMsg["autoMsg"], "prepid": batchId})
-            try:
-                self.mcmClient.set("/restapi/batches/notify", {"notes": msg + self.logMsg["autoMsg"], "prepid": batchId})
-                self.logger.info("Acknowledgement is successful")
-            except Exception as error:
-                self.logger.error("Failed to acknowledge dataset invalidation")
-                self.logger.error(str(error))
+            #try:
+            #    self.mcmClient.set("/restapi/batches/notify", {"notes": msg + self.logMsg["autoMsg"], "prepid": batchId})
+            #    self.logger.info("Acknowledgement is successful")
+            #except Exception as error:
+            #    self.logger.error("Failed to acknowledge dataset invalidation")
+            #    self.logger.error(str(error))
 
     def go(self) -> bool:
         """
@@ -180,7 +180,7 @@ class Invalidator(OracleClient):
                         continue
 
                     if invalidated:
-                        self.logger.info("Rejection/Invalidation is successful. Writing the acknowledgement text.")
+                        #self.logger.info("Rejection/Invalidation is successful. Writing the acknowledgement text.")
                         self._writeInvalidationAcknowledgement(
                             prepId,
                             name if type == "request" else prepId,
