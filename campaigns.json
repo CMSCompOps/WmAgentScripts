@@ -842,7 +842,7 @@
         "/MinBias_TuneCP5_14TeV-pythia8/Phase2D76Spring21GS-113X_mcRun4_realistic_v7-v1/GEN-SIM": {
             "SiteWhitelist": [
                 "T1_US_FNAL_Disk",
-                "T1_IT_CNAF_Disk"
+                "T1_DE_KIT_Disk"
                 ]
         },
         "/MinBias_TuneCP5_14TeV-pythia8/Phase2D80Spring21GS-113X_mcRun4_realistic_T25_v1-v1/GEN-SIM": {
