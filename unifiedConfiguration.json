@@ -136,7 +136,8 @@
 	      ["knaskar","kousik.naskar@cern.ch"],
 	      ["jen_a","jen_a@fnal.gov"],
 	      ["wangz","wangzqe@mit.edu"],
-	      ["haozturk","h.ozturk@cern.ch"]
+	      ["haozturk","h.ozturk@cern.ch"],
+          [ tyjyang , tyjyang@mit.edu ]
              ]
  },
  "max_tail_priority" : {
