@@ -6,3 +6,4 @@ cern-get-sso-cookie -u https://cms-pdmv.cern.ch/mcm/ -o $MCM_SSO_COOKIE --krb
 
 export X509_USER_PROXY=/tmp/$USER-4hty64k793hj
 cat $HOME/private/$USER.txt | voms-proxy-init -voms cms --valid 140:00 --rfc -pwstdin
+

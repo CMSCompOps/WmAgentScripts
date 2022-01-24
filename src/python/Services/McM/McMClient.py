@@ -3,7 +3,7 @@ import json
 import pycurl
 from io import BytesIO
 from logging import Logger
-
+#from logging import getLogger
 import logging
 from Utilities.Logging import getLogger
 
@@ -21,11 +21,8 @@ class McMClient(object):
             super().__init__()
             self.logger = logger or getLogger(self.__class__.__name__)
 
-            self.devMode = os.getenv("UNIFIED_MCM") == "dev" or kwargs.get("dev") or False
-            self.intMode = kwargs.get("int") or False
-
             self.response = BytesIO()
-            self.url = f"cms-pdmv{'-dev' if self.devMode else '-int' if self.intMode else ''}.cern.ch/mcm/"
+            self.url = f"cms-pdmv.cern.ch/mcm/"
 
             self._setCookie(kwargs.get("cookie"))
             self._setConnection()
@@ -40,13 +37,7 @@ class McMClient(object):
         """
         self.cookie = cookie or os.environ.get("MCM_SSO_COOKIE")
         if self.cookie is None:
-            self.cookie = f"{os.getenv('HOME')}/private/{'dev' if self.devMode else 'int' if self.intMode else 'prod'}-cookie.txt"
-
-        if not os.path.isfile(self.cookie):
-            self.logger.info("The required sso cookie file does not exist. Trying to make one")
-            os.system(f"cern-get-sso-cookie -u https://{self.url} -o {self.cookie} --krb")
-            if not os.path.isfile(self.cookie):
-                raise ValueError("The required sso cookie file cannot be made")
+            raise Exception(f"There is no McM client cookie, make sure that you ran /src/bash/authenticate.sh")
 
         self.logger.info(f"Using sso cookie file: {self.cookie}")
 
@@ -109,7 +100,7 @@ class McMClient(object):
         try:
             self.connection.setopt(pycurl.URL, "https://" + f"{self.url}{endpoint}".replace("//", "/"))
             self.connection.setopt(pycurl.UPLOAD, 1)
-            self.connection.setopt(pycurl.READFUNCTION, BytesIO(json.dumps(data)).read)
+            self.connection.setopt(pycurl.READFUNCTION, BytesIO(json.dumps(data).encode()).read)
             self.connection.perform()
 
             return self._getResponse()
