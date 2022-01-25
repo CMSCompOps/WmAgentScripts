@@ -81,32 +81,29 @@ class Checkor(OracleClient):
 
         parser.add_option("--go", help="Does not check on duplicate process", action="store_true", default=False)
         parser.add_option(
-            "--update",
+            "--checkRunning",
             help="Running workflows that have not yet reached completed",
             action="store_true",
             default=False,
         )
         parser.add_option(
-            "--strict", help="Only running workflows that reached completed", action="store_true", default=False
+            "--checkNewlyCompleted", help="Only running workflows that reached completed", action="store_true", default=False
         )
         parser.add_option(
-            "--clear", help="Only running workflows that have reached custodial", action="store_true", default=False
-        )
-        parser.add_option(
-            "--review",
+            "--checkAssistance",
             help="Look at the workflows that have already completed and had required actions",
             action="store_true",
             default=False,
         )
         parser.add_option(
-            "--recovering",
+            "--checkAssistanceRecovering",
             help="Look at the workflows that already have on-going acdc",
             action="store_true",
             default=False,
         )
-        parser.add_option("--manual", help='Look at the workflows in "manual"', action="store_true", default=False)
-        parser.add_option("--limit", help="The number of workflows to consider for checking", default=0, type=int)
-        parser.add_option("--threads", help="The number of threads for processing workflows", default=10, type=int)
+        parser.add_option("--checkAssistanceManual", help='Look at the workflows in "manual"', action="store_true", default=False)
+        parser.add_option("--maxPerRound", help="The number of workflows to consider for checking", default=0, type=int)
+        parser.add_option("--nThreads", help="The number of threads for processing workflows", default=1, type=int)
         parser.add_option(
             "--fractionPass", help="The completion fraction that is permitted", default=0.0, type="float"
         )
@@ -138,10 +135,10 @@ class Checkor(OracleClient):
         options, args = parser.parse_args()
         options = vars(options)
 
-        options["manual"] = not options.get("recovering")
-        actions = ["strict", "update", "clear", "review"]
+        options["checkAssistanceManual"] = not options.get("checkAssistanceRecovering")
+        actions = ["checkNewlyCompleted", "checkRunning", "checkAssistance"]
         if all(not options.get(option) for option in actions):
-            for option in actions + ["recovering", "manual"]:
+            for option in actions + ["checkAssistanceRecovering", "checkAssistanceManual"]:
                 options[option] = True
 
         return options, args[0] if args else None
@@ -202,27 +199,23 @@ class Checkor(OracleClient):
         assistanceWfs = self.session.query(Workflow).filter(Workflow.status.startswith("assistance")).all()
         completedWfs = self.reqMgr["reader"].getWorkflowsByStatus("completed")
 
-        if self.options.get("strict"):
-            self.logger.info("Strict option is on: checking workflows that freshly completed")
+        if self.options.get("checkNewlyCompleted"):
+            self.logger.info("checkNewlyCompleted option is on: checking workflows that freshly completed")
             workflows.update(filter(lambda wf: wf.name in completedWfs, awayWfs))
 
-        if self.options.get("update"):
-            self.logger.info("Update option is on: checking workflows that have not completed yet")
+        if self.options.get("checkRunning"):
+            self.logger.info("checkRunning option is on: checking workflows that have not completed yet")
             workflows.update(filter(lambda wf: wf.name not in completedWfs, awayWfs))
 
-        if self.options.get("clear"):
-            self.logger.info("Clear option is on: checking workflows that are ready to toggle closed-out")
-            workflows.update(filter(lambda wf: "custodial" in wf.status, assistanceWfs))
-
-        if self.options.get("review"):
+        if self.options.get("checkAssistance"):
             nonCustodialWfs = [*filter(lambda wf: "custodial" not in wf.status, assistanceWfs)]
-            if self.options.get("recovering"):
+            if self.options.get("checkAssistanceRecovering"):
                 self.logger.info(
-                    "Review-recovering option is on: checking only the workflows that had been already acted on"
+                    "checkAssistanceRecovering option is on: checking only the workflows that had been already acted on"
                 )
                 workflows.update(filter(lambda wf: "manual" not in wf.status, nonCustodialWfs))
-            if self.options.get("manual"):
-                self.logger.info("Review-manual option is on: checking the workflows to be acted on")
+            if self.options.get("checkAssistanceManual"):
+                self.logger.info("checkAssistanceManual option is on: checking the workflows to be acted on")
                 workflows.update(filter(lambda wf: "manual" in wf.status, nonCustodialWfs))
 
         return list(workflows)
@@ -266,15 +259,15 @@ class Checkor(OracleClient):
         :return: filtered list of workflows
         """
         maxPerRound = self.unifiedConfiguration.get("max_per_round", {}).get("checkor")
-        if self.options.get("limit"):
-            self.logger.info("Command line to limit workflows to %s", self.options.get("limit"))
-            maxPerRound = self.options.get("limit")
+        if self.options.get("maxPerRound"):
+            self.logger.info("Command line to limit workflows to %s", self.options.get("maxPerRound"))
+            maxPerRound = self.options.get("maxPerRound")
 
         if maxPerRound and not self.specificWf:
-            self.logger.info("Limiting workflows to %s this round", maxPerRound)
+            self.logger.info("Number of workflows to check after limitation: %s", maxPerRound)
 
             workflows = self._rankWorkflows(workflows)
-            if self.option.get("update"):
+            if self.option.get("checkRunning"):
                 random.shuffle(workflows)
             return workflows[:maxPerRound]
 
@@ -364,13 +357,11 @@ class Checkor(OracleClient):
         """
         if not self.specificWf:
             msg = ""
-            if self.options.get("strict"):
+            if self.options.get("checkNewlyCompleted"):
                 msg += "Workflows which just got in completed were looked at. Look in manual.\n"
-            if self.options.get("update"):
+            if self.options.get("checkRunning"):
                 msg += "Workflows that are still running (and not completed) got looked at.\n"
-            if self.options.get("clear"):
-                msg += "Workflows that just need to close-out were verified. Nothing too new a-priori.\n"
-            if self.options.get("review"):
+            if self.options.get("checkAssistance"):
                 msg += "Workflows under intervention got review.\n"
 
             msg += "\n".join(
@@ -406,14 +397,18 @@ class Checkor(OracleClient):
         The function to run checkor
         """
         try:
-            self._setWfs()
+            # Review this later. Consider moving JIRA functionalities to a different module.
+            #self._setWfs()
 
             wfsToCheck = self._filterBackfills(self._getWorkflowsToCheck())
             random.shuffle(wfsToCheck)
 
-            self.logger.info("Considering %s workflows (before any limitation)", len(wfsToCheck))
+            self.logger.info("Number of workflows to check before any limitation: %s", len(wfsToCheck))
 
             wfsToCheck = self._filterMaxNumberOfWorkflows(wfsToCheck)
+            self.logger.info("Workflows to check: ")
+            for w in wfsToCheck:
+                self.logger.info(w)
             self._check(wfsToCheck)
 
             self._writeSummary()
@@ -428,7 +423,7 @@ class Checkor(OracleClient):
         :param wfsToCheck: workflows to check
         """
 
-        @runWithMultiThreading(mtParam="wfsToCheck", maxThreads=len(wfsToCheck))
+        @runWithMultiThreading(mtParam="wfsToCheck", maxThreads=self.options.get("nThreads"))
         def _checkWorkflow(self, wfsToCheck: list) -> dict:
             return WorkflowCheckor(wfsToCheck, checkor=self).check()
 
