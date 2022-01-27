@@ -2829,7 +2829,7 @@
   },
   "RunIISummer20UL17pp5TeVMiniAODv2": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
@@ -2847,7 +2847,7 @@
   },
   "RunIISummer20UL17pp5TeVNanoAODv9": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
