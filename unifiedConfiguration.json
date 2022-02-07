@@ -443,7 +443,7 @@
     "description" : "Maximum memory for stepchain workflows"
   },
   "pnr_users": {
-    "value" : [],
+    "value" : ["haozturk"],
     "description" : "PnR users"
   }
 }
