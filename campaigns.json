@@ -749,6 +749,114 @@
     "lumisize": -1,
     "maxcopies": 1
   },
+  "Run3Winter22PbPbNoMixRECOMiniAOD" : {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+       "MergedLFNBase": "/store/himc",
+       "SiteBlacklist": [
+          "T1_US_FNAL",
+          "T2_US_Purdue",
+          "T2_US_Caltech",
+          "T2_US_Florida",
+          "T2_US_Nebraska",
+          "T2_US_UCSD",
+          "T2_US_Wisconsin"
+        ]
+     } 
+  },
+  "Run3Winter22PbPbRECOMiniAOD" : {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+       "MergedLFNBase": "/store/himc",
+       "SiteBlacklist": [
+          "T1_US_FNAL",
+          "T2_US_Purdue",
+          "T2_US_Caltech",
+          "T2_US_Florida",
+          "T2_US_Nebraska",
+          "T2_US_UCSD",
+          "T2_US_Wisconsin"
+        ]
+     }
+  },
+  "Run3Winter22PbPbNoMixDIGI" : {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+       "MergedLFNBase": "/store/himc",
+       "SiteBlacklist": [
+          "T1_US_FNAL",
+          "T2_US_Purdue",
+          "T2_US_Caltech",
+          "T2_US_Florida",
+          "T2_US_Nebraska",
+          "T2_US_UCSD",
+          "T2_US_Wisconsin"
+        ]
+     }
+  },
+  "Run3Winter22PbPbDIGI" : {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+       "MergedLFNBase": "/store/himc",
+       "SiteBlacklist": [
+          "T1_US_FNAL",
+          "T2_US_Purdue",
+          "T2_US_Caltech",
+          "T2_US_Florida",
+          "T2_US_Nebraska",
+          "T2_US_UCSD",
+          "T2_US_Wisconsin"
+        ]
+     }
+  },   
+  "Run3Winter22PbPbNoMixGS" : {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+       "MergedLFNBase": "/store/himc",
+       "SiteBlacklist": [
+          "T1_US_FNAL",
+          "T2_US_Purdue",
+          "T2_US_Caltech",
+          "T2_US_Florida",
+          "T2_US_Nebraska",
+          "T2_US_UCSD",
+          "T2_US_Wisconsin"
+        ]
+     }
+  }, 
+  "Run3Winter22PbPbGS" : {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+       "MergedLFNBase": "/store/himc",
+       "SiteBlacklist": [
+          "T1_US_FNAL",
+          "T2_US_Purdue",
+          "T2_US_Caltech",
+          "T2_US_Florida",
+          "T2_US_Nebraska",
+          "T2_US_UCSD",
+          "T2_US_Wisconsin"
+        ]
+     }
+  },
   "Run3Winter22GS": {
     "fractionpass": 0.95,
     "go": false,
