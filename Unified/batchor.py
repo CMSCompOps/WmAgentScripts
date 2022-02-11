@@ -41,7 +41,7 @@ def batchor( url ):
     default_setup = {
         "go" :True,
         "parameters" : {
-            "SiteWhitelist": [ "T2_CH_CERN" ],
+            "SiteWhitelist": [ "T1_IT_CNAF" ],
             "MergedLFNBase": "/store/relval",
             "Team" : "relval",
             "NonCustodialGroup" : "RelVal"
