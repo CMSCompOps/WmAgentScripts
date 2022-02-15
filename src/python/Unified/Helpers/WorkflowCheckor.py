@@ -29,10 +29,13 @@ class WorkflowCheckor(object):
 
             self.wfToCheck = wfToCheck
             self.wfToCheck.wm_status = self.wfController.request.get("RequestStatus")
+            # TODO: Check this
+            self.unifiedStatus = wfToCheck.status
 
             self.checkor = kwargs.get("checkor")
             self.rucioReader = RucioReader()
 
+            # TODO: What's the difference between assistanceTags & existingAssistaceTags?
             self.assistanceTags, self.existingAssistaceTags = set(), set(wfToCheck.status.split("-")[1:])
             
             self.acdcs = dict()
@@ -84,10 +87,13 @@ class WorkflowCheckor(object):
         The function to check if a given workflow should be closed
         :return: True if workflow should be closed, False o/w
         """
-        if self.wfToCheck.wm_status in ["closed-out", "announced"]:
+        self.logger.info("Checking if the unified status should be 'close' already, but not")
+        if self.wfToCheck.wm_status in ["closed-out", "announced"] and self.wfToCheck.unifiedStatus != "close":
             self.logger.info("%s is already %s, setting as close", self.wf, self.wfToCheck.wm_status)
             self.newStatus = "close"
             return True
+        else:
+            self.logger.info("Unified status is already okay, skipping the request.")
 
         return False
 
@@ -96,6 +102,7 @@ class WorkflowCheckor(object):
         The function to check if a given workflow should be forgotten
         :return: True if workflow should be forgotten, False o/w
         """
+        self.logger.info("Checking if the unified status should be 'forget'")
         if self.wfController.request.isRelVal() and self.wfToCheck.wm_status in [
             "failed",
             "aborted",
@@ -104,9 +111,11 @@ class WorkflowCheckor(object):
             "rejected-archived",
             "aborted-completed",
         ]:
-            self.logger.info("%s is %s, but will not be set in trouble to find a replacement", self.wf, self.wfToCheck.wm_status)
+            self.logger.info("%s is %s, setting the unified status as 'forget'", self.wf, self.wfToCheck.wm_status)
             self.newStatus = "forget"
             return True
+        else:
+            self.logger.info("%s is %s, not setting it as 'forget'", self.wf, self.wfToCheck.wm_status)
 
         return False
 
@@ -223,25 +232,29 @@ class WorkflowCheckor(object):
         The function to check if the status of a given workflow should be updated
         :return: True if update status, False o/w
         """
-        if self._setWorkflowToClose() or self._setWorkflowToForget() or self._setWorkflowToTrouble():
+        if self._setWorkflowToClose():
             return True
-        if self._isWorkflowOnHold() and self._setNewOnHoldStatus(self.wfController.getFamily(includeItself=True)):
+        if self._setWorkflowToForget():
             return True
+        # TODO Check this
+        #if self._setWorkflowToTrouble():
+        #    return True
+
+        # TODO Check this later
+        #if self._isWorkflowOnHold() and self._setNewOnHoldStatus(self.wfController.getFamily(includeItself=True)):
+        #    return True
 
         return False
 
-    def _getTiersWithNoCheckAndCustodial(self) -> Tuple[list, list]:
+    def _getTiersWithNoCheck(self) -> Tuple[list, list]:
         """
         The function yo get the tiers with no check and custodial
         :return: list of tiers with no check, and list of tiers with no custodial
         """
         tiersWithNoCheck = set(self.checkor.unifiedConfiguration.get("tiers_with_no_check"))
-        tiersWithNoCustodial = set(
-            self.checkor.unifiedConfiguration.get("tiers_with_no_custodial") if not self.wfController.request.isRelVal() else []
-        )
 
         campaigns = self.campaigns or self._setWorkflowCampaigns()
-
+        # TODO custodial_override is not good name anymore, change it!
         for campaign in campaigns.values():
             if (
                 campaign in self.checkor.campaignController.campaigns
@@ -249,19 +262,15 @@ class WorkflowCheckor(object):
             ):
                 if isinstance(self.checkor.campaignController.campaigns[campaign]["custodial_override"], list):
                     tiersWithNoCheck -= self.checkor.campaignController.campaigns[campaign]["custodial_override"]
-                elif self.checkor.campaignController.campaigns[campaign]["custodial_override"] == "notape":
-                    tiersWithNoCustodial = set(
-                        sorted([dataset.split("/")[-1] for dataset in self.wfController.request.get("OutputDatasets")])
-                    )
 
-        return tiersWithNoCheck, tiersWithNoCustodial
+        return tiersWithNoCheck
 
     def _setOutputDatasetsToCheck(self) -> None:
         """
         The function to set the datasets to check
         """
-        tiersWithNoCheck, tiersWithNoCustodial = self._getTiersWithNoCheckAndCustodial(self.wfController)
-
+        self.logger.info("Checking which output datasets to be handled")
+        tiersWithNoCheck = self._getTiersWithNoCheck(self.wfController)
         expectedOutputsDatasets = self.wfController.request.get("OutputDatasets")
         self.outputDatasetsToCheck = [
             dataset
@@ -269,12 +278,11 @@ class WorkflowCheckor(object):
             if all([dataset.split("/")[-1] != tier for tier in tiersWithNoCheck])
         ]
 
-        self.wfController.logger.debug(
+        self.wfController.logger.info(
             "Initial outputs: %s\nWill check on: %s\nTiers out: %s\nTiers no custodials: %s",
             ", ".join(sorted(expectedOutputsDatasets)),
             ", ".join(sorted(self.outputDatasetsToCheck)),
-            ", ".join(sorted(tiersWithNoCheck)),
-            ", ".join(sorted(tiersWithNoCustodial)),
+            ", ".join(sorted(tiersWithNoCheck))
         )
 
     def _skipFamilyWorkflow(self, wfSchema: dict) -> bool:
@@ -534,7 +542,7 @@ class WorkflowCheckor(object):
             return fractionPass
 
 
-    def _setDatasetsFractionsToPass(self) -> None:
+    def _setDatasetsFractionPass(self) -> None:
         """
         The function to set the dataset fractions to pass
         """
@@ -557,6 +565,7 @@ class WorkflowCheckor(object):
                     fractionsPass[dataset] = passValue
                     self.wfController.logger.info("Overriding fraction to %s for %s by dataset key", passValue, dataset)
 
+        self.logger.info("Expected stats (Fraction pass): %s", str(fractionsPass))
         self.fractions["pass"] = fractionsPass
 
     def _setDatasetsFractionsToTruncateRecovery(self) -> None:
@@ -593,14 +602,18 @@ class WorkflowCheckor(object):
 
         self.fractions["truncate"] = fractionsTruncateRecovery
 
-    def _setStatisticsThresholds(self) -> None:
+    def _setExpectedStats(self) -> None:
         """
         The function to set the statistics thresholds
         """
-        self._setDatasetsFractionsToAnnounce()
-        self._setDatasetsFractionsToPass()
-        self._setDatasetsFractionsToTruncateRecovery()
+        # TODO: # Sets it 1 regardless of the dataset and it's not used?
+        #self._setDatasetsFractionsToAnnounce()
+        self._setDatasetsFractionPass()
 
+
+        # TODO: Disabling truncation for now. Check that later.
+        """
+        self._setDatasetsFractionsToTruncateRecovery()
         fractionDamping = self._getFractionDumping()
         for dataset, value in self.fractions["pass"].items():
             if value != 1.0 and fractionDamping and self.checkor.unifiedConfiguration.get("timeout_for_damping_fraction"):
@@ -612,6 +625,7 @@ class WorkflowCheckor(object):
             self.fractions["truncate"][dataset] = self.fractions["pass"][dataset]
 
         self._updateFractionsToPassAndToTruncateRecovery()
+        """
 
     def _updateFractionsToPassAndToTruncateRecovery(self) -> None:
         """
@@ -666,7 +680,7 @@ class WorkflowCheckor(object):
 
         return tasksByDataset
 
-    def _checkCompletionStatistics(self) -> None:
+    def _setActualStats(self) -> None:
         """
         The function to check the completion statistics
         """
@@ -699,17 +713,20 @@ class WorkflowCheckor(object):
                         outputEventsExpected,
                         dataset,
                     )
+        self.logger.info("Actual stats: %s", str(self.percentCompletions))
 
-    def _setPassStatisticsCheck(self) -> None:
+    def _compareAndSetExpectedAndActualStats(self) -> None:
         """
         The function to set pass statistics
         """
+        # TODO: The way bypassChecks is introduced seems problematic, review it.
         self.passStatsCheck = dict(
             [
                 (dataset, self.bypassChecks or self.percentCompletions[dataset] >= passValue)
                 for dataset, passValue in self.fractions["pass"].items()
             ]
         )
+        self.logger.info("Compared actual and expected stats: %s", str(self.passStatsCheck))
 
     def _setPassStatisticsCheckToAnnounce(self) -> None:
         """
@@ -916,21 +933,26 @@ class WorkflowCheckor(object):
         """
         The function to check the lumi sections sizes
         """
+        self.logger.info("Checking lumi size")
         if self._hasSmallLumis():
             self.assistanceTags.add("smalllumi")
             self.isClosing = False
+            # TODO: Give more details??
+            self.logger.info("Output has small lumisections, not closing out.")
 
         self._setLumiUpperLimit()
         if self._hasBigLumis():
             self.assistanceTags.add("biglumi")
             self.isClosing = False
+            # TODO: Give more details??
+            self.logger.info("Output has big lumisections, not closing out.")
 
     def _checkRucioFileCounts(self) -> None:
         """
         The function to check the number of files in Rucio
         """
         rucioPresence = {}
-
+        # TODO: Check the algorithm of this function
         for dataset in self.wfController.request.get("OutputDatasets"):
             filesPerBlock = set(self.rucioReader.countDatasetFilesPerBlock(dataset))
             allBlocks = set([*map(lambda x: x[0], filesPerBlock)])
@@ -947,6 +969,7 @@ class WorkflowCheckor(object):
             self.assistanceTags.remove("announce")
 
         self.rucioPresence = rucioPresence
+        self.logger.info("Checked the rucio presence: %s", str(self.rucioPresence))
 
     def _checkDBSFileCounts(self) -> None:
         """
@@ -958,6 +981,9 @@ class WorkflowCheckor(object):
             dbsInvalid[dataset] = self.checkor.dbs["reader"].countDatasetFiles(dataset, onlyInvalid=True)
 
         self.dbsPresence, self.dbsInvalid = dbsPresence, dbsInvalid
+
+        self.logger.info("Checked DBS Presence: %s", str(self.dbsPresence))
+        self.logger.info("Checked INVALID DBS Presence: %s", str(self.dbsInvalid))
 
     def _hasFileMismatch(self) -> bool:
         """
@@ -972,11 +998,15 @@ class WorkflowCheckor(object):
 
         return False
 
-    def _checkFileCounts(self) -> None:
+    def _handleFileMismatch(self) -> None:
         """
         The function to check the number of files
         """
+        # TODO: Make this configurable!
         showOnlyN = 10
+
+        # TODO: Check the algorithm of this function
+        self.logger.info("There is a RUCIO/DBS filemismatch. Checking the details")
 
         for dataset in self.dbsPresence:
             dbsFilenames = set(
@@ -998,6 +1028,7 @@ class WorkflowCheckor(object):
                     "\n".join(missingRucioFiles[:showOnlyN]),
                 )
                 wereInvalidated = sorted(missingRucioFiles & set(self.checkor.dataCacheLoader.load("file_invalidation")))
+                # TODO: Check this invalidation!!
                 if wereInvalidated:
                     self.wfController.logger.info(
                         "These %d files were invalidated globally, showing %d only.\n %s",
@@ -1019,6 +1050,7 @@ class WorkflowCheckor(object):
                     "\n".join(missingDBSFiles[:showOnlyN]),
                 )
                 wereInvalidated = sorted(missingDBSFiles & set(self.checkor.dataCacheLoader.load("file_invalidation")))
+                # TODO: Check this invalidation
                 if wereInvalidated:
                     self.wfController.logger.info(
                         "These %d files were invalidated globally, showing %d only.\n %s",
@@ -1032,10 +1064,11 @@ class WorkflowCheckor(object):
 
         self.isClosing = False
 
-    def _checkInvalidations(self) -> None:
+    def _checkInvalidFiles(self) -> None:
         """
         The function to check the invalidations
         """
+        self.logger.info("Checking if the output(s) has/have a significant amount of invalid files")
         fractionInvalid = 0.2
         if not self.checkor.options.get("ignoreinvalid") and not all(
             [
@@ -1045,6 +1078,8 @@ class WorkflowCheckor(object):
         ):
             self.wfController.logger.info("The workflow has a DBS invalid file level too high")
             self.assistanceTags.add("invalidfiles")
+        else:
+            self.logger.info("The outputs don't have a significant amount of invalid files")
 
     def _setRecord(self) -> None:
         """
@@ -1084,9 +1119,11 @@ class WorkflowCheckor(object):
 
             wfRecord["datasets"][dataset] = record
 
+        self.logger.info("Following record has been produced for MongoDB update: %s", record)
+
         self.record = wfRecord
 
-    def _closeWorkflow(self) -> None:
+    def _closeOutWorkflow(self) -> None:
         """
         The function to close the workflow
         """
@@ -1112,10 +1149,11 @@ class WorkflowCheckor(object):
             self.logger.info("Could not close-out, will try again next time")
 
 
-    def _checkAssistanceTags(self) -> None:
+    def _updateAssistanceStatus(self) -> None:
         """
         The function to check the assistance tags
         """
+        # TODO: Needs dry-run mode update
         self.logger.info("%s was tagged with: %s", self.wf, self.assistanceTags)
         if "recovering" in self.assistanceTags:
             self.assistanceTags -= set(["recovery", "filemismatch", "manual"])
@@ -1141,9 +1179,9 @@ class WorkflowCheckor(object):
             msg = "The request PREPID (WORKFLOW) is facing issue in production.\n"
 
             if "recovery" in self.assistanceTags:
-                msg += f"Samples completed with missing statistics\n{'\n'.join([f'{round(self.percentCompletions[dataset]*100, 2)}%% complete for {dataset}' for dataset in self.outputDatasetsToCheck ])}\nhttps://cmsweb.cern.ch/report/{self.wf}\n"
+                msg += f"Samples completed with missing statistics\n{''.join([f'{round(self.percentCompletions[dataset]*100, 2)}%% complete for {dataset}' for dataset in self.outputDatasetsToCheck ])}\nhttps://cmsweb.cern.ch/report/{self.wf}\n"
             if "biglumi" in self.assistanceTags:
-                msg += f"Samples completed with large luminosity blocks:\n{'\n'.join([f'{self.eventsPerLumi[dataset]} > {self.lumiUpperLimit[dataset]} for {dataset}' for dataset in self.outputDatasetsToCheck])}\nhttps://cmsweb.cern.ch/reqmgr/view/splitting/{self.wf}\n"
+                msg += f"Samples completed with large luminosity blocks:\n{''.join([f'{self.eventsPerLumi[dataset]} > {self.lumiUpperLimit[dataset]} for {dataset}' for dataset in self.outputDatasetsToCheck])}\nhttps://cmsweb.cern.ch/reqmgr/view/splitting/{self.wf}\n"
 
             msg += "You are invited to check, while this is being taken care of by Comp-Ops.\n"
             msg += "This is an automated message from Comp-Ops.\n"
@@ -1158,7 +1196,7 @@ class WorkflowCheckor(object):
             return "assistance-" + "-".join(sorted(self.assistanceTags))
         return "assistance"
     
-    def _setWorkflowToAssistance(self) -> None:
+    def _setAssistanceStatus(self) -> None:
         """
         The function to set the workflow to assistance
         """
@@ -1166,63 +1204,96 @@ class WorkflowCheckor(object):
         if "manual" not in self.wfToCheck.status or assistanceStatus != "assistance-recovery":
             self.newStatus = assistanceStatus
 
+        self.logger.info("Ultimate assistance status is: %s", str(assistanceStatus))
+
     def check(self) -> dict:
         """
         The function to check the workflow
         """
         try:
             self.checkor._checkPoint(f"Starting checkor with {self.wf}")
-            if self._skipWorkflow() or self._updateWorkflowStatus():
+
+            # Investigate this later: There should not be a case to skip a workflow
+            #if self._skipWorkflow():
+            #    return self._writeResponse()
+
+            # TODO: The following function checks workflows whose unified status should have been updated, but not.
+            # TODO: Workflows to close & Workflows to forget
+            # TODO: I think we can keep it for a while and see if it really has a use
+            # TODO: I also think that it needs a renaming.
+            if self._updateWorkflowStatus():
+                # TODO: Check this function!!
                 return self._writeResponse()
             self.checkor._checkPoint("Checked workflow status", subLap=True)
         
             self._setOutputDatasetsToCheck()
-            self._checkWorkflowFamily()
-            self.checkor._checkPoint("Checked workflow family", subLap=True)
 
-            self._setStatisticsThresholds()
-            self.checkor._checkPoint("Checked statistics threshold", subLap=True)
+            # TODO: Check this function. It does more than checking
+            #self._checkWorkflowFamily()
+            #self.checkor._checkPoint("Checked workflow family", subLap=True)
 
-            self._checkCompletionStatistics()
-            self.checkor._checkPoint("Checked observed statistics", subLap=True)
+            # TODO: I did simplifications. Review it later.
+            self._setExpectedStats()
+            self.checkor._checkPoint("Checked expected stats", subLap=True)
 
-            self._setPassStatisticsCheck()
-            self._checkAvgCompletionStatistics()
-            self.checkor._checkPoint("Checked more detailed observed statistics", subLap=True)
+            # TODO: "_set" prefix seems confusing. The function gets and sets
+            # TODO: Perhaps, break it down into 2 function: getActualStats & setActualStats
+            self._setActualStats()
+            self.checkor._checkPoint("Checked actual stats", subLap=True)
 
-            self._setPassStatisticsCheckToAnnounce()
-            self._setPassStatisticsCheckOverCompletion()
-            self._checkOutputSize()
-            self.checkor._checkPoint("Checked output size", subLap=True)
+            # TODO: Rename this after understanding the following functions
+            self._compareAndSetExpectedAndActualStats()
 
+            # TODO: I don't understand these two functions. Could be related to over100 and announce tags. Disabling now
+            #self._checkAvgCompletionStatistics()
+            #self._setPassStatisticsCheckToAnnounce()
+            #self.checkor._checkPoint("Checked more detailed observed statistics", subLap=True)
+
+            # TODO: This might be a good feature. Disabling for now. Review later.
+            #self._setPassStatisticsCheckOverCompletion()
+
+            # TODO: Function does more than output size checking, which I don't understand. Disabling for now.
+            #self._checkOutputSize()
+            #self.checkor._checkPoint("Checked output size", subLap=True)
+
+            # TODO: We might disable smalllumi check. Review later. Keep it for now.
             self._checkLumiSize()
             self.checkor._checkPoint("Checked lumi size", subLap=True)
 
             self._checkRucioFileCounts()
-            self.checkor_checkPoint("Checked Rucio count", subLap=True)
+            self.checkor_checkPoint("Checked Rucio file count", subLap=True)
 
             self._checkDBSFileCounts()
-            self.checkor._checkPoint("DBS file count", subLap=True)
+            self.checkor._checkPoint("Checked DBS file count", subLap=True)
 
             if self._hasFileMismatch() and "recovering" not in self.assistanceTags:
-                self._checkFileCounts()
+                # TODO: Test this function carefully: filemismatch, agentfilemismatch, etc.
+                self._handleFileMismatch()
             self.checkor._checkPoint("Checked file count", subLap=True)
 
-            self._checkInvalidations()
-            self.checkor._checkPoint("Checked invalidation", subLap=True)
+            # TODO: Test this function
+            self._checkInvalidFiles()
+            self.checkor._checkPoint("Checked invalid files", subLap=True)
 
             self.checkor._checkPoint(f"Done with {self.wf}")
+            # TODO: Log this properly and understand how it is used
             self._setRecord()
 
             if self.isClosing:
-                self._closeWorkflow()
+                self.logger.info("The workflow is okay to be closed-out. Perform the action later.")
+                #self._closeOutWorkflow()
             else:
-                self._checkAssistanceTags()
-                self._warnRequestor()
-                self._setWorkflowToAssistance()
+                self.logger.info("The workflow is not okay to be closed-out.")
+                # TODO: Rename and update dry run mode
+                self._updateAssistanceStatus()
+                # TODO: What's the difference from the function above? Clear here.
+                self._setAssistanceStatus()
+
+                # TODO: Disabling for now, check later.
+                # self._warnRequestor()
                     
                 ## TODO: update JIRA tickets / migrate JiraClient
-            
+
             return self._writeResponse()
 
         except Exception as error:
@@ -1235,6 +1306,7 @@ class WorkflowCheckor(object):
         """
         The function to write the check response
         """
+        # TODO: What's the difference between workflow and wf???
         response = {
             "workflow": self.wfToCheck,
             "wf": self.wf,
@@ -1245,5 +1317,8 @@ class WorkflowCheckor(object):
             "mcmForceComplete": self.bypassChecksByMcMForceComplete,
             "record": self.record
         }
+
+        self.logger.info("An update is required: ")
+        self.logger.info(response)
         return response
 

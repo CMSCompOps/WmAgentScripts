@@ -302,13 +302,14 @@ class Checkor(OracleClient):
         The function to update the workflows status
         :param wfsStatus: status
         """
+        # TODO: Do the ReqMgr update here as well: WorkflowCheckor:_closeOutWorkflow
         for wf in wfsStatus:
             if wf.get("newStatus"):
                 newStatus = wf.get("newStatus")
                 wf["workflow"].status = newStatus
 
                 if wf.options.get("dryRun"):
-                    self.logger.debug("Dry run: updated workflow %s status to %s", wf.get("wf"), newStatus)
+                    self.logger.debug("Dry run: Unified status update of %s to %s", wf.get("wf"), newStatus)
                 else:
                     self.session.commit()
 
@@ -427,9 +428,15 @@ class Checkor(OracleClient):
         def _checkWorkflow(self, wfsToCheck: list) -> dict:
             return WorkflowCheckor(wfsToCheck, checkor=self).check()
 
+        # TODO: Workflow statuses have been already updated in WorkflowCheckor????
         checkResponses = _checkWorkflow(wfsToCheck)
-        self._updateWorkflowsRecords(checkResponses)
-        self._updateWorkflowsStatus(checkResponses)
+        self.logger.critical("Response to Checkor:")
+        self.logger.critical(checkResponses)
+        # TODO: The following function updates closeoutInfo table of MongoDB.
+        #self._updateWorkflowsRecords(checkResponses)
+        # TODO: This does unified status update, mongodb record update and McM force-completion.
+        # TODO: Why not do all the operations here, especially ReqMgr2 status update??
+        #self._updateWorkflowsStatus(checkResponses)
 
         self._checkExecutionTime(len(wfsToCheck))
 
