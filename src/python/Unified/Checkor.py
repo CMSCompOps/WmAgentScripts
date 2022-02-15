@@ -128,7 +128,7 @@ class Checkor(OracleClient):
         parser.add_option(
             "--dryRun",
             help="To run in test mode (with production but without making any changes)",
-            actions="store_true",
+            action="store_true",
             default=False,
         )
 
