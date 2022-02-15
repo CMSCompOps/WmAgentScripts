@@ -433,9 +433,13 @@ class Checkor(OracleClient):
         def _checkWorkflow(workflow: list) -> dict:
             return WorkflowCheckor(workflow).check()
 
+        #checkResponses = _checkWorkflow(wfsToCheck)
+        # self._updateWorkflowsRecords(checkResponses)
+        # self._updateWorkflowsStatus(checkResponses)
+
         for workflow in wfsToCheck:
             # TODO: Workflow statuses have been already updated in WorkflowCheckor????
-            checkResponses = _checkWorkflow(wfsToCheck)
+            checkResponses = _checkWorkflow(workflow)
             self.logger.critical("Response to Checkor:")
             self.logger.critical(checkResponses)
             # TODO: The following function updates closeoutInfo table of MongoDB.
