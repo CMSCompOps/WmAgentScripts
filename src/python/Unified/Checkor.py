@@ -426,19 +426,23 @@ class Checkor(OracleClient):
         :param wfsToCheck: workflows to check
         """
 
-        @runWithMultiThreading(mtParam="wfsToCheck", maxThreads=self.options.get("nThreads"))
-        def _checkWorkflow(self, wfsToCheck: list) -> dict:
-            return WorkflowCheckor(wfsToCheck, checkor=self).check()
+        # TODO: Fix the multithreading!
+        #@runWithMultiThreading(mtParam="wfsToCheck", maxThreads=self.options.get("nThreads"))
+        #def _checkWorkflow(self, wfsToCheck: list) -> dict:
+            #return WorkflowCheckor(wfsToCheck, checkor=self).check()
+        def _checkWorkflow(workflow: list) -> dict:
+            return WorkflowCheckor(workflow).check()
 
-        # TODO: Workflow statuses have been already updated in WorkflowCheckor????
-        checkResponses = _checkWorkflow(wfsToCheck)
-        self.logger.critical("Response to Checkor:")
-        self.logger.critical(checkResponses)
-        # TODO: The following function updates closeoutInfo table of MongoDB.
-        #self._updateWorkflowsRecords(checkResponses)
-        # TODO: This does unified status update, mongodb record update and McM force-completion.
-        # TODO: Why not do all the operations here, especially ReqMgr2 status update??
-        #self._updateWorkflowsStatus(checkResponses)
+        for workflow in wfsToCheck:
+            # TODO: Workflow statuses have been already updated in WorkflowCheckor????
+            checkResponses = _checkWorkflow(wfsToCheck)
+            self.logger.critical("Response to Checkor:")
+            self.logger.critical(checkResponses)
+            # TODO: The following function updates closeoutInfo table of MongoDB.
+            #self._updateWorkflowsRecords(checkResponses)
+            # TODO: This does unified status update, mongodb record update and McM force-completion.
+            # TODO: Why not do all the operations here, especially ReqMgr2 status update??
+            #self._updateWorkflowsStatus(checkResponses)
 
         self._checkExecutionTime(len(wfsToCheck))
 

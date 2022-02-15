@@ -22,6 +22,7 @@ class WorkflowCheckor(object):
         try:
             super().__init__(self)
             self.logger = logger or getLogger(self.__class__.__name__)
+            self.logger.info("Initializing Workflow Checkor")
             self.now = mktime(gmtime())
 
             self.wf = wfToCheck.name
