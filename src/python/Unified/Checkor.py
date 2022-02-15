@@ -27,6 +27,7 @@ from WorkflowMgmt.UserLockChecker import UserLockChecker
 from Unified.Helpers.WorkflowCheckor import WorkflowCheckor
 
 from typing import Optional, Tuple, Union
+import traceback
 
 
 class Checkor(OracleClient):
@@ -408,8 +409,8 @@ class Checkor(OracleClient):
 
             wfsToCheck = self._filterMaxNumberOfWorkflows(wfsToCheck)
             self.logger.info("Workflows to check: ")
-            for w in wfsToCheck:
-                self.logger.info(w)
+            for workflow in wfsToCheck:
+                self.logger.info(workflow.name)
             self._check(wfsToCheck)
 
             self._writeSummary()
@@ -417,6 +418,7 @@ class Checkor(OracleClient):
         except Exception as error:
             self.logger.error("Failed to run checkor")
             self.logger.error(str(error))
+            self.logger.error(traceback.format_exc())
 
     def _check(self, wfsToCheck: list) -> None:
         """
