@@ -258,7 +258,7 @@ class Checkor(OracleClient):
         :param workflows: list of workflows
         :return: filtered list of workflows
         """
-        maxPerRound = self.unifiedConfiguration.get("max_per_round", {}).get("checkor")
+        maxPerRound = self.unifiedConfiguration.get("max_per_round").get("checkor")
         if self.options.get("maxPerRound"):
             self.logger.info("Command line to limit workflows to %s", self.options.get("maxPerRound"))
             maxPerRound = self.options.get("maxPerRound")
