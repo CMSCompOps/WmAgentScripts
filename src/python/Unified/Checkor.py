@@ -267,7 +267,7 @@ class Checkor(OracleClient):
             self.logger.info("Number of workflows to check after limitation: %s", maxPerRound)
 
             workflows = self._rankWorkflows(workflows)
-            if self.option.get("checkRunning"):
+            if self.options.get("checkRunning"):
                 random.shuffle(workflows)
             return workflows[:maxPerRound]
 
