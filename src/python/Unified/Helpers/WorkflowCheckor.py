@@ -12,32 +12,33 @@ from WorkflowMgmt.WorkflowStatusEnforcer import WorkflowStatusEnforcer
 
 from typing import Optional, Tuple
 
-class WorkflowCheckor(object):
+#class WorkflowCheckor(object):
+class WorkflowCheckor():
     """
     __WorkflowCheckor__
     General API for checking a given workflow
     """
 
-    def __init__(self, wfToCheck: Workflow, logger: Optional[Logger] = None, **kwargs) -> None:
+    def __init__(self, workflow: Workflow, logger: Optional[Logger] = None, **kwargs) -> None:
         try:
-            super().__init__(self)
+            #super().__init__(self)
             self.logger = logger or getLogger(self.__class__.__name__)
             self.logger.info("Initializing Workflow Checkor")
             self.now = mktime(gmtime())
 
-            self.wf = wfToCheck.name
+            self.wf = workflow.name
             self.wfController = WorkflowController(self.wf)
 
-            self.wfToCheck = wfToCheck
-            self.wfToCheck.wm_status = self.wfController.request.get("RequestStatus")
+            self.workflow = workflow
+            self.workflow.wm_status = self.wfController.request.get("RequestStatus")
             # TODO: Check this
-            self.unifiedStatus = wfToCheck.status
+            self.unifiedStatus = workflow.status
 
             self.checkor = kwargs.get("checkor")
             self.rucioReader = RucioReader()
 
             # TODO: What's the difference between assistanceTags & existingAssistaceTags?
-            self.assistanceTags, self.existingAssistaceTags = set(), set(wfToCheck.status.split("-")[1:])
+            self.assistanceTags, self.existingAssistaceTags = set(), set(workflow.status.split("-")[1:])
             
             self.acdcs = dict()
             self.campaigns = dict()
@@ -75,8 +76,8 @@ class WorkflowCheckor(object):
         if (
             (self.checkor.specificWf and self.checkor.specificWf not in self.wf)
             or os.path.isfile(".checkor_stop")
-            or self.wfToCheck.wm_status in ["assigned", "acquired"]
-            or self.wfToCheck.wm_status != "completed"
+            or self.workflow.wm_status in ["assigned", "acquired"]
+            or self.workflow.wm_status != "completed"
         ):
             self.logger.info("Skipping workflow %s", self.wf)
             return True
@@ -89,8 +90,8 @@ class WorkflowCheckor(object):
         :return: True if workflow should be closed, False o/w
         """
         self.logger.info("Checking if the unified status should be 'close' already, but not")
-        if self.wfToCheck.wm_status in ["closed-out", "announced"] and self.wfToCheck.unifiedStatus != "close":
-            self.logger.info("%s is already %s, setting as close", self.wf, self.wfToCheck.wm_status)
+        if self.workflow.wm_status in ["closed-out", "announced"] and self.workflow.unifiedStatus != "close":
+            self.logger.info("%s is already %s, setting as close", self.wf, self.workflow.wm_status)
             self.newStatus = "close"
             return True
         else:
@@ -104,7 +105,7 @@ class WorkflowCheckor(object):
         :return: True if workflow should be forgotten, False o/w
         """
         self.logger.info("Checking if the unified status should be 'forget'")
-        if self.wfController.request.isRelVal() and self.wfToCheck.wm_status in [
+        if self.wfController.request.isRelVal() and self.workflow.wm_status in [
             "failed",
             "aborted",
             "aborted-archived",
@@ -112,11 +113,11 @@ class WorkflowCheckor(object):
             "rejected-archived",
             "aborted-completed",
         ]:
-            self.logger.info("%s is %s, setting the unified status as 'forget'", self.wf, self.wfToCheck.wm_status)
+            self.logger.info("%s is %s, setting the unified status as 'forget'", self.wf, self.workflow.wm_status)
             self.newStatus = "forget"
             return True
         else:
-            self.logger.info("%s is %s, not setting it as 'forget'", self.wf, self.wfToCheck.wm_status)
+            self.logger.info("%s is %s, not setting it as 'forget'", self.wf, self.workflow.wm_status)
 
         return False
 
@@ -125,7 +126,7 @@ class WorkflowCheckor(object):
         The function to check if a given workflow should be set as trouble
         :return: True if workflow should be set as trouble, False o/w
         """
-        if not self.wfController.request.isRelVal() and self.wfToCheck.wm_status in [
+        if not self.wfController.request.isRelVal() and self.workflow.wm_status in [
             "failed",
             "aborted",
             "aborted-archived",
@@ -133,7 +134,7 @@ class WorkflowCheckor(object):
             "rejected-archived",
             "aborted-completed",
         ]:
-            self.logger.info("%s is %s, setting as trouble", self.wf, self.wfToCheck.wm_status)
+            self.logger.info("%s is %s, setting as trouble", self.wf, self.workflow.wm_status)
             self.newStatus = "trouble"
             return True
 
@@ -181,7 +182,7 @@ class WorkflowCheckor(object):
         The function to check if a given workfloe is on hold
         :return: True if workflow is on hold, False o/w
         """
-        return "-onhold" in self.wfToCheck.wm_status or self.wf in self.checkor.onHoldWfs
+        return "-onhold" in self.workflow.wm_status or self.wf in self.checkor.onHoldWfs
 
     def _getMinFamilyCompletedDelay(self, family: list) -> float:
         """
@@ -217,12 +218,12 @@ class WorkflowCheckor(object):
             self.bypassChecks = True
             return False
 
-        if "-onhold" in self.wfToCheck.wm_status and self.wf in self.checkor.onHoldWfs and not self.bypassChecks:
+        if "-onhold" in self.workflow.wm_status and self.wf in self.checkor.onHoldWfs and not self.bypassChecks:
             self.logger.info("%s is on hold", self.wf)
             return True
 
         if self.wf in self.checkor.onHoldWfs and not self.bypassChecks:
-            self.logger.info("%s is %s, setting as on hold", self.wf, self.wfToCheck.wm_status)
+            self.logger.info("%s is %s, setting as on hold", self.wf, self.workflow.wm_status)
             self.newStatus = "assistance-onhold"
             return True
 
@@ -800,7 +801,7 @@ class WorkflowCheckor(object):
             self.wfController.logger.info(
                 "The output of this workflow are essentially good to be announced while we work on the rest"
             )
-            return ["announced" if "announced" in self.wfToCheck.status else "announce"]
+            return ["announced" if "announced" in self.workflow.status else "announce"]
 
         return []
 
@@ -1130,11 +1131,11 @@ class WorkflowCheckor(object):
         """
         self.wfController.logger.info("Setting %s as closed-out", self.wf)
 
-        if self.wfToCheck.status in ["closed-out", "announced", "normal-archived"]:
+        if self.workflow.status in ["closed-out", "announced", "normal-archived"]:
             self.logger.info(
                 "%s is already %s, not trying to close-out as assuming it does",
                 self.wf,
-                self.wfToCheck.status,
+                self.workflow.status,
             )
             self.newStatus = "close"
             return
@@ -1202,7 +1203,7 @@ class WorkflowCheckor(object):
         The function to set the workflow to assistance
         """
         assistanceStatus = self._getAssistanceStatus()
-        if "manual" not in self.wfToCheck.status or assistanceStatus != "assistance-recovery":
+        if "manual" not in self.workflow.status or assistanceStatus != "assistance-recovery":
             self.newStatus = assistanceStatus
 
         self.logger.info("Ultimate assistance status is: %s", str(assistanceStatus))
@@ -1309,7 +1310,7 @@ class WorkflowCheckor(object):
         """
         # TODO: What's the difference between workflow and wf???
         response = {
-            "workflow": self.wfToCheck,
+            "workflow": self.workflow,
             "wf": self.wf,
             "failed": self.failed, 
             "isClosing": self.isClosing, 
