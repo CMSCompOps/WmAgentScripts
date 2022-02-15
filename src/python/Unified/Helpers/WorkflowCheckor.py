@@ -9,6 +9,7 @@ from Databases.Oracle.OracleDB import Workflow
 from Services.Rucio.RucioReader import RucioReader
 from WorkflowMgmt.WorkflowController import WorkflowController
 from WorkflowMgmt.WorkflowStatusEnforcer import WorkflowStatusEnforcer
+from Unified.Checkor import Checkor
 
 from typing import Optional, Tuple
 
@@ -19,7 +20,7 @@ class WorkflowCheckor():
     General API for checking a given workflow
     """
 
-    def __init__(self, workflow: Workflow, logger: Optional[Logger] = None, **kwargs) -> None:
+    def __init__(self, workflow: Workflow, checkor: Checkor, logger: Optional[Logger] = None, **kwargs) -> None:
         try:
             #super().__init__(self)
             self.logger = logger or getLogger(self.__class__.__name__)
@@ -34,7 +35,8 @@ class WorkflowCheckor():
             # TODO: Check this
             self.unifiedStatus = workflow.status
 
-            self.checkor = kwargs.get("checkor")
+            #self.checkor = kwargs.get("checkor")
+            self.checkor = checkor
             self.rucioReader = RucioReader()
 
             # TODO: What's the difference between assistanceTags & existingAssistaceTags?
