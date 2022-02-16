@@ -859,14 +859,14 @@
   },
   "Run3Winter22GS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
   },
   "Run3Winter22wmLHEGS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
@@ -3248,8 +3248,7 @@
     "secondaries": {
       "/ReggeGribovPartonMC_EposLHC_PbP_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_IT_Pisa", 
-          "T2_US_MIT"
+          "T1_IT_CNAF_Disk"
         ]
       }, 
       "/ReggeGribovPartonMC_EposLHC_pPb_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
