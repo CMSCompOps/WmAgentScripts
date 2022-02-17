@@ -862,14 +862,14 @@ class CheckBuster(threading.Thread):
                 expectedL[output] = lumi_expected
 
 
-            output_event_expected = event_expected_per_task.get(task_outputs.get(output,'NoTaskFound'), event_expected)
+            #output_event_expected = event_expected_per_task.get(task_outputs.get(output,'NoTaskFound'), event_expected)
             
-            if output_event_expected:
-                expectedN[output] = output_event_expected
-                e_fraction = float(event_count) / float( output_event_expected )
-                if e_fraction > percent_completions[output]:
-                    percent_completions[output] = e_fraction
-                    wfi.sendLog('checkor', "overiding : event completion real %s expected %s for %s"%(event_count, output_event_expected, output))
+            #if output_event_expected:
+            #    expectedN[output] = output_event_expected
+            #    e_fraction = float(event_count) / float( output_event_expected )
+            #    if e_fraction > percent_completions[output]:
+            #        percent_completions[output] = e_fraction
+            #        wfi.sendLog('checkor', "overiding : event completion real %s expected %s for %s"%(event_count, output_event_expected, output))
 
 
             percent_avg_completions[output] = percent_completions[output]
