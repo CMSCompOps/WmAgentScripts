@@ -5182,8 +5182,8 @@ class workflowInfo:
     def go(self,log=False):
         CI = campaignInfo()
         pss = self.processingString()
-        #aes = self.acquisitionEra()
-        aes = self.campaigns()
+        aes = self.acquisitionEra()
+        #aes = self.campaigns()
 
         if type(pss) == dict:
 	    try:
