@@ -681,6 +681,12 @@
               "T1_US_FNAL_Disk",
               "T1_DE_KIT_Disk"
                 ]
+       },        
+       "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter22GS-122X_mcRun3_2021_realistic_v9-v1/GEN-SIM": {
+            "SiteWhitelist": [
+                "T2_US_Florida",
+                "T1_IT_CNAF_Disk"
+                    ]
            }
     },
     "maxcopies": 1
@@ -707,7 +713,13 @@
                   "T1_US_FNAL_Disk",
                   "T1_DE_KIT_Disk"
                       ]
-          }
+          },
+       "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter22GS-122X_mcRun3_2021_realistic_v9-v1/GEN-SIM": {
+             "SiteWhitelist": [
+                       "T2_US_Florida",
+                       "T1_IT_CNAF_Disk"
+                             ]
+            }                    
       }
   },
   "Run3Summer21DRPremix": {
