@@ -130,7 +130,8 @@ This is an automated message"""%( new_campaign,
 
         print subject
         print text
-        to = ['hn-cms-dataopsrequests@cern.ch']
+        #to = ['hn-cms-dataopsrequests@cern.ch']
+        to = ['cmstalk+dataopsrequests@dovecotmta.cern.ch']
         sendEmail(subject, text, destination=to)
         # sendLog('batchor',text, level='critical')
 

@@ -315,7 +315,8 @@ def closor(url, specific=None, options=None):
             text+= "%s\n\n"%(issues) 
             text+= "This is an automated message.\n\n"
             text+= ""
-            to = ['hn-cms-relval@cern.ch']
+            #to = ['hn-cms-relval@cern.ch']
+            to = ['cmstalk+relval@dovecotmta.cern.ch']
             sendEmail(subject, text, destination=to )
             ## just announced ; take it out now.
             BI.pop( bname )
