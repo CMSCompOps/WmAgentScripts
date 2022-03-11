@@ -846,7 +846,15 @@
           "T2_US_UCSD",
           "T2_US_Wisconsin"
         ]
-     }
+     },
+    "secondaries": {
+         "/MinBias_Hydjet_Drum5F_5p02TeV/Run3Winter22PbPbNoMixGS-122X_mcRun3_2021_realistic_HI_v10-v1/GEN-SIM": {
+                 "SiteWhitelist": [
+                      "T1_IT_CNAF_Disk",
+                      "T2_US_Florida"
+                                  ]
+                      }
+           }        
   },   
   "Run3Winter22PbPbNoMixGS" : {
     "fractionpass": 0.95,
@@ -882,7 +890,15 @@
           "T2_US_UCSD",
           "T2_US_Wisconsin"
         ]
-     }
+     },
+    "secondaries": {
+         "/MinBias_Hydjet_Drum5F_5p02TeV/Run3Winter22PbPbNoMixGS-122X_mcRun3_2021_realistic_HI_v10-v1/GEN-SIM": {
+               "SiteWhitelist": [
+                     "T1_IT_CNAF_Disk",
+                     "T2_US_Florida"
+                              ]
+                      }
+            }        
   },
   "Run3Winter22GS": {
     "fractionpass": 0.95,
@@ -1665,7 +1681,7 @@
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v3-v1/GEN-SIM": {
        "SiteWhitelist": [
-         "T1_US_FNAL"
+         "T1_US_FNAL_DISK"
         ]
       }
     }, 
