@@ -931,6 +931,10 @@
           }
   },
   "Run3Winter22DRPremix": {
+    "SecondaryLocation": [
+      "T1_US_FNAL_Disk", 
+      "T2_CH_CERN" 
+    ],
     "fractionpass": 0.95,
     "go": false,
     "lumisize": -1,
