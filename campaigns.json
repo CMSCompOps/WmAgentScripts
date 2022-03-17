@@ -746,7 +746,7 @@
     "secondary_AAA": true,        
     "secondaries": {
           "/Neutrino_E-10_gun/Run3Summer21PrePremix-120X_mcRun3_2021_realistic_v6-v2/PREMIX": { 
-              "SiteWhitelist": [
+              "SecondaryLocation": [
                   "T1_US_FNAL_Disk",
                   "T1_DE_KIT_Disk"
                       ]
@@ -931,17 +931,18 @@
           }
   },
   "Run3Winter22DRPremix": {
-    "SecondaryLocation": [
-      "T1_US_FNAL_Disk", 
-      "T2_CH_CERN" 
-    ],
     "fractionpass": 0.95,
     "go": false,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto",
     "secondaries": {
-        "/Neutrino_E-10_gun/Run3Summer21PrePremix-Winter22_122X_mcRun3_2021_realistic_v9-v1/PREMIX": {}
+        "/Neutrino_E-10_gun/Run3Summer21PrePremix-Winter22_122X_mcRun3_2021_realistic_v9-v1/PREMIX": {
+            "SecondaryLocation": [
+                      "T1_US_FNAL_Disk",
+                      "T2_CH_CERN"
+                                    ],
+        }
     }
   },
   "Run3Winter22MiniAOD": {
@@ -1049,9 +1050,6 @@
     "resize": "auto"
   },
   "RunIIAutumn18DRPremix": {
-    "SecondaryLocation": [
-      "T1_US_FNAL_Disk"
-    ], 
     "SiteBlacklist": [
       "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
@@ -1065,18 +1063,16 @@
     }, 
     "resize": "auto", 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUAutumn18_102X_upgrade2018_realistic_v15-v1/GEN-SIM-DIGI-RAW": {}
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUAutumn18_102X_upgrade2018_realistic_v15-v1/GEN-SIM-DIGI-RAW": {
+          "SecondaryLocation": [
+                    "T1_US_FNAL_Disk"
+                        ],
+      }
     }, 
     "secondary_AAA": true, 
     "tune": true
   }, 
   "RunIIAutumn18FSPremix": {
-    "SecondaryLocation": [
-      "T1_US_FNAL_Disk", 
-      "T2_US_Nebraska", 
-      "T1_DE_KIT_Disk", 
-      "T1_RU_JINR_Disk"
-    ], 
     "SiteBlacklist": [
       "T2_CH_CERN_HLT"
     ], 
@@ -1089,7 +1085,14 @@
     }, 
     "resize": "auto", 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUMoriond18_102X_upgrade2018_realistic_v15-v2/GEN-SIM-DIGI-RAW": {}
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUMoriond18_102X_upgrade2018_realistic_v15-v2/GEN-SIM-DIGI-RAW": {
+          "SecondaryLocation": [
+                    "T1_US_FNAL_Disk",
+                    "T2_US_Nebraska",
+                    "T1_DE_KIT_Disk",
+                    "T1_RU_JINR_Disk"
+                                            ],
+      }
     }, 
     "secondary_AAA": true, 
     "tune": true
@@ -1123,9 +1126,6 @@
     "tune": true
   }, 
   "RunIIFall17DRPremix": {
-    "SecondaryLocation": [
-      "T1_US_FNAL_Disk"
-    ], 
     "SiteBlacklist": [
       "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
@@ -1139,7 +1139,11 @@
     }, 
     "resize": "auto", 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv2_correctPU_94X_mc2017_realistic_v9-v1/GEN-SIM-DIGI-RAW": {}
+      "/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv2_correctPU_94X_mc2017_realistic_v9-v1/GEN-SIM-DIGI-RAW": {
+          "SecondaryLocation": [
+                    "T1_US_FNAL_Disk"
+                        ],
+      }
     }, 
     "secondary_AAA": true, 
     "tune": true
@@ -1180,9 +1184,6 @@
     "tune": false
   }, 
   "RunIIFall17FSPremix": {
-    "SecondaryLocation": [
-      "T2_CH_CERN"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -1192,7 +1193,11 @@
     }, 
     "resize": "auto", 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUMoriond17_94X_mc2017_realistic_v15-v1/GEN-SIM-DIGI-RAW": {}
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUMoriond17_94X_mc2017_realistic_v15-v1/GEN-SIM-DIGI-RAW": {
+          "SecondaryLocation": [
+                    "T2_CH_CERN"
+                        ],
+      }
     }, 
     "secondary_AAA": true, 
     "tune": true
@@ -1399,10 +1404,6 @@
     "NO_NO_fractionpass": {
       "90000": 0.9
     }, 
-    "SecondaryLocation": [
-      "T1_US_FNAL_Disk", 
-      "T1_RU_JINR_Disk"
-    ], 
     "SiteBlacklist": [
       "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
@@ -1423,7 +1424,12 @@
       "minCores": 3
     }, 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW": {}
+      "/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW": {
+          "SecondaryLocation": [
+                    "T1_US_FNAL_Disk",
+                    "T1_RU_JINR_Disk"
+                                  ],
+      }
     }, 
     "secondary_AAA": true, 
     "truncate-complete": 0.95, 
@@ -1442,7 +1448,7 @@
     }, 
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer16FSPremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4-v1/GEN-SIM-DIGI-RAW": {
-        "SiteWhitelist": [
+        "SecondaryLocation": [
           "T2_US_Purdue", 
           "T1_DE_KIT_Disk"
         ], 
@@ -1463,7 +1469,7 @@
     },
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer16FSPremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v4-v1/GEN-SIM-DIGI-RAW": {
-        "SiteWhitelist": [
+        "SecondaryLocation": [
           "T2_US_Purdue",
           "T1_DE_KIT_Disk"
         ],
@@ -1579,9 +1585,6 @@
     "tune": true
   },
   "RunIISummer19UL17DIGIPremix": {
-    "SecondaryLocation": [
-      "T1_US_FNAL_Disk"
-    ],
     "SiteBlacklist": [
         "T2_CH_CERN",
         "T2_CH_CERN_HLT"
@@ -1593,7 +1596,11 @@
     "partial_copy": 0.95, 
     "resize": "auto", 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIISummer19ULPrePremix-UL17_106X_mc2017_realistic_v6-v1/PREMIX": {}
+      "/Neutrino_E-10_gun/RunIISummer19ULPrePremix-UL17_106X_mc2017_realistic_v6-v1/PREMIX": {
+          "SecondaryLocation": [
+                    "T1_US_FNAL_Disk"
+                        ],
+      }
     }, 
     "secondary_AAA": true, 
     "tune": true
@@ -2370,10 +2377,6 @@
     "tune": true
   }, 
   "RunIISummer20UL17DIGIPremix": {
-    "SecondaryLocation": [
-      "T2_CH_CERN", 
-      "T1_US_FNAL_Disk"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -2388,7 +2391,12 @@
     "partial_copy": 0.95, 
     "resize": "auto", 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIISummer20ULPrePremix-UL17_106X_mc2017_realistic_v6-v3/PREMIX": {}
+      "/Neutrino_E-10_gun/RunIISummer20ULPrePremix-UL17_106X_mc2017_realistic_v6-v3/PREMIX": {
+                  "SecondaryLocation": [
+                            "T2_CH_CERN",
+                            "T1_US_FNAL_Disk"
+                                          ],
+      }
     }, 
     "secondary_AAA": true, 
     "tune": true
@@ -2606,11 +2614,6 @@
     "tune": true
   }, 
   "RunIISummer20UL18DIGIPremix": {
-    "SecondaryLocation": [
-      "T1_IT_CNAF_Disk", 
-      "T1_US_FNAL_Disk", 
-      "T2_CH_CERN"
-    ], 
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -2625,7 +2628,13 @@
     "partial_copy": 0.95, 
     "resize": "auto", 
     "secondaries": {
-      "/Neutrino_E-10_gun/RunIISummer20ULPrePremix-UL18_106X_upgrade2018_realistic_v11_L1v1-v2/PREMIX": {}
+      "/Neutrino_E-10_gun/RunIISummer20ULPrePremix-UL18_106X_upgrade2018_realistic_v11_L1v1-v2/PREMIX": {
+          "SecondaryLocation": [
+                    "T1_IT_CNAF_Disk",
+                    "T1_US_FNAL_Disk",
+                    "T2_CH_CERN"
+                                  ],
+      }
     }, 
     "secondary_AAA": true, 
     "tune": true
@@ -3349,7 +3358,7 @@
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO" :
           {
-              "SecondaryLocation": [
+              "SiteWhitelist": [
                   "T1_RU_JINR_Disk",
                   "T1_US_FNAL_Disk"
                       ]
@@ -3368,7 +3377,7 @@
               ],
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO" : {
-               "SecondaryLocation": [
+               "SiteWhitelist": [
                                 "T1_RU_JINR_Disk",
                                 "T1_US_FNAL_Disk"                                                            
                ]
@@ -3387,7 +3396,7 @@
               ],
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO" : {
-               "SecondaryLocation": [
+               "SiteWhitelist": [
                                 "T1_RU_JINR_Disk",
                                 "T1_US_FNAL_Disk"
                ]
@@ -3521,7 +3530,7 @@
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
           {
-              "SecondaryLocation": [
+              "SiteWhitelist": [
                   "T1_DE_KIT_Disk",
                   "T1_RU_JINR_Disk"
                       ]
@@ -3541,7 +3550,7 @@
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
           {
-              "SecondaryLocation": [
+              "SiteWhitelist": [
                   "T1_DE_KIT_Disk",
                   "T1_RU_JINR_Disk"
                       ]
@@ -3561,7 +3570,7 @@
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
           {
-              "SecondaryLocation": [
+              "SiteWhitelist": [
                   "T1_DE_KIT_Disk",
                   "T1_RU_JINR_Disk"
                       ]
@@ -3681,7 +3690,7 @@
       "secondaries": {
         "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO" :
         {
-            "SecondaryLocation": [
+            "SiteWhitelist": [
                 "T1_RU_JINR_Disk"
                 ]
         }
@@ -3720,7 +3729,7 @@
       "secondaries": {
         "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO" :
         {
-            "SecondaryLocation": [
+            "SiteWhitelist": [
                 "T1_RU_JINR_Disk"
                 ]
         }
@@ -3739,7 +3748,7 @@
       "secondaries": {
         "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO" :
         {
-            "SecondaryLocation": [
+            "SiteWhitelist": [
                 "T1_RU_JINR_Disk"
                 ]
         }
