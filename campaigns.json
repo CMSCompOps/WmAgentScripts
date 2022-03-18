@@ -941,7 +941,7 @@
             "SecondaryLocation": [
                       "T1_US_FNAL_Disk",
                       "T2_CH_CERN"
-                                    ],
+                                    ]
         }
     }
   },
@@ -1066,7 +1066,7 @@
       "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUAutumn18_102X_upgrade2018_realistic_v15-v1/GEN-SIM-DIGI-RAW": {
           "SecondaryLocation": [
                     "T1_US_FNAL_Disk"
-                        ],
+                        ]
       }
     }, 
     "secondary_AAA": true, 
@@ -1091,7 +1091,7 @@
                     "T2_US_Nebraska",
                     "T1_DE_KIT_Disk",
                     "T1_RU_JINR_Disk"
-                                            ],
+                                            ]
       }
     }, 
     "secondary_AAA": true, 
@@ -1142,7 +1142,7 @@
       "/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv2_correctPU_94X_mc2017_realistic_v9-v1/GEN-SIM-DIGI-RAW": {
           "SecondaryLocation": [
                     "T1_US_FNAL_Disk"
-                        ],
+                        ]
       }
     }, 
     "secondary_AAA": true, 
@@ -1196,7 +1196,7 @@
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUMoriond17_94X_mc2017_realistic_v15-v1/GEN-SIM-DIGI-RAW": {
           "SecondaryLocation": [
                     "T2_CH_CERN"
-                        ],
+                        ]
       }
     }, 
     "secondary_AAA": true, 
@@ -1428,7 +1428,7 @@
           "SecondaryLocation": [
                     "T1_US_FNAL_Disk",
                     "T1_RU_JINR_Disk"
-                                  ],
+                                  ]
       }
     }, 
     "secondary_AAA": true, 
@@ -1599,7 +1599,7 @@
       "/Neutrino_E-10_gun/RunIISummer19ULPrePremix-UL17_106X_mc2017_realistic_v6-v1/PREMIX": {
           "SecondaryLocation": [
                     "T1_US_FNAL_Disk"
-                        ],
+                        ]
       }
     }, 
     "secondary_AAA": true, 
@@ -2395,7 +2395,7 @@
                   "SecondaryLocation": [
                             "T2_CH_CERN",
                             "T1_US_FNAL_Disk"
-                                          ],
+                                          ]
       }
     }, 
     "secondary_AAA": true, 
@@ -2633,7 +2633,7 @@
                     "T1_IT_CNAF_Disk",
                     "T1_US_FNAL_Disk",
                     "T2_CH_CERN"
-                                  ],
+                                  ]
       }
     }, 
     "secondary_AAA": true, 
