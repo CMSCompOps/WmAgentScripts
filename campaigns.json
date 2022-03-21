@@ -923,6 +923,7 @@
     "secondaries": {        
          "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter22GS-122X_mcRun3_2021_realistic_v9-v1/GEN-SIM": {
                "SiteWhitelist": [
+                   "T1_US_FNAL_Disk",
                     "T2_US_Florida",
                     "T1_ES_PIC_Disk"
                      ]
