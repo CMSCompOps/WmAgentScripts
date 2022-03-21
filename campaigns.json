@@ -483,13 +483,13 @@
      "tune": true
     },
   "Commissioning900wmLHEGS": {
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "fractionpass": 0.95
   },
   "Commissioning900GS": {
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "fractionpass": 0.95
@@ -501,7 +501,7 @@
       "fractionpass": 0.95
   },
   "Commissioning900MiniAOD": {
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "fractionpass": 0.95
@@ -778,7 +778,7 @@
   },
   "Run3Winter22PbPbNoMixRECOMiniAOD" : {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
@@ -814,7 +814,7 @@
   },
   "Run3Winter22PbPbNoMixDIGI" : {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
@@ -923,7 +923,7 @@
     "secondaries": {        
          "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter22GS-122X_mcRun3_2021_realistic_v9-v1/GEN-SIM": {
                "SiteWhitelist": [
-                    "T1_US_FNAL_Disk",
+                   "T1_US_FNAL_Disk",
                     "T2_US_Florida",
                     "T1_ES_PIC_Disk"
                      ]
@@ -932,7 +932,7 @@
   },
   "Run3Winter22DRPremix": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto",
