@@ -495,13 +495,13 @@
       "fractionpass": 0.95
   },
   "Commissioning900DR": {
-      "go": true,
+      "go": false,
       "lumisize": -1,
       "maxcopies": 1,
       "fractionpass": 0.95
   },
   "Commissioning900MiniAOD": {
-      "go": true,
+      "go": false,
       "lumisize": -1,
       "maxcopies": 1,
       "fractionpass": 0.95
