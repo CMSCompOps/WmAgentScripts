@@ -3111,7 +3111,7 @@
   },
   "RunIISummer20UL17pp5TeVpLHEGS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
