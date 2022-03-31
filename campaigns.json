@@ -776,6 +776,12 @@
     "lumisize": -1,
     "maxcopies": 1
   },
+  "Run3Summer21pLHE": {
+      "fractionpass": 0.95,
+      "go": true,
+      "lumisize": -1,
+      "tune": true
+  },
   "Run3Winter22PbPbNoMixRECOMiniAOD" : {
     "fractionpass": 0.95,
     "go": true,
@@ -3105,7 +3111,7 @@
   },
   "RunIISummer20UL17pp5TeVpLHEGS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
@@ -3388,7 +3394,7 @@
   },
   "RunIISpring21UL18FSSIMDR": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "SiteBlacklist": [
