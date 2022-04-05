@@ -525,7 +525,7 @@
   },
   "pnr_users": {
     "value": [
-      "haozturk"
+      "haozturk", "cmsunified"
     ],
     "description": "PnR users"
   },
