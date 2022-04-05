@@ -430,8 +430,8 @@ class Checkor(OracleClient):
         #@runWithMultiThreading(mtParam="wfsToCheck", maxThreads=self.options.get("nThreads"))
         #def _checkWorkflow(self, wfsToCheck: list) -> dict:
             #return WorkflowCheckor(wfsToCheck, checkor=self).check()
-        def _checkWorkflow(workflow: list) -> dict:
-            return WorkflowCheckor(workflow).check()
+        def _checkWorkflow(workflow: Workflow, checkor: Checkor) -> dict:
+            return WorkflowCheckor(workflow, checkor).check()
 
         #checkResponses = _checkWorkflow(wfsToCheck)
         # self._updateWorkflowsRecords(checkResponses)
@@ -454,5 +454,7 @@ class Checkor(OracleClient):
 if __name__ == "__main__":
     options, specificWf = Checkor.parseOptions()
     checkor = Checkor(options=options, specificWf=specificWf)
-    if checkor.go():
+    # TODO: Update this in production
+    #if checkor.go():
+    if True:
         checkor.run()
