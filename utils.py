@@ -1305,22 +1305,6 @@ class siteInfo:
 
         UC = unifiedConfiguration()
 
-        self.sites_ready_in_agent = set()
-
-        try:
-            agents = getAllAgents( reqmgr_url )
-            for team,agents in agents.items():
-                if team !='production': continue
-                for agent in agents:
-                    if agent['status'] != 'ok':
-                        continue
-                    for site,site_info in agent['WMBS_INFO']['thresholds'].iteritems():
-                        if site_info['state'] in ['Normal']:
-                            self.sites_ready_in_agent.add( site )
-        except Exception as e :
-            print e
-            pass
-
         try:
             ## get all sites from SSB readiness
             self.sites_ready = []
@@ -1335,11 +1319,8 @@ class siteInfo:
                 override = (override_good and siteInfo['name'] in override_good)
                 if siteInfo['name'] in self.sites_banned and not override:
                     continue
-                if (self.sites_ready_in_agent and siteInfo['name'] in self.sites_ready_in_agent) or override:
-                    self.sites_ready.append( siteInfo['name'] )
-                elif self.sites_ready_in_agent and not siteInfo['name'] in self.sites_ready_in_agent:
-                    self.sites_not_ready.append( siteInfo['name'] )
-                elif siteInfo['prod_status'] == 'enabled':
+
+                if siteInfo['prod_status'] == 'enabled':
                     self.sites_ready.append( siteInfo['name'] )
                 else:
                     self.sites_not_ready.append( siteInfo['name'] )
