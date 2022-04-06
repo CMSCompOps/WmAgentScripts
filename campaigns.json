@@ -949,7 +949,7 @@
                       "T2_CH_CERN"
                                     ]
         }
-    }
+    },
     "secondary_AAA": true
   },
   "Run3Winter22MiniAOD": {
@@ -3483,7 +3483,7 @@
                    "T1_FR_CCIN2P3_Disk"
                ]
            }
-       }
+       },
        "secondary_AAA": true
   },
   "RunIISpring21UL18FSGSPremixLLPBugFix": {
@@ -3643,7 +3643,7 @@
                    "T1_DE_KIT_Disk"
                     ]
            }
-       }
+       },
        "secondary_AAA": true
   },       
   "RunIISpring21UL17FSGSPremixLLPBugFix": {
@@ -3834,7 +3834,7 @@
                    "T1_US_FNAL_Disk"
                        ]
           }
-      }
+      },
       "secondary_AAA": true
   },
   "RunIISpring21UL16FSGSPremixLLPBugFix": {
