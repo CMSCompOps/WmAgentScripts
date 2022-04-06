@@ -949,7 +949,8 @@
                       "T2_CH_CERN"
                                     ]
         }
-    }
+    },
+    "secondary_AAA": true
   },
   "Run3Winter22MiniAOD": {
     "fractionpass": 0.95,
@@ -3482,7 +3483,8 @@
                    "T1_FR_CCIN2P3_Disk"
                ]
            }
-        }
+        },
+       "secondary_AAA": true 
   },
   "RunIISpring21UL18FSGSPremixLLPBugFix": {
       "fractionpass": 0.95,
@@ -3831,7 +3833,8 @@
                    "T1_US_FNAL_Disk"
                        ]
           }
-     }
+     },
+     "secondary_AAA": true
   },
   "RunIISpring21UL16FSGSPremixLLPBugFix": {
     "fractionpass": 0.95,
