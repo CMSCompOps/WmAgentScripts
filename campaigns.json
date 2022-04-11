@@ -792,8 +792,8 @@
       "parameters": {
           "MergedLFNBase": "/store/himc",
           "SiteBlacklist": [
-              "T1_US_FNAL"
-              "T2_US_Purdue"
+              "T1_US_FNAL",
+              "T2_US_Purdue",
               "T2_US_Caltech",
               "T2_US_Florida",
               "T2_US_Nebraska",
