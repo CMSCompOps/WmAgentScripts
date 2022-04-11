@@ -783,6 +783,25 @@
       "lumisize": -1,
       "tune": true
   },
+  "Run3Winter22PbPbpLHE": {
+      "fractionpass": 0.95,
+      "go": false,
+      "lumisize": -1,
+      "resize": "auto",
+      "tune": true,
+      "parameters": {
+          "MergedLFNBase": "/store/himc",
+          "SiteBlacklist": [
+              "T1_US_FNAL"
+              "T2_US_Purdue"
+              "T2_US_Caltech",
+              "T2_US_Florida",
+              "T2_US_Nebraska",
+              "T2_US_UCSD",
+              "T2_US_Wisconsin"
+              ]
+        }
+  },
   "Run3Winter22PbPbNoMixRECOMiniAOD" : {
     "fractionpass": 0.95,
     "go": true,
