@@ -1550,7 +1550,7 @@ class CheckBuster(threading.Thread):
         
             pop_a_jira = False
             ## rereco and manual => jira
-            if 'manual' in self.to_status and 'ReReco' in wfi.request['RequestType']:
+            if 'manual' in self.to_status:
                 pop_a_jira = True
             ## end of first round acdc => jira
             if 'recovered' in self.to_status and 'manual' in self.to_status:
