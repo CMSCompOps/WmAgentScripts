@@ -785,7 +785,7 @@
   },
   "Run3Winter22PbPbpLHE": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "resize": "auto",
       "tune": true,
@@ -3491,7 +3491,7 @@
   },
   "RunIISpring22UL18FSwmLHEGSPremix": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "SiteBlacklist": [
@@ -3651,7 +3651,7 @@
   },
   "RunIISpring22UL17FSwmLHEGSPremix": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "SiteBlacklist": [
@@ -3842,7 +3842,7 @@
   },
   "RunIISpring22UL16FSwmLHEGSPremix": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "lumisize": -1,
       "maxcopies": 1,
       "SiteBlacklist": [
