@@ -97,6 +97,12 @@ def assignor(url ,specific = None, talk=True, options=None):
         print "\n\n"
         wfh = workflowInfo( url, wfo.name)
 
+        try:
+            if wfh.request["PrepID"] in UC.get('prepIDs_to_skip'): 
+                continue
+        except:
+            pass
+
         if wfh.request['RequestStatus'] in ['rejected','aborted','aborted-completed','aborted-archived','rejected-archived'] and wfh.isRelval():
             wfo.status = 'forget'
             session.commit()

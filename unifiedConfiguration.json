@@ -446,5 +446,18 @@
   "pnr_users": {
     "value" : ["haozturk"],
     "description" : "PnR users"
+  },
+  "prepIDs_to_skip": {
+    "value" : ["task_SMP-RunIISummer20UL16wmLHEGEN-00495",
+               "task_SMP-RunIISummer20UL16wmLHEGEN-00496",
+               "task_SMP-RunIISummer20UL16wmLHEGEN-00497",
+               "task_SMP-RunIISummer20UL17wmLHEGEN-00481",
+               "task_SMP-RunIISummer20UL17wmLHEGEN-00482",
+               "task_SMP-RunIISummer20UL17wmLHEGEN-00483",
+               "task_SMP-RunIISummer20UL17wmLHEGEN-00484",
+               "task_SMP-RunIISummer20UL18wmLHEGEN-00474",
+               "task_SMP-RunIISummer20UL18wmLHEGEN-00475",
+               "task_SMP-RunIISummer20UL18wmLHEGEN-00476"],
+    "description" : "PrepIDs to skip from workflow assignment"
   }
 }
