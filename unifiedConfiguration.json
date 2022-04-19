@@ -404,7 +404,8 @@
 	       "ALCA_" : { "primary_AAA" : true , 
 	       	       	   "parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}
 			},
-	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50, "LumisPerJob" : 1000 }}
+	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50, "LumisPerJob" : 1000 }},
+               "M100PPC" : {"parameters" : { "SiteWhitelist" : ["T1_IT_CNAF"]}}
              }
   },
   "batch_goodness":{
