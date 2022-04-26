@@ -1101,11 +1101,6 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         text+='<li> %s <a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site, site )
     text += "</ul></div></li>"
 
-    text += site_div_header("Sites ready in agents")
-    for site in sorted(SI.sites_ready_in_agent):
-        text+='<li> %s <a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site, site )
-    text += "</ul></div></li>"
-
 
     text += site_div_header("Approximate Free Tape")
     for mss in SI.storage:
