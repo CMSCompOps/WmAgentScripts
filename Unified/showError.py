@@ -680,16 +680,16 @@ def parse_one(url, wfn, options=None):
             if not site in SI.sites_ready:
                 color = 'bgcolor=indianred'
                 site_in ='<b>No</b>'
-                if task in missing_to_run_at and  missing_to_run_at[task][SI.CE_to_SE(site)] == 0 or min_rank == task_rank:
+                if task in missing_to_run_at and  missing_to_run_at[task][site] == 0 or min_rank == task_rank:
                     color = 'bgcolor=aquamarine'
                     site_in = '<b>No</b> but fine'
 
             if not no_error:
-                site_in +=" (%s events)"%("{:,}".format(missing_to_run_at[task][SI.CE_to_SE(site)]) if task in missing_to_run_at else '--')
+                site_in +=" (%s events)"%("{:,}".format(missing_to_run_at[task][site]) if task in missing_to_run_at else '--')
             html+='<tr><td %s>%s</td>'%(color,site)
             for code in sorted(all_codes):
                 if code == notreported:
-                    html += '<td %s width=200>%s events </td>' %(color, "{:,}".format(missing_to_run_at[task][SI.CE_to_SE(site)]))
+                    html += '<td %s width=200>%s events </td>' %(color, "{:,}".format(missing_to_run_at[task][site]))
                 else:
                     if error_site_count[code][site]:
                         er_frac = float(error_site_count[code][site])/s_per_code[code] if s_per_code[code] else 0.
