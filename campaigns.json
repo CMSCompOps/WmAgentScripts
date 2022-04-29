@@ -1058,6 +1058,14 @@
     },
     "secondary_AAA": false  
   },
+  "PhaseIISpring22GS" :{
+      "fractionpass": 0.95,
+      "go": false
+  },
+  "PhaseIISpring22DRMiniAOD" : {
+      "fractionpass": 0.95,
+      "go": false
+  },
   "Phase2D81Spring21GS":{
       "fractionpass": 0.95,
       "go": true,
