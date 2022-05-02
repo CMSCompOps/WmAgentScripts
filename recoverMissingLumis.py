@@ -644,15 +644,8 @@ def defineRequests(workload, requestInfo,
             collection = self.c
             self.lumis = 0
             self.files = 0
-            f = open('RecoveryLog.txt', 'a')
-            for run in fileInfo['runs']:
-                f.write(str(fileInfo['runs'][run]))
-                f.write("")
-            f.close()
-            logging.info( fileInfo['runs'])
             for run in fileInfo['runs']:
                 if run in requestObject['lumis']:
-                    #for lumi in fileInfo['runs'][run][0]:
                     for lumi in fileInfo['runs'][run]:
                         if lumi in requestObject['lumis'][run]:
                             if run not in fileRuns:
@@ -822,7 +815,6 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
     else:
         logging.getLogger().setLevel(logging.INFO)
-    logging.info("Starting!!!")
     # First load the request
     if val.requestName is None:
         raise RuntimeError("Request name must be specified.")
