@@ -1334,7 +1334,8 @@ class siteInfo:
                 'T3_US_NERSC',
                 'T3_US_TACC',
                 'T3_US_PSC',
-                'T3_US_SDSC'
+                'T3_US_SDSC',
+                'T3_US_Lancium'
                             ]
             for aar in add_as_ready:
                 if not aar in self.sites_ready:
@@ -1376,7 +1377,8 @@ class siteInfo:
                            'T3_US_TACC',
                            'T3_US_OSG',
                            'T3_US_Colorado',
-                           'T3_US_SDSC'
+                           'T3_US_SDSC',
+                           'T3_US_Lancium'
         ]
         add_on_aaa = list(set(add_on_good_aaa + add_on_aaa))
         self.sites_AAA = list(set(self.sites_AAA + add_on_aaa ))

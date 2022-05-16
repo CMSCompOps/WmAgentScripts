@@ -429,7 +429,7 @@
     "description" : "The sites to assign DQM/DMQIO harvesting workflows"
   },
   "HEPCloud_sites": {
-    "value" : ["T3_US_NERSC","T3_US_PSC","T3_US_SDSC","T3_US_TACC", "T3_US_Anvil"],
+    "value" : ["T3_US_NERSC","T3_US_PSC","T3_US_SDSC","T3_US_TACC", "T3_US_Anvil", "T3_US_Lancium"],
     "description" : "HEPCloud sites"
   },
   "acdc_console_url": {
