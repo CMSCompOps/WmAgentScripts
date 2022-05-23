@@ -927,6 +927,10 @@
     },
     "secondary_AAA": false        
   },
+  "Run3Winter22pLHE": {
+     "fractionpass": 0.95,
+     "go": false
+  }, 
   "Run3Winter22GS": {
     "fractionpass": 0.95,
     "go": true,
@@ -980,6 +984,10 @@
     "maxcopies": 1,
     "resize": "auto"
   },
+  "Run3Summer22NanoAOD" :{
+        "fractionpass": 0.97,
+        "go": false
+   },
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
     "go": true, 
