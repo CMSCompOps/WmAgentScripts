@@ -927,6 +927,10 @@
     },
     "secondary_AAA": false        
   },
+  "Run3Winter22pLHE": {
+     "fractionpass": 0.95,
+     "go": true
+  }, 
   "Run3Winter22GS": {
     "fractionpass": 0.95,
     "go": true,
@@ -979,6 +983,18 @@
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
+  },
+  "Run3Summer22NanoAOD" :{
+        "fractionpass": 0.97,
+        "go": false
+  },
+  "Run3Winter22CosmicGS":{
+      "fractionpass": 0.95,
+      "go": false
+  },
+  "Run3Winter22CosmicDR":{
+      "fractionpass": 0.95,
+      "go": false
   },
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
@@ -1062,7 +1078,15 @@
   },
   "PhaseIISpring22DRMiniAOD" : {
       "fractionpass": 0.95,
-      "go": false
+      "go": false,
+      "secondaries": {
+         "/MinBias_TuneCP5_14TeV-pythia8/PhaseIISpring22GS-123X_mcRun4_realistic_v11-v1/GEN-SIM": {
+                 "SiteWhitelist": [
+                     "T1_US_FNAL_Disk",
+                     "T2_CH_CERN"
+                       ]
+              }
+      }
   },
   "Phase2D81Spring21GS":{
       "fractionpass": 0.95,
