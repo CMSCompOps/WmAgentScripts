@@ -985,16 +985,16 @@
     "resize": "auto"
   },
   "Run3Summer22NanoAOD" :{
-        "fractionpass": 0.97,
-        "go": false
+        "fractionpass": 0.95,
+        "go": true
   },
   "Run3Winter22CosmicGS":{
       "fractionpass": 0.95,
-      "go": false
+      "go": true
   },
   "Run3Winter22CosmicDR":{
       "fractionpass": 0.95,
-      "go": false
+      "go": true
   },
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
