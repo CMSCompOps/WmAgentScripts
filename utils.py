@@ -19,10 +19,10 @@ import datetime
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.Utils import COMMASPACE, formatdate
+from email.utils import COMMASPACE, formatdate
 from email.utils import make_msgid
 
-from .RucioClient import RucioClient
+from RucioClient import RucioClient
 
 ## add local python paths
 for p in ['/usr/lib64/python2.7/site-packages', '/usr/lib/python2.7/site-packages']:
