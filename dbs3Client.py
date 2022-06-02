@@ -8,7 +8,7 @@
 """
 
 
-import urllib2,urllib, httplib, sys, re, os, json, datetime
+import urllib.request, urllib.error, urllib.parse,urllib.request,urllib.parse,urllib.error, http.client, sys, re, os, json, datetime
 from xml.dom.minidom import getDOMImplementation
 from dbs.apis.dbsClient import DbsApi
 from collections import defaultdict
@@ -24,11 +24,11 @@ dbs3_url_writer = r'https://cmsweb.cern.ch/dbs/prod/global/DBSWriter'
 def duplicateRunLumi(dataset, verbose=False, skipInvalid=False):
     r,lumisChecked = duplicateRunLumiFiles( dataset, verbose, skipInvalid)
     if verbose:
-        print "dataset :",dataset
+        print("dataset :",dataset)
         for rl in sorted(lumisChecked.keys()):
-            print rl,"is in these files"
+            print(rl,"is in these files")
             for fn in lumisChecked[rl]:
-                print fn
+                print(fn)
     return r
 
 
@@ -51,7 +51,7 @@ def duplicateRunLumiFiles(dataset, verbose=False, skipInvalid=False):
     #if only one run in the list
     if len(runs) == 1:
         if verbose:
-            print "only one run:",runs
+            print("only one run:",runs)
         return duplicateLumiFiles(dataset, verbose, skipInvalid)
 
     #if verbose:        print len(runs),"runs to look at"
@@ -80,8 +80,8 @@ def duplicateRunLumiFiles(dataset, verbose=False, skipInvalid=False):
         #if verbose: print len(rreply),"files with their lumi info"
         not_found = set(files) - set([f['logical_file_name'] for f in rreply])
         if not_found:
-            print "no lumi info for"
-            print '\n'.join( sorted(not_found))
+            print("no lumi info for")
+            print('\n'.join( sorted(not_found)))
         #if verbose:
         #    print len(reply),"files in the run"
         #    print json.dumps(reply[0], indent=2)
@@ -93,12 +93,12 @@ def duplicateRunLumiFiles(dataset, verbose=False, skipInvalid=False):
 
 
     ## reduce to those with duplicates
-    for rl in lumisChecked.keys():
+    for rl in list(lumisChecked.keys()):
         if len(lumisChecked[rl])<=1:
             lumisChecked.pop( rl )
 
     #print lumisChecked
-    lumisChecked = dict([(k,list(v)) for k,v in lumisChecked.iteritems()])
+    lumisChecked = dict([(k,list(v)) for k,v in lumisChecked.items()])
 
     r = len(lumisChecked)!=0
     return (r,lumisChecked)
@@ -136,7 +136,7 @@ def duplicateLumiFiles(dataset, verbose=False, skipInvalid=False):
         for lumi in lumis:
             lumisChecked['%d:%d'%(run,lumi)].add( logical_file_name )
 
-    for rl in lumisChecked.keys():
+    for rl in list(lumisChecked.keys()):
         if len(lumisChecked[rl])<=1:
             lumisChecked.pop( rl )
 
@@ -144,10 +144,10 @@ def duplicateLumiFiles(dataset, verbose=False, skipInvalid=False):
     if verbose:
         for rl in sorted(lumisChecked.keys()):
             run,lumi = rl.split(':')
-            print 'Lumi',lumi,'in run',run,'is in these files'
-            print '\n'.join( lumisChecked[rl] )
+            print('Lumi',lumi,'in run',run,'is in these files')
+            print('\n'.join( lumisChecked[rl] ))
     r = len(lumisChecked)!=0
-    lumisChecked = dict([(k,list(v)) for k,v in lumisChecked.iteritems()])
+    lumisChecked = dict([(k,list(v)) for k,v in lumisChecked.items()])
     return (r,lumisChecked)
 
 
@@ -201,11 +201,11 @@ def setDatasetStatus(dataset, newStatus, files=True):
         elif newStatus in ['PRODUCTION', 'VALID']:
             file_status = 1
         else:
-            print "Sorry, I don't know this state and you cannot set files to %s" % newStatus
-            print "Only the dataset was changed. Quitting the program!"
+            print("Sorry, I don't know this state and you cannot set files to %s" % newStatus)
+            print("Only the dataset was changed. Quitting the program!")
             return
         
-        print "Files will be set to:",file_status,"in DBS3"
+        print("Files will be set to:",file_status,"in DBS3")
         files = dbsapi.listFiles(dataset=dataset)
         for this_file in files:
             dbsapi.updateFileStatus(logical_file_name=this_file['logical_file_name'], is_file_valid=file_status)
@@ -282,21 +282,21 @@ def getFileCountDataset(dataset, skipInvalid=False, onlyInvalid=False):
         #print main_lfn
 
     if main_lfn:
-        bads = filter(lambda f : not f['logical_file_name'].startswith(main_lfn), reply) 
+        bads = [f for f in reply if not f['logical_file_name'].startswith(main_lfn)] 
         if bads:
-            print "bad files"
-            print bads
+            print("bad files")
+            print(bads)
     #print reply
     if skipInvalid:
-        reply = filter(lambda f : f['is_file_valid'] ==1, reply)
+        reply = [f for f in reply if f['is_file_valid'] ==1]
         if main_lfn:
-            reply = filter(lambda f : f['logical_file_name'].startswith(main_lfn), reply)
+            reply = [f for f in reply if f['logical_file_name'].startswith(main_lfn)]
             #print "restricted"
     elif onlyInvalid:
         if main_lfn:
-            reply = filter(lambda f : f['is_file_valid'] ==0 or not f['logical_file_name'].startswith(main_lfn), reply)
+            reply = [f for f in reply if f['is_file_valid'] ==0 or not f['logical_file_name'].startswith(main_lfn)]
         else:
-            reply = filter(lambda f : f['is_file_valid'] ==0, reply)
+            reply = [f for f in reply if f['is_file_valid'] ==0]
     else:
         #if main_lfn:
         #    reply = filter(lambda f : f['logical_file_name'].startswith(main_lfn), reply)
@@ -353,7 +353,7 @@ def getLumiCountDataSetBlockList(dataset, blockList):
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)
     #transform from strin to list
-    if type(blockList) in (str, unicode):
+    if type(blockList) in (str, str):
         blockList = eval(blockList)
     total = 0
     #get one by one block and add it so uri wont be too large
@@ -388,7 +388,7 @@ def getEventCountDataSetBlockList(dataset,blockList):
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)    
     #transform from strin to list
-    if type(blockList) in (str, unicode):
+    if type(blockList) in (str, str):
         blockList = eval(blockList)
     total = 0
     #get one by one block and add it so uri wont be too large
@@ -405,7 +405,7 @@ def getEventCountDataSetFileList(dataset,fileList):
     # initialize API to DBS3
     dbsapi = DbsApi(url=dbs3_url)    
     #transform from strin to list
-    if type(fileList) in (str, unicode):
+    if type(fileList) in (str, str):
         fileList = eval(fileList)
     total = 0
     #get one by one block and add it so uri wont be too large
@@ -424,7 +424,7 @@ def getEventCountDataSetRunList(dataset,runList):
     dbsapi = DbsApi(url=dbs3_url)
     # retrieve file aggregation only by the runs
     #transform from strin to list
-    if type(runList) in (str, unicode):
+    if type(runList) in (str, str):
         runList = eval(runList)
     total = 0
     #get one by one run, so URI wont be too large
@@ -443,7 +443,7 @@ def getLumiCountDataSetRunList(dataset,runList):
     dbsapi = DbsApi(url=dbs3_url)
     # retrieve file aggregation only by the runs
     #transform from strin to list
-    if type(runList) in (str, unicode):
+    if type(runList) in (str, str):
         runList = eval(runList)
     total = 0
     #get one by one run, so URI wont be too large
@@ -464,18 +464,18 @@ def getDatasetSize(dataset):
 def main():
     args=sys.argv[1:]
     if len(args) < 1:
-        print "usage:dbs3Client dataset dataset2 ..."
+        print("usage:dbs3Client dataset dataset2 ...")
         sys.exit(0)
     datasets = args
     for dataset in datasets:
-        print dataset
-        print " Events:", getEventCountDataSet(dataset)
-        print " Lumis:", getLumiCountDataSet(dataset)
+        print(dataset)
+        print(" Events:", getEventCountDataSet(dataset))
+        print(" Lumis:", getLumiCountDataSet(dataset))
         info = getDatasetInfo(dataset)
-        print " Open Blocks: ", info[0]
-        print " Creation:", datetime.datetime.fromtimestamp(info[1]).strftime('%Y-%m-%d %H:%M:%S')
-        print " Last update:", datetime.datetime.fromtimestamp(info[2]).strftime('%Y-%m-%d %H:%M:%S')
-        print " Status (access type):", getDatasetStatus(dataset)
+        print(" Open Blocks: ", info[0])
+        print(" Creation:", datetime.datetime.fromtimestamp(info[1]).strftime('%Y-%m-%d %H:%M:%S'))
+        print(" Last update:", datetime.datetime.fromtimestamp(info[2]).strftime('%Y-%m-%d %H:%M:%S'))
+        print(" Status (access type):", getDatasetStatus(dataset))
         #print " Duplicated Lumis:", duplicateRunLumi(dataset)
         #print " Duplicated Lumis:", duplicateLumi(dataset)
         #print " Runs", getRunsDataset(dataset))
