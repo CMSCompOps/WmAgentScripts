@@ -43,7 +43,7 @@ class RucioClient(Client):
         try:
             files = list(self.list_files(self.scope, dataset))
         except Exception as e:
-            print(str(e))
+            print((str(e)))
             return 0
         return len(files)
 
@@ -54,7 +54,7 @@ class RucioClient(Client):
         try:
             files = list(self.list_files(self.scope, dataset))
         except Exception as e:
-            print(str(e))
+            print((str(e)))
             return []
         fileNames = [_file['name'] for _file in files]
         return fileNames
@@ -66,7 +66,7 @@ class RucioClient(Client):
         try:
             blockNames = [block['name'] for block in self.list_content(self.scope, dataset)]
         except Exception as e:
-            print(str(e))
+            print((str(e)))
             return []
         return blockNames
 
@@ -79,7 +79,7 @@ class RucioClient(Client):
             if numFiles is None:
                 raise Exception("block length in rucio is None")
         except Exception as e:
-            print(str(e))
+            print((str(e)))
             return 0
         return numFiles
 
@@ -93,7 +93,7 @@ class RucioClient(Client):
             for block in self.getBlockNamesDataset(dataset):
                 blocks.append((block, self.getFileCountBlock(block)))
         except Exception as e:
-            print(str(e))
+            print((str(e)))
             return []
         return blocks
 
@@ -113,8 +113,8 @@ class RucioClient(Client):
             cric = CRIC()
             CEs = cric.PNNstoPSNs(RSEs)
         except Exception as e:
-            print "Exception while getting the dataset location"
-            print(str(e))
+            print("Exception while getting the dataset location")
+            print((str(e)))
             return []
         return CEs
 

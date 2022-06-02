@@ -1,8 +1,8 @@
 import sys
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import logging
 from dbs.apis.dbsClient import DbsApi
-import httplib
+import http.client
 import os
 import socket
 import json
@@ -22,7 +22,7 @@ from email.MIMEText import MIMEText
 from email.Utils import COMMASPACE, formatdate
 from email.utils import make_msgid
 
-from RucioClient import RucioClient
+from .RucioClient import RucioClient
 
 ## add local python paths
 for p in ['/usr/lib64/python2.7/site-packages','/usr/lib/python2.7/site-packages']:
@@ -45,8 +45,8 @@ class unifiedConfiguration:
             try:
                 self.configs = json.loads(open(self.configFile).read())
             except Exception as ex:
-                print("Could not read configuration file: %s\nException: %s" %
-                      (self.configFile, str(ex)))
+                print(("Could not read configuration file: %s\nException: %s" %
+                      (self.configFile, str(ex))))
                 sys.exit(124)
 
         if self.configs is None:
@@ -54,7 +54,7 @@ class unifiedConfiguration:
                 self.client = mongo_client()
                 self.db = self.client.unified.unifiedConfiguration
             except Exception as ex:
-                print ("Could not reach pymongo.\n Exception: \n%s" % str(ex))
+                print(("Could not reach pymongo.\n Exception: \n%s" % str(ex)))
                 # self.configs = json.loads(open(self.configFile).read())
                 sys.exit(124)
 
@@ -63,8 +63,8 @@ class unifiedConfiguration:
             if parameter in self.configs:
                 return self.configs[parameter]['value']
             else:
-                print parameter, 'is not defined in global configuration'
-                print ','.join(self.configs.keys()), 'possible'
+                print(parameter, 'is not defined in global configuration')
+                print(','.join(list(self.configs.keys())), 'possible')
                 sys.exit(124)
         else:
             found = self.db.find_one({"name": parameter})
@@ -74,8 +74,8 @@ class unifiedConfiguration:
                 return found
             else:
                 availables = [o['name'] for o in self.db.find_one()]
-                print parameter, 'is not defined in mongo configuration'
-                print ','.join(availables), 'possible'
+                print(parameter, 'is not defined in mongo configuration')
+                print(','.join(availables), 'possible')
                 sys.exit(124)
 
 
@@ -109,7 +109,7 @@ logging.basicConfig(format = FORMAT, datefmt = DATEFMT, level=logging.DEBUG)
 do_html_in_each_module = False
 
 def deep_update(d, u):
-    for k, v in u.items():
+    for k, v in list(u.items()):
         if isinstance(v, collections.Mapping) or isinstance(v, dict):
             default = v.copy()
             default.clear()
@@ -123,12 +123,12 @@ def sendLog( subject, text , wfi = None, show=True ,level='info'):
     try:
         try_sendLog( subject, text , wfi, show, level)
     except Exception as e:
-        print "failed to send log to elastic search"
-        print str(e)
+        print("failed to send log to elastic search")
+        print(str(e))
         sendEmail('failed logging',subject+text+str(e))
 
 def new_searchLog( q, actor=None, limit=50 ):
-    conn = httplib.HTTPSConnection( 'es-unified7.cern.ch' )
+    conn = http.client.HTTPSConnection( 'es-unified7.cern.ch' )
     return _searchLog(q, actor, limit,conn, prefix = '/es/unified-logs/_doc', h = es_header())
 
 def _searchLog( q, actor, limit, conn, prefix, h = None):
@@ -139,7 +139,7 @@ def _searchLog( q, actor, limit, conn, prefix, h = None):
         goodquery['query']['bool']['filter'] = { "term" : { "subject" : actor}}
 
     turl = prefix+'/_search?size=%d'%limit
-    print turl
+    print(turl)
     conn.request("GET" , turl, json.dumps(goodquery) ,headers = h if h else {})
 
     response = conn.getresponse()
@@ -157,12 +157,12 @@ def es_header():
     return header
 
 def new_sendLog( subject, text , wfi = None, show=True, level='info'):
-    conn = httplib.HTTPSConnection( 'es-unified7.cern.ch' )
+    conn = http.client.HTTPSConnection( 'es-unified7.cern.ch' )
 
     conn.request("GET", "/es", headers=es_header())
     response = conn.getresponse()
     data = response.read()
-    print data
+    print(data)
 
     ## historical information on how the schema was created
     """
@@ -211,7 +211,7 @@ def new_sendLog( subject, text , wfi = None, show=True, level='info'):
 
 def try_sendLog( subject, text , wfi = None, show=True, level='info'):
 
-    re_conn = httplib.HTTPSConnection( 'es-unified7.cern.ch' )
+    re_conn = http.client.HTTPSConnection( 'es-unified7.cern.ch' )
     _try_sendLog( subject, text, wfi, show, level, conn = re_conn, prefix='/es/unified-logs', h = es_header())
 
 
@@ -220,15 +220,15 @@ def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= Non
     meta_text="level:%s\n"%level
     if wfi:
         ## add a few markers automatically
-        meta_text += '\n\n'+'\n'.join(map(lambda i : 'id: %s'%i, wfi.getPrepIDs()))
+        meta_text += '\n\n'+'\n'.join(['id: %s'%i for i in wfi.getPrepIDs()])
         _,prim,_,sec = wfi.getIO()
         if prim:
-            meta_text += '\n\n'+'\n'.join(map(lambda i : 'in:%s'%i, prim))
+            meta_text += '\n\n'+'\n'.join(['in:%s'%i for i in prim])
         if sec:
-            meta_text += '\n\n'+'\n'.join(map(lambda i : 'pu:%s'%i, sec))
-        out = filter(lambda d : not any([c in d for c in ['FAKE','None']]),wfi.request['OutputDatasets'])
+            meta_text += '\n\n'+'\n'.join(['pu:%s'%i for i in sec])
+        out = [d for d in wfi.request['OutputDatasets'] if not any([c in d for c in ['FAKE','None']])]
         if out:
-            meta_text += '\n\n'+'\n'.join(map(lambda i : 'out:%s'%i, out))
+            meta_text += '\n\n'+'\n'.join(['out:%s'%i for i in out])
         meta_text += '\n\n'+wfi.request['RequestName']
 
     now_ = time.gmtime()
@@ -242,16 +242,16 @@ def _try_sendLog( subject, text , wfi = None, show=True, level='info', conn= Non
            "date" : now_d}
 
     if show:
-        print text
-    encodedParams = urllib.urlencode( doc )
+        print(text)
+    encodedParams = urllib.parse.urlencode( doc )
     conn.request("POST" , prefix+'/_doc/', json.dumps(doc), headers = h if h else {})
     response = conn.getresponse()
     data = response.read()
     try:
         res = json.loads( data )
     except Exception as e:
-        print "failed"
-        print str(e)
+        print("failed")
+        print(str(e))
         pass
 
 
@@ -305,18 +305,18 @@ def url_encode_params(params = {}):
     like this: param=val1&param=val2...
     """
     params_list = []
-    for key, value in params.items():
+    for key, value in list(params.items()):
         if isinstance(value, list):
             params_list.extend([(key, x) for x in value])
         else:
             params_list.append((key, value))
-    return urllib.urlencode(params_list)
+    return urllib.parse.urlencode(params_list)
 
 def make_x509_conn(url=reqmgr_url,max_try=5):
     tries = 0
     while tries<max_try:
         try:
-            conn = httplib.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            conn = http.client.HTTPSConnection(url, cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
             return conn
         except:
             tries+=1
@@ -351,17 +351,17 @@ class UnifiedLock:
         from assignSession import session, LockOfLock
         to_remove = []
         for ll in session.query(LockOfLock).filter(LockOfLock.lock== True).filter(LockOfLock.owner.contains(host)).all():
-            print ll.owner
+            print(ll.owner)
             try:
                 host,pid = ll.owner.split('-')
                 process = os.popen('ps -e -f | grep %s | grep -v grep'%pid).read()
                 if not process:
-                    print "the lock",ll,"is a deadlock"
+                    print("the lock",ll,"is a deadlock")
                     to_remove.append( ll )
                 else:
-                    print "the lock on",ll.owner,"is legitimate"
+                    print("the lock on",ll.owner,"is legitimate")
             except:
-                print ll.owner,"is not good"
+                print(ll.owner,"is not good")
 
         if to_remove:
             for ll in to_remove:
@@ -393,8 +393,8 @@ class lockInfo:
         try:
             self._release(item)
         except Exception as e:
-            print "failed to release"
-            print str(e)
+            print("failed to release")
+            print(str(e))
 
     def _release(self, item ):
         from assignSession import session, Lock
@@ -414,20 +414,20 @@ class lockInfo:
     def _lock(self, item, site, reason):
         if not item:
             sendEmail('lockInfo', "trying to lock item %s" % item)
-            print "[ERROR] trying to lock item",item
+            print("[ERROR] trying to lock item",item)
             
         from assignSession import session, Lock
         l = session.query(Lock).filter(Lock.item == item).first()
         do_com = False
         if not l:
-            print "in lock, making a new object for",item
+            print("in lock, making a new object for",item)
             l = Lock(lock=False)
             l.item = item
             l.is_block = '#' in item
             session.add ( l )
             do_com = True
         else:
-            print "lock for",item,"already existing",l.lock
+            print("lock for",item,"already existing",l.lock)
         now = time.mktime(time.gmtime())
         ## overwrite the lock
         message = "[Lock] %s"%item
@@ -450,8 +450,8 @@ class lockInfo:
             self._lock( item, site, reason)
         except Exception as e:
             ## to be removed once we have a fully functional lock db
-            print "could not lock",item,"at",site
-            print str(e)
+            print("could not lock",item,"at",site)
+            print(str(e))
 
 
     def items(self, locked=True):
@@ -461,10 +461,10 @@ class lockInfo:
 
     def tell(self, comment):
         from assignSession import session, Lock
-        print "---",comment,"---"
+        print("---",comment,"---")
         for l in session.query(Lock).all():
-            print l.item,l.lock
-        print "------"+"-"*len(comment)
+            print(l.item,l.lock)
+        print("------"+"-"*len(comment))
 
 
 class statusHistory:
@@ -487,7 +487,7 @@ class statusHistory:
         now = time.mktime(now)
         for doc in self.db.find():
             if (float(now)-float(doc['time'])) > days*24*60*60:
-                print "trim history of",doc['_id']
+                print("trim history of",doc['_id'])
                 self.db.delete_one( {'_id' : doc['_id']})
 
 class StartStopInfo:
@@ -541,12 +541,12 @@ class componentInfo:
                 alarm =  "Timeout in checking the sanity of components %d > %d , while checking on %s"%(now-check_start,self.check_timeout, self.checks.checking)
                 sendLog('componentInfo',alarm, level='critical')
                 return False
-            print "componentInfo, ping",now,check_start,now-check_start
+            print("componentInfo, ping",now,check_start,now-check_start)
             time.sleep(ping)
         
         self.status = self.checks.status
-        print "componentInfo, going with"
-        print self.checks.go
+        print("componentInfo, going with")
+        print(self.checks.go)
         return self.checks.go
 
 class componentCheck(threading.Thread):
@@ -575,7 +575,7 @@ class componentCheck(threading.Thread):
 
     def run(self):
         self.go = self.check()
-        print "componentCheck finished"
+        print("componentCheck finished")
 
     def check_cmsr(self):
         from assignSession import session, Workflow
@@ -585,7 +585,7 @@ class componentCheck(threading.Thread):
         data = getReqmgrInfo(reqmgr_url)
         
     def check_mcm(self):
-        from McMClient import McMClient
+        from .McMClient import McMClient
         mcmC = McMClient(dev=False)
         test = mcmC.getA('requests',page=0)
         time.sleep(1)
@@ -603,7 +603,7 @@ class componentCheck(threading.Thread):
             raise Exception("dbs corrupted")
 
     def check_wtc(self):
-        from wtcClient import wtcClient
+        from .wtcClient import wtcClient
         WC = wtcClient()
         a = WC.get_actions()
         if a is None:
@@ -624,7 +624,7 @@ class componentCheck(threading.Thread):
         infos = [a['status'] for a in db.find()]
         
     def check_jira(self):
-        from JIRAClient import JIRAClient
+        from .JIRAClient import JIRAClient
         JC = JIRAClient()
         opened = JC.find({'status': 'OPEN'})
         
@@ -636,7 +636,7 @@ class componentCheck(threading.Thread):
             self.checking = component
             while True:
                 try:
-                    print "checking on",component
+                    print("checking on",component)
                     sys.stdout.flush()
                     getattr(self,'check_%s'%component)()
                     self.status[component] = True
@@ -644,19 +644,19 @@ class componentCheck(threading.Thread):
                 except Exception as e:
                     self.tell(component)
                     if self.keep_trying:
-                        print "re-checking on",component
+                        print("re-checking on",component)
                         time.sleep(30)
                         continue
                     import traceback
-                    print traceback.format_exc()
-                    print component,"is unreachable"
-                    print str(e)
+                    print(traceback.format_exc())
+                    print(component,"is unreachable")
+                    print(str(e))
                     if self.block and not (self.soft and component in self.soft):
                         self.code = ecode
                         return False
                     break
 
-        print json.dumps( self.status, indent=2)
+        print(json.dumps( self.status, indent=2))
         sys.stdout.flush()
         return True
 
@@ -667,7 +667,7 @@ class componentCheck(threading.Thread):
 def is_json(myjson):
     try:
         json_object = json.loads(myjson)
-    except ValueError, e:
+    except ValueError as e:
         return False
     return True
 
@@ -686,26 +686,26 @@ def read_file(target):
 def eosRead(filename,trials=5):
     filename = filename.replace('//','/')
     if not filename.startswith('/eos/'):
-        print filename,"is not an eos path in eosRead"
+        print(filename,"is not an eos path in eosRead")
     T=0
     while T<trials:
         T+=1
         try:
             return read_file(filename) 
         except Exception as e:
-            print "failed to read",filename,"from eos"
+            print("failed to read",filename,"from eos")
             time.sleep(2)
             cache = (cache_dir+'/'+filename.replace('/','_')).replace('//','/')
             r = os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s %s'%( filename, cache ))
             if r==0:
                 return read_file(cache)
-    print "unable to read from eos"
+    print("unable to read from eos")
     return None
         
 class eosFile(object):
     def __init__(self, filename, opt='w', trials=5):
         if not filename.startswith('/eos/'):
-            print filename,"is not an eos path"
+            print(filename,"is not an eos path")
             sys.exit(2)
         self.opt = opt
         self.eos_filename = filename.replace('//','/')
@@ -724,23 +724,23 @@ class eosFile(object):
         while T < self.trials:
             T += 1
             try:
-                print "moving",self.cache_filename,"to",self.eos_filename
-                print("Attempt {}".format(T))
+                print("moving",self.cache_filename,"to",self.eos_filename)
+                print(("Attempt {}".format(T)))
                 r = os.system("env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s %s"%( self.cache_filename, self.eos_filename))
                 if r==0 and os.path.getsize(self.eos_filename) > 0: return True
-                print "not able to copy to eos",self.eos_filename,"with code",r
+                print("not able to copy to eos",self.eos_filename,"with code",r)
                 time.sleep(30)
                 
                 if bail_and_email:
                     h = socket.gethostname()
-                    print 'eos is acting up on %s on %s. not able to copy %s to eos code %s'%( h, time.asctime(), self.eos_filename, r)
+                    print('eos is acting up on %s on %s. not able to copy %s to eos code %s'%( h, time.asctime(), self.eos_filename, r))
                     break
 
             except Exception as e:
-                print "Failed to copy",self.eos_filename,"with",str(e)
+                print("Failed to copy",self.eos_filename,"with",str(e))
                 if bail_and_email:
                     h = socket.gethostname()
-                    print 'eos is acting up on %s on %s. not able to copy %s to eos \n%s'%( h, time.asctime(), self.eos_filename, str(e))
+                    print('eos is acting up on %s on %s. not able to copy %s to eos \n%s'%( h, time.asctime(), self.eos_filename, str(e)))
                     break
                 else:
                     time.sleep(30)
@@ -809,7 +809,7 @@ class campaignInfo:
         return [o['name'] for o in self.db.find() if (c_type == None or o.get('type',None) == c_type)]
 
     def update(self, c_dict, c_type=None):
-        for k,v in c_dict.items():
+        for k,v in list(c_dict.items()):
             self.add( k, v, c_type=c_type)
             
     def add(self, name, content, c_type=None):
@@ -823,7 +823,7 @@ class campaignInfo:
                        )
 
     def pop(self, item_name):
-        print "removing",item_name,"from campaign configuration"
+        print("removing",item_name,"from campaign configuration")
         self.db.delete_one({'name' : item_name})
 
     def go(self, c, s=None):
@@ -833,7 +833,7 @@ class campaignInfo:
                 if s!=None:
                     GO = (s in self.campaigns[c]['labels']) or any([l in s for l in self.campaigns[c]['labels']])
                 else:
-                    print "Not allowed to go for",c,s
+                    print("Not allowed to go for",c,s)
                     GO = False
             else:
                 GO = True
@@ -841,7 +841,7 @@ class campaignInfo:
             if s and 'pilot' in s.lower():
                 GO = True
         else:
-            print "Not allowed to go for",c
+            print("Not allowed to go for",c)
             GO = False
         return GO
 
@@ -889,7 +889,7 @@ class moduleLock(object):
         now = time.mktime(time.gmtime())
         for lock in locks:
             pid = lock.get('pid',None)
-            print "checking on %s on %s"%( pid, host)
+            print("checking on %s on %s"%( pid, host))
             on_since = now - lock.get('time',now)
             if on_since > (hours_before_kill*60*60):
                 alarm = "process %s on %s for module %s is running since %s : killing"%( pid, host, lock.get('component',None), display_time( on_since))
@@ -904,8 +904,8 @@ class moduleLock(object):
 
     def all_locks(self):
         locks = [l for l in self.db.find()]
-        print "module locks available in mongodb"
-        print sorted(locks)
+        print("module locks available in mongodb")
+        print(sorted(locks))
         
     def clean(self, component=None, pid=None, host=None):
         sdoc = {'component' : component}
@@ -916,7 +916,7 @@ class moduleLock(object):
         self.db.delete_many( sdoc )
                
     def __call__(self):
-        print "module lock for component",self.component,"from mongo db"
+        print("module lock for component",self.component,"from mongo db")
         polled = 0
         nogo = True
         locks = []
@@ -932,7 +932,7 @@ class moduleLock(object):
                     nogo =True
                     break
                 else:
-                    print "Waiting for other %s components to stop running \n%s" % ( self.component , locks)
+                    print("Waiting for other %s components to stop running \n%s" % ( self.component , locks))
                     time.sleep( self.poll )
                     polled += self.poll
             else:
@@ -941,7 +941,7 @@ class moduleLock(object):
                 break
             i_try += 1
             if self.max_wait and polled > self.max_wait:
-                print "stop waiting for %s to be released"% ( self.component )
+                print("stop waiting for %s to be released"% ( self.component ))
                 break
         if not nogo:
             ## insert a lock doc
@@ -961,7 +961,7 @@ class moduleLock(object):
                                                                                                  polled,
                                                                                                  locks)
                 sendLog('heartbeat', msg , level='critical')
-                print msg
+                print(msg)
         return nogo
 
     def __del__(self):
@@ -977,7 +977,7 @@ def userLock(component=None):
     lockers = ['dmytro','mcremone','vlimant']
     for who in lockers:
         if os.path.isfile('/afs/cern.ch/user/%s/%s/public/ops/%s.lock'%(who[0],who,component)):
-            print "disabled by",who
+            print("disabled by",who)
             return True
     return False
 
@@ -1035,7 +1035,7 @@ class ThreadHandler(threading.Thread):
     def _run(self):
         random.shuffle(self.threads)
         ntotal=len(self.threads)
-        print "[%s] Processing %d threads with %d max concurrent and timeout %s [min]"%( self.label, ntotal,self.n_threads, self.timeout)
+        print("[%s] Processing %d threads with %d max concurrent and timeout %s [min]"%( self.label, ntotal,self.n_threads, self.timeout))
         start_now = time.mktime(time.gmtime())
         self.r_threads = []
         
@@ -1054,14 +1054,14 @@ class ThreadHandler(threading.Thread):
                 if n_done > int(ntotal*0.05):
                     ## shoot for 10 reminder in total                                                                                                              
                     self.show_eta = max(self.show_eta, int(total_expected/10.))
-            print "[%s] Will finish in about %s. %d/%d. spend %s. expected total %s, ping in %d [s] "%(
+            print("[%s] Will finish in about %s. %d/%d. spend %s. expected total %s, ping in %d [s] "%(
                 self.label,
                 display_time(eta) if eta else "N/A", 
                 n_done, ntotal,
                 display_time(spend),
                 display_time(total_expected),
             self.show_eta
-            )
+            ))
         
 
 
@@ -1073,7 +1073,7 @@ class ThreadHandler(threading.Thread):
         last_talk = time.mktime(time.gmtime())
         while self.threads:
             if self.timeout and (time.mktime(time.gmtime()) - start_now) > (self.timeout*60.):
-                print "[%s] Stopping to start threads because the time out is over %s "%(self.label,time.asctime(time.gmtime()))
+                print("[%s] Stopping to start threads because the time out is over %s "%(self.label,time.asctime(time.gmtime())))
                 for t in self.r_threads:
                     while t.is_alive():
                         time.sleep(refresh_ping)
@@ -1112,7 +1112,7 @@ class ThreadHandler(threading.Thread):
         while sum([t.is_alive() for t in self.r_threads]):
             now= time.mktime(time.gmtime())
             if self.timeout and (now - start_now) > (self.timeout*60.):
-                print "[%s] Stopping to start threads because the time out is over %d "%(self.label,time.asctime(time.gmtime()))
+                print("[%s] Stopping to start threads because the time out is over %d "%(self.label,time.asctime(time.gmtime())))
                 return
             if now - last_talk > self.show_eta:
                 last_talk = now
@@ -1215,8 +1215,8 @@ class docCache:
         def get_invalidation():
             import csv
             TMDB_invalid = set([row[3] for row in csv.reader( os.popen('curl -s "https://docs.google.com/spreadsheets/d/11fFsDOTLTtRcI4Q3gXw0GNj4ZS8IoXMoQDC3CbOo_2o/export?format=csv"'))])
-            TMDB_invalid = map(lambda e : e.split(':')[-1], TMDB_invalid)
-            print len(TMDB_invalid),"globally invalidated files"
+            TMDB_invalid = [e.split(':')[-1] for e in TMDB_invalid]
+            print(len(TMDB_invalid),"globally invalidated files")
             return TMDB_invalid
 
         self.cache['file_invalidation'] = {
@@ -1242,7 +1242,7 @@ class docCache:
 
     def get(self, label, fresh=False, lastdoc=True):
         if not label in self.cache:
-            print "unkown cache doc key",label
+            print("unkown cache doc key",label)
             return None
         cache = cacheInfo()
         cached = cache.get( label ) if not fresh else None
@@ -1254,13 +1254,13 @@ class docCache:
                 data =  o['getter']()
             except Exception as e:
                 sendLog('doccache','Failed to get {}\n{}\n{}'.format(label,type(e),str(e)), level='critical')
-                print "failed to get",label
-                print str(e)
+                print("failed to get",label)
+                print(str(e))
                 if lastdoc:
                     last_doc = cache.get( label, no_expire=True)
-                    print "last document in cache for",label,"is",last_doc
+                    print("last document in cache for",label,"is",last_doc)
                     if last_doc:
-                        print "returning the last doc in cache"
+                        print("returning the last doc in cache")
                         return last_doc
                 data = o['default']
             cache.store( label, 
@@ -1346,8 +1346,8 @@ class siteInfo:
 
 
         except Exception as e:
-            print "issue with getting SSB readiness"
-            print str(e)
+            print("issue with getting SSB readiness")
+            print(str(e))
             sys.exit(-9)
 
         self.sites_auto_approve = UC.get('sites_auto_approve')
@@ -1423,7 +1423,7 @@ class siteInfo:
         self.addHocStorageS['T2_CH_CERN_T0'].add( 'T2_CH_CERN')
         self.addHocStorageS['T2_CH_CERN_AI'].add('T2_CH_CERN')
 
-        for s,d in self.addHocStorage.items():
+        for s,d in list(self.addHocStorage.items()):
             self.addHocStorageS[s].add( d )
 
         self._map_SE_to_CE = defaultdict(set)
@@ -1462,7 +1462,7 @@ class siteInfo:
         self.fetch_detox_info(talk=False, buffer_level=UC.get('DDM_buffer_level'), sites_space_override=sites_space_override)
 
         ## transform no disks in veto transfer
-        for (dse,free) in self.disk.items():
+        for (dse,free) in list(self.disk.items()):
             if free<=0:
                 if not dse in self.sites_veto_transfer:
                     self.sites_veto_transfer.append( dse )
@@ -1486,7 +1486,7 @@ class siteInfo:
 
     def fetch_glidein_info(self, talk=True):
         self.sites_memory = dataCache.get('gwmsmon_totals')
-        for site in self.sites_memory.keys():
+        for site in list(self.sites_memory.keys()):
             if not site in self.sites_ready:
                 self.sites_memory.pop( site )
 
@@ -1520,10 +1520,10 @@ class siteInfo:
 
     def sitesByMemory( self, maxMem, maxCore=1):
         if not self.sites_memory:
-            print "no memory information from glidein mon"
+            print("no memory information from glidein mon")
             return None
         allowed = set()
-        for site,slots in self.sites_memory.items():
+        for site,slots in list(self.sites_memory.items()):
             #for slot in slots: print site,slot['MaxMemMB'],maxMem,slot['MaxMemMB']>= maxMem,slot['MaxCpus'],maxCore,int(slot['MaxCpus'])>=int(maxCore)
             if any([slot['MaxMemMB']>= maxMem and slot['MaxCpus']>=maxCore for slot in slots]):
                 allowed.add(site)
@@ -1543,7 +1543,7 @@ class siteInfo:
             info = dataCache.get('detox_sites', fresh = True)
             #info = os.popen('curl --retry 5 -s http://t3serv001.mit.edu/~cmsprod/IntelROCCS-Dev/DetoxDataOps/SitesInfo.txt').read().split('\n')
             if len(info) < 15:
-                print "detox info is gone"
+                print("detox info is gone")
                 return
         pcount = 0
         read = False
@@ -1588,12 +1588,12 @@ class siteInfo:
             }
 
         all_data = {}
-        for name,column in columns.items():
-            if talk: print name,column
+        for name,column in list(columns.items()):
+            if talk: print(name,column)
             try:
                 all_data[name] =  dataCache.get('ssb_%s'% column) 
             except:
-                print "cannot get info from ssb for",name
+                print("cannot get info from ssb for",name)
         _info_by_site = {}
         for info in all_data:
             for item in all_data[info]:
@@ -1603,21 +1603,21 @@ class siteInfo:
                 if not site in _info_by_site: _info_by_site[site]={}
                 _info_by_site[site][info] = value
 
-        if talk: print json.dumps( _info_by_site, indent =2 )
+        if talk: print(json.dumps( _info_by_site, indent =2 ))
 
-        if talk: print self.disk.keys()
-        for (site,info) in _info_by_site.items():
-            if talk: print "\n\tSite:",site
+        if talk: print(list(self.disk.keys()))
+        for (site,info) in list(_info_by_site.items()):
+            if talk: print("\n\tSite:",site)
             ssite = self.CE_to_SE( site )
             tsite = site+'_MSS'
             #key_for_cpu ='prodCPU'
             key_for_cpu ='CPUbound'
             if key_for_cpu in info and site in self.cpu_pledges and info[key_for_cpu]:
                 if self.cpu_pledges[site] < info[key_for_cpu]:
-                    if talk: print site,"could use",info[key_for_cpu],"instead of",self.cpu_pledges[site],"for CPU"
+                    if talk: print(site,"could use",info[key_for_cpu],"instead of",self.cpu_pledges[site],"for CPU")
                     self.cpu_pledges[site] = int(info[key_for_cpu])
                 elif self.cpu_pledges[site] > 1.5* info[key_for_cpu]:
-                    if talk: print site,"could correct",info[key_for_cpu],"instead of",self.cpu_pledges[site],"for CPU"
+                    if talk: print(site,"could correct",info[key_for_cpu],"instead of",self.cpu_pledges[site],"for CPU")
                     self.cpu_pledges[site] = int(info[key_for_cpu])
 
 
@@ -1677,7 +1677,7 @@ class siteInfo:
         else:
             r_weights = from_weights
 
-        return r_weights.keys()[self._weighted_choice_sub(r_weights.values())]
+        return list(r_weights.keys())[self._weighted_choice_sub(list(r_weights.values()))]
 
     def _weighted_choice_sub(self,ws):
         if sum(ws)>0:
@@ -1693,7 +1693,7 @@ class siteInfo:
                 rnd -= 1
                 if rnd <= 0:
                     return i
-        print "could not make a choice from ",ws,"and",rnd
+        print("could not make a choice from ",ws,"and",rnd)
         return None
 
 
@@ -1724,14 +1724,14 @@ class remainingDatasetInfo:
  
     def sync(self, site=None):
         if not site:
-            print "synching with all site possible"
+            print("synching with all site possible")
             sites = []
             try:
                 r = json.loads(eosRead('%s/remaining.json'%( monitor_dir)))
-                sites = r.keys()
+                sites = list(r.keys())
             except:
                 try:
-                    for fn in filter(None,os.popen('ls -1 %s/remaining_*.json | sort '%monitor_dir).read().split('\n')):
+                    for fn in [_f for _f in os.popen('ls -1 %s/remaining_*.json | sort '%monitor_dir).read().split('\n') if _f]:
                         site = fn.split('_',1)[-1].split('.')[0]
                         if not any([site.endswith(v) for v in ['_MSS','_Export']]):
                             sites.append( site )
@@ -1740,21 +1740,21 @@ class remainingDatasetInfo:
             for site in sites:
                 self.sync( site )
         else:
-            print "synching on site",site
+            print("synching on site",site)
             remaining_reasons = json.loads(eosRead('%s/remaining_%s.json'%(monitor_dir,site)))
             self.set(site, remaining_reasons)
 
     def set(self, site, info):
         if not info: return
         existings = [o['dataset'] for o in self.db.find({'site' : site})]
-        updatings = info.keys()
+        updatings = list(info.keys())
         n = time.gmtime()
         now = time.mktime( n )
         nows = time.asctime( n )
         ## drop existing datasets that are not to be updated
         for dataset in sorted(set(existings) - set(updatings)):
             self.db.delete_one({'site' : site, 'dataset' : dataset})
-        for dataset,dinfo in info.items():
+        for dataset,dinfo in list(info.items()):
             content = { 'site' : site,
                         'dataset' : dataset,
                         'reasons' : dinfo.get('reasons',[]),
@@ -1780,11 +1780,11 @@ class remainingDatasetInfo:
 
     def tell(self, site):
         info = self.get(site)
-        print json.dumps(info, indent=2)
+        print(json.dumps(info, indent=2))
 
 def global_SI(a=None):
     if a or not global_SI.instance:
-        print "making a new instance of siteInfo",a
+        print("making a new instance of siteInfo",a)
         global_SI.instance = siteInfo(a)
     return global_SI.instance
 global_SI.instance = None
@@ -1802,7 +1802,7 @@ class reportInfo:
             then = time.mktime( time.gmtime()) - (grace*24*60*60) ## s
             self.db.delete_many( { 'time': { '$lt': then } } )
         if wipe == True:
-            if raw_input('wipe repor db?').lower() in ['y','yes']:
+            if input('wipe repor db?').lower() in ['y','yes']:
                 for o in self.db.find():
                     self.db.delete_one({'_id': o['_id']})
     
@@ -1814,7 +1814,7 @@ class reportInfo:
     def _convert( self, d ):
         d = copy.deepcopy(d)
         ## convert recursively the types that cannot go in as is
-        for k,v in d.items():
+        for k,v in list(d.items()):
             if '.' in k:
                 d.pop(k)
                 k = k.replace('.','__dot__')
@@ -1841,7 +1841,7 @@ class reportInfo:
             # nested info update and pop from new doc
             for nested in ['tasks']:
                 new_info = updating_doc.pop(nested) if nested in updating_doc else {}
-                for k in sorted(exist.get(nested,{}).keys()+new_info.keys()):
+                for k in sorted(list(exist.get(nested,{}).keys())+list(new_info.keys())):
                     exist.setdefault(nested,{}).setdefault(k,{}).update( new_info.get(k,{}))
 
             #root info update
@@ -1894,13 +1894,13 @@ class cacheInfo:
                 if not 'data' in o:
                     return self.from_file(key)
                 else:
-                    print "cache hit",key
+                    print("cache hit",key)
                     return o['data']
             else:
-                print "expired doc",key
+                print("expired doc",key)
                 return None
         else:
-            print "cache miss",key
+            print("cache miss",key)
             return None
 
     def _file_key(self, key):
@@ -1910,10 +1910,10 @@ class cacheInfo:
     def from_file(self, key):
         fn = self._file_key(key)
         if os.path.isfile( fn):
-            print "file cache hit",key
+            print("file cache hit",key)
             return json.loads(open(fn).read())
         else:
-            print "file cachemiss",key
+            print("file cachemiss",key)
             return None
     def store(self, key, data, lifetime_min=10):
         import pymongo
@@ -1934,8 +1934,8 @@ class cacheInfo:
                                {"$set": content},
                                upsert = True)
         except Exception as e:
-            print type(e)
-            print str(e)
+            print(type(e))
+            print(str(e))
 
     def purge(self, grace = 2):
         limit = time.mktime(time.gmtime())
@@ -2082,7 +2082,7 @@ class closeoutInfo:
             wfo = session.query(Workflow).filter(Workflow.name == wf).first()
             if not wfo: continue
             if not (wfo.status == 'away' or wfo.status.startswith('assistance')):
-                print "Taking",wf,"out of the close-out record"
+                print("Taking",wf,"out of the close-out record")
                 self.pop( wf )
                 continue
             html.write( self.one_line( wf, wfo , count) )
@@ -2102,7 +2102,7 @@ class closeoutInfo:
             existings = glob.glob('%s/closedout.*.lock'%base_eos_dir)
             if existings:
                 ## wait until there are no such files any more
-                print len(existings),"existing content",sorted(existings)
+                print(len(existings),"existing content",sorted(existings))
                 time.sleep(10)
             else:
                 break
@@ -2123,15 +2123,15 @@ class closeoutInfo:
 
         for wf in old:
             if wf in self.removed_keys:
-                print wf,"was removed in the process, skipping"
+                print(wf,"was removed in the process, skipping")
                 continue
             update_to_old = False
             if wf not in self.record:
                 update_to_old = True
             else:
                 # the content is in both place
-                old_ts = [dsi['timestamp'] for ds,dsi in old[wf].get('datasets',{}).items()]
-                new_ts = [dsi['timestamp'] for ds,dsi in self.record[wf].get('datasets',{}).items()]
+                old_ts = [dsi['timestamp'] for ds,dsi in list(old[wf].get('datasets',{}).items())]
+                new_ts = [dsi['timestamp'] for ds,dsi in list(self.record[wf].get('datasets',{}).items())]
                 if not new_ts:
                     ##weird
                     update_to_old = True
@@ -2244,7 +2244,7 @@ Updated on %s (GMT) <br>
                 else:            color='white'
 
                 if not wfo.name in self.record:
-                    print "wtf with",wfo.name
+                    print("wtf with",wfo.name)
                     continue
                 html.write( self.one_line( wfo.name, wfo, count))
                 for out in self.record[wfo.name]['datasets']:
@@ -2294,7 +2294,7 @@ def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=3
     cached = cache.get(cache_key)
     
     if cached:
-        print ("{} {} taken from cache".format(call, dataset ))
+        print(("{} {} taken from cache".format(call, dataset )))
         all_files = cached
     else:
         dbsapi = DbsApi(url=dbs_url)
@@ -2308,7 +2308,7 @@ def getDatasetFileArray( dataset, validFileOnly=0, detail=False, cache_timeout=3
         all_files = [f for f in all_files if f['is_file_valid']==1]
     if not detail:
         keys= ['logical_file_name','is_file_valid']
-        all_files = [ dict([ (k,v) for k,v in f.items() if k in keys]) for f in all_files]
+        all_files = [ dict([ (k,v) for k,v in list(f.items()) if k in keys]) for f in all_files]
     return all_files
 
 
@@ -2318,7 +2318,7 @@ def _getDatasetBlocks( dataset, runs=None, lumis=None):
     dbsapi = DbsApi(url=dbs_url)
     all_blocks = set()
     if lumis:
-        print "Entering a heavy check on block per lumi"
+        print("Entering a heavy check on block per lumi")
         for run in lumis:
             try:
                 ## to be fixed, if run==1, this call fails. one needs to provide the following
@@ -2326,9 +2326,9 @@ def _getDatasetBlocks( dataset, runs=None, lumis=None):
                 ### so get first the list of files, then make the call
                 all_files = dbsapi.listFileArray( dataset = dataset, lumi_list = lumis[run], run_num=int(run), detail=True)
             except Exception as e:
-                print "Exception in listFileArray",str(e)
+                print("Exception in listFileArray",str(e))
                 all_files = []
-            print len(all_files)
+            print(len(all_files))
             all_blocks.update( [f['block_name'] for f in all_files])
 
     elif runs:
@@ -2366,8 +2366,8 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
     try:
         all_blocks = dbsapi.listBlockSummaries( dataset = dataset, detail=True)
     except Exception as e:
-	print("dbsapi.listBlockSummaries failed on {}".format(dataset))
-	print(str(e))
+	print(("dbsapi.listBlockSummaries failed on {}".format(dataset)))
+	print((str(e)))
 	raise
     #print json.dumps( all_blocks, indent=2)
     all_block_names=set([block['block_name'] for block in all_blocks])
@@ -2396,7 +2396,7 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
                 locations[replica['node']].add( item['name'] )
                 #print "\t",replica['node'],item['name']
                 if item['name'] not in all_block_names and not only_blocks:
-                    print item['name'],'not yet injected in dbs, counting anyways'
+                    print(item['name'],'not yet injected in dbs, counting anyways')
                     all_block_names.add( item['name'] )
                     size_in_phedex += item['bytes']
 
@@ -2412,30 +2412,30 @@ def try_getDatasetPresence( url, dataset, complete='y', only_blocks=None, group=
                     is_valid = True
                     break
             if is_valid:
-                print block,"is valid"
+                print(block,"is valid")
                 continue
             else:
                 all_block_names.remove( block )
-        print "Mismatch in phedex/DBS blocks"
+        print("Mismatch in phedex/DBS blocks")
         missing_in_phedex = sorted(set(all_block_names) - set(blocks_in_phedex))
         missing_in_dbs = sorted(set(blocks_in_phedex) - set(all_block_names))
-        if missing_in_phedex: print missing_in_phedex,"missing in phedex"
-        if missing_in_dbs: print missing_in_dbs,"missing in dbs"
+        if missing_in_phedex: print(missing_in_phedex,"missing in phedex")
+        if missing_in_dbs: print(missing_in_dbs,"missing in dbs")
 
     if only_blocks:
-        all_block_names = filter( lambda b : b in only_blocks, all_block_names)
+        all_block_names = [b for b in all_block_names if b in only_blocks]
         full_size = sum([block['file_size'] for block in all_blocks if (block['block_name'] in only_blocks)])
         #print all_block_name
         #print [block['block_name'] for block in all_blocks if block['block_name'] in only_blocks]
     else:
         full_size = sum([block['file_size'] for block in all_blocks if block['block_name'] in all_block_names])
     if not full_size:
-        print dataset,"is nowhere"
+        print(dataset,"is nowhere")
         return {}
     full_size = full_size+size_in_phedex
     #print locations.items()
     presence={}
-    for (site,blocks) in locations.items():
+    for (site,blocks) in list(locations.items()):
         site_size = sum([ block['file_size'] for block in all_blocks if (block['block_name'] in blocks and block['block_name'] in all_block_names)])
         ### print site,blocks,all_block_names
         #presence[site] = (set(blocks).issubset(set(all_block_names)), site_size/float(full_size)*100.)
@@ -2467,7 +2467,7 @@ def getDatasetEventsAndLumis(dataset, blocks=None):
             time.sleep(2)
             r = try_getDatasetEventsAndLumis( dataset, blocks)
         except Exception as e:
-            print "fatal exception in getDatasetEventsAndLumis",dataset,blocks
+            print("fatal exception in getDatasetEventsAndLumis",dataset,blocks)
             #sendEmail("fatal exception in getDatasetEventsAndLumis",str(e)+dataset)
             sendLog('getDatasetEventsAndLumis','fatal execption in processing getDatasetEventsAndLumis for %s \n%s'%( dataset, str(e)), level='critical')
             r = 0,0
@@ -2556,7 +2556,7 @@ class duplicateAnalyzer:
         that is, there is at least one lumi present in two different
         files
         """
-        for v in graph.values():
+        for v in list(graph.values()):
             if v:
                 return True
         return False
@@ -2569,10 +2569,10 @@ class duplicateAnalyzer:
         red = set()
         green = set()
 
-        for f1, f2d in graph.items():
+        for f1, f2d in list(graph.items()):
             f1red = f1 in red
             f1green = f1 in green
-            for f2 in f2d.keys():
+            for f2 in list(f2d.keys()):
                 f2red = f2 in red
                 f2green = f2 in green
                 #both have no color
@@ -2581,11 +2581,11 @@ class duplicateAnalyzer:
                     green.add(f2)
                 #some has two colors:
                 elif (f1red and f1green) or (f2red and f2green):
-                    print "NOT BIPARTITE GRAPH"
+                    print("NOT BIPARTITE GRAPH")
                     raise Exception("Not a bipartite graph, cannot use this algorithm for removing")
                 #have same color
                 elif (f1red and f2red) or (f1green and f2green):
-                    print "NOT BIPARTITE GRAPH"
+                    print("NOT BIPARTITE GRAPH")
                     raise Exception("Not a bipartite graph, cannot use this algorithm for removing")
 
                 #both are colored but different
@@ -2616,9 +2616,9 @@ class duplicateAnalyzer:
         in two different files)
         """
         files = []
-        print "Initial files:", len(graph)
+        print("Initial files:", len(graph))
         #sort by number of events
-        ls = sorted(graph.keys(), key=lambda x: events[x])
+        ls = sorted(list(graph.keys()), key=lambda x: events[x])
         #quadratic first
         while self._hasEdges(graph):
         #get smallest vertex
@@ -2635,9 +2635,9 @@ class duplicateAnalyzer:
 
     def files_to_remove(self, files_per_lumis):
         lumi_count_per_file = defaultdict(int)
-        for rl,fns in files_per_lumis.items():
+        for rl,fns in list(files_per_lumis.items()):
             for fn in fns: lumi_count_per_file[fn]+=1
-        bad_lumis = dict([(rl,files) for rl,files in files_per_lumis.items() if len(files)>1])
+        bad_lumis = dict([(rl,files) for rl,files in list(files_per_lumis.items()) if len(files)>1])
         graph = self._buildGraph(bad_lumis)
         try:
             files = self._colorBipartiteGraph(graph, lumi_count_per_file)
@@ -2649,7 +2649,7 @@ class duplicateAnalyzer:
 
 def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,force=False, check_with_invalid_files_too=False):
     if runs and lumilist:
-        print "should not be used that way"
+        print("should not be used that way")
         return {},{}
     #lumis =set()
     #if lumilist:
@@ -2668,7 +2668,7 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
     if not cached:
         ## do the full query
         
-        print "querying getDatasetLumisAndFiles", dataset
+        print("querying getDatasetLumisAndFiles", dataset)
         full_lumi_json = defaultdict(set)
         files_per_lumi = defaultdict(set) ## the revers dictionnary of files by r:l
 
@@ -2683,12 +2683,12 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
                 response = self.a.listFileLumis( block_name = self.b , validFileOnly=int(not check_with_invalid_files_too))
                 if type(response[0]["lumi_section_num"]) is list:
                     # Old DBS Server response
-                    print "Handling dbsapi.listFileLumis response from OLD DBS server"
+                    print("Handling dbsapi.listFileLumis response from OLD DBS server")
                     self.res = response
 
                 else:
                     # New DBS Server response
-                    print "Handling dbsapi.listFileLumis response from NEW DBS server"
+                    print("Handling dbsapi.listFileLumis response from NEW DBS server")
                     self.res = aggregateListFileLumis(response)
 
         threads = []
@@ -2709,9 +2709,9 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
                 full_lumi_json[ str(f['run_num']) ].update( f['lumi_section_num'])
                 for lumi in f['lumi_section_num']:
                     files_per_lumi['{}:{}'.format(f['run_num'], lumi)].add( f['logical_file_name'])
-        for k,v in full_lumi_json.items():
+        for k,v in list(full_lumi_json.items()):
             full_lumi_json[k] = list(v)
-        for k,v in files_per_lumi.items():
+        for k,v in list(files_per_lumi.items()):
             files_per_lumi[k] = list(v)
 
         cache.store( cache_key,
@@ -2723,15 +2723,15 @@ def getDatasetLumisAndFiles(dataset, runs=None, lumilist=None, with_cache=False,
         full_lumi_json = cached['lumis']
 
     ## need to filter on the runs
-    lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items()])
-    files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items()])
+    lumi_json = dict([(int(k),v) for (k,v) in list(full_lumi_json.items())])
+    files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in list(files_per_lumi.items())])
     if runs:
-        lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items() if int(k) in runs])
-        files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items() if int(k.split(':')[0]) in runs])
+        lumi_json = dict([(int(k),v) for (k,v) in list(full_lumi_json.items()) if int(k) in runs])
+        files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in list(files_per_lumi.items()) if int(k.split(':')[0]) in runs])
     elif lumilist:
         #runs = map(int(lumilist.keys()))
-        runs = [int(r) for r in lumilist.keys()]
-        lumi_json = dict([(int(k),v) for (k,v) in full_lumi_json.items() if int(k) in runs])
+        runs = [int(r) for r in list(lumilist.keys())]
+        lumi_json = dict([(int(k),v) for (k,v) in list(full_lumi_json.items()) if int(k) in runs])
         # This file json is only necessary for duplicate check in checkor. It's disabled.
         #files_json = dict([(tuple(map(int,k.split(":"))),v) for (k,v) in files_per_lumi.items() if map(int,k.split(":")) in lumis])
 
@@ -2753,7 +2753,7 @@ def _getDatasetEventsPerLumi(dataset):
 
 def invalidateFiles( files ):
     all_OK = True
-    conn  =  httplib.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+    conn  =  http.client.HTTPSConnection('dynamo.mit.edu', cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
     for fn in files:
         if not all_OK :break ## stop at the first file
         try:
@@ -2761,10 +2761,10 @@ def invalidateFiles( files ):
             r2 = conn.getresponse()
             res = json.loads(r2.read())
             all_OK = res['result'] == 'OK'
-            print fn,"set for invalidation"
+            print(fn,"set for invalidation")
         except Exception as e:
-            print str(e)
-            print "could not set to invalidate", fn
+            print(str(e))
+            print("could not set to invalidate", fn)
             all_OK = False
 
     return all_OK
@@ -2785,7 +2785,7 @@ def setFileStatus(file_names, validate=True):
         status = fn['is_file_valid']
         if status != validate:
             ## then change the status
-            print "Turning",fn['logical_file_name'],"to",validate
+            print("Turning",fn['logical_file_name'],"to",validate)
             dbswrite.updateFileStatus( logical_file_name= fn['logical_file_name'], is_file_valid = int(validate) )
 
 
@@ -2797,7 +2797,7 @@ def _setDatasetStatus(dataset, status, withFiles=True):
     new_status = getDatasetStatus( dataset )
     if new_status == None:
         ## means the dataset does not exist in the first place
-        print "setting dataset status",status,"to inexistant dataset",dataset,"considered succeeding"
+        print("setting dataset status",status,"to inexistant dataset",dataset,"considered succeeding")
         return True
 
     file_status = -1
@@ -2836,7 +2836,7 @@ def getDatasets(dataset):
         try:
             return _getDatasets(dataset)
         except Exception as e:
-            print "[%d] Failed on %s with \n%s"%(count,label,str(e))
+            print("[%d] Failed on %s with \n%s"%(count,label,str(e)))
             time.sleep(5)
     raise Exception("Failed on %s with \n%s"%( label,str(e)))
     
@@ -2860,7 +2860,7 @@ def getWorkLoad(url, wf ):
         try:
             return _getWorkLoad(url, wf )
         except:
-            print "failed twice to _getWorkLoad(url, wf )"
+            print("failed twice to _getWorkLoad(url, wf )")
             return None
 def getReqmgrInfo(url):
     conn = make_x509_conn(url)
@@ -2887,7 +2887,7 @@ def getWorkflowByCampaign(url, campaign, details=False):
         ## list of dict
         r = []
         for it in data:
-            r.extend( it.values())
+            r.extend( list(it.values()))
         return r
     else:
         return data
@@ -2965,36 +2965,36 @@ def invalidate(url, wfi, only_resub=False, with_output=True):
     return check
 
 def _invalidate(url, wfi, only_resub=False, with_output=True):
-    import reqMgrClient
+    from . import reqMgrClient
     familly = wfi.getFamilly( and_self=True, only_resub=only_resub)
     outs = set()
     check = []
     for fwl in familly:
-        print "checking wf family:", fwl['RequestName'], fwl['RequestStatus'], fwl['OutputDatasets']
+        print("checking wf family:", fwl['RequestName'], fwl['RequestStatus'], fwl['OutputDatasets'])
         check.append(reqMgrClient.invalidateWorkflow(url, fwl['RequestName'], current_status=fwl['RequestStatus'], cascade=False))
         outs.update( fwl['OutputDatasets'] )
     if with_output:
         for dataset in outs:
-            print "printing datasets again", dataset
+            print("printing datasets again", dataset)
             check.append(setDatasetStatus(dataset, 'INVALID'))
     check = [r in ['None',None,True] for r in check]
     return check
 
 def forceComplete(url, wfi):
-    import reqMgrClient
+    from . import reqMgrClient
     familly = getWorkflowById( url, wfi.request['PrepID'] ,details=True)
     for member in familly:
-        print "considering",member['RequestName'],"as force complete"
+        print("considering",member['RequestName'],"as force complete")
         ### if member['RequestName'] == wl['RequestName']: continue ## set himself out
         if member['RequestDate'] < wfi.request['RequestDate']: continue
         if member['RequestStatus'] in ['None',None]: continue
         ## then set force complete all members
         if member['RequestStatus'] in ['running-open','running-closed']:
             #sendEmail("force completing","%s is worth force completing\n%s"%( member['RequestName'] , percent_completions))
-            print "setting",member['RequestName'],"force-complete"
+            print("setting",member['RequestName'],"force-complete")
             reqMgrClient.setWorkflowForceComplete(url, member['RequestName'])
         elif member['RequestStatus'] in ['acquired','assignment-approved']:
-            print "rejecting",member['RequestName']
+            print("rejecting",member['RequestName'])
             reqMgrClient.invalidateWorkflow(url, member['RequestName'], current_status=member['RequestStatus'])
 
 def agentInfoDB():
@@ -3026,8 +3026,8 @@ class agentInfo:
         self.m_release = defaultdict(set)
         self.ready = self.getStatus()
         if not self.ready:
-            print "AgentInfo could not initialize properly"
-        print json.dumps(self.content(), indent=2)
+            print("AgentInfo could not initialize properly")
+        print(json.dumps(self.content(), indent=2))
 
     def content(self):
         r= {}
@@ -3059,7 +3059,7 @@ class agentInfo:
         return self._get(agent, 'status', 'N/A')
 
     def checkTrello(self, sync_trello=None, sync_agents=None, acting=False):
-        from TrelloClient import TrelloClient
+        from .TrelloClient import TrelloClient
         if not hasattr(self, 'tc'):
             self.tc = TrelloClient()
         tc = self.tc
@@ -3073,15 +3073,15 @@ class agentInfo:
             lid_name = tc.getList(ln=lid).get('name')
             clid = ti.get('idList',None)
             if lid and clid and lid!=clid:
-                print "there is a mismatch for agent",agent
-                print "sync_trello",sync_trello,"sync_agents",sync_agents
+                print("there is a mismatch for agent",agent)
+                print("sync_trello",sync_trello,"sync_agents",sync_agents)
                 if sync_trello==True or (sync_trello and agent in sync_trello):
-                    print "changing",agent,"into list",lid,lid_name
+                    print("changing",agent,"into list",lid,lid_name)
                     if acting:
                         tc.changeList( cn = agent, ln = lid )
                 if sync_agents==True or (sync_agents and agent in sync_agents):
                     ## make the operation locally
-                    print "Should operate on the agent",agent
+                    print("Should operate on the agent",agent)
                     do_drain = False
                     new_status = None
                     if clid == tc.lists.get('draining'):
@@ -3103,11 +3103,11 @@ class agentInfo:
                         do_drain = True
                         new_status = 'offline'
                     else:
-                        print "trello status",clid,"not recognized"
+                        print("trello status",clid,"not recognized")
                         continue
 
                     ## operate the agent
-                    print "wish to operate",agent,do_drain,new_status
+                    print("wish to operate",agent,do_drain,new_status)
                     if acting:
                         setAgentDrain(self.url, agent, drain=do_drain)
                         ## change the local information
@@ -3121,13 +3121,13 @@ class agentInfo:
         all_agents_prod = getAllAgents(self.url).get('production',None)
         if not all_agents_prod:
             ## we cannot go on like that. there is something disruptive here
-            print "cannot get production agent information"
+            print("cannot get production agent information")
             return False
         prod_info = dict([(a['agent_url'].split(':')[0], a) for a in all_agents_prod])
-        all_agents_name = sorted(set(self.all_agents + prod_info.keys()))
+        all_agents_name = sorted(set(self.all_agents + list(prod_info.keys())))
         ## do you want to use this to make an alarm on agent in error for too long ?
         self.in_error = [a['agent_url'].split(':')[0] for a in all_agents_prod if a.get('down_components',[])]
-        print "agents with errors",self.in_error
+        print("agents with errors",self.in_error)
 
         now,nows = self.getNow()
         def drained( stats ):
@@ -3147,10 +3147,10 @@ class agentInfo:
             is_drained = False
                 
             if self.verbose:
-                print agent
-                print linfo
-                print pinfo
-                print "drained",is_drained
+                print(agent)
+                print(linfo)
+                print(pinfo)
+                print("drained",is_drained)
 
             if release:
                 self.release[ release ].add( str(agent) )
@@ -3180,7 +3180,7 @@ class agentInfo:
                 if pinfo['drain_mode']:
                     st = 'standby'
                     ## for the first time
-                    print "A new agent in the pool",agent,"setting",st
+                    print("A new agent in the pool",agent,"setting",st)
 
                 ## add it
                 self._update(agent, {'status' : st,
@@ -3188,7 +3188,7 @@ class agentInfo:
                                      'date' : nows }
                          )
                 if self.verbose:
-                    print self._getA(agent)
+                    print(self._getA(agent))
 
             if release:
                 self._update(agent, {'version': release})
@@ -3201,7 +3201,7 @@ class agentInfo:
             sendLog('agentInfo', msg, level='critical')
 
         if self.verbose:
-            print json.dumps( self.buckets, indent=2)
+            print(json.dumps( self.buckets, indent=2))
 
         return True
 
@@ -3221,14 +3221,14 @@ class agentInfo:
     def flag_standby(self, agent):
         if self._getA(agent).get('status',None) == 'draining':
             if self.verbose:
-                print "Able to set",agent,"in standby"
+                print("Able to set",agent,"in standby")
             self.change_status( agent, 'standby')
         else:
-            print "not changing status from",self._getA(agent).get('status',None)
+            print("not changing status from",self._getA(agent).get('status',None))
 
     def poll(self, wake_up_draining=False, acting=False, verbose=False):
         if not self.ready:
-            print "cannot poll the agents without fresh information about them"
+            print("cannot poll the agents without fresh information about them")
             return False
 
         verbose = verbose or self.verbose
@@ -3313,9 +3313,9 @@ class agentInfo:
                 m_r = '.'.join( r.split('.')[:3]) ## limit to major three numbers
                 self.m_release[m_r].add( ra )
 
-        rel_num = [(r, map(lambda frag : int(frag.replace('patch','')), r.split('.'))) for r in self.release.keys()]
+        rel_num = [(r, [int(frag.replace('patch','')) for frag in r.split('.')]) for r in list(self.release.keys())]
         rel_num = sorted( rel_num, key = lambda o: o[1], reverse=True)
-        m_rel_num = [(r, map(lambda frag : int(frag.replace('patch','')), r.split('.'))) for r in self.m_release.keys()]
+        m_rel_num = [(r, [int(frag.replace('patch','')) for frag in r.split('.')]) for r in list(self.m_release.keys())]
         m_rel_num = sorted( m_rel_num , key = lambda o: o[1], reverse=True)
         #print rel_num
         sorted_release = [r[0] for r in rel_num]
@@ -3335,7 +3335,7 @@ class agentInfo:
         speed_draining = set()
         open_draining = set()
         wake_up_metric = []
-        for agent,ainfo in all_agents.items():
+        for agent,ainfo in list(all_agents.items()):
             if not 'Name' in ainfo: continue
             agent_name = ainfo['Name']
             if not agent_name in self.all_agents: continue
@@ -3353,7 +3353,7 @@ class agentInfo:
         runnings = self.buckets.get('running',[])
         drainings = self.buckets.get('draining',[])
         standbies = self.buckets.get('standby',[])
-        for agent,ainfo in all_agents.items():
+        for agent,ainfo in list(all_agents.items()):
             if not 'Name' in ainfo: continue
             agent_name = ainfo['Name']
             if not agent_name in self.all_agents: continue
@@ -3366,7 +3366,7 @@ class agentInfo:
             light = (r <= t*self.idle_fraction)
 
             if verbose:
-                print json.dumps(ainfo, indent=2)
+                print(json.dumps(ainfo, indent=2))
             if agent_name in drainings:
                 if not agent_name in self.release[oldest_release]:
                     ## you can candidate those not running the oldest release, and in drain
@@ -3394,9 +3394,9 @@ class agentInfo:
 
                 capacity += t
                 if verbose:
-                    print agent
-                    print "is Stuffed?",stuffed
-                    print "is underused?",light
+                    print(agent)
+                    print("is Stuffed?",stuffed)
+                    print("is underused?",light)
                 over_threshold &= stuffed
 
                 light = False ## prevent this for now
@@ -3412,24 +3412,24 @@ class agentInfo:
 
 
         if verbose or verbose or True:
-            print "agent releases",sorted_release
-            print "agent major releases",sorted_m_release
-            print "latest release",top_release
-            print "latest major release",top_m_release
-            print "oldest release",oldest_release
-            print "oldest major release",oldest_m_release
-            print "Capacity",capacity
-            print "Running jobs", running
-            print "Running cpus", cpu_running
-            print "Pending jobs", pending
-            print "Pending cpus",cpu_pending
-            print "Running lastest release",running_top_release
-            print "Standby in latest release",standby_top_release
-            print "Running with old release",running_old_release
-            print "These are candidates for draining",sorted(candidates_to_drain)
-            print "These are good for speed drainig",sorted(speed_draining)
-            print "These are good for open draining",sorted(open_draining)
-            print "These are fully empty",sorted(fully_empty)
+            print("agent releases",sorted_release)
+            print("agent major releases",sorted_m_release)
+            print("latest release",top_release)
+            print("latest major release",top_m_release)
+            print("oldest release",oldest_release)
+            print("oldest major release",oldest_m_release)
+            print("Capacity",capacity)
+            print("Running jobs", running)
+            print("Running cpus", cpu_running)
+            print("Pending jobs", pending)
+            print("Pending cpus",cpu_pending)
+            print("Running lastest release",running_top_release)
+            print("Standby in latest release",standby_top_release)
+            print("Running with old release",running_old_release)
+            print("These are candidates for draining",sorted(candidates_to_drain))
+            print("These are good for speed drainig",sorted(speed_draining))
+            print("These are good for open draining",sorted(open_draining))
+            print("These are fully empty",sorted(fully_empty))
         if not acting:
             speed_draining = set()
             open_draining = set()
@@ -3463,28 +3463,28 @@ class agentInfo:
                 if release_deploy:
                     drain_agent = True
         else:
-            print "An agent was recently put in running/draining/standby. Cannot do any further acting for another %s last running or %s last standby"% (display_time(timeout_action),
-                                                                                                                                        display_time(timeout_last_standby))
+            print("An agent was recently put in running/draining/standby. Cannot do any further acting for another %s last running or %s last standby"% (display_time(timeout_action),
+                                                                                                                                        display_time(timeout_last_standby)))
             candidates_to_wakeup = candidates_to_wakeup - fully_empty
         if need_one:
             pick_from = self.buckets.get('standby',[])
             if not pick_from:
                 if wake_up_draining:
-                    print "wake up an agent that was already draining"
+                    print("wake up an agent that was already draining")
                     if candidates_to_wakeup:
-                        print "picking up from candidated agents"
+                        print("picking up from candidated agents")
                         pick_from = candidates_to_wakeup
                     else:
-                        print "picking up from draining agents"
+                        print("picking up from draining agents")
                         pick_from = self.buckets.get('draining',[])
 
                     ## order by the metric
                     pick_from = [o[0] for o in sorted([(a,m) for (a,m) in wake_up_metric if a in pick_from ], key = lambda o:o[1], reverse=True)]
-                    print wake_up_metric
-                    print pick_from
+                    print(wake_up_metric)
+                    print(pick_from)
                     pick_from = pick_from[:1]
             if not pick_from:
-                print "need to wake an agent up, but there are none available"
+                print("need to wake an agent up, but there are none available")
                 ## this is a major issue!!!
                 msg = 'We urgently need a new agent in the pool, but none seem to be available'
                 sendEmail('agentInfo', msg)
@@ -3492,7 +3492,7 @@ class agentInfo:
             else:
                 # pick one at random in the one idling
                 wake_up = random.choice( pick_from )
-                print "waking up", wake_up
+                print("waking up", wake_up)
                 if wake_up in speed_draining: speed_draining.remove( wake_up )
                 if wake_up in open_draining: open_draining.remove( wake_up )
                 if setAgentOn(self.url, wake_up):
@@ -3512,15 +3512,15 @@ class agentInfo:
                     manipulated_agents.add( sleep_up )
                     self.change_status(sleep_up, 'draining')
             else:
-                print "Agents need to be set in drain, but nothing is there to be drained"
+                print("Agents need to be set in drain, but nothing is there to be drained")
 
         elif retire_agent:
             # pick one with most running jobs
             if candidates_to_standby:
-                print "picking up from the candidated agents for standby"
+                print("picking up from the candidated agents for standby")
                 sleep_up = random.choice( list( candidates_to_standby ))
             else:
-                print "picking up from the running agents"
+                print("picking up from the running agents")
                 pick_from = self.buckets.get('running',[])
                 sleep_up = random.choice( pick_from )
             if setAgentDrain(self.url, sleep_up):
@@ -3530,9 +3530,9 @@ class agentInfo:
                 self.change_status(sleep_up, 'standby')
         else:
             if not acting:
-                print "The polling is not proactive"
+                print("The polling is not proactive")
             else:
-                print "Everything is fine. No need to retire or add an agent"
+                print("Everything is fine. No need to retire or add an agent")
 
         for agent in open_draining:
             ## set the config tweaks to enable retry=0 and thresold=0
@@ -3542,7 +3542,7 @@ class agentInfo:
         all_in_priority_drain = set()
         if (already_speed_drain & speed_draining):
             ## lets keep that agent in speed drainig
-            print sorted(already_speed_drain),"already in speed draining. not changing this"
+            print(sorted(already_speed_drain),"already in speed draining. not changing this")
             all_in_priority_drain = already_speed_drain & speed_draining
         else:
             speed_draining = list(speed_draining)
@@ -3594,7 +3594,7 @@ def sendAgentConfig(url, agent, config_dict):
 def setAgentDrain(url, agent, drain=True):
     #the agent name has to have .cern.ch and all
     info = getAgentConfig(url, agent)
-    print agent,"is draining?",info['UserDrainMode']
+    print(agent,"is draining?",info['UserDrainMode'])
 
     info['UserDrainMode'] = drain
     r = sendAgentConfig(url, agent, info)
@@ -3621,7 +3621,7 @@ def _getWorkflowsByName(url, names, details=False):
     conn = make_x509_conn(url)
 
     go_to = '/reqmgr2/data/request?'
-    if isinstance(names, basestring):
+    if isinstance(names, str):
         names = [names]
     for wfName in names:
         go_to += '&name=%s' % wfName
@@ -3633,11 +3633,11 @@ def _getWorkflowsByName(url, names, details=False):
     items = data['result']
 
     if details and items:
-        workflows = items[0].values()
+        workflows = list(items[0].values())
     else:
         workflows = items
 
-    print "%d retrieved for %d workflow names with details: %s" % (len(workflows), len(names), details)
+    print("%d retrieved for %d workflow names with details: %s" % (len(workflows), len(names), details))
     return workflows
 
 def getWorkflows(url,status,user=None,details=False,rtype=None, priority=None):
@@ -3654,7 +3654,7 @@ def try_getWorkflows(url,status,user=None,details=False,rtype=None, priority=Non
         for u in user.split(','):
             go_to+='&requestor=%s'%u
     if priority!=None:
-        print priority,"is requested"
+        print(priority,"is requested")
         go_to+='&initialpriority=%d'%priority ### does not work...
 
     go_to+='&detail=%s'%('true' if details else 'false')
@@ -3663,12 +3663,12 @@ def try_getWorkflows(url,status,user=None,details=False,rtype=None, priority=Non
     data = json.loads(r2.read())
     items = data['result']
 
-    print len(items),"retrieved",status,user,details,rtype
+    print(len(items),"retrieved",status,user,details,rtype)
     workflows = []
 
     for item in items:
         if details:
-            those = item.keys()
+            those = list(item.keys())
         else:
             those = [item]
 
@@ -3752,7 +3752,7 @@ class wtcInfo:
     def add(self, action, keyword, user=None):
         ##add an item for the action (hold, bypass, force) for the keyword
         if not keyword:
-            print "blank keyword is not allowed"
+            print("blank keyword is not allowed")
             return
         n = time.gmtime()
         now = time.mktime( n )
@@ -3788,14 +3788,14 @@ class wtcInfo:
         for item in self.db.find():
             key = item['keyword']
             if any([key in wfn for wfn in wfns]):
-                print item.get('keyword'),"can go"
+                print(item.get('keyword'),"can go")
                 self.db.delete_one({'_id' : item.get('_id',None)})
             
     def remove(self, keyword):
         ## will remove from the db anything that the item matches on
         for item in self.db.find():
             if item.get('keyword',None) in keyword:
-                print item,"goes away"
+                print(item,"goes away")
                 self.db.delete_one({'_id' : item.get('_id',None)})
 
 class workflowInfo:
@@ -3811,16 +3811,16 @@ class workflowInfo:
                 ret = ret['result'][0][workflow] ##new
                 self.request = ret
             except Exception as e:
-                print "failed to get workload"
-                print str(e)
+                print("failed to get workload")
+                print(str(e))
                 try:
                     r1=self.conn.request("GET",'/couchdb/reqmgr_workload_cache/'+workflow)
                     r2=self.conn.getresponse()
                     ret = json.loads(r2.read())
                     self.request = ret
                 except Exception as e:
-                    print "Failed to get workload cache for",workflow
-                    print str(e)
+                    print("Failed to get workload cache for",workflow)
+                    print(str(e))
                     raise Exception("Failed to get workload cache for %s"%workflow)
         else:
             self.request = copy.deepcopy( request )
@@ -3892,16 +3892,16 @@ class workflowInfo:
         # Do not convert if there is only 1 task
         if 'TaskChain' in self.request:
             if self.request['TaskChain'] <= 1:
-                print("Workflow %s is not converted to stepchain: it has 1 task" % (
-                    self.request['RequestName']))
+                print(("Workflow %s is not converted to stepchain: it has 1 task" % (
+                    self.request['RequestName'])))
                 return False
 
         # Conversion is not supported if there is a task whose EventStreams is nonzero 
-        for key,value in self.request.items():
+        for key,value in list(self.request.items()):
             if key.startswith('Task') and type(value) is dict: 
                 if 'EventStreams' in value:
                     if value['EventStreams'] != 0:
-                        print('EventStreams is ' + str(value['EventStreams']) + ' do not convert')
+                        print(('EventStreams is ' + str(value['EventStreams']) + ' do not convert'))
                         return False
 
         threshold = self.UC.get("efficiency_threshold_for_stepchain")
@@ -3915,28 +3915,28 @@ class workflowInfo:
         ## efficiency 
         try:
             time_info = self.getTimeInfoForChain()
-            if debug: print time_info
+            if debug: print(time_info)
             totalTimePerEvent = 0
             max_nCores = self.UC.get("max_nCores_for_stepchain")
-            for i,info in time_info.items():
+            for i,info in list(time_info.items()):
                 totalTimePerEvent += info['tpe']
                 efficiency += info['tpe']*min(info['cores'], max_nCores)
-            if debug: print "Total time per event for TaskChain: %0.1f" % totalTimePerEvent
+            if debug: print("Total time per event for TaskChain: %0.1f" % totalTimePerEvent)
             if totalTimePerEvent > 0:
                 efficiency /= totalTimePerEvent * max_nCores
-                if debug: print "CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_nCores, efficiency * 100)
+                if debug: print("CPU efficiency of StepChain with %u cores: %0.1f%%" % (max_nCores, efficiency * 100))
                 acceptable_efficiency = efficiency > threshold
             else:
                 acceptable_efficiency = False
         except TypeError:
             acceptable_efficiency = False
             if debug:
-                print "Caught TypeError"
+                print("Caught TypeError")
 
         ## only one value throughout the chain
         all_same_cores = len(set(self.getMulticores()))==1
         ##make sure not tow same data tier is produced
-        all_tiers = map(lambda o : o.split('/')[-1], self.request['OutputDatasets'])
+        all_tiers = [o.split('/')[-1] for o in self.request['OutputDatasets']]
         single_tiers = (len(all_tiers) == len(set(all_tiers)))
         ## more than one task with output until https://github.com/dmwm/WMCore/issues/8269 gets solved
         output_from_single_task = True ## the parentage
@@ -3954,7 +3954,7 @@ class workflowInfo:
             
         pss = self.processingString()
 	if type(pss)==dict:
-	    pssString = ''.join('{}{}'.format(key, val) for key, val in pss.items())
+	    pssString = ''.join('{}{}'.format(key, val) for key, val in list(pss.items()))
 	else:
 	    pssString = pss
         wf = pssString+self.request['RequestName']
@@ -3963,20 +3963,20 @@ class workflowInfo:
             found_in_transform_keywords = any([keyword in wf for keyword in keywords])
         good = self.request['RequestType'] == 'TaskChain' and more_than_one_task and found_in_transform_keywords and single_tiers and (all_same_cores or acceptable_efficiency) and output_from_single_task and all_same_arch
         if not good and talk:
-            print "cores",all_same_cores
-            print "parentage",output_from_single_task
+            print("cores",all_same_cores)
+            print("parentage",output_from_single_task)
 
 
         # Report
         if good:
             if isHighPriority:
-                print ("High priority workflow %s is okay to be converted to stepchain with efficiency %s" % (self.request['RequestName'], str(efficiency)) )
+                print(("High priority workflow %s is okay to be converted to stepchain with efficiency %s" % (self.request['RequestName'], str(efficiency)) ))
             else:
-                print ("Low priority workflow %s is is okay to be converted to stepchain with efficiency %s" % (
-                self.request['RequestName'], str(efficiency)))
+                print(("Low priority workflow %s is is okay to be converted to stepchain with efficiency %s" % (
+                self.request['RequestName'], str(efficiency))))
         else:
-            print("Workflow %s is not converted to stepchain with efficiency %s" % (
-                self.request['RequestName'], str(efficiency)))
+            print(("Workflow %s is not converted to stepchain with efficiency %s" % (
+                self.request['RequestName'], str(efficiency))))
         return good
 
 
@@ -3985,7 +3985,7 @@ class workflowInfo:
         try:
 
             if mcm == None:
-                from McMClient import McMClient
+                from .McMClient import McMClient
                 mcm = McMClient(dev=False)
             pids = self.getPrepIDs()
             wf_name = self.request['RequestName']
@@ -3996,33 +3996,33 @@ class workflowInfo:
                                 }
                 dedicated_message = message
                 add_batch ="This message concerns PREPID WORKFLOW"
-                for src,dest in replacements.items():
+                for src,dest in list(replacements.items()):
                     dedicated_message = dedicated_message.replace(src, dest)
                     add_batch = add_batch.replace(src, dest)
 
                 batches = mcm.getA('batches',query='contains=%s'%wf_name)
-                batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)
+                batches = [b for b in batches if b['status'] in ['announced','done','reset']]
                 if not batches:
                     batches = mcm.getA('batches',query='contains=%s'%pid)
-                    batches = filter(lambda b : b['status'] in ['announced','done','reset'], batches)
+                    batches = [b for b in batches if b['status'] in ['announced','done','reset']]
                 if batches:
                     bid = batches[0]['prepid']
-                    print "batch nofication to",bid
+                    print("batch nofication to",bid)
                     if not bid in items_notified:
                         mcm.put('/restapi/batches/notify', { "notes" : dedicated_message+"\n"+add_batch, "prepid" : bid})
                         items_notified.add( bid )
                 if not pid in items_notified:
-                    print "request notification to",pid
+                    print("request notification to",pid)
                     mcm.put('/restapi/requests/notify',{ "message" : dedicated_message, "prepids" : [pid] })
                     items_notified.add( pid )
         except Exception as e:
-            print "could not notify back to requestor\n%s"%str(e)
+            print("could not notify back to requestor\n%s"%str(e))
             self.sendLog('notifyRequestor','could not notify back to requestor\n%s'%str(e))
 
 
     def sendLog( self, subject, text, show=True):
         if show:
-            print text ## to avoid having to duplicate it
+            print(text) ## to avoid having to duplicate it
         self.logs[subject] += '\n'+text
 
     def __del__(self):
@@ -4030,7 +4030,7 @@ class workflowInfo:
 
     def flushLog(self):
         ## flush the logs
-        for sub,text in self.logs.items():
+        for sub,text in list(self.logs.items()):
             sendLog(sub, text, wfi = self, show=False, level='workflow')
 
     def get_spec(self):
@@ -4041,7 +4041,7 @@ class workflowInfo:
             try:
                 return self._get_spec()
             except Exception as e:
-                print "cannot get spec for",self.request['RequestName']
+                print("cannot get spec for",self.request['RequestName'])
                 return None
 
     def _get_spec(self):
@@ -4061,7 +4061,7 @@ class workflowInfo:
                     now = time.mktime(time.gmtime())
                     stamp = d_cache['timestamp']
                     if (now-stamp) < cache:
-                        print "wmerrors taken from cache",f_cache
+                        print("wmerrors taken from cache",f_cache)
                         self.errors = d_cache['data']
                         return self.errors
 
@@ -4074,11 +4074,11 @@ class workflowInfo:
                 open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
                                                      'data' : self.errors}))
             except Exception as e:
-                print "failed getting getWMErrors"
-                print str(e)
+                print("failed getting getWMErrors")
+                print(str(e))
             return self.errors
         except:
-            print "Could not get wmstats errors for",self.request['RequestName']
+            print("Could not get wmstats errors for",self.request['RequestName'])
             self.conn = make_x509_conn(self.url)
             return {}
 
@@ -4088,9 +4088,9 @@ class workflowInfo:
             try:
                 return self._getWMStats(cache=cache)
             except Exception as e:
-                print "Failed",trials,"at reading getWMStats"
-                print str(e)
-                print self.request['RequestName']
+                print("Failed",trials,"at reading getWMStats")
+                print(str(e))
+                print(self.request['RequestName'])
                 self.conn = make_x509_conn(self.url)
 
             trials-=1
@@ -4105,7 +4105,7 @@ class workflowInfo:
                 now = time.mktime(time.gmtime())
                 stamp = d_cache['timestamp']
                 if (now-stamp) < cache:
-                    print "wmstats taken from cache",f_cache
+                    print("wmstats taken from cache",f_cache)
                     self.wmstats = d_cache['data']
                     return self.wmstats
         r1=self.conn.request("GET",'/wmstatsserver/data/request/%s'%self.request['RequestName'], headers={"Accept":"application/json"})
@@ -4115,8 +4115,8 @@ class workflowInfo:
             open(f_cache,'w').write( json.dumps({'timestamp': time.mktime(time.gmtime()),
                                                  'data' : self.wmstats}) )
         except Exception as e:
-            print "failed getWMStats"
-            print str(e)
+            print("failed getWMStats")
+            print(str(e))
 
         return self.wmstats
 
@@ -4127,11 +4127,11 @@ class workflowInfo:
         for d in doc:
             task = d.get('fileset_name',"")
             if for_task and not task.endswith(for_task):continue
-            all_files.update( d['files'].keys())
+            all_files.update( list(d['files'].keys()))
             for fn in d['files']:
                 files_and_loc[ fn ].update( d['files'][fn]['locations'] )
 
-        print len(all_files),"file in recovery"
+        print(len(all_files),"file in recovery")
         dbsapi = DbsApi(url=dbs_url)
         all_blocks = set()
         all_blocks_loc = defaultdict(set)
@@ -4158,13 +4158,13 @@ class workflowInfo:
 
         file_block_doc = defaultdict( lambda : defaultdict( set ))
         dataset_blocks = set()
-        for _f,_b in file_block_cache.iteritems():
+        for _f,_b in file_block_cache.items():
             file_block_doc[ _b.split('#')[0]][_b].add( _f )
             dataset_blocks.add( _b )
 
         ## skim out the files
-        files_and_loc_noblock = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_no_block])
-        files_and_loc = dict([(k,list(v)) for (k,v) in files_and_loc.items() if k in files_in_block])
+        files_and_loc_noblock = dict([(k,list(v)) for (k,v) in list(files_and_loc.items()) if k in files_no_block])
+        files_and_loc = dict([(k,list(v)) for (k,v) in list(files_and_loc.items()) if k in files_in_block])
         return dataset_blocks,all_blocks_loc,files_in_block,files_and_loc,files_and_loc_noblock
 
     def getRecoveryDoc(self, collection_name=None):
@@ -4174,27 +4174,27 @@ class workflowInfo:
         if 'CollectionName' in self.request and self.request['CollectionName']:
             if collection_name == True:
                 collection_name = self.request['CollectionName']
-                print "using collection name from schema"
+                print("using collection name from schema")
 
         if self.recovery_doc != None:
-            print "returning cached self.recovery_doc"
+            print("returning cached self.recovery_doc")
             return self.recovery_doc
         try:
-            print "using",collection_name
+            print("using",collection_name)
             r1=self.conn.request("GET",'/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key="%s"&include_docs=true&reduce=false'% collection_name)
             r2=self.conn.getresponse()
             rows = json.loads(r2.read())['rows']
             self.recovery_doc = [r['doc'] for r in rows]
         except:
             self.conn = make_x509_conn(self.url)
-            print "failed to get the acdc document for",self.request['RequestName']
+            print("failed to get the acdc document for",self.request['RequestName'])
             self.recovery_doc = None
         return self.recovery_doc
 
     def getRecoveryInfo(self):
         self.getRecoveryDoc()
         if not self.recovery_doc:
-            print "nothing retrieved"
+            print("nothing retrieved")
             return {},{},{}
         where_to_run = defaultdict(list)
         missing_to_run = defaultdict(int)
@@ -4202,7 +4202,7 @@ class workflowInfo:
         original_whitelist = self.request['SiteWhitelist']
         for doc in self.recovery_doc:
             task = doc['fileset_name']
-            for f,info in doc['files'].iteritems():
+            for f,info in doc['files'].items():
                 missing_to_run[task] += info['events']
                 if f.startswith('MCFakeFile'):
                     locations = original_whitelist
@@ -4217,7 +4217,7 @@ class workflowInfo:
     def getPileUpJSON(self, task):
         res = {}
         agents = self.getActiveAgents()
-        agents = map(lambda s : s.split('/')[-1].split(':')[0], agents)
+        agents = [s.split('/')[-1].split(':')[0] for s in agents]
         wf = self.request['RequestName']
         inagent=None
         for agent in agents:
@@ -4228,7 +4228,7 @@ class workflowInfo:
                 inagent=agent
                 res = json.loads(open( dest ).read())
                 break
-            print agent
+            print(agent)
             com = 'scp %s %s'%( src, dest)
             os.system( com )
             if os.path.isfile( dest ):
@@ -4236,9 +4236,9 @@ class workflowInfo:
                 res = json.loads(open( dest ).read())
                 break
         if inagent:
-            print "found PU json in:",inagent
+            print("found PU json in:",inagent)
         else:
-            print "PU json not found"
+            print("PU json not found")
                 
         return res
 
@@ -4259,7 +4259,7 @@ class workflowInfo:
                 intersection = set(pu['mc'][block]['PhEDExNodeNames'])
 
         max_blocks = max( count_blocks.values())
-        site_with_enough = [ site for site,count in count_blocks.items() if count > 0.90*max_blocks]
+        site_with_enough = [ site for site,count in list(count_blocks.items()) if count > 0.90*max_blocks]
         SI = global_SI()
         ret = sorted(set([ SI.SE_to_CE(s) for s in ret if not 'Buffer' in s] ))
         inter = sorted(set([ SI.SE_to_CE(s) for s in intersection if not ('Buffer' in s or 'MSS' in s)]))
@@ -4283,8 +4283,8 @@ class workflowInfo:
                 except Exception as e:
                     self.conn = make_x509_conn(self.url)
                     time.sleep(1) ## time-out
-                    print "Failed to get workqueue"
-                    print str(e)
+                    print("Failed to get workqueue")
+                    print(str(e))
                     self.workqueue = []
         return self.workqueue
 
@@ -4294,7 +4294,7 @@ class workflowInfo:
         blocks = defaultdict(set)
         selected = set()
         for wqe in wqes:
-            blocks[wqe['Status']].update( wqe['Inputs'].keys() )
+            blocks[wqe['Status']].update( list(wqe['Inputs'].keys()) )
         for s in select:
             selected.update( blocks[s] )
         return blocks,selected
@@ -4333,7 +4333,7 @@ class workflowInfo:
             gmon = json.loads(os.popen('curl -s https://cms-gwmsmon.cern.ch/prodview/json/%s/summary'%self.request['RequestName']).read())
             return gmon
         except:
-            print "cannot get glidemon info",self.request['RequestName']
+            print("cannot get glidemon info",self.request['RequestName'])
             return None
 
     def _tasks(self):
@@ -4381,7 +4381,7 @@ class workflowInfo:
                     elif 'RequestNumEvents' in task:
                         ne = float(task['RequestNumEvents'])
                     else:
-                        print "this is not supported, making it zero cput"
+                        print("this is not supported, making it zero cput")
                         ne = 0
                     tpe =task.get('TimePerEvent',1) ## harsh
                     carry_on[task['%sName'%base]] = ne
@@ -4432,7 +4432,7 @@ class workflowInfo:
                 t=task['splittingTask']
                 for k in ['events_per_job','avg_events_per_job']:
                     if k in task: c_size = task[k]
-                parents = filter(lambda o : t.startswith(o['splittingTask']) and t!=o['splittingTask'], splits)
+                parents = [o for o in splits if t.startswith(o['splittingTask']) and t!=o['splittingTask']]
                 if parents:
                     for parent in parents:
                         for k in ['events_per_job','avg_events_per_job']:
@@ -4477,29 +4477,29 @@ class workflowInfo:
                     pileup_locations = rucioClient.getDatasetLocationsByAccount(sec, "wmcore_transferor")
                     sites_allowed += pileup_locations
                 sites_allowed = sorted(set(sites_allowed))
-                print "Reading minbias"
+                print("Reading minbias")
             else:
                 sites_allowed = sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_with_goodAAA))
                 if self.request['RequestType'] == 'StepChain':
                     sites_allowed = sorted(set(sites_allowed + SI.HEPCloud_sites))
-                    print "Include HEPCloud in the sitewhitelist of ",self.request['RequestName']
-                print "Reading premix"
+                    print("Include HEPCloud in the sitewhitelist of ",self.request['RequestName'])
+                print("Reading premix")
         elif primary:
             sites_allowed =sorted(set(SI.sites_T0s + SI.sites_T1s + SI.sites_T2s))# + SI.sites_T3s))
             if self.request['RequestType'] == 'StepChain':
                     sites_allowed = sorted(set(sites_allowed + SI.HEPCloud_sites))
-                    print "Include HEPCloud in the sitewhitelist of ",self.request['RequestName']
+                    print("Include HEPCloud in the sitewhitelist of ",self.request['RequestName'])
         else:
             # no input at all
             ## all site should contribute
             sites_allowed =sorted(set( SI.sites_T0s + SI.sites_T2s + SI.sites_T1s))# + SI.sites_T3s ))
             if self.request['RequestType'] == 'StepChain':
                     sites_allowed = sorted(set(sites_allowed + SI.HEPCloud_sites))
-                    print "Include HEPCloud in the sitewhitelist of ",self.request['RequestName']
+                    print("Include HEPCloud in the sitewhitelist of ",self.request['RequestName'])
         if pickone:
             sites_allowed = sorted([SI.pick_CE( sites_allowed )])
 
-        print("Initially allow {}".format(sites_allowed))
+        print(("Initially allow {}".format(sites_allowed)))
 
         # do further restrictions based on memory
         # do further restrictions based on blow-up factor
@@ -4511,9 +4511,9 @@ class workflowInfo:
             new_sites_allowed = list(set(sites_allowed) & set([site for site in sites_allowed if SI.cpu_pledges[site] > needed_cores]))
             if new_sites_allowed :
                 sites_allowed = new_sites_allowed
-                print "swaping",verbose
+                print("swaping",verbose)
                 if verbose:
-                    print "restricting site white list because of blow-up factor",min_child_job_per_event, root_job_per_event, max_blow_up
+                    print("restricting site white list because of blow-up factor",min_child_job_per_event, root_job_per_event, max_blow_up)
 
         CI = campaignInfo()
         for campaign in self.getCampaigns():
@@ -4521,7 +4521,7 @@ class workflowInfo:
             c_sites_allowed.extend(CI.parameters(campaign).get('SiteWhitelist',[]))
             if c_sites_allowed:
                 if verbose:
-                    print "Using site whitelist restriction by campaign,",campaign,"configuration",sorted(c_sites_allowed)
+                    print("Using site whitelist restriction by campaign,",campaign,"configuration",sorted(c_sites_allowed))
                 sites_allowed = list(set(sites_allowed) & set(c_sites_allowed))
                 if not sites_allowed:
                     sites_allowed = list(c_sites_allowed)
@@ -4530,13 +4530,13 @@ class workflowInfo:
             c_black_list.extend( CI.parameters(campaign).get('SiteBlacklist', []))
             if c_black_list:
                 if verbose:
-                    print "Reducing the whitelist due to black list in campaign configuration"
-                    print "Removing",sorted(c_black_list)
+                    print("Reducing the whitelist due to black list in campaign configuration")
+                    print("Removing",sorted(c_black_list))
                 sites_allowed = list(set(sites_allowed) - set(c_black_list))
                 sites_not_allowed = c_black_list
 
-        print("After all of these, allowing: {}".format(sorted(sites_allowed)))
-        print("After all of these, not allowing: {}".format(sorted(sites_not_allowed)))
+        print(("After all of these, allowing: {}".format(sorted(sites_allowed))))
+        print(("After all of these, not allowing: {}".format(sorted(sites_not_allowed))))
         return (lheinput,primary,parent,secondary,sites_allowed,sites_not_allowed)
 
     def checkSplitting(self):
@@ -4560,10 +4560,10 @@ class workflowInfo:
                 tname = spl['taskName'].split('/')[-1]
                 avg_events_per_job = task.get('events_per_job',None)
                 if avg_events_per_job and sizeperevent and (avg_events_per_job * sizeperevent ) > (GB_space_limit*1024.**2):
-                    print "The output size of task %s is expected to be large : %d x %.2f kB = %.2f GB > %f GB "% ( tname ,
+                    print("The output size of task %s is expected to be large : %d x %.2f kB = %.2f GB > %f GB "% ( tname ,
                                                                                                                     avg_events_per_job, sizeperevent,
                                                                                                                     avg_events_per_job * sizeperevent / (1024.**2 ),
-                                                                                                                    GB_space_limit)
+                                                                                                                    GB_space_limit))
                     avg_events_per_job_for_task = int( (GB_space_limit*1024.**2) / sizeperevent)
                     modified_split_for_task = spl
                     modified_split_for_task['splitParams']['events_per_job'] = avg_events_per_job_for_task
@@ -4604,10 +4604,10 @@ class workflowInfo:
                 if t.get('KeepOutput',True) == False:
                     ## we can shoot the limit up, as we don't care too much.
                     #GB_space_limit = 10000 * ncores
-                    print "the output is not kept, but keeping the output size to",GB_space_limit
+                    print("the output is not kept, but keeping the output size to",GB_space_limit)
 
                 sizeperevent = t.get('SizePerEvent',None)
-                for keyword,factor in output_size_correction.items():
+                for keyword,factor in list(output_size_correction.items()):
                     if keyword in spl['taskName']:
                         sizeperevent *= factor
                         break
@@ -4725,7 +4725,7 @@ class workflowInfo:
                         sendLog('assignor', critical_msg, level='critical')
                         hold = True
                     else:
-                        print "The smallest value of %s is ok compared to %s evt/lumi in the input"%(max_events_per_lumi, events_per_lumi_inputs)
+                        print("The smallest value of %s is ok compared to %s evt/lumi in the input"%(max_events_per_lumi, events_per_lumi_inputs))
                 else:
                     root_split = splits[0]
                     current_split = root_split.get('splitParams',{}).get('events_per_lumi',None)
@@ -4764,7 +4764,7 @@ class workflowInfo:
 
         ## put in the era accordingly ## although this could be done in re-assignment
         ## take care of the splitting specifications ## although this could be done in re-assignment
-        for (k,v) in new_schema.items():
+        for (k,v) in list(new_schema.items()):
             if v in [None,'None']:
                 new_schema.pop(k)
         return new_schema
@@ -4774,7 +4774,7 @@ class workflowInfo:
         if (not select):# or (select and node.taskType == select):
             all_tasks.append( node )
         else:
-            for (key,value) in select.items():
+            for (key,value) in list(select.items()):
                 if (type(value)==list and getattr(node,key) in value) or (type(value)!=list and getattr(node, key) == value):
                     all_tasks.append( node )
                     break
@@ -4793,7 +4793,7 @@ class workflowInfo:
     def getCompletionFraction(self, caller='getCompletionFraction', with_event=True):
         output_per_task = self.getOutputPerTask()
         task_outputs = {}
-        for task,outs in output_per_task.items():
+        for task,outs in list(output_per_task.items()):
             for out in outs:
                 task_outputs[out] = task
 
@@ -4856,7 +4856,7 @@ class workflowInfo:
         all_outputs = self.request['OutputDatasets']
         output_per_task = defaultdict(list)
         if 'ChainParentageMap' in self.request:
-            for t,info in self.request['ChainParentageMap'].items():
+            for t,info in list(self.request['ChainParentageMap'].items()):
                 for dsname in info.get('ChildDsets'):
                     output_per_task[t].append( dsname)
             return dict(output_per_task)
@@ -4868,7 +4868,7 @@ class workflowInfo:
                     if dsname in all_outputs: ## do the intersection with real outputs
                         output_per_task[t._internal_name].append( dsname )
             else:
-                print "no output subscriptions..."
+                print("no output subscriptions...")
                 
         return dict(output_per_task)
 
@@ -4914,7 +4914,7 @@ class workflowInfo:
                 'LumiBased' : { 'halt_job_on_file_boundaries' : 'True'}
                 }
             if ts.algorithm in include:
-                for k,v in include[ts.algorithm].items():
+                for k,v in list(include[ts.algorithm].items()):
                     spl[-1][k] = v
 
             for get in get_those:
@@ -4964,7 +4964,7 @@ class workflowInfo:
         mems_d = {}
         if 'Chain' in self.request['RequestType']:
             mems_d = self._collectinchain('Memory',default=None)
-        mems = filter(None, mems_d.values()) if mems_d else mems
+        mems = [_f for _f in list(mems_d.values()) if _f] if mems_d else mems
         return mems
 
     def getMulticores(self):
@@ -4972,7 +4972,7 @@ class workflowInfo:
         mcores_d = {}
         if 'Chain' in self.request['RequestType']:
             mcores_d = self._collectinchain('Multicore',default=1)
-        return mcores_d.values() if mcores_d else [mcores]
+        return list(mcores_d.values()) if mcores_d else [mcores]
 
     def getCorePerTask(self, task):
         mcores = self.request.get('Multicore',1)
@@ -4993,7 +4993,7 @@ class workflowInfo:
         mcores = [int(self.request.get('Multicore',1))]
         if 'Chain' in self.request['RequestType']:
             mcores_d = self._collectinchain('Multicore',default=1)
-            mcores.extend( map(int, mcores_d.values() ))
+            mcores.extend( list(map(int, list(mcores_d.values()) )))
         return max(mcores)
 
     def getBlockWhiteList(self):
@@ -5053,12 +5053,12 @@ class workflowInfo:
             parent=set()
             secondary=set()
             if 'InputDataset' in blob:
-                primary = set(filter(None,[blob['InputDataset']]))
+                primary = set([_f for _f in [blob['InputDataset']] if _f])
             if primary and 'IncludeParents' in blob and blob['IncludeParents']:
                 for p in primary:
                     parent.update(findParent( p ))
             if 'MCPileup' in blob:
-                secondary = set(filter(None,[blob['MCPileup']]))
+                secondary = set([_f for _f in [blob['MCPileup']] if _f])
             if 'LheInputFiles' in blob and blob['LheInputFiles'] in ['True',True]:
                 lhe=True
 
@@ -5104,7 +5104,7 @@ class workflowInfo:
 
     def getPrimaryDSN(self):
         if 'Chain' in self.request['RequestType']:
-            return self._collectinchain('PrimaryDataset').values()
+            return list(self._collectinchain('PrimaryDataset').values())
         else:
             return [self.request['PrimaryDataset']]
 
@@ -5144,7 +5144,7 @@ class workflowInfo:
                     insert_at=isolated.index(True)+1
                     st = st[:insert_at]+number+st[insert_at:]
                     return st
-                print "not yet implemented",st
+                print("not yet implemented",st)
                 sys.exit(34)
             return st
 
@@ -5195,7 +5195,7 @@ class workflowInfo:
         # If there is 'pilot' in SubRequestType (an alternative pilot)
         if 'SubRequestType' in self.request:
             if 'pilot' in self.request['SubRequestType'].lower():
-                print "Alternative pilot"
+                print("Alternative pilot")
                 return True
  	
         for campaign,label in pas:
@@ -5203,7 +5203,7 @@ class workflowInfo:
                 if log:
                     self.sendLog('go',"no go due to %s %s"%(campaign,label))
                 else:
-                    print "no go due to",campaign,label
+                    print("no go due to",campaign,label)
                 return False
         return True
 
@@ -5230,7 +5230,7 @@ class workflowInfo:
                     aps='*'
                 pattern = '/'.join(['',dsn,'-'.join([aera,aps,'v*']),tier])
                 wilds = getDatasets( pattern )
-                print pattern,"->",len(wilds),"match(es)"
+                print(pattern,"->",len(wilds),"match(es)")
                 for wild in [wildd['dataset'] for wildd in wilds]:
                     (_,_,mid,_) = wild.split('/')
                     v = int(mid.split('-')[-1].replace('v',''))
@@ -5242,16 +5242,16 @@ class workflowInfo:
                 elif ps.count('-')==3:
                     (aera,fn,aps,_) = ps.split('-')
                 else:
-                    print "Cannot check output in reqmgr"
-                    print output,"is what is in the request workload"
+                    print("Cannot check output in reqmgr")
+                    print(output,"is what is in the request workload")
                     continue
                 while True:
                     predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
-                    print "checking against",predicted
+                    print("checking against",predicted)
                     conflicts = getWorkflowByOutput( self.url, predicted )
-                    conflicts = filter(lambda wfn : wfn!=self.request['RequestName'], conflicts)
+                    conflicts = [wfn for wfn in conflicts if wfn!=self.request['RequestName']]
                     if len(conflicts):
-                        print "There is an output conflict for",self.request['RequestName'],"with",conflicts
+                        print("There is an output conflict for",self.request['RequestName'],"with",conflicts)
                         ## since we are not planned for pure extension and ever writing in the same dataset, go +1
                         version += 1
                     else:
@@ -5259,7 +5259,7 @@ class workflowInfo:
 
         else:
             for output in  outputs:
-                print output
+                print(output)
                 (_,dsn,ps,tier) = output.split('/')
                 if ps.count("-") == 2:
                     (aera,aps,_) = ps.split('-')
@@ -5267,47 +5267,47 @@ class workflowInfo:
                     (aera,fn,aps,_) = ps.split('-')
                 else:
                     ## cannot so anything
-                    print "the processing string is mal-formated",ps
+                    print("the processing string is mal-formated",ps)
                     return None
 
                 if aera == 'None' or aera == 'FAKE':
-                    print "no era, using ",era
+                    print("no era, using ",era)
                     aera=era
                 if aps == 'None':
-                    print "no process string, using wild char"
+                    print("no process string, using wild char")
                     aps='*'
                 pattern = '/'.join(['',dsn,'-'.join([aera,aps,'v*']),tier])
-                print "looking for",pattern
+                print("looking for",pattern)
                 wilds = getDatasets( pattern )
-                print pattern,"->",len(wilds),"match(es)"
+                print(pattern,"->",len(wilds),"match(es)")
                 for wild in [wildd['dataset'] for wildd in wilds]:
                     (_,_,mid,_) = wild.split('/')
                     v = int(mid.split('-')[-1].replace('v',''))
                     version = max(v,version)
             #print "version found so far",version
             for output in  outputs:
-                print output
+                print(output)
                 (_,dsn,ps,tier) = output.split('/')
                 if ps.count("-") == 2:
                     (aera,aps,_) = ps.split('-')
                 elif ps.count("-") == 3:
                     (aera,fn,aps,_) = ps.split('-')
                 else:
-                    print "the processing string is mal-formated",ps
+                    print("the processing string is mal-formated",ps)
                     return None
 
                 if aera == 'None' or aera == 'FAKE':
-                    print "no era, using ",era
+                    print("no era, using ",era)
                     aera=era
                 if aps == 'None':
-                    print "no process string, cannot parse"
+                    print("no process string, cannot parse")
                     continue
                 while True:
                     predicted = '/'.join(['',dsn,'-'.join([aera,aps,'v%d'%(version+1)]),tier])
                     conflicts = getWorkflowByOutput( self.url, predicted )
-                    conflicts = filter(lambda wfn : wfn!=self.request['RequestName'], conflicts)
+                    conflicts = [wfn for wfn in conflicts if wfn!=self.request['RequestName']]
                     if len(conflicts):
-                        print "There is an output conflict for",self.request['RequestName'],"with",conflicts
+                        print("There is an output conflict for",self.request['RequestName'],"with",conflicts)
                         #return None
                         ## since we are not planned for pure extension and ever writing in the same dataset, go +1
                         version += 1
@@ -5318,7 +5318,7 @@ class workflowInfo:
 
 def getFailedJobs(taskname, caller='getFailedJobs'):
     wfname=taskname.split('/')[1]
-    print 'wfname=',wfname
+    print('wfname=',wfname)
     conn = make_x509_conn(reqmgr_url)
     try:
         r1=conn.request("GET",'/wmstatsserver/data/filtered_requests?RequestName=%s&mask=PrepID&mask=AgentJobInfo'%(wfname),headers={"Accept":"application/json"})
@@ -5326,7 +5326,7 @@ def getFailedJobs(taskname, caller='getFailedJobs'):
         reading = json.loads(r2.read())
     except Exception as e:
         sendLog('componentInfo','not able to connect to wmstats server', level='critical')
-        print str(e)
+        print(str(e))
         return 0
 
     failed_jobs = 0
@@ -5337,7 +5337,7 @@ def getFailedJobs(taskname, caller='getFailedJobs'):
                 if taskname in info['AgentJobInfo'][agentName].get("tasks", {}):
                     taskInfo = info['AgentJobInfo'][agentName]["tasks"][taskname]
                     if "failure" in taskInfo.get("status", {}):
-                        for failureType, numFailures in taskInfo["status"]["failure"].items():
+                        for failureType, numFailures in list(taskInfo["status"]["failure"].items()):
                             failed_jobs += numFailures
     
     return failed_jobs
@@ -5363,7 +5363,7 @@ def aggregateListFileLumis(response):
             tmpDict[key] = {"event_count": [event_count], "lumi_section_num": [lumi_section_num]}
 
 
-    for key, value in tmpDict.iteritems():
+    for key, value in tmpDict.items():
         aggregatedResponse.append({'run_num': key[0],'lumi_section_num': value["lumi_section_num"],'logical_file_name': key[1],'event_count': value["event_count"]})
 
     return aggregatedResponse
