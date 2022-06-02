@@ -57,16 +57,16 @@ def singleRecovery(url, task, initial, actions, do=False, priority_change=False)
                 if 'multicore' in actions and actions['multicore'] != "":
                     continue
                 ## Taskchains needs to be treated special to set the memory to all tasks
-		try: 
+                try:
                     set_to = int(actions[action])
-		except ValueError:
-		    if actions[action].lower().endswith('gb'):
-			set_to = int(actions[action][:-2])*1024
-		    elif actions[action].lower().endswith('kb'):
-			set_to = int(actions[action][:-2])
-		    else:
-			# invalid parameter -- making no change
-			continue
+                except ValueError:
+                    if actions[action].lower().endswith('gb'):
+                        set_to = int(actions[action][:-2])*1024
+                    elif actions[action].lower().endswith('kb'):
+                        set_to = int(actions[action][:-2])
+                    else:
+                        # invalid parameter -- making no change
+                        continue
                 if 'TaskChain' in initial:
                     mem_dict = {}
                     it = 1
