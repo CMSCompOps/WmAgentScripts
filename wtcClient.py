@@ -1,5 +1,5 @@
 import os
-import httplib
+import http.client
 import ssl
 import json
 
@@ -7,7 +7,7 @@ class wtcClient(object):
     def __init__(self):
         self.conn = None
         if not os.path.exists('Unified/secret_act.txt'):
-            print 'Needs to be called from same directory as key.json'
+            print('Needs to be called from same directory as key.json')
             return
 
         with open('Unified/secret_act.txt', 'r') as key_file:
@@ -15,7 +15,7 @@ class wtcClient(object):
         self._make_conn()
 
     def _make_conn(self):
-        self.conn = httplib.HTTPSConnection(self.key_info['url'], self.key_info['port'],context=ssl._create_unverified_context())
+        self.conn = http.client.HTTPSConnection(self.key_info['url'], self.key_info['port'],context=ssl._create_unverified_context())
         #self.conn = httplib.HTTPConnection(self.key_info['url'], self.key_info['port'])
         
     def check(self):
@@ -30,7 +30,7 @@ class wtcClient(object):
                 self._make_conn()
                 return self._get_actions()
             except Exception as e:
-                print str(e)
+                print(str(e))
                 return None
             
     def _get_actions(self):
@@ -52,7 +52,7 @@ class wtcClient(object):
                 self._make_conn()
                 return self._remove_action(*args)
             except Exception as e:
-                print str(e)
+                print(str(e))
                 return None
             
     def _remove_action(self, *args):
@@ -64,7 +64,7 @@ class wtcClient(object):
         
         r= self.conn.getresponse().read()
         jr = json.loads( r )
-        print jr 
+        print(jr) 
         #conn.close()
         #return (r == 'Done')
         return all([w in jr['success'] for w in args])
