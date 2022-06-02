@@ -91,14 +91,14 @@ class LogRecord(Base):
     month = Column(Integer)
 
 if Admin_Mode:
-    print "Using the admin account"
+    print("Using the admin account")
     secret = open('Unified/secret_cmsr_admin.txt','r').read().strip()
 else:
-    print "Using the rw account"
+    print("Using the rw account")
     secret = open('Unified/secret_cmsr_rw.txt','r').read().strip()    
 
 engine = create_engine(secret)
 try:
     Base.metadata.create_all(engine)
 except:
-    print "Failed to create_all(engine)"
+    print("Failed to create_all(engine)")
