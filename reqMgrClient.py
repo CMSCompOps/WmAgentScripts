@@ -15,7 +15,7 @@ import sys
 import time
 import urllib.request, urllib.parse, urllib.error
 
-from . import dbs3Client as dbs3
+import dbs3Client as dbs3
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/json", "Accept": "application/json"}
