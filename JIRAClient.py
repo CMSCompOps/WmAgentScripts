@@ -1,8 +1,6 @@
 from subprocess import PIPE,Popen
 import sys,os,json
 import time
-from utils import sendLog
-import socket
 
 # JIRA requires a peculiar combination of package versions sometimes
 # Github issue: https://github.com/CMSCompOps/WmAgentScripts/issues/454
@@ -12,7 +10,7 @@ except ImportError as e:
     cmd1 = 'sudo yum remove python-requests python-urllib3 -y' 
     cmd2 = 'sudo pip install --upgrade --force-reinstall requests urllib3'
 
-    print("Error importing jira: {}\nDoing the following commands: \n\t{}\n\t{}".format(str(e),cmd1, cmd2))
+    print(("Error importing jira: {}\nDoing the following commands: \n\t{}\n\t{}".format(str(e),cmd1, cmd2)))
     cmd1out, cmd1err = Popen(cmd1, shell=True, stderr=PIPE, stdout=PIPE).communicate()
     print(cmd1out)
     print(cmd1err)
@@ -32,7 +30,7 @@ class JIRAClient:
         cookie = os.environ.get('JIRA_SSO_COOKIE', cookie)
         cookies = {}
         try:
-            print "using cookie from", cookie
+            print("using cookie from", cookie)
             for l in open(cookie,'r').read().split('\n'):
                 try:
                     s = l.split()
@@ -41,11 +39,11 @@ class JIRAClient:
                 except:
                     pass
         except:
-            print cookie,"is not a file?"
-            print "run cern-get-sso-cookie -u https://its.cern.ch/jira/loginCern.jsp -o %s --krb, or something like that"%cookie
+            print(cookie,"is not a file?")
+            print("run cern-get-sso-cookie -u https://its.cern.ch/jira/loginCern.jsp -o %s --krb, or something like that"%cookie)
         #print cookies
         if not cookies:
-            print "That ain't going to work out"
+            print("That ain't going to work out")
             sys.exit(1)
         self.client = jira.JIRA('https://its.cern.ch/jira' , options = {'cookies':  cookies})
 
@@ -125,7 +123,7 @@ class JIRAClient:
         if priority:
             fields['priority'] = {'id' : priority}
 
-        print fields
+        print(fields)
         if do:
             i = self.client.create_issue( fields) 
             return i
@@ -182,15 +180,15 @@ class JIRAClient:
               }.get( status , None)
         if to:
             try:
-                print jid,"to",status
+                print(jid,"to",status)
                 self.client.transition_issue( jid, to)
                 return True
             except Exception as e:
-                print "transition to",status,"not successful"
-                print str(e)
+                print("transition to",status,"not successful")
+                print(str(e))
                 return False
         else:
-            print "transition to",status,"not known"
+            print("transition to",status,"not known")
         return False
 
     def progress(self, jid):
@@ -206,10 +204,10 @@ if __name__ == "__main__":
     JC = JIRAClient(cookie = 'jira.txt')
     
     i= JC.get('CMSCOMPPR-4516')
-    print i.fields.summary
+    print(i.fields.summary)
 
     ii = JC.find({'prepid' : 'SUS-RunIISummer16MiniAODv3-00261'})
-    print [io.key for io in ii]
+    print([io.key for io in ii])
 
     #JC.reopen('CMSCOMPPR-4518')
     #JC.progress('CMSCOMPPR-4518')
@@ -224,4 +222,4 @@ if __name__ == "__main__":
     
     ii = JC.find({'summary' : 'vocms0253.cern.ch heartbeat issues'})
 
-    print [time.asctime(time.gmtime(JC.created(io))) for io in sorted(ii, key=lambda o:JC.created(o))]
+    print([time.asctime(time.gmtime(JC.created(io))) for io in sorted(ii, key=lambda o:JC.created(o))])
