@@ -1,22 +1,18 @@
 #!/usr/bin/env python
-from .assignSession import *
-from .utils import workflowInfo, sendEmail, componentInfo, campaignInfo, unifiedConfiguration, siteInfo, sendLog, setDatasetStatus, moduleLock, invalidate, wtcInfo
-from .utils import closeoutInfo, userLock, base_eos_dir, getFailedJobs
-from . import reqMgrClient
-from . import wtcClient
+from assignSession import *
+from utils import workflowInfo, componentInfo, unifiedConfiguration, siteInfo, sendLog, moduleLock, invalidate, wtcInfo
+from utils import userLock, base_eos_dir, getFailedJobs
+import reqMgrClient
+import wtcClient
 import json
 import optparse
 import copy
-from collections import defaultdict
-import re
 import os
-from .utils import reqmgr_url
-import http.client
-import ssl
+from utils import reqmgr_url
 import sys
 import random
-from .wtcClient import wtcClient
-from .JIRAClient import JIRAClient
+from wtcClient import wtcClient
+from JIRAClient import JIRAClient
 
 
 def singleRecovery(url, task, initial, actions, do=False, priority_change=False):
