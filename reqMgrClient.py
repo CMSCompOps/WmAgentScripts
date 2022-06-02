@@ -6,16 +6,16 @@
 """
 
 import copy
-import httplib
+import http.client
 import json
 import optparse
 import os
 import re
 import sys
 import time
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
-import dbs3Client as dbs3
+from . import dbs3Client as dbs3
 
 # default headers for PUT and POST methods
 def_headers={"Content-type": "application/json", "Accept": "application/json"}
@@ -243,7 +243,7 @@ class WorkflowWithInput(Workflow):
             runLumis = self.info['LumiList']
             if runLumis:
                 total = 0
-                for run, lumiList in runLumis.items():
+                for run, lumiList in list(runLumis.items()):
                     total += sum(l2 - l1 + 1 for l1, l2 in lumiList)
                 return total
             return 0
@@ -336,7 +336,7 @@ def requestManagerGet(url, request, retries=4):
     request: the request suffix url
     retries: number of retries
     """
-    conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+    conn  =  http.client.HTTPSConnection(url, cert_file = CERT_FILE,
                                             key_file = KEY_FILE)
     headers = {"Accept": "application/json"}
     r1=conn.request("GET",request, headers=headers)
@@ -344,7 +344,7 @@ def requestManagerGet(url, request, retries=4):
     request = json.loads(r2.read())  
     #try until no exception
     while 'exception' in request and retries > 0:
-        conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+        conn  =  http.client.HTTPSConnection(url, cert_file = CERT_FILE,
                                                 key_file = KEY_FILE)
         r1=conn.request("GET",request, headers=headers)
         r2=conn.getresponse()
@@ -376,9 +376,9 @@ def requestManager1Post(url, request, params, head = def_headers1, nested=False)
         jsonEncodedParams ={}
         for pKey in params:
             jsonEncodedParams[pKey] = json.dumps(params[pKey])
-        encodedParams = urllib.urlencode(jsonEncodedParams)
+        encodedParams = urllib.parse.urlencode(jsonEncodedParams)
     else:
-        encodedParams = urllib.urlencode(params)
+        encodedParams = urllib.parse.urlencode(params)
     
     data, status = _post(url, request, encodedParams, head, encode=None)
     return data
@@ -395,14 +395,14 @@ def requestManagerPost(url, request, params, head = def_headers):
     data, status = _post(url, request, params, head, encode=json.dumps)
     return data
 
-def _put(url, request, params, head=def_headers, encode=urllib.urlencode):
+def _put(url, request, params, head=def_headers, encode=urllib.parse.urlencode):
     return _httpsRequest("PUT", url, request, params, head, encode)
 
-def _post(url, request, params, head=def_headers, encode=urllib.urlencode):
+def _post(url, request, params, head=def_headers, encode=urllib.parse.urlencode):
     return _httpsRequest("POST", url, request, params, head, encode)
 
 def _httpsRequest(verb, url, request, params, head, encode):
-    conn  =  httplib.HTTPSConnection(url, cert_file = CERT_FILE,
+    conn  =  http.client.HTTPSConnection(url, cert_file = CERT_FILE,
                                     key_file = KEY_FILE)
     headers = head
     if encode:
@@ -445,7 +445,7 @@ def getWorkflowWorkload(url, workflow, retries=4):
     """
     Gets the workflow loaded, splitted by lines.
     """
-    print "getWorkflowWorkload is Deprecated"
+    print("getWorkflowWorkload is Deprecated")
     return None
 
 def getWorkflowInfo(url, workflow):
@@ -460,7 +460,7 @@ def getWorkflowInfo(url, workflow):
         except:
             time.sleep(1)
             retries -=1
-            print "Retrieving workflow information from ReqMgr2..."
+            print("Retrieving workflow information from ReqMgr2...")
     return None
 
 def isRequestMgr2Request(url, workflow):
@@ -770,7 +770,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
     defaults["RequestName"] = workflowname
     defaults["RequestStatus"] = 'assigned'
 
-    from utils import workflowInfo
+    from .utils import workflowInfo
 
     wf = workflowInfo(url, workflowname)
 
@@ -795,7 +795,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
     if not set(assignWorkflow.mandatories).issubset( set(parameters.keys())):
         assignWorkflow.errorMessage = "There are missing parameters\n"
         assignWorkflow.errorMessage += str(list(set(assignWorkflow.mandatories) - set(parameters.keys())))
-        print assignWorkflow.errorMessage
+        print(assignWorkflow.errorMessage)
         return False
 
 
@@ -812,7 +812,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
         #defaults['SiteBlacklist'] = []
         if not defaults['SiteWhitelist']:
             assignWorkflow.errorMessage = "Cannot assign with no site whitelist"
-            print assignWorkflow.errorMessage
+            print(assignWorkflow.errorMessage)
             return False
 
 
@@ -830,20 +830,20 @@ def assignWorkflow(url, workflowname, team, parameters ):
                                    "splittingTask" : '/%s/%s'%(workflowname,t),
                                    "events_per_job": par,
                                    "splittingAlgo":"EventBased"})
-                    print setWorkflowSplitting(url, workflowname, params)
+                    print(setWorkflowSplitting(url, workflowname, params))
             elif aux == 'EventsPerLumi':
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
                 params = wf.getSplittings()[0]
                 if wf.request['RequestType']  == 'StepChain':
-                    print "Ignoring changing eventsperlumi in stepchain"
+                    print("Ignoring changing eventsperlumi in stepchain")
                     continue
                 if params['splittingAlgo'] != 'EventBased': 
-                    print "Ignoring changing events per lumi for",params['splittingAlgo']
+                    print("Ignoring changing events per lumi for",params['splittingAlgo'])
                     continue
                 (_,prim,_,_) = wf.getIO()
                 if prim:
-                    print "Ignoring changing events per lumi for wf that take input"
+                    print("Ignoring changing events per lumi for wf that take input")
                     continue
 
                 if str(par).startswith('x'):
@@ -858,7 +858,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 params.update({"requestName":workflowname,
                                "splittingTask" : '/%s/%s'%(workflowname,t),
                                "events_per_lumi": par})
-                print setWorkflowSplitting(url, workflowname, params)
+                print(setWorkflowSplitting(url, workflowname, params))
             elif aux == 'SplittingAlgorithm':
                 wf = workflowInfo(url, workflowname)
                 ### do it for all major tasks
@@ -875,8 +875,8 @@ def assignWorkflow(url, workflowname, team, parameters ):
                 #swap values
                 if "avg_events_per_job" in params and not "events_per_job" in params:
                     params['events_per_job' ] = params.pop('avg_events_per_job')
-                print params
-                print setWorkflowSplitting(url, workflowname, params)
+                print(params)
+                print(setWorkflowSplitting(url, workflowname, params))
             elif aux == 'LumisPerJob': 
                 wf = workflowInfo(url, workflowname)
                 t = wf.firstTask()
@@ -886,29 +886,29 @@ def assignWorkflow(url, workflowname, team, parameters ):
                           "lumis_per_job" : int(par),
                           "halt_job_on_file_boundaries" : True,
                           "splittingAlgo" : "LumiBased"}
-                print setWorkflowSplitting(url, workflowname, params)
+                print(setWorkflowSplitting(url, workflowname, params))
             elif aux == 'AverageEventsPerJob':
                 wf = workflowInfo(url, workflowname)
                 return False
             else:
-                print "No action for ",aux
+                print("No action for ",aux)
 
     if not 'execute' in defaults or not defaults['execute']:
         assignWorkflow.errorMessage = json.dumps( defaults ,indent=2)
-        print assignWorkflow.errorMessage
+        print(assignWorkflow.errorMessage)
         return False
     else:
         defaults.pop('execute')
-        print "These are the parameters to be used"
-        print json.dumps( defaults ,indent=2)
+        print("These are the parameters to be used")
+        print(json.dumps( defaults ,indent=2))
         
 
     res = setWorkflowAssignment(url, workflowname, defaults)
     if res:
-        print 'Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team
+        print('Assigned workflow:',workflowname,'to site:',defaults['SiteWhitelist'],'and team',team)
         return True
     else:
-        print "error in assigning",workflowname
+        print("error in assigning",workflowname)
         assignWorkflow.errorMessage = setWorkflowAssignment.errorMessage
         return False
 
@@ -957,7 +957,7 @@ assignWorkflow.auxiliaries = [ 'SplittingAlgorithm',
                                'LumisPerJob',
                                ]
 
-assignWorkflow.keys = assignWorkflow.mandatories+assignWorkflow.defaults.keys() + assignWorkflow.auxiliaries
+assignWorkflow.keys = assignWorkflow.mandatories+list(assignWorkflow.defaults.keys()) + assignWorkflow.auxiliaries
 
 
 def changePriorityWorkflow(url, workflowname, priority):
@@ -1060,14 +1060,14 @@ def setWorkflowRunning(url, workflowname):
 
 def invalidateWorkflow(url, workflowname, current_status=None, cascade=False):
     if not current_status:
-        print "not implemented yet to retrieve the status at that point"
+        print("not implemented yet to retrieve the status at that point")
     
     if current_status in ['assignment-approved','new','completed','closed-out','announced','failed']:
         return rejectWorkflow(url, workflowname, cascade)
     elif current_status in['normal-archived']:
         return rejectArchivedWorkflow(url, workflowname)
     elif current_status in ['aborted','rejected','aborted-completed','aborted-archived','rejected-archived']:
-        print workflowname,"already",current_status
+        print(workflowname,"already",current_status)
         return True
     else:
         return abortWorkflow(url, workflowname, cascade)
@@ -1149,7 +1149,7 @@ def cloneWorkflow(url, workflowname, overrideArgs=None):
     if isRequestMgr2Request(url, workflowname):
         data = requestManagerPost(url, "/reqmgr2/data/request/clone/%s" % workflowname, overrideArgs)
     else:
-        print "cloneWorkflow Does not function in reqmgr1 in this interface. please migrate."
+        print("cloneWorkflow Does not function in reqmgr1 in this interface. please migrate.")
         data = None
     return data
 
@@ -1166,8 +1166,8 @@ def submitWorkflow(url, schema, reqmgr2=True): ## single switch flip
         newwf = json.loads(data)['result'][0]['request']
         return newwf
     except:
-        print "Error in making the request"
-        print data
+        print("Error in making the request")
+        print(data)
         return None
         
 
@@ -1182,7 +1182,7 @@ def reqmgr1_to_2_Splitting(params):
     return [reqmgr2Params]
 
 def reqmgr2_to_1_Splitting(params):
-    if len(params)>1: print "cannot set multiple splitting in reqmgr1 at once : truncating. please migrate."
+    if len(params)>1: print("cannot set multiple splitting in reqmgr1 at once : truncating. please migrate.")
     params = params[0]
     reqmgr1Params = {}
     reqmgr1Params["splittingTask"] = params["taskName"]
@@ -1199,13 +1199,13 @@ def setWorkflowSplitting(url, workflowname, schema):
 
     if isRequestMgr2Request(url, workflowname):
         if ifOldSchema(schema):
-            print "old splitting format detected : translating. please migrate."
+            print("old splitting format detected : translating. please migrate.")
             schema = reqmgr1_to_2_Splitting(schema)
-        print "post to reqmgr2"
+        print("post to reqmgr2")
         data = requestManagerPost(url, "/reqmgr2/data/splitting/%s"%workflowname, schema)
     else:
         if not ifOldSchema(schema):
-            print "new schema to reqmgr1 detected: translating. please drain."
+            print("new schema to reqmgr1 detected: translating. please drain.")
             schema = reqmgr2_to_1_Splitting(schema)
         data = requestManager1Post(url,"/reqmgr/view/handleSplittingPage", schema)
     #print data
@@ -1214,17 +1214,17 @@ def setWorkflowSplitting(url, workflowname, schema):
     try:
         res = json.loads( data )
     except Exception as e:
-        print "setWorkflowSplitting has failed to update. exiting"
-        print str(e)
-        print data
+        print("setWorkflowSplitting has failed to update. exiting")
+        print(str(e))
+        print(data)
         sys.exit(1)
 
     return data
 
 def reqmgr1_to_2_Assignment( params ):
     teams = []
-    for key, value in params.iteritems():
-        if isinstance(value, basestring):
+    for key, value in params.items():
+        if isinstance(value, str):
             params[key] = value.strip()
         if key.startswith("Team"):
             if key[4:]: teams.append(key[4:])
@@ -1263,29 +1263,29 @@ def setWorkflowAssignment(url, workflowname, schema):
     """
     setWorkflowAssignment.errorMessage = ""
     def isOldSchema(schema):
-        return any([k.startswith('checkbox') for k in schema.keys()])
+        return any([k.startswith('checkbox') for k in list(schema.keys())])
 
     if isRequestMgr2Request(url, workflowname):
         if isOldSchema(schema):
-            print "old schema detected : translating. please migrate."
+            print("old schema detected : translating. please migrate.")
             schema = reqmgr1_to_2_Assignment(schema)
         data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, schema)
         try:
             ok = any(ro[workflowname]=='OK' for ro in json.loads( data )['result'] if workflowname in ro)
             return ok
         except:
-            print data
+            print(data)
             setWorkflowAssignment.errorMessage = data
             return False
     else:
         if not isOldSchema(schema):
-            print "new schema to reqmgr1 detected : translating. please drain."
+            print("new schema to reqmgr1 detected : translating. please drain.")
             schema = reqmgr2_to_1_Assignment(schema)
         data = requestManager1Post(url, "/reqmgr/assign/handleAssignmentPage", schema, nested=True)
         if 'Assigned' in data:
             return True
         else:
-            print data
+            print(data)
             setWorkflowAssignment.errorMessage = data
             return False
     return data
@@ -1357,8 +1357,8 @@ def setStatusToStaged(url, workflowname, cascade=False):
         try:
             data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
         except Exception as e:
-            print "ERROR:"
-            print e
+            print("ERROR:")
+            print(e)
 
         try:
             return None if (json.loads(data)['result'][0][workflowname] == 'OK') else "Error"
@@ -1390,13 +1390,13 @@ if __name__ == "__main__":
     schema = json.loads(open(options.json).read())
     if "createRequest" in schema: schema = schema["createRequest"]
     
-    print json.dumps( schema ,indent=2)
+    print(json.dumps( schema ,indent=2))
     if not options.test:
         new_wf = submitWorkflow(url, schema)
         if not new_wf:
-            print "Issue in making the request"
+            print("Issue in making the request")
             sys.exit(1)
-        print "Created:",new_wf
+        print("Created:",new_wf)
         if not options.no_approve:
             r = setWorkflowApproved(url, new_wf)
-            print r
+            print(r)
