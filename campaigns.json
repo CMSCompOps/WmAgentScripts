@@ -3284,15 +3284,6 @@
     ], 
     "fractionpass": 1, 
     "go": true, 
-    "labels": [
-      "PHATTEST", 
-      "25Jul2019", 
-      "27May2019", 
-      "29Jun2019", 
-      "UL17", 
-      "ForPixelALCARECO_UL2017", 
-      "09Aug2019"
-    ], 
     "lumisize": -1, 
     "maxcopies": 1, 
     "overflow": {
