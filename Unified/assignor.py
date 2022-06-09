@@ -4,7 +4,6 @@ import reqMgrClient
 from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_pub_dir, monitor_dir, global_SI
 from utils import getDatasetEventsPerLumi, getLFNbase, lockInfo, do_html_in_each_module
 from utils import componentInfo, sendEmail, sendLog, getWorkflows, eosRead
-#from utils import lockInfo
 from utils import moduleLock
 import optparse
 from htmlor import htmlor
@@ -40,18 +39,18 @@ def assignor(url ,specific = None, talk=True, options=None):
 
 
     if options.early:
-        print "Option Early is on"
+        print("Option Early is on")
 
     fetch_from.extend(['staged'])
 
     if options.from_status:
         fetch_from = options.from_status.split(',')
-        print "Overriding to read from",fetch_from
+        print("Overriding to read from",fetch_from)
 
     for status in fetch_from:
-        print "getting wf in",status
+        print("getting wf in",status)
         wfos.extend(session.query(Workflow).filter(Workflow.status==status).all())
-        print len(wfos)
+        print(len(wfos))
 
     ## in case of partial, go for fetching a list from json ?
     #if options.partial and not specific:
@@ -90,11 +89,11 @@ def assignor(url ,specific = None, talk=True, options=None):
             break
 
         if specific:
-            if not any(map(lambda sp: sp in wfo.name, specific.split(','))): continue
+            if not any([sp in wfo.name for sp in specific.split(',')]): continue
             #if not specific in wfo.name: continue
 
         if not options.manual and 'rucio' in (wfo.name).lower(): continue
-        print "\n\n"
+        print("\n\n")
         wfh = workflowInfo( url, wfo.name)
 
         try:
@@ -189,7 +188,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 session.commit()
                 continue
             else:
-                print wfo.name,wfh.request['RequestStatus']
+                print(wfo.name,wfh.request['RequestStatus'])
 
         ## retrieve from the schema, dbs and reqMgr what should be the next version
         version=wfh.getNextVersion()
@@ -317,7 +316,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         else:
             sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
             
-        print "available=",SI.disk[sites_out[0]]    
+        print("available=",SI.disk[sites_out[0]])    
         wfh.sendLog('assignor',"Placing the output on %s"%sites_out)
         parameters={
             'SiteWhitelist' : sites_allowed,
@@ -360,7 +359,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                     v=getattr(options,key)
                     if v!=None:
                         if type(v)==str and ',' in v: 
-                            parameters[key] = filter(None,v.split(','))
+                            parameters[key] = [_f for _f in v.split(',') if _f]
                         else: 
                             parameters[key] = v
 
@@ -458,19 +457,19 @@ def assignor(url ,specific = None, talk=True, options=None):
                         LI.lock( secure, reason = 'assigning')
 
                 except Exception as e:
-                    print "fail in locking output"
+                    print("fail in locking output")
                     
-                    print str(e)
+                    print(str(e))
                     sendEmail("failed locking of output",str(e))
 
 
             else:
                 wfh.sendLog('assignor',"Failed to assign %s.\n%s \n Please check the logs"%(wfo.name, reqMgrClient.assignWorkflow.errorMessage))
                 sendLog('assignor',"Failed to assign %s.\n%s \n Please check the logs"%(wfo.name, reqMgrClient.assignWorkflow.errorMessage), level='critical')
-                print "ERROR could not assign",wfo.name
+                print("ERROR could not assign",wfo.name)
         else:
             pass
-    print "Assignment summary:"
+    print("Assignment summary:")
     sendLog('assignor',"Assigned %d Stalled %s"%(n_assigned, n_stalled))
     if n_stalled and not options.go and not options.early:
         sendLog('assignor',"%s workflows cannot be assigned. Please take a look"%(n_stalled), level='critical')

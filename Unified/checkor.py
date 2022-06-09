@@ -18,7 +18,7 @@ from RucioClient import RucioClient
 from McMClient import McMClient
 from JIRAClient import JIRAClient
 from htmlor import htmlor
-from utils import sendEmail 
+from utils import sendEmail
 from utils import closeoutInfo
 from showError import parse_one, showError_options
 import threading
@@ -87,15 +87,15 @@ def checkor(url, spec=None, options=None):
         now = time.mktime(time.gmtime())
         nows = time.asctime(time.gmtime())
 
-        print "[checkor] Time check (%s) point at : %s"%(label, nows)
+        print("[checkor] Time check (%s) point at : %s"%(label, nows))
         if percent:
-            print "[checkor] finishing in about %.2f [s]" %( (now - time_point.start) / percent )
-        print "[checkor] Since start: %s [s]"% ( now - time_point.start)
+            print("[checkor] finishing in about %.2f [s]" %( (now - time_point.start) / percent ))
+        print("[checkor] Since start: %s [s]"% ( now - time_point.start))
         if sub_lap:
-            print "[checkor] Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
+            print("[checkor] Sub Lap : %s [s]"% ( now - time_point.sub_lap )) 
             time_point.sub_lap = now
         else:
-            print "[checkor] Lap : %s [s]"% ( now - time_point.lap ) 
+            print("[checkor] Lap : %s [s]"% ( now - time_point.lap )) 
             time_point.lap = now            
             time_point.sub_lap = now
 
@@ -112,25 +112,25 @@ def checkor(url, spec=None, options=None):
 
     if options.strict:
         ## the one which were running and now have completed
-        print "strict option is on: checking workflows that freshly completed"
-        wfs.extend( filter(lambda wfo: wfo.name in all_completed , runnings))
+        print("strict option is on: checking workflows that freshly completed")
+        wfs.extend( [wfo for wfo in runnings if wfo.name in all_completed])
     if options.update:
-        print "update option is on: checking workflows that have not completed yet"
-        wfs.extend( filter(lambda wfo: not wfo.name in all_completed , runnings))
+        print("update option is on: checking workflows that have not completed yet")
+        wfs.extend( [wfo for wfo in runnings if not wfo.name in all_completed])
 
     if options.clear: 
-        print "clear option is on: checking workflows that are ready to toggle closed-out"
-        wfs.extend( filter(lambda wfo: 'custodial' in wfo.status, standings))
+        print("clear option is on: checking workflows that are ready to toggle closed-out")
+        wfs.extend( [wfo for wfo in standings if 'custodial' in wfo.status])
     if options.review:
         #print "review option is on: checking the workflows that needed intervention"
-        these = filter(lambda wfo: not 'custodial' in wfo.status, standings)
+        these = [wfo for wfo in standings if not 'custodial' in wfo.status]
         if options.recovering:
-            print "review-recovering is on: checking only the workflows that had been already acted on"
-            these = filter(lambda wfo: not 'manual' in wfo.status, these)
+            print("review-recovering is on: checking only the workflows that had been already acted on")
+            these = [wfo for wfo in these if not 'manual' in wfo.status]
             wfs.extend( these )
         if options.manual:
-            print "review-manual is on: checking the workflows to be acted on"
-            these = filter(lambda wfo: 'manual' in wfo.status, these)
+            print("review-manual is on: checking the workflows to be acted on")
+            these = [wfo for wfo in these if 'manual' in wfo.status]
             wfs.extend( these )
 
 
@@ -149,26 +149,26 @@ def checkor(url, spec=None, options=None):
 
     WI = wtcInfo()
     actors = [a for a,_ in UC.get('allowed_bypass')]
-    for user,extending in WI.getHold().items():
+    for user,extending in list(WI.getHold().items()):
         if not user in actors:
-            print user,"is not allowed to hold"
+            print(user,"is not allowed to hold")
             continue
-        print user,"is holding",extending
+        print(user,"is holding",extending)
         holdings.extend( extending )
 
-    for user,extending in WI.getBypass().items():
+    for user,extending in list(WI.getBypass().items()):
         if not user in actors:
-            print user,"is not allowed to bypass"
+            print(user,"is not allowed to bypass")
             continue
-        print user,"is bypassing",extending
+        print(user,"is bypassing",extending)
         bypasses.extend( extending )
         
     overrides = defaultdict(list)
-    for user,extending in WI.getForce().items():
+    for user,extending in list(WI.getForce().items()):
         if not user in actors:
-            print user,"is not allowed to force complete"
+            print(user,"is not allowed to force complete")
             continue
-        print user,"is force-completing",extending
+        print(user,"is force-completing",extending)
         bypasses.extend( extending )
         overrides[user].extend(extending)
 
@@ -183,7 +183,7 @@ def checkor(url, spec=None, options=None):
                     prepid = jira.fields.summary.split()[0]
                     keyword = c.body[(c.body.find(force_complete_jira_string)+len(force_complete_jira_string)):].split()[0]
                     if keyword and user in actors:
-                        print user,"is force-completing", keyword,"from JIRA"
+                        print(user,"is force-completing", keyword,"from JIRA")
                         bypasses.append( keyword )
                         overrides[user].append( keyword )
                     break
@@ -197,7 +197,7 @@ def checkor(url, spec=None, options=None):
                     prepid = jira.fields.summary.split()[0]
                     keyword = c.body[(c.body.find(bypass_jira_string)+len(bypass_jira_string)):].split()[0]
                     if keyword and user in actors:
-                        print user,"is bypassing", keyword,"from JIRA"
+                        print(user,"is bypassing", keyword,"from JIRA")
                         bypasses.append( keyword )
                     break
                     
@@ -207,7 +207,7 @@ def checkor(url, spec=None, options=None):
         if not forcings: forcings = []
     
     ## remove empty entries ...
-    bypasses = filter(None, bypasses)
+    bypasses = [_f for _f in bypasses if _f]
 
     #pattern_fraction_pass = UC.get('pattern_fraction_pass')
     #cumulative_fraction_pass = UC.get('cumulative_fraction_pass')
@@ -223,13 +223,13 @@ def checkor(url, spec=None, options=None):
     ## now you have a record of what file was invalidated globally from TT
     TMDB_invalid = dataCache.get('file_invalidation') 
 
-    print "considering",len(wfs),"before any limitation"
+    print("considering",len(wfs),"before any limitation")
     max_per_round = UC.get('max_per_round').get('checkor',None)
     if options.limit: 
-        print "command line to limit to",options.limit
+        print("command line to limit to",options.limit)
         max_per_round=options.limit
     if max_per_round and not spec: 
-        print "limiting to",max_per_round,"this round"
+        print("limiting to",max_per_round,"this round")
         """
         ##should be ordering by priority if you can
         ## order wfs with rank of wfname
@@ -288,7 +288,7 @@ def checkor(url, spec=None, options=None):
     while run_threads.is_alive():
         time.sleep(5)
 
-    print len(run_threads.threads),"finished thread to gather information from"
+    print(len(run_threads.threads),"finished thread to gather information from")
 
     ## then wrap up from the threads
     failed_threads = 0
@@ -313,7 +313,7 @@ def checkor(url, spec=None, options=None):
                         mcm.delete('/restapi/requests/forcecomplete/%s'%pid)
 
         if to.custodials:
-            for site,items in to.custodials.items():
+            for site,items in list(to.custodials.items()):
                 custodials[site].extend( items )
     n_wfs = len(run_threads.threads)
     if n_wfs and float(failed_threads/n_wfs) > 0:
@@ -322,13 +322,13 @@ def checkor(url, spec=None, options=None):
         sendEmail('checkor','%d/%d threads have failed, better check this out'% (failed_threads,n_wfs))
 
     ## conclude things, the good old way
-    print report_created,"reports created in this run"
+    print(report_created,"reports created in this run")
 
     ## warn us if the process took a bit longer than usual
     if wfs:
         now = time.mktime(time.gmtime())
         time_spend_per_workflow = float(now - time_point.start)/ float( float(len(wfs)))
-        print "Average time spend per workflow is", time_spend_per_workflow
+        print("Average time spend per workflow is", time_spend_per_workflow)
         ## set a threshold to it
         if time_spend_per_workflow > 120:
             sendLog('checkor','The module checkor took %.2f [s] per workflow'%( time_spend_per_workflow), level='critical')
@@ -351,12 +351,12 @@ def checkor(url, spec=None, options=None):
         #sendEmail("fresh assistance status available","Fresh status are available at %s/assistance.html\n%s"%(unified_url, some_details),destination=['katherine.rozo@cern.ch'])
         pass
 
-    print "File Invalidation"
-    print invalidations
+    print("File Invalidation")
+    print(invalidations)
 
     ## a hook to halt checkor nicely at this stage
     if os.path.isfile('.checkor_stop'):
-        print "The loop on workflows was shortened"
+        print("The loop on workflows was shortened")
         sendEmail('checkor','Checkor loop was shortened artificially using .checkor_stop')
         os.system('rm -f .checkor_stop')
 
@@ -367,7 +367,7 @@ class CheckBuster(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
         ## a bunch of other things
-        for k,v in args.items():
+        for k,v in list(args.items()):
             setattr(self, k, v)
         
         ## actions
@@ -398,7 +398,7 @@ class CheckBuster(threading.Thread):
 
         ## a hook to halt checkor nicely at this stage
         if os.path.isfile('.checkor_stop'):
-            print "The check on workflows is shortened"
+            print("The check on workflows is shortened")
             return
 
         UC = self.UC
@@ -435,15 +435,15 @@ class CheckBuster(threading.Thread):
             now = time.mktime(time.gmtime())
             nows = time.asctime(time.gmtime())
 
-            print "[checkor] Time check (%s) point at : %s"%(label, nows)
+            print("[checkor] Time check (%s) point at : %s"%(label, nows))
             if percent:
-                print "[checkor] finishing in about %.2f [s]" %( (now - time_point.start) / percent )
-            print "[checkor] Since start: %s [s]"% ( now - time_point.start)
+                print("[checkor] finishing in about %.2f [s]" %( (now - time_point.start) / percent ))
+            print("[checkor] Since start: %s [s]"% ( now - time_point.start))
             if sub_lap:
-                print "[checkor] Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
+                print("[checkor] Sub Lap : %s [s]"% ( now - time_point.sub_lap )) 
                 time_point.sub_lap = now
             else:
-                print "[checkor] Lap : %s [s]"% ( now - time_point.lap ) 
+                print("[checkor] Lap : %s [s]"% ( now - time_point.lap )) 
                 time_point.lap = now            
                 time_point.sub_lap = now
 
@@ -453,7 +453,7 @@ class CheckBuster(threading.Thread):
 
         time_point("Starting checkor with %s Progress [%d/%d]"% (wfo.name, iwfo, will_do_that_many), percent = float(iwfo)/will_do_that_many)
         usage = checkMemory()
-        print "memory so far",usage
+        print("memory so far",usage)
 
         ## get info
         wfi = workflowInfo(url, wfo.name)
@@ -523,10 +523,10 @@ class CheckBuster(threading.Thread):
                     force_by_user = True
                     break
 
-        delays = [ (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 for completed_log in [filter(lambda change : change["Status"] in ["completed"], m['RequestTransition']) for m in wfi.getFamilly(details=True,and_self=True)]]
-        delays = filter(None, delays)
+        delays = [ (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 for completed_log in [[change for change in m['RequestTransition'] if change["Status"] in ["completed"]] for m in wfi.getFamilly(details=True,and_self=True)]]
+        delays = [_f for _f in delays if _f]
         min_completed_delays = min(delays) ## take the shortest time since a member of the familly completed
-        completed_log = filter(lambda change : change["Status"] in ["completed"],wfi.request['RequestTransition'])
+        completed_log = [change for change in wfi.request['RequestTransition'] if change["Status"] in ["completed"]]
         delay = (now_s - completed_log[-1]['UpdateTime']) / (60.*60.*24.) if completed_log else 0 ## in days
         completed_delay = delay ## this is for the workflow itself
         #onhold_completed_delay = delay
@@ -534,7 +534,7 @@ class CheckBuster(threading.Thread):
         onhold_timeout = UC.get('onhold_timeout')
 
         if '-onhold' in wfo.status:
-            print "onhold since",onhold_completed_delay,"timeout at",onhold_timeout
+            print("onhold since",onhold_completed_delay,"timeout at",onhold_timeout)
             if onhold_timeout>0 and onhold_timeout<onhold_completed_delay:
                 bypass_checks = True
                 wfi.sendLog('checkor',"%s is on hold and stopped for %.2f days, letting this through with current statistics"%( wfo.name, onhold_completed_delay))
@@ -570,7 +570,7 @@ class CheckBuster(threading.Thread):
             for out in campaigns:
                 campaigns[out] = wf_campaigns[0]
 
-        for out,c in campaigns.items():
+        for out,c in list(campaigns.items()):
             if c in CI.campaigns and 'custodial_override' in CI.campaigns[c]:
                 if type(CI.campaigns[c]['custodial_override'])==list:
                     vetoed_custodial_tier = list(set(vetoed_custodial_tier) - set(CI.campaigns[c]['custodial_override']))
@@ -579,7 +579,7 @@ class CheckBuster(threading.Thread):
                 elif CI.campaigns[c]['custodial_override'] == 'notape':
                     vetoed_custodial_tier = sorted(set([o.split('/')[-1] for o in wfi.request['OutputDatasets'] ]))
 
-        print campaigns
+        print(campaigns)
 
         check_output_text = "Initial outputs:"+",".join(sorted(wfi.request['OutputDatasets'] ))
         wfi.request['OutputDatasets'] = [ out for out in wfi.request['OutputDatasets'] if not any([out.split('/')[-1] == veto_tier for veto_tier in tiers_with_no_check])]
@@ -623,7 +623,7 @@ class CheckBuster(threading.Thread):
                     acdc_order = max( irank, acdc_order )
 
             if member['RequestStatus'] in ['running-open','running-closed','assigned','acquired','staging','staged']:
-                print wfo.name,"still has an ACDC running",member['RequestName']
+                print(wfo.name,"still has an ACDC running",member['RequestName'])
                 acdc.append( member['RequestName'] )
                 ## cannot be bypassed!
                 is_closing = False
@@ -663,7 +663,7 @@ class CheckBuster(threading.Thread):
         event_expected_per_task = {} 
         output_per_task = wfi.getOutputPerTask()
         task_outputs = {}
-        for task,outs in output_per_task.items():
+        for task,outs in list(output_per_task.items()):
             for out in outs:
                 #task_outputs[out] = task
                 task_outputs[out] = wfi.request.get(task,{}).get('TaskName',task)
@@ -712,14 +712,14 @@ class CheckBuster(threading.Thread):
                 else:
                     break
         
-        print event_expected_per_task
-        print task_outputs
+        print(event_expected_per_task)
+        print(task_outputs)
         time_point("expected statistics", sub_lap=True)
 
-        running_log = filter(lambda change : change["Status"] in ["running-open","running-closed"],wfi.request['RequestTransition'])
+        running_log = [change for change in wfi.request['RequestTransition'] if change["Status"] in ["running-open","running-closed"]]
         running_delay = (now_s - (min(l['UpdateTime'] for l in running_log))) / (60.*60.*24.) if running_log else 0 ## in days        
 
-        print delay,"since completed"
+        print(delay,"since completed")
 
 
         default_fraction_overdoing = UC.get('default_fraction_overdoing')
@@ -747,7 +747,7 @@ class CheckBuster(threading.Thread):
                         tier_pass_content = CI.campaigns[c]['fractionpass'][tier]
                         if type(tier_pass_content) == dict:
                             fractions_pass[output] = CI.campaigns[c]['fractionpass'][tier].get('all', default_pass)
-                            for exp,pass_exp in CI.campaigns[c]['fractionpass'][tier].items():
+                            for exp,pass_exp in list(CI.campaigns[c]['fractionpass'][tier].items()):
                                 if output.startswith(exp):
                                     fractions_pass[output] = pass_exp
                         else:
@@ -760,12 +760,12 @@ class CheckBuster(threading.Thread):
 
             if options.fractionpass:
                 fractions_pass[output] = options.fractionpass
-                print "overriding fraction to",fractions_pass[output],"by command line for",output
+                print("overriding fraction to",fractions_pass[output],"by command line for",output)
 
             for key in pattern_fraction_pass:
                 if key in output:
                     fractions_pass[output] = pattern_fraction_pass[key]
-                    print "overriding fraction to",fractions_pass[output],"by dataset key",key
+                    print("overriding fraction to",fractions_pass[output],"by dataset key",key)
 
             pass_percent_below = fractions_pass[output]-0.02
             weight_full = 7.
@@ -781,7 +781,7 @@ class CheckBuster(threading.Thread):
                 wfi.sendLog('checkor', "Can truncate recovery of %s over %.2f"%(out, fractions_truncate_recovery[output]))
 
             if fractions_truncate_recovery[output] < fractions_pass[output]:
-                print "This is not going to end well if you truncate at a lower threshold than passing",fractions_truncate_recovery[output],fractions_pass[output]
+                print("This is not going to end well if you truncate at a lower threshold than passing",fractions_truncate_recovery[output],fractions_pass[output])
                 ## floor truncating
                 fractions_truncate_recovery[output] = fractions_pass[output]
                 ##### OR 
@@ -794,7 +794,7 @@ class CheckBuster(threading.Thread):
         #1% every damping_time days after > timeout_for_damping_fraction in completed. Not more than damping_fraction_pass_max
         #fraction_damping = min(0.01*(max(running_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
         fraction_damping = min(0.01*(max(completed_delay - timeout_for_damping_fraction,0)/damping_time),damping_fraction_pass_max)
-        print "We could reduce the passing fraction by",fraction_damping,"given it's been in for long"
+        print("We could reduce the passing fraction by",fraction_damping,"given it's been in for long")
         long_lasting_choped = False
         for out in fractions_pass:
             if fractions_pass[out]!=1.0 and fraction_damping: ## strictly ones cannot be set less than one
@@ -818,7 +818,7 @@ class CheckBuster(threading.Thread):
 
         #and then make the fraction multiplicative per child
         parentage = {} ## a daugther: parents kind of thing
-        for out in fractions_pass.keys():
+        for out in list(fractions_pass.keys()):
             parentage[out] = findParent( out )
 
         def upward( ns ):
@@ -839,9 +839,9 @@ class CheckBuster(threading.Thread):
             if cumulative_fraction_pass:
                 fractions_pass[out] = descending_pass
                 fractions_truncate_recovery[out] = descending_truncate
-                print "For",out,"previously passing at",initial_pass,"is now passing at",descending_pass
+                print("For",out,"previously passing at",initial_pass,"is now passing at",descending_pass)
             else:
-                print "For",out,"isntead of passing at",initial_pass,"could be done with",descending_pass
+                print("For",out,"isntead of passing at",initial_pass,"could be done with",descending_pass)
 
 
         time_point("statistics thresholds", sub_lap=True)
@@ -893,7 +893,7 @@ class CheckBuster(threading.Thread):
             for p in prim:
                 nr = getDatasetRuns(p)
                 if len(nr)>1:
-                    print "fecthing input lumis and files for",p
+                    print("fecthing input lumis and files for",p)
                     lumis_per_run[p], files_per_rl[p] = getDatasetLumisAndFiles(p, runs = rwl, lumilist = lwl)
                     n_runs = len(set(lumis_per_run[p].keys()))
 
@@ -905,21 +905,21 @@ class CheckBuster(threading.Thread):
                     ## now do a better check of fractions
                     fraction_per_run = {}
                     a_primary = list(prim)[0]
-                    all_runs = sorted(set(lumis_per_run[a_primary].keys() + lumis_per_run[out].keys()))
+                    all_runs = sorted(set(list(lumis_per_run[a_primary].keys()) + list(lumis_per_run[out].keys())))
                     for run in all_runs:
                         denom = lumis_per_run[a_primary].get(run,[])
                         numer = lumis_per_run[out].get(run,[])
                         if denom:
                             fraction_per_run[run] = float(len(numer))/len(denom)
                         else:
-                            print "for run",run,"in output, there isnt any run in input/output..."
+                            print("for run",run,"in output, there isnt any run in input/output...")
                     if fraction_per_run:
                         lowest_fraction = min( fraction_per_run.values())
                         highest_fraction = max( fraction_per_run.values())
-                        average_fraction = sum(fraction_per_run.values())/len(fraction_per_run.values())
-                        print "the lowest completion fraction per run for",out," is",lowest_fraction
-                        print "the highest completion fraction per run for",out," is",highest_fraction
-                        print "the average completion fraction per run for",out," is",average_fraction
+                        average_fraction = sum(fraction_per_run.values())/len(list(fraction_per_run.values()))
+                        print("the lowest completion fraction per run for",out," is",lowest_fraction)
+                        print("the highest completion fraction per run for",out," is",highest_fraction)
+                        print("the average completion fraction per run for",out," is",average_fraction)
                         percent_avg_completions[out] = average_fraction
                         percent_completions[out] = lowest_fraction
                 
@@ -930,7 +930,7 @@ class CheckBuster(threading.Thread):
         pass_stats_check_to_truncate_recovery = dict([(out, (percent_avg_completions[out] >= fractions_truncate_recovery[out])) for out in fractions_truncate_recovery ])
         pass_stats_check_over_completion = dict([(out, (percent_completions[out] >= default_fraction_overdoing)) for out in percent_completions ])
 
-        print "announce checks"
+        print("announce checks")
         should_announce = False
         if pass_stats_check_to_announce and all(pass_stats_check_to_announce.values()):
             wfi.sendLog('checkor',"The output of this workflow are essentially good to be announced while we work on the rest\n%s \n%s"% ( json.dumps( percent_avg_completions , indent =2 ), json.dumps( fractions_announce , indent =2 )))
@@ -964,7 +964,7 @@ class CheckBuster(threading.Thread):
             wfi.sendLog('checkor','passing stats check \nCurrent stats:\n%s \nRequired stats:\n%s'%( json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
 
         if acdc and all(pass_stats_check.values()) and all(pass_stats_check_to_truncate_recovery.values()):
-            print "This is essentially good to truncate"
+            print("This is essentially good to truncate")
 
             wfi.sendLog('checkor','Will force-complete the recovery to speed things up')
             forceComplete(url, wfi)
@@ -988,11 +988,11 @@ class CheckBuster(threading.Thread):
 
             if campaign in CI.campaigns and 'lumisize' in CI.campaigns[campaign]:
                 upper_limit = CI.campaigns[campaign]['lumisize']
-                print "overriding the upper lumi size to",upper_limit,"for",campaign
+                print("overriding the upper lumi size to",upper_limit,"for",campaign)
 
             if options.lumisize:
                 upper_limit = options.lumisize
-                print "overriding the upper lumi size to",upper_limit,"by command line"
+                print("overriding the upper lumi size to",upper_limit,"by command line")
                 
             lumi_upper_limit[output] = upper_limit
             if wfi.request['RequestType'] in ['ReDigi','ReReco']: lumi_upper_limit[output] = -1
@@ -1033,7 +1033,7 @@ class CheckBuster(threading.Thread):
             #   changing the code for the rest of the consistency checks
             rucio_filecount_pb = rucioClient.getFileCountPerBlock(output)
             all_filecount_pb =  set(rucio_filecount_pb)
-            all_blocks = set(map(lambda x: x[0], rucio_filecount_pb))
+            all_blocks = set([x[0] for x in rucio_filecount_pb])
 
             # bellow we will misscount in case there are same blocks in both
             # Rucio and Phedex but with different number of files in the two
@@ -1041,7 +1041,7 @@ class CheckBuster(threading.Thread):
             # will be concidered as two different blocks from the two subsets
             # hence the following check:
             if len(all_blocks) == len(all_filecount_pb):
-                rucio_presence[output] = sum(map(lambda x: x[1], all_filecount_pb))
+                rucio_presence[output] = sum([x[1] for x in all_filecount_pb])
             else:
                 # TODO: to check if we need to rise a higher level of alarm here.
                 msg = "There are inconsistences of number of files per block"
@@ -1052,7 +1052,7 @@ class CheckBuster(threading.Thread):
             del(all_filecount_pb)
             del(all_blocks)
 
-        one_output_not_in_rucio = any([Nfiles==0 for Nfiles in rucio_presence.values()])
+        one_output_not_in_rucio = any([Nfiles==0 for Nfiles in list(rucio_presence.values())])
         if one_output_not_in_rucio and 'announce' in assistance_tags:
             wfi.sendLog('checkor','No files in rucio yet, no good to announce')
             assistance_tags.remove('announce')
@@ -1067,10 +1067,10 @@ class CheckBuster(threading.Thread):
             dbs_invalid[output] = dbs3Client.getFileCountDataset( output, onlyInvalid=True)
 
         ## prepare the check on having a valid subscription to tape
-        out_worth_checking = [out for out in custodial_locations.keys() if out.split('/')[-1] not in vetoed_custodial_tier]
+        out_worth_checking = [out for out in list(custodial_locations.keys()) if out.split('/')[-1] not in vetoed_custodial_tier]
         size_worth_checking = sum([(getDatasetSize(out)/1023. if not wfi.isRelval() else 0.) for out in out_worth_checking ]) ## size in TBs of all outputs
         size_worht_going_to_ddm = sum([getDatasetSize(out)/1023. for out in out_worth_checking if out.split('/')[-1] in to_ddm_tier ]) ## size in TBs of all outputs
-        all_relevant_output_are_going_to_tape = all(map( lambda sites : len(sites)!=0, [custodial_locations[out] for out in out_worth_checking]))
+        all_relevant_output_are_going_to_tape = all([len(sites)!=0 for sites in [custodial_locations[out] for out in out_worth_checking]])
 
         show_N_only = 10 ## number of files to include in a report log
 
@@ -1135,7 +1135,7 @@ class CheckBuster(threading.Thread):
             #files_per_rl[output] = "skiped"
 
         ignoreduplicates ={}
-        for out,c in campaigns.items():
+        for out,c in list(campaigns.items()):
             if c in CI.campaigns and 'ignoreduplicates' in CI.campaigns[c]:
                 ignoreduplicates[out] = CI.campaigns[c]['ignoreduplicates'] or options.ignoreduplicates
             else:
@@ -1144,19 +1144,19 @@ class CheckBuster(threading.Thread):
 
         ## check for duplicates prior to making the tape subscription ## this is quite expensive and we run it twice for each sample
         if (not stop_duplicate_check) and (is_closing or bypass_checks) and (not all_relevant_output_are_going_to_tape):
-            print "starting duplicate checker for",wfo.name
+            print("starting duplicate checker for",wfo.name)
             for output in wfi.request['OutputDatasets']:
                 if (output in ignoreduplicates) and (ignoreduplicates[output]):
-                    print "\tNot checking",output
+                    print("\tNot checking",output)
                     duplications[output] = False
                     continue
-                print "\tchecking",output
+                print("\tchecking",output)
                 duplications[output] = True
                 if not output in lumis_per_run or not output in files_per_rl:
                     lumis_per_run[output], files_per_rl[output] = getDatasetLumisAndFiles(output)
                     fetched[output] = True
 
-                lumis_with_duplicates[output] = [rl for (rl,files) in files_per_rl[output].items() if len(files)>1]
+                lumis_with_duplicates[output] = [rl for (rl,files) in list(files_per_rl[output].items()) if len(files)>1]
                 duplications[output] = len(lumis_with_duplicates[output])!=0 
 
             if is_closing and any(duplications.values()):
@@ -1166,7 +1166,7 @@ class CheckBuster(threading.Thread):
                 #duplicate_notice += '\n'
                 ## TO DO, make the file list invalidation analysis. to find the files with least number of lumis
                 duplicate_notice += "This number of lumis are duplicated\n"
-                duplicate_notice += json.dumps( dict([(o,len(badl)) for o,badl in lumis_with_duplicates.items() ]), indent=2)
+                duplicate_notice += json.dumps( dict([(o,len(badl)) for o,badl in list(lumis_with_duplicates.items()) ]), indent=2)
                 wfi.sendLog('checkor',duplicate_notice)
 
                 bad_files = {}
@@ -1179,10 +1179,10 @@ class CheckBuster(threading.Thread):
                         wfi.sendLog('checkor',duplicate_notice)
                         ## sending the list is not possible
                         duplicate_notice += json.dumps( sorted(bad_files[out]), indent=2)
-                        print duplicate_notice
+                        print(duplicate_notice)
                 
                 ## and invalidate the files in DBS directly witout asking
-                for out,bads in bad_files.items():
+                for out,bads in list(bad_files.items()):
                     if bads:
                         invalidateFiles(bads) ## for full removal
                         dbs3Client.setFileStatus( bads, newstatus=0 ) ## invalidate in dbs in the meantime so that the dataset goes into filemismatch category
@@ -1196,8 +1196,8 @@ class CheckBuster(threading.Thread):
             
         
         if is_closing and not all_relevant_output_are_going_to_tape:
-            print wfo.name,"has not all custodial location"
-            print json.dumps(custodial_locations, indent=2)
+            print(wfo.name,"has not all custodial location")
+            print(json.dumps(custodial_locations, indent=2))
 
             ##########
             ## hook for making a custodial replica ?
@@ -1207,7 +1207,7 @@ class CheckBuster(threading.Thread):
                 if len(custodial_locations[output]): 
                     custodial = custodial_locations[output][0]
             if custodial and float(SI.storage[custodial]) < size_worth_checking:
-                print "cannot use the other output custodial:",custodial,"because of limited space"
+                print("cannot use the other output custodial:",custodial,"because of limited space")
                 custodial = None
 
             ## try to get it from campaign configuration
@@ -1217,17 +1217,17 @@ class CheckBuster(threading.Thread):
                     campaign = campaigns[output]
                     if campaign in CI.campaigns and 'custodial' in CI.campaigns[campaign]:
                         custodial = CI.campaigns[campaign]['custodial']
-                        print "Setting custodial to",custodial,"from campaign configuration"
+                        print("Setting custodial to",custodial,"from campaign configuration")
                         force_custodial = True
 
             group = None
             #phedex_group is a name parameter defined in batchor
             if campaign in CI.campaigns and 'phedex_group' in CI.campaigns[campaign]:
                 group = CI.campaigns[campaign]['phedex_group']
-                print "using group",group,"for replica"
+                print("using group",group,"for replica")
 
             if not force_custodial and custodial and float(SI.storage[custodial]) < size_worth_checking:
-                print "cannot use the campaign configuration custodial:",custodial,"because of limited space"
+                print("cannot use the campaign configuration custodial:",custodial,"because of limited space")
                 custodial = None
 
             ## get from the parent
@@ -1257,7 +1257,7 @@ class CheckBuster(threading.Thread):
 #                    assistance_tags.add('parentcustodial')
                                 
             if not force_custodial and custodial and float(SI.storage[custodial]) < size_worth_checking:
-                print "cannot use the custodial:",custodial,"because of limited space"
+                print("cannot use the custodial:",custodial,"because of limited space")
                 custodial = None
 
             #if not custodial and pick_custodial and not force_custodial:
@@ -1271,7 +1271,7 @@ class CheckBuster(threading.Thread):
 
             if custodial:
                 for output in out_worth_checking:
-                    print output
+                    print(output)
                     if getDatasetSize(output)/1023 > tape_size_limit:
                         wfi.sendLog('checkor',"%s output size (%s TB) is too large for the limit set (%s TB)"%( output, out_worth_checking[output], tape_size_limit))
                         assistance_tags.add('bigoutput')
@@ -1279,7 +1279,7 @@ class CheckBuster(threading.Thread):
 
 
             if not custodial:
-                print "cannot find a custodial for",wfo.name
+                print("cannot find a custodial for",wfo.name)
                 wfi.sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking))
                 sendLog('checkor',"cannot find a custodial for %s probably because of the total output size %d"%( wfo.name, size_worth_checking), level='critical')
 
@@ -1288,7 +1288,7 @@ class CheckBuster(threading.Thread):
             is_closing = False
                 
             if picked_a_tape:
-                print "picked",custodial,"for tape copy"
+                print("picked",custodial,"for tape copy")
                 ## remember how much you added this round already ; this stays locally
                 SI.storage[custodial] -= size_worth_checking
                 ## register the custodial request, if there are no other big issues
@@ -1327,10 +1327,10 @@ class CheckBuster(threading.Thread):
 
         fraction_invalid = 0.20
         if not all([(dbs_invalid[out] <= int(fraction_invalid*dbs_presence[out])) for out in wfi.request['OutputDatasets']]) and not options.ignoreinvalid:
-            print wfo.name,"has a dbs invalid file level too high"
-            print json.dumps(dbs_presence, indent=2)
-            print json.dumps(dbs_invalid, indent=2)
-            print json.dumps(rucio_presence, indent=2)
+            print(wfo.name,"has a dbs invalid file level too high")
+            print(json.dumps(dbs_presence, indent=2))
+            print(json.dumps(dbs_invalid, indent=2))
+            print(json.dumps(rucio_presence, indent=2))
             ## need to be going and taking an eye
             assistance_tags.add('invalidfiles')
             ## no need for holding stuff because of a fraction of invalid files
@@ -1385,7 +1385,7 @@ class CheckBuster(threading.Thread):
                 os.system('python Unified/lumi_plot.py %s > /dev/null'%(wfi.request['PrepID']))
                 wfi.sendLog('checkor','Lumi summary available at %s/datalumi/lumi.%s.html'%(unified_url,wfi.request['PrepID']))
             except Exception as e:
-                print str(e)
+                print(str(e))
         ## make the error report
         
     
@@ -1399,27 +1399,27 @@ class CheckBuster(threading.Thread):
                 try:
                     parse_one(url, wfo.name, so)
                 except Exception as e:
-                    print "Could not make error report for",wfo.name
-                    print "because",str(e)
+                    print("Could not make error report for",wfo.name)
+                    print("because",str(e))
                 
             if not options.test:
                 if wfo.wm_status in ['closed-out','announced','normal-archived']:
-                    print wfo.name,"is already",wfo.wm_status,"not trying to closed-out and assuming it does"
+                    print(wfo.name,"is already",wfo.wm_status,"not trying to closed-out and assuming it does")
                     res = None
                 else:
                     res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
-                    print "close out answer",res
+                    print("close out answer",res)
 
                 if not res in ["None",None]:
-                    print "try to get the current status again"
+                    print("try to get the current status again")
                     wfi_bis = workflowInfo(url, wfo.name)
                     if wfi_bis.request['RequestStatus'] == 'closed-out':
-                        print "the request did toggle to closed-out"
+                        print("the request did toggle to closed-out")
                         res = None
                     
                 if not res in ["None",None]:
-                    print "retrying to closing out"
-                    print res
+                    print("retrying to closing out")
+                    print(res)
                     res = reqMgrClient.closeOutWorkflowCascade(url, wfo.name)
                     
                 
@@ -1434,7 +1434,7 @@ class CheckBuster(threading.Thread):
                         #for pid in pids:
                             #mcm.delete('/restapi/requests/forcecomplete/%s'%pid)
                 else:
-                    print "could not close out",wfo.name,"will try again next time"
+                    print("could not close out",wfo.name,"will try again next time")
         else:
             if not 'custodial' in assistance_tags or wfi.isRelval():
                 ## do only the report for those
@@ -1448,8 +1448,8 @@ class CheckBuster(threading.Thread):
                         parse_one(url, member, so)
                         self.report_created += 1
                     except Exception as e:
-                        print "Could not make error report for",member
-                        print "because",str(e)
+                        print("Could not make error report for",member)
+                        print("because",str(e))
 
                 time_point("Done with reports")
 
@@ -1465,7 +1465,7 @@ class CheckBuster(threading.Thread):
             #duplicates #a lumi section is there twice
 
             ## manual is not added yet, and should be so by recoveror
-            print wfo.name,"was tagged with :",list(assistance_tags)
+            print(wfo.name,"was tagged with :",list(assistance_tags))
             if 'recovering' in assistance_tags:
                 ## if active ACDC, being under threshold, filemismatch do not matter
                 assistance_tags = assistance_tags - set(['recovery','filemismatch','manual'])
@@ -1484,8 +1484,8 @@ class CheckBuster(threading.Thread):
                 assistance_tags = assistance_tags - set(['announce'])
 
             ## that means there is something that needs to be done acdc, lumi invalidation, custodial, name it
-            print wfo.name,"needs assistance with",",".join( assistance_tags )
-            print wfo.name,"existing conditions",",".join( existing_assistance_tags )
+            print(wfo.name,"needs assistance with",",".join( assistance_tags ))
+            print(wfo.name,"existing conditions",",".join( existing_assistance_tags ))
         
             #########################################
             ##### notification to requester #########
@@ -1546,7 +1546,7 @@ class CheckBuster(threading.Thread):
                     #session.commit()
                     self.to_status = new_status
             else:
-                print "current status is",wfo.status,"not changing to anything"
+                print("current status is",wfo.status,"not changing to anything")
         
             pop_a_jira = False
             ## rereco and manual => jira
@@ -1573,7 +1573,7 @@ class CheckBuster(threading.Thread):
                     j_comment = "Appears in %s"%(self.to_status)
                 else:
                     ## pick up the last one
-                    print "a jira already exists, taking the last one"
+                    print("a jira already exists, taking the last one")
                     j = sorted(jiras, key= lambda o:JC.created(o))[-1]
                     if JC.reopen(j.key):
                         j_comment = "Came back in %s"%(self.to_status)
@@ -1618,7 +1618,7 @@ if __name__ == "__main__":
         options.review=True
         options.recovering=True
         options.manual=True
-        print "no options passed, assuming we do everything"
+        print("no options passed, assuming we do everything")
 
     checkor(url, spec, options=options)
     

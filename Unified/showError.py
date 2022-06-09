@@ -30,7 +30,7 @@ class AgentBuster(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
         self.daemon = True
-        for k,v in args.items():
+        for k,v in list(args.items()):
             setattr(self,k,v)
 
     def run(self):
@@ -48,7 +48,7 @@ class ReadBuster(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
         self.daemon = True
-        for k,v in args.items():
+        for k,v in list(args.items()):
             setattr(self,k,v)
 
     def run(self):
@@ -59,7 +59,7 @@ class LogBuster(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
         self.daemon = True
-        for k,v in args.items():
+        for k,v in list(args.items()):
             setattr(self,k,v)
 
     def run(self):
@@ -76,15 +76,15 @@ class LogBuster(threading.Thread):
                                     local = '/tmp/%s/%s'%(os.getenv('USER'),self.out_lfn.split('/')[-1])
                                     #command = 'xrdcp root://cms-xrd-global.cern.ch/%s %s'%( self.out_lfn, local)
                                     command = 'XRD_REQUESTTIMEOUT=10 xrdcp root://cms-xrd-global.cern.ch/%s %s'%( self.out_lfn, local)
-                                    print "#"*15,"cmsrun log retrieval","#"*15
+                                    print("#"*15,"cmsrun log retrieval","#"*15)
                                     if os.system('ls %s'% local)!=0:
-                                        print "running",command
+                                        print("running",command)
                                         ## get the file
                                         xec = os.system( command )
                                         if xec !=0:
-                                            print "\t\t",command,"did not succeed"
+                                            print("\t\t",command,"did not succeed")
                                     else:
-                                        print "the file",local,"already exists"
+                                        print("the file",local,"already exists")
                                         xec = 0
 
                                     ## expose the content
@@ -94,9 +94,9 @@ class LogBuster(threading.Thread):
                                                                       self.errorcode_s,
                                                                       self.task_short,
                                                                       label)
-                                    print "should try eos?"
+                                    print("should try eos?")
                                     if os.system('ls %s'% local)!=0 and self.from_eos:
-                                        print "no file retrieved using xrootd, using eos source"
+                                        print("no file retrieved using xrootd, using eos source")
                                         ## will parse eos and not doing anything for things already indexed
                                         date_option = ""
                                         if self.date:
@@ -107,10 +107,10 @@ class LogBuster(threading.Thread):
                                                 m_s = ','.join(map(str,list(range(1, this_month+1)) + list(range(this_month-N_months_back+12, 13))))
                                                 y_s = '%d,%d'%( this_year, this_year-1 )
                                             else:
-                                                m_s = ','.join(map(str, range(this_month-N_months_back, this_month+1)))
+                                                m_s = ','.join(map(str, list(range(this_month-N_months_back, this_month+1))))
                                                 y_s = str(this_year)
                                             date_option = ' --year %s --month %s '%( y_s, m_s )
-                                            print "using",date_option,"to find logs on eos"
+                                            print("using",date_option,"to find logs on eos")
                                         os.system('Unified/createLogDB.py --workflow %s %s '%( self.wfn , date_option))
                                         os.system('Unified/whatLog.py --workflow  %s --log %s --get' %(self.wfn,self.out_lfn.split('/')[-1]) )
                                         os.system('mv `find /tmp/%s/ -name "%s"` %s'%( os.getenv('USER'), self.out_lfn.split('/')[-1], local))
@@ -138,7 +138,7 @@ class LogBuster(threading.Thread):
                                                 os.system('(head -%d ; echo;echo;echo "<snip>";echo;echo ; tail -%d ) < %s > %s'%(head, tail, fn, trunc))
                                                 os.system('mv %s %s.trunc.txt'%(trunc, fn))
                                     else:
-                                        print "no file retrieved in",local
+                                        print("no file retrieved in",local)
 
 
 
@@ -178,7 +178,7 @@ def checkFilesLocations_xrootd( check_files ):
     f_locations = defaultdict(set)
     for f in check_files:
         rthreads.append( ReadBuster( file = f ))
-    print "checking on existence of",len(rthreads),"files"
+    print("checking on existence of",len(rthreads),"files")
     run_rthreads = ThreadHandler( threads = rthreads, n_threads = 20, timeout = 10)
     run_rthreads.start()
     while run_rthreads.is_alive():
@@ -195,13 +195,13 @@ def parse_one(url, wfn, options=None):
         now = time.mktime(time.gmtime())
         nows = time.asctime(time.gmtime())
 
-        print "[showError] Time check (%s) point at : %s"%(label, nows)
-        print "[showError] Since start: %s [s]"% ( now - time_point.start)
+        print("[showError] Time check (%s) point at : %s"%(label, nows))
+        print("[showError] Since start: %s [s]"% ( now - time_point.start))
         if sub_lap:
-            print "[showError] Sub Lap : %s [s]"% ( now - time_point.sub_lap ) 
+            print("[showError] Sub Lap : %s [s]"% ( now - time_point.sub_lap )) 
             time_point.sub_lap = now
         else:
-            print "[showError] Lap : %s [s]"% ( now - time_point.lap ) 
+            print("[showError] Lap : %s [s]"% ( now - time_point.lap )) 
             time_point.lap = now            
             time_point.sub_lap = now
 
@@ -241,7 +241,7 @@ def parse_one(url, wfn, options=None):
     no_input = (not lhe) and len(prim)==0 and len(sec)==0
 
     cache = options.cache
-    print "cache timeout", cache
+    print("cache timeout", cache)
 
     err= wfi.getWMErrors(cache=cache)
     time_point("wmerrors" ,sub_lap=True)
@@ -259,15 +259,15 @@ def parse_one(url, wfn, options=None):
         #dashb = wfi.getFullPicture(since=dash_board_h,cache=cache)
         dashb = {}
         #print json.dumps( dashb , indent=2)
-        for site,sinfo in dashb.items():
-            for s_code,counts in sinfo.items():
+        for site,sinfo in list(dashb.items()):
+            for s_code,counts in list(sinfo.items()):
                 d_statuses = ['submitted','pending','app-unknown','done']
                 total_by_code_dash[str(s_code)]+= counts.get('submitted',0)
                 total_by_site_dash[site] += counts.get('submitted',0)
                 r_dashb[str(s_code)][site] += counts.get('submitted',0)
 
-        print json.dumps(total_by_code_dash , indent=2)
-        print json.dumps(total_by_site_dash , indent=2)
+        print(json.dumps(total_by_code_dash , indent=2))
+        print(json.dumps(total_by_site_dash , indent=2))
 
     time_point("Got most input")
 
@@ -275,7 +275,7 @@ def parse_one(url, wfn, options=None):
     
     if not 'AgentJobInfo' in stat:
         stat['AgentJobInfo'] = {}
-        print "no information in AgentJobInfo, they agents must have been retired. I cannot go on without creating a partial report"
+        print("no information in AgentJobInfo, they agents must have been retired. I cannot go on without creating a partial report")
         return task_error_site_count, one_explanation 
         #print "bad countent ?"
         #print json.dumps(  stat,  indent=2)
@@ -300,18 +300,18 @@ def parse_one(url, wfn, options=None):
     #        db_total_per_site[site] += dashb[site][error] 
     #        db_total_per_code[code] += dashb[site][error]
     
-    print "ACDC Information"
-    print "\t where to re-run"
-    print json.dumps( where_to_run , indent=2)         
-    print "\t Missing events"
-    print json.dumps(missing_to_run , indent=2)        
-    print "\t Missing events per site"
-    print json.dumps(missing_to_run_at , indent=2)        
+    print("ACDC Information")
+    print("\t where to re-run")
+    print(json.dumps( where_to_run , indent=2))         
+    print("\t Missing events")
+    print(json.dumps(missing_to_run , indent=2))        
+    print("\t Missing events per site")
+    print(json.dumps(missing_to_run_at , indent=2))        
     for task in missing_to_run_at:
         RI.set_missing(wfn, task, missing_to_run_at[task] )
 
     if not where_to_run and not missing_to_run and not missing_to_run_at:
-        print "showError is unable to run"
+        print("showError is unable to run")
         #return task_error_site_count, one_explanation
         pass
 
@@ -319,18 +319,18 @@ def parse_one(url, wfn, options=None):
     do_CL = not options.no_CL
     do_all_error_code = options.all_errors
     if high_order_acdc>=1:
-        print high_order_acdc,"order request, pulling down all logs"
+        print(high_order_acdc,"order request, pulling down all logs")
         do_all_error_code = True
     if wfi.isRelval():
-        print "getting all codes for relval"
+        print("getting all codes for relval")
         do_all_error_code = True
         
 
     IO_doc = {}
-    tasks = sorted(set(err.keys() + missing_to_run.keys()))
+    tasks = sorted(set(list(err.keys()) + list(missing_to_run.keys())))
 
     if not tasks:
-        print "no task to look at"
+        print("no task to look at")
         #return task_error_site_count
 
     html="<html> <center><h1>%s, Updated on %s (GMT)" % ( wfn, time.asctime(time.gmtime()) )    
@@ -416,7 +416,7 @@ def parse_one(url, wfn, options=None):
     html += '<br>'
 
     n_expose_base = options.expose# if options else UC.get('n_error_exposed')
-    print "getting",n_expose_base,"logs by default"
+    print("getting",n_expose_base,"logs by default")
     reported_tasks= []
     if tasks:
         min_rank = min([task.count('/') for task in tasks])
@@ -465,7 +465,7 @@ def parse_one(url, wfn, options=None):
         #total_count= defaultdict(int)
         #error_site_count = defaultdict( lambda : defaultdict(int))
         if not task in err:
-            print task,"has not reported error"
+            print(task,"has not reported error")
             err[task] = {}
         #print err[task].keys()
         
@@ -496,7 +496,7 @@ def parse_one(url, wfn, options=None):
                 s_per_code[code] += error_site_count[code][site]
         
         expose_top_N = UC.get('expose_top_N')
-        count_top_N = min( sorted(s_per_code.values(), reverse=True)[:expose_top_N]) if s_per_code else -1
+        count_top_N = min( sorted(list(s_per_code.values()), reverse=True)[:expose_top_N]) if s_per_code else -1
 
         
         for exittype in err[task]:
@@ -505,7 +505,7 @@ def parse_one(url, wfn, options=None):
                 if errorcode_s == '0' : continue
                 #print "\t\t",err[task][exittype][errorcode_s].keys()
                 force_code = (count_top_N>0 and s_per_code[errorcode_s] >= count_top_N)
-                if force_code: print "will expose",errorcode_s,"anyways"
+                if force_code: print("will expose",errorcode_s,"anyways")
                 for site in err[task][exittype][errorcode_s]:
                     ce = SI.SE_to_CE(site)
                     count = err[task][exittype][errorcode_s][site]['errorCount']
@@ -535,7 +535,7 @@ def parse_one(url, wfn, options=None):
                         if do_CL and ((errorcode_s in expose_condor_code and expose_condor_code[errorcode_s][agent])) and 'cern' in agent:
                             if errorcode_s in expose_condor_code:
                                 expose_condor_code[errorcode_s][agent]-=1
-                            print errorcode_s,agent,"error count",expose_condor_code.get(errorcode_s,{}).get(agent,0)
+                            print(errorcode_s,agent,"error count",expose_condor_code.get(errorcode_s,{}).get(agent,0))
 
                             threads.append(AgentBuster( agent =agent, 
                                                         workflow = workflow, 
@@ -551,7 +551,7 @@ def parse_one(url, wfn, options=None):
                                 if do_JL and ((errorcode_s in expose_archive_code and expose_archive_code[errorcode_s][agent]>0)):
                                     if errorcode_s in expose_archive_code:
                                         expose_archive_code[errorcode_s][agent]-=1
-                                    print errorcode_s,agent,"error count",expose_archive_code.get(errorcode_s,{}).get(agent,0)
+                                    print(errorcode_s,agent,"error count",expose_archive_code.get(errorcode_s,{}).get(agent,0))
 
                                     threads.append( LogBuster(
                                                               out_lfn = out['lfn'],
@@ -667,7 +667,7 @@ def parse_one(url, wfn, options=None):
                 0.8 : 'salmon',
                 0.9 : 'red'
                 }
-            which = [k for k in _range.keys() if k<=frac]
+            which = [k for k in list(_range.keys()) if k<=frac]
             if which:
                 there = max(which)
             else:
@@ -733,19 +733,19 @@ def parse_one(url, wfn, options=None):
             RI.set_blocks( wfn, task_n, needed_blocks_loc)
 
         html += '<a name=FILE></a>'
-        if len(files_and_loc_in_dbs.keys()): 
-            html += "<b>%s Files in block for %s</b><br>"%( len(files_and_loc_in_dbs.keys()), task_n)
+        if len(list(files_and_loc_in_dbs.keys())): 
+            html += "<b>%s Files in block for %s</b><br>"%( len(list(files_and_loc_in_dbs.keys())), task_n)
             #print files_and_loc_in_dbs
             RI.set_files( wfn, task_n, files_and_loc_in_dbs )
-        if len(files_and_loc_notin_dbs.keys()):
-            html += "<b>%s Files in no block for %s</b><br>"%( len(files_and_loc_notin_dbs.keys()), task_n)
+        if len(list(files_and_loc_notin_dbs.keys())):
+            html += "<b>%s Files in no block for %s</b><br>"%( len(list(files_and_loc_notin_dbs.keys())), task_n)
             #print files_and_loc_notin_dbs
             RI.set_ufiles(wfn, task_n, files_and_loc_notin_dbs )
 
         max_number_of_files = 500
         display_files = sorted(files_and_loc_notin_dbs.keys())
         display_files = display_files[:max_number_of_files] if max_number_of_files else display_files
-        check_files = [ f for f in files_and_loc_notin_dbs.keys() if '/store' in f]
+        check_files = [ f for f in list(files_and_loc_notin_dbs.keys()) if '/store' in f]
         check_location_mode = options.check_location
         if check_location_mode is None and len(check_files)< 10: 
             ## fallback to xrootd if nothing was said, and there aren't many files
@@ -884,7 +884,7 @@ def ratios( ti ):
         }
 
 def add_condensed( d1, d2):
-    all_keys = set(d1.keys()+d2.keys())
+    all_keys = set(list(d1.keys())+list(d2.keys()))
     d3= {}
     for k in all_keys:
         d3[k] = d1.get(k,0)+d2.get(k,0)
@@ -896,17 +896,17 @@ def parse_top(url, options=None):
     diagnose_by_agent_by_site = defaultdict( lambda : defaultdict( lambda : defaultdict(dict)))
     wm = dataCache.get('wmstats')
 
-    for wfn in wm.keys():
+    for wfn in list(wm.keys()):
         ## filter by runn*
         if not wm[wfn]['RequestStatus'] in ['running-open','running-closed',
                                             #'completed',
                                             ]: 
             continue
         info = wm[wfn].get('AgentJobInfo',{})
-        for agent,ai in info.items():
+        for agent,ai in list(info.items()):
             an = agent.split('.')[0]
-            for task,ti in ai['tasks'].items():        
-                for site,si in ti.get('sites',{}).items():
+            for task,ti in list(ai['tasks'].items()):        
+                for site,si in list(ti.get('sites',{}).items()):
                     ssi = condensed( si )
                     diagnose_by_agent_by_site[task][an][site] = ssi 
                
@@ -926,29 +926,29 @@ def parse_top(url, options=None):
 
 
     ##include fractions
-    for t,ti in diagnose.items():
+    for t,ti in list(diagnose.items()):
         diagnose[t].update( ratios(ti) )
     for t in diagnose_by_site:
-        for s,ti in diagnose_by_site[t].items():
+        for s,ti in list(diagnose_by_site[t].items()):
             diagnose_by_site[t][s].update( ratios(ti) )
     for t in diagnose_by_agent:
-        for a,ti in diagnose_by_agent[t].items():
+        for a,ti in list(diagnose_by_agent[t].items()):
             diagnose_by_agent[t][a].update( ratios(ti) )
     for t in diagnose_by_agent_by_site:
         for a in diagnose_by_agent_by_site[t]:
-            for s,ti in diagnose_by_agent_by_site[t][a].items():
+            for s,ti in list(diagnose_by_agent_by_site[t][a].items()):
                 diagnose_by_agent_by_site[t][a][s].update( ratios(ti) )
 
     #top_cooloff = dict(sorted([(t,i.get('cooloff',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
     #top_failure = dict(sorted([(t,i.get('failure',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
-    top_cooloff = dict(sorted([(t,i.get('cooloff_f',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
-    top_failure = dict(sorted([(t,i.get('failure_f',0)) for t,i in diagnose.items()], key = lambda o:o[1], reverse=True)[:top_N])
+    top_cooloff = dict(sorted([(t,i.get('cooloff_f',0)) for t,i in list(diagnose.items())], key = lambda o:o[1], reverse=True)[:top_N])
+    top_failure = dict(sorted([(t,i.get('failure_f',0)) for t,i in list(diagnose.items())], key = lambda o:o[1], reverse=True)[:top_N])
     
     all_bad_wfs = set()
-    all_bad_wfs.update([t.split('/')[1] for t in top_cooloff.keys()] )
-    all_bad_wfs.update([t.split('/')[1] for t in top_failure.keys()] )
+    all_bad_wfs.update([t.split('/')[1] for t in list(top_cooloff.keys())] )
+    all_bad_wfs.update([t.split('/')[1] for t in list(top_failure.keys())] )
     
-    print "found",len(all_bad_wfs),"to parse for detailled error report"
+    print("found",len(all_bad_wfs),"to parse for detailled error report")
     parse_those(url, options, all_bad_wfs)
 
     #ht = open('%s/toperror.html'%monitor_eos_dir, 'w')
@@ -967,27 +967,27 @@ Last updated on %s (GMT)
     ## sort by max errors 
     tops = defaultdict(int)
     for wf in sorted(all_bad_wfs):
-        for owf,N in top_cooloff.items():
+        for owf,N in list(top_cooloff.items()):
             if wf in owf:
                 tops[wf]+=N
-        for owf,N in top_failure.items():
+        for owf,N in list(top_failure.items()):
             if wf in owf:
                 tops[wf]+=N
 
-    for iw,(wf,count) in enumerate(sorted(tops.items(), key = lambda o : o[1], reverse=True)):
+    for iw,(wf,count) in enumerate(sorted(list(tops.items()), key = lambda o : o[1], reverse=True)):
         report = set()
-        for owf,N in top_cooloff.items():
+        for owf,N in list(top_cooloff.items()):
             if wf in owf:
                 report.add( owf)
-        for owf,N in top_failure.items():
+        for owf,N in list(top_failure.items()):
             if wf in owf:
                 report.add( owf)
         
         lcol = 'bgcolor=%s'% ( 'white' if iw%2==0 else 'lightblue')
         for task in sorted(report):
             tdiag = diagnose.get(task,{})
-            print task
-            print tdiag
+            print(task)
+            print(tdiag)
             ht.write('<tr %s><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n'%(lcol,
                                                                                                                                wf,
                                                                                               task.split('/')[-1],
@@ -1017,12 +1017,12 @@ def parse_those(url, options=None, those=[]):
                                  timeout = None,
                                  verbose = True )
 
-    print "running all workers"
+    print("running all workers")
     run_threads.start()
     while run_threads.is_alive():
         time.sleep(10)
 
-    print "all threads completed"
+    print("all threads completed")
     for worker in threads:
         task_error = worker.task_error
         one_explanation = worker.one_explanation
@@ -1033,7 +1033,7 @@ def parse_those(url, options=None, those=[]):
     #open('%s/all_errors.json'%monitor_dir,'w').write( json.dumps(alls , indent=2 ))
     eosFile('%s/all_errors.json'%monitor_dir,'w').write( json.dumps(alls , indent=2 )).close()
 
-    explanations = dict([(k,list(v)) for k,v in explanations.items()])
+    explanations = dict([(k,list(v)) for k,v in list(explanations.items())])
 
     #open('%s/explanations.json'%monitor_dir,'w').write( json.dumps(explanations, indent=2))
     eosFile('%s/explanations.json'%monitor_dir,'w').write( json.dumps(explanations, indent=2)).close()
@@ -1047,8 +1047,8 @@ def parse_those(url, options=None, those=[]):
             per_code[code].add( task.split('/')[1])
         
     for code in per_code:
-        print code
-        print json.dumps( sorted(per_code[code]), indent=2)
+        print(code)
+        print(json.dumps( sorted(per_code[code]), indent=2))
 
 
 
@@ -1094,15 +1094,15 @@ class showError_options(object):
                               },
                              
             }
-        for opt,defv in self.default.items():
+        for opt,defv in list(self.default.items()):
             setattr( self, opt, args.get(opt, defv['default']))
             
     def set_parser(self, parser):
-        for opt,defv in self.default.items():
+        for opt,defv in list(self.default.items()):
             parser.add_option('--%s'%opt, 
                               **defv)
     def from_parser(self, options):
-        for opt,defv in self.default.items():
+        for opt,defv in list(self.default.items()):
             setattr( self, opt, getattr(options,opt))
 
             
@@ -1146,4 +1146,4 @@ if __name__=="__main__":
     else:
         parse_all(url, so)
 
-    print "ultimate",time.asctime(time.gmtime())
+    print("ultimate",time.asctime(time.gmtime()))
