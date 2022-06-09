@@ -639,6 +639,3 @@ if __name__ == "__main__":
         spec = args[0]
 
     closor(url,spec, options=options)
-
-    if (not spec) and (not options.limit) and do_html_in_each_module:
-        htmlor()
