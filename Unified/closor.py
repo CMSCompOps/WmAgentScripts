@@ -9,7 +9,6 @@ import time
 import sys
 import os
 from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, getWorkflowByCampaign
-from htmlor import htmlor
 from collections import defaultdict
 import re
 import copy
