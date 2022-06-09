@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import json
 
-from utils import make_x509_conn, reqmgr_url
+from .utils import make_x509_conn, reqmgr_url
 
 
 def getCampaignConfig(docName, url=reqmgr_url):
@@ -40,8 +40,8 @@ def createCampaignConfig(docContent, url=reqmgr_url):
     conn.request("POST", url, json_args, headers=headers)
     resp = conn.getresponse()
     if resp.status >= 400:
-        print("FAILED to create campaign: %s. Response status: %s, response reason: %s"
-              % (docContent['CampaignName'], resp.status, resp.reason))
+        print(("FAILED to create campaign: %s. Response status: %s, response reason: %s"
+              % (docContent['CampaignName'], resp.status, resp.reason)))
         outcome = False
     conn.close()
     return outcome
@@ -62,8 +62,8 @@ def updateCampaignConfig(docContent, url=reqmgr_url):
     conn.request("PUT", url, json_args, headers=headers)
     resp = conn.getresponse()
     if resp.status >= 400:
-        print("FAILED to update campaign: %s. Response status: %s, response reason: %s"
-              % (docContent['CampaignName'], resp.status, resp.reason))
+        print(("FAILED to update campaign: %s. Response status: %s, response reason: %s"
+              % (docContent['CampaignName'], resp.status, resp.reason)))
         outcome = False
     conn.close()
     return outcome
@@ -84,8 +84,8 @@ def deleteCampaignConfig(docName, url=reqmgr_url):
     conn.request("DELETE", url, headers=headers)
     resp = conn.getresponse()
     if resp.status >= 400:
-        print("FAILED to delete campaign: %s. Response status: %s, response reason: %s"
-              % (docName, resp.status, resp.reason))
+        print(("FAILED to delete campaign: %s. Response status: %s, response reason: %s"
+              % (docName, resp.status, resp.reason)))
         outcome = False
     conn.close()
     return outcome
@@ -130,12 +130,12 @@ def parseMongoCampaigns(campaigns, verbose=False):
         campaigns = [campaigns]
     for rec in campaigns:
         if verbose:
-            print("read record: %s (type=%s)" % (rec, type(rec)))
+            print(("read record: %s (type=%s)" % (rec, type(rec))))
 
         conf = dict(confRec)
         # Set default value from top level campaign configuration
         # or use the default values defined above
-        for uniKey, wmKey in remap.items():
+        for uniKey, wmKey in list(remap.items()):
             conf[wmKey] = rec.get(uniKey, conf[wmKey])
 
         conf['SiteWhiteList'] = _getSiteList("SiteWhitelist", conf['SiteWhiteList'], rec)
@@ -144,7 +144,7 @@ def parseMongoCampaigns(campaigns, verbose=False):
         conf['SecondaryLocation'] = _getSecondaryLocation(conf['SecondaryLocation'], rec)
         conf['Secondaries'] = _getSecondaries(conf['Secondaries'], rec)
         if verbose:
-            print("Final WMCore Campaign configuration: %s" % conf)
+            print(("Final WMCore Campaign configuration: %s" % conf))
         wmCampaigns.append(conf)
     return wmCampaigns
 
@@ -172,7 +172,7 @@ def _getSiteList(keyName, initialValue, uniRecord):
     If it appears multiple times, we make an intersection of the values
     """
     if keyName in uniRecord.get("parameters", {}):
-        print("Found internal %s for campaign: %s" % (keyName, uniRecord['name']))
+        print(("Found internal %s for campaign: %s" % (keyName, uniRecord['name'])))
         initialValue = _intersect(initialValue, uniRecord["parameters"][keyName])
 
     return initialValue
@@ -186,9 +186,9 @@ def _getSecondaryAAA(initialValue, uniRecord):
       * under the secondaries dictionary.
     If it appears multiple times, we make an OR of the values.
     """
-    for _, innerDict in uniRecord.get("secondaries", {}).items():
+    for _, innerDict in list(uniRecord.get("secondaries", {}).items()):
         if "secondary_AAA" in innerDict:
-            print("Found internal secondary_AAA for campaign: %s" % uniRecord['name'])
+            print(("Found internal secondary_AAA for campaign: %s" % uniRecord['name']))
             initialValue = initialValue or innerDict["secondary_AAA"]
     return initialValue
 
@@ -202,9 +202,9 @@ def _getSecondaryLocation(initialValue, uniRecord):
       * under the secondaries dictionary.
     If it appears multiple times, we make an intersection of the values.
     """
-    for _, innerDict in uniRecord.get("secondaries", {}).items():
+    for _, innerDict in list(uniRecord.get("secondaries", {}).items()):
         if "SecondaryLocation" in innerDict:
-            print("Found internal SecondaryLocation for campaign: %s" % uniRecord['name'])
+            print(("Found internal SecondaryLocation for campaign: %s" % uniRecord['name']))
             initialValue = _intersect(initialValue, innerDict["SecondaryLocation"])
     return initialValue
 
@@ -219,8 +219,8 @@ def _getSecondaries(initialValue, uniRecord):
       * taken from the SiteWhitelist key or
       * taken from the SecondaryLocation one
     """
-    for dset, innerDict in uniRecord.get("secondaries", {}).items():
-        print("Found secondaries for campaign: %s" % uniRecord['name'])
+    for dset, innerDict in list(uniRecord.get("secondaries", {}).items()):
+        print(("Found secondaries for campaign: %s" % uniRecord['name']))
         initialValue[dset] = _intersect(innerDict.get("SiteWhitelist", []),
                                         innerDict.get("SecondaryLocation", []))
 
