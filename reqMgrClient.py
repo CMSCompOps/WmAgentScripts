@@ -781,7 +781,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
 
     if 'Multicore' in parameters:
         pass
-    elif 'Multicore' in wf.request and (wf.request['Multicore']>1) and not wf.request['RequestType']=='TaskChain':
+    elif 'Multicore' in wf.request and not (wf.request['Multicore'] == None) and (wf.request['Multicore']>1) and not wf.request['RequestType']=='TaskChain':
         ## hack for multicode assignment
 
         defaults['Multicore'] = wf.request['Multicore']
