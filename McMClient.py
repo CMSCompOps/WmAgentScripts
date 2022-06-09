@@ -1,10 +1,10 @@
 import sys,pprint,os,json
 import os
-import httplib
-import urllib
+import http.client
+import urllib.request, urllib.parse, urllib.error
 import pprint
 import pycurl
-import cStringIO
+import io
 import traceback 
 
 class McMClient:
@@ -26,7 +26,7 @@ class McMClient:
         
     def connect(self,cookie=None):
         if self.id=='cert':
-            self.__http = httplib.HTTPSConnection(self.server,  cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
+            self.__http = http.client.HTTPSConnection(self.server,  cert_file = os.getenv('X509_USER_PROXY'), key_file = os.getenv('X509_USER_PROXY'))
         elif self.id=='sso':
             env_cookie = os.environ.get('MCM_SSO_COOKIE',None)
             if cookie:
@@ -42,22 +42,22 @@ class McMClient:
                     self.cookieFilename = '%s/private/prod-cookie.txt'%(os.getenv('HOME'))
 
             if not os.path.isfile(self.cookieFilename):
-                print "The required sso cookie file is absent. Trying to make one for you"
+                print("The required sso cookie file is absent. Trying to make one for you")
                 os.system('cern-get-sso-cookie -u https://%s -o %s --krb'%( self.server, self.cookieFilename))
                 if not os.path.isfile(self.cookieFilename):
-                    print "The required sso cookie file cannot be made."
+                    print("The required sso cookie file cannot be made.")
                     sys.exit(1)
 
             self.curl = pycurl.Curl()
-            print "Using sso-cookie file",self.cookieFilename
+            print("Using sso-cookie file",self.cookieFilename)
             self.curl.setopt(pycurl.COOKIEFILE,self.cookieFilename)
-            self.output = cStringIO.StringIO()
+            self.output = io.StringIO()
             self.curl.setopt(pycurl.SSL_VERIFYPEER, 1)
             self.curl.setopt(pycurl.SSL_VERIFYHOST, 2)
             self.curl.setopt(pycurl.CAPATH, '/etc/pki/tls/certs')  
             self.curl.setopt(pycurl.WRITEFUNCTION, self.output.write)
         else:
-            self.__http = httplib.HTTPConnection(self.server)
+            self.__http = http.client.HTTPConnection(self.server)
 
     #################
     ### generic methods for GET,PUT,DELETE
@@ -65,7 +65,7 @@ class McMClient:
         fullurl='https://'+(self.server+url).replace('//','/')
         
         if self.debug:
-            print 'url=|'+fullurl+'|'
+            print('url=|'+fullurl+'|')
         if self.id=='sso':
             self.curl.setopt(pycurl.HTTPGET, 1)
             self.curl.setopt(pycurl.URL, str(fullurl))
@@ -77,22 +77,22 @@ class McMClient:
             d=json.loads(self.response())
             return d
         except:
-            print "ERROR"
-            print traceback.format_exc()
-            print self._response
+            print("ERROR")
+            print(traceback.format_exc())
+            print(self._response)
             return None
 
     def put(self,url,data):
         fullurl='https://'+(self.server+url).replace('//','/')
         if self.debug:
-            print 'url=|'+fullurl+'|'
+            print('url=|'+fullurl+'|')
         if self.id=='sso':
             self.curl.setopt(pycurl.URL, str(fullurl))
-            p_data=cStringIO.StringIO(json.dumps(data))
+            p_data=io.StringIO(json.dumps(data))
             self.curl.setopt(pycurl.UPLOAD, 1)
-            self.curl.setopt(pycurl.READFUNCTION, cStringIO.StringIO(json.dumps(data)).read)
+            self.curl.setopt(pycurl.READFUNCTION, io.StringIO(json.dumps(data)).read)
             if self.debug:
-                print 'message=|'+p_data.read()+'|'
+                print('message=|'+p_data.read()+'|')
             self.curl.perform()
         else:
             self.__http.request("PUT", url, json.dumps(data), headers=self.headers)
@@ -102,35 +102,35 @@ class McMClient:
             return d
         except:
             #print "ERROR",self._response
-            print "ERROR"
+            print("ERROR")
             return None
 
     def delete(self,url):
         fullurl='https://'+(self.server+url).replace('//','/')
         if self.debug:
-            print 'url=|'+fullurl+'|'
+            print('url=|'+fullurl+'|')
         if self.id=='sso':
             self.curl.setopt(pycurl.CUSTOMREQUEST,'DELETE')
             self.curl.setopt(pycurl.URL, str(fullurl))
             self.curl.perform()
         else:
-            print "Not implemented Yet ?"
+            print("Not implemented Yet ?")
             self.__http.request("DELETE", url, headers=self.headers)
         r = self.response()
         try:
             d=json.loads(r)
             return d
         except Exception as e :
-            print "ERROR"
-            print fullurl
-            print str(e)
-            print r
+            print("ERROR")
+            print(fullurl)
+            print(str(e))
+            print(r)
             return None             
     #####################
     #### generic methods for i/o
     def clear(self):
         if self.id=='sso':
-            self.output = cStringIO.StringIO()
+            self.output = io.StringIO()
             self.curl.setopt(pycurl.WRITEFUNCTION, self.output.write)
             
     def response(self):
