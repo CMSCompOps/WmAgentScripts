@@ -11,7 +11,6 @@ import os
 from utils import getDatasetEventsAndLumis, campaignInfo, getDatasetPresence, getWorkflowByCampaign
 from htmlor import htmlor
 from collections import defaultdict
-import reqMgrClient
 import re
 import copy
 import random
@@ -30,7 +29,7 @@ def spawn_harvesting(url, wfi , sites_for_DQMHarvest):
     outputs = wfi.request['OutputDatasets'] 
     if ('EnableHarvesting' in wfi.request and not wfi.request['EnableHarvesting']) and ('DQMConfigCacheID' in wfi.request and wfi.request['DQMConfigCacheID']):
         if not 'MergedLFNBase' in wfi.request:
-            print "fucked up"
+            print("fucked up")
             sendEmail('screwed up wl cache','%s wl cache is bad'%(wfi.request['RequestName']))
             all_OK['fake'] = False
             return all_OK,requests
@@ -73,14 +72,14 @@ def spawn_harvesting(url, wfi , sites_for_DQMHarvest):
                 if item in wfi.request:
                     harvesting_schema[item] = copy.deepcopy(wfi.request[item])
                 else:
-                    print item,"is not in initial schema"
+                    print(item,"is not in initial schema")
 
             harvesting_schema['InputDataset'] = dqm_input
             harvesting_schema['TimePerEvent'] = 1
             harvesting_schema['PrepID'] = 'Harvest-'+wfi.request['PrepID']
             if len(wfi.request['RequestString'])>60:
                 wfi.request['RequestString']= wfi.request['RequestString'][:60]
-                print "truncating request string",wfi.request['RequestString']
+                print("truncating request string",wfi.request['RequestString'])
                 
             harvesting_schema['RequestString'] = 'HARVEST-'+wfi.request['RequestString']
             harvesting_schema['DQMHarvestUnit'] = 'byRun'
@@ -88,20 +87,20 @@ def spawn_harvesting(url, wfi , sites_for_DQMHarvest):
 
             harvest_request = reqMgrClient.submitWorkflow(url, harvesting_schema)
             if not harvest_request:
-                print "Error in making harvesting for",wfi.request['RequestName']
-                print "schema"
-                print json.dumps( harvesting_schema, indent = 2)
+                print("Error in making harvesting for",wfi.request['RequestName'])
+                print("schema")
+                print(json.dumps( harvesting_schema, indent = 2))
                 harvest_request = reqMgrClient.submitWorkflow(url, harvesting_schema)
                 if not harvest_request:
-                    print "Error twice in harvesting for",wfi.request['RequestName']
-                    print "schema"
-                    print json.dumps( harvesting_schema, indent = 2)
+                    print("Error twice in harvesting for",wfi.request['RequestName'])
+                    print("schema")
+                    print(json.dumps( harvesting_schema, indent = 2))
 
             if harvest_request:
                 requests.append( harvest_request )
                 ## should we protect for setting approved ? no, it's notified below, assignment will fail, likely
                 data = reqMgrClient.setWorkflowApproved(url, harvest_request)
-                print "created",harvest_request,"for harvesting of",dqm_input
+                print("created",harvest_request,"for harvesting of",dqm_input)
                 wfi.sendLog('closor',"created %s for harvesting of %s"%( harvest_request, dqm_input))
                 ## assign it directly
                 team = wfi.request['Team']
@@ -156,22 +155,22 @@ def closor(url, specific=None, options=None):
 
     jump_the_line = options.announce if options else False
     if jump_the_line:
-        print "announce option is on. Checking on things on-going ready to be announced"
+        print("announce option is on. Checking on things on-going ready to be announced")
         wfs = session.query(Workflow).filter(Workflow.status.contains('announce')).filter(sqlalchemy.not_(Workflow.status.contains('announced'))).all()
     else:
-        print "regular option. Checking on things done and to be announced"
+        print("regular option. Checking on things done and to be announced")
         wfs = session.query(Workflow).filter(Workflow.status=='close').all()
 
     if specific:
         wfs = [wfo for wfo in wfs if specific in wfo.name]
     wfs_n = [w.name for w in wfs]
 
-    print "unique names?"
-    print len(set(wfs_n)) == len(wfs_n)
+    print("unique names?")
+    print(len(set(wfs_n)) == len(wfs_n))
     
     held = set()
 
-    print len(wfs),"closing"
+    print(len(wfs),"closing")
     random.shuffle( wfs )    
     max_per_round = UC.get('max_per_round').get('closor',None)
     if options.limit: max_per_round = options.limit
@@ -193,7 +192,7 @@ def closor(url, specific=None, options=None):
 
     closers = []
 
-    print len(wfs),"closing"
+    print(len(wfs),"closing")
     th_start = time.mktime(time.gmtime())
 
     for iwfo,wfo in enumerate(wfs):
@@ -231,7 +230,7 @@ def closor(url, specific=None, options=None):
         time.sleep(5)
 
     JC = JIRAClient() if up.status.get('jira',False) else None
-    print len(run_threads.threads),"finished thread to gather information from"
+    print(len(run_threads.threads),"finished thread to gather information from")
     failed_threads = 0
     for to in run_threads.threads:
         if to.failed:
@@ -242,7 +241,7 @@ def closor(url, specific=None, options=None):
                 out = outO.datasetname
                 odb = session.query(Output).filter(Output.datasetname==out).first()
                 if not odb:
-                    print "adding an output object",out
+                    print("adding an output object",out)
                     session.add( outO )
                 else:
                     odb.date = outO.date
@@ -265,7 +264,7 @@ def closor(url, specific=None, options=None):
 
     if wfs:
         time_spend_per_workflow = (th_stop-th_start) / float(len(wfs))
-        print "Average time spend per workflow is", time_spend_per_workflow
+        print("Average time spend per workflow is", time_spend_per_workflow)
 
     if float(failed_threads/run_threads.n_threads) > 0:
         sendLog('checkor','%d/%d threads have failed, better check this out'% (failed_threads, run_threads.n_threads), level='critical')
@@ -282,13 +281,13 @@ def closor(url, specific=None, options=None):
         #sendEmail('waiting for files to announce', subject)
         sendLog('closor', subject, level='warning')
         sendLog('closor',subject)
-        print subject
+        print(subject)
         open('%s/stuck_files.json'%monitor_dir,'w').write( json.dumps( really_late_files , indent=2))
 
     if held:
         sendLog('closor',"the workflows below are held up \n%s"%("\n".join( sorted(held) )), level='critical')
 
-    for bname,go in batch_go.items():
+    for bname,go in list(batch_go.items()):
         if go:
             subject = "Release Validation Samples Batch %s"% bname
             issues=""
@@ -324,7 +323,7 @@ def closor(url, specific=None, options=None):
 
 
     if os.path.isfile('.closor_stop'):
-        print "The loop on workflows was shortened"
+        print("The loop on workflows was shortened")
         sendEmail('closor','Closor loop was shortened artificially using .closor_stop')
         os.system('rm -f .closor_stop')
         
@@ -335,7 +334,7 @@ class CloseBuster(threading.Thread):
     def __init__(self, **args):
         threading.Thread.__init__(self)
         ## a bunch of other things
-        for k,v in args.items():
+        for k,v in list(args.items()):
             setattr(self, k, v)
 
         self.failed = False
@@ -355,7 +354,7 @@ class CloseBuster(threading.Thread):
 
     def close(self):
         if os.path.isfile('.closor_stop'):
-            print "The closing of workflows is shortened"
+            print("The closing of workflows is shortened")
             return 
 
         url = self.url
@@ -380,7 +379,7 @@ class CloseBuster(threading.Thread):
             if not batch_name in batch_go:
                 ## do the esimatation whethere this can be announced : only once per batch
                 in_batches = getWorkflowByCampaign(url , batch_name, details=True)
-                batch_go[ batch_name ]  = all(map(lambda s : not s in ['completed','running-open','running-closed','acquired','staged','staging','assigned','assignment-approved'], [r['RequestStatus'] for r in in_batches]))
+                batch_go[ batch_name ]  = all([not s in ['completed','running-open','running-closed','acquired','staged','staging','assigned','assignment-approved'] for s in [r['RequestStatus'] for r in in_batches]])
             ## already verified
             has_batch_go = batch_go[batch_name]
             if not has_batch_go:
@@ -400,9 +399,9 @@ class CloseBuster(threading.Thread):
 
         expected_lumis = 1
         if not 'TotalInputLumis' in wfi.request:
-            print wfo.name,"has not been assigned yet, or the database is corrupted"
+            print(wfo.name,"has not been assigned yet, or the database is corrupted")
         elif wfi.request['TotalInputLumis']==0:
-            print wfo.name,"is corrupted with 0 expected lumis"
+            print(wfo.name,"is corrupted with 0 expected lumis")
         else:
             expected_lumis = wfi.request['TotalInputLumis']
 
@@ -413,7 +412,7 @@ class CloseBuster(threading.Thread):
         stats = defaultdict(int)
         #print outputs
         if len(outputs): 
-            print wfo.name,wfi.request['RequestStatus']
+            print(wfo.name,wfi.request['RequestStatus'])
         for out in outputs:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=out)
             self.outs.append( Output( datasetname = out ))
@@ -481,17 +480,17 @@ class CloseBuster(threading.Thread):
 
         ## only that status can let me go into announced
         if all(all_OK.values()) and ((wfi.request['RequestStatus'] in ['closed-out']) or options.force or jump_the_line):
-            print wfo.name,"to be announced"
+            print(wfo.name,"to be announced")
             results=[]
             if not results:
                 for out in outputs:
-                    print "dealing with",out
+                    print("dealing with",out)
                     if out in stats and not stats[out]: 
                         continue
                     _,dsn,process_string,tier = out.split('/')
 
                     if all_OK[out]:
-                        print "setting valid"
+                        print("setting valid")
                         results.append(setDatasetStatus(out, 'VALID', withFiles=False))
                     if all_OK[out] and wfi.isRelval():
                         ## make the specific relval rules and the replicas
@@ -540,7 +539,7 @@ class CloseBuster(threading.Thread):
                             to_DDM = True
                         ## check for unitarity
                         if not tier in UC.get("tiers_no_DDM")+UC.get("tiers_to_DDM"):
-                            print "tier",tier,"neither TO or NO DDM for",out
+                            print("tier",tier,"neither TO or NO DDM for",out)
                             results.append('Not recognitized tier %s'%tier)
                             #sendEmail("failed DDM injection","could not recognize %s for injecting in DDM"% out)
                             sendLog('closor', "could not recognize %s for injecting in DDM"% out, level='critical')
@@ -554,7 +553,7 @@ class CloseBuster(threading.Thread):
                                 n_copies = CI.campaigns[campaign]['DDMcopies']
                             elif type(ddm_instructions) == dict:
                                 ## a more fancy configuration
-                                for ddmtier,indication in ddm_instructions.items():
+                                for ddmtier,indication in list(ddm_instructions.items()):
                                     if ddmtier==tier or ddmtier in ['*','all']:
                                         ## this is for us
                                         if 'N' in indication:
@@ -567,7 +566,7 @@ class CloseBuster(threading.Thread):
                             destination_spec = "--destination="+",".join( destinations )
                         group_spec = "" ## not used yet
                     else:
-                        print wfo.name,"no stats for announcing",out
+                        print(wfo.name,"no stats for announcing",out)
                         results.append('No Stats')
 
                 # adding check for PrentageResolved flag from ReqMgr:
@@ -578,7 +577,7 @@ class CloseBuster(threading.Thread):
                         wfi.sendLog('closor',"Delayed announcement of %s due to unresolved Parentage dependencies" % wfi.request['RequestName'])
                         results.append('No ParentageResolved')
 
-                if all(map(lambda result : result in ['None',None,True],results)):
+                if all([result in ['None',None,True] for result in results]):
                     if not jump_the_line:
                         ## only announce if all previous are fine
                         res = reqMgrClient.announceWorkflowCascade(url, wfo.name)
@@ -593,8 +592,8 @@ class CloseBuster(threading.Thread):
                             
                         results.append( res )
                                 
-            print results
-            if all(map(lambda result : result in ['None',None,True],results)):
+            print(results)
+            if all([result in ['None',None,True] for result in results]):
                 if jump_the_line:
                     if not 'announced' in wfo.status:
                         self.to_status = wfo.status.replace('announce','announced')
@@ -616,7 +615,7 @@ class CloseBuster(threading.Thread):
                 self.to_status = 'trouble'
                 self.to_wm_status = wfi.request['RequestStatus']
         else:
-            print wfo.name,"not good for announcing:",wfi.request['RequestStatus']
+            print(wfo.name,"not good for announcing:",wfi.request['RequestStatus'])
             wfi.sendLog('closor',"cannot be announced")
             self.held.add( wfo.name )
 
