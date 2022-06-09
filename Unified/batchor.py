@@ -23,19 +23,19 @@ def batchor( url ):
             # then there is likely work to be done
             all_wfs = getWorkflowsByName(url, wfs, details=True)
 
-    wfs = filter( lambda r :r['SubRequestType'] == 'RelVal' if 'SubRequestType' in r else False, all_wfs)
+    wfs = [r for r in all_wfs if (r['SubRequestType'] == 'RelVal' if 'SubRequestType' in r else False)]
     ## need a special treatment for those
-    hi_wfs = filter( lambda r :r['SubRequestType'] == 'HIRelVal' if 'SubRequestType' in r else False, all_wfs)
+    hi_wfs = [r for r in all_wfs if (r['SubRequestType'] == 'HIRelVal' if 'SubRequestType' in r else False)]
 
     by_campaign = defaultdict(set)
     by_hi_campaign = defaultdict(set)
     for wf in wfs:
-        print "Relval:",wf['RequestName'], wf['Campaign']
+        print("Relval:",wf['RequestName'], wf['Campaign'])
         by_campaign[wf['Campaign']].add( wf['PrepID'] )
 
 
     for wf in hi_wfs:
-        print "HI Relval:",wf['RequestName'], wf['Campaign']
+        print("HI Relval:",wf['RequestName'], wf['Campaign'])
         by_hi_campaign[wf['Campaign']].add( wf['PrepID'] )
         
     default_setup = {
@@ -61,7 +61,7 @@ def batchor( url ):
         if "parameters" in p and "SiteWhitelist" in p["parameters"] and len(p["parameters"]["SiteWhitelist"])>1:
             choose_from = list(set(p["parameters"]["SiteWhitelist"]) & set(SI.sites_ready))
             picked = random.choice( choose_from )
-            print "picked",picked,"from",choose_from
+            print("picked",picked,"from",choose_from)
             p["parameters"]["SiteWhitelist"] = [picked]
             
     batches = BI.all()
@@ -74,8 +74,8 @@ def batchor( url ):
             if key in campaign:
                 ## augment with the routing information
                 augment_with = relval_routing[key]
-                print "Modifying the batch configuration because of keyword",key
-                print "with",augment_with
+                print("Modifying the batch configuration because of keyword",key)
+                print("with",augment_with)
                 setup = deep_update( setup, augment_with )
 
         pick_one_site( setup )
@@ -86,7 +86,7 @@ def batchor( url ):
         setup['name'] = campaign
         wmcoreCamp = parseMongoCampaigns(setup)[0]
         res = createCampaignConfig(wmcoreCamp)
-        print "Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res)
+        print("Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res))
 
     for campaign in by_hi_campaign:
         if campaign in batches: continue
@@ -105,12 +105,12 @@ def batchor( url ):
         setup['name'] = campaign
         wmcoreCamp = parseMongoCampaigns(setup)[0]
         res = createCampaignConfig(wmcoreCamp)
-        print "Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res)
+        print("Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res))
 
     ## only new campaigns in announcement
     for new_campaign in list(set(add_on.keys())-set(CI.all(c_type='relval'))):
         ## this is new, and can be announced as such
-        print new_campaign,"is new stuff"
+        print(new_campaign,"is new stuff")
         subject = "Request of RelVal samples batch %s"% new_campaign
         text="""Dear all, 
 A new batch of relval workflows was requested.
@@ -128,8 +128,8 @@ This is an automated message"""%( new_campaign,
                                   )
 
 
-        print subject
-        print text
+        print(subject)
+        print(text)
         #to = ['hn-cms-dataopsrequests@cern.ch']
         to = ['cmstalk+dataopsrequests@dovecotmta.cern.ch']
         sendEmail(subject, text, destination=to)
@@ -139,16 +139,16 @@ This is an automated message"""%( new_campaign,
     for old_campaign in CI.all(c_type='relval'):
         all_in_batch = getWorkflowByCampaign(url, old_campaign, details=True)
         if not all_in_batch: continue
-        is_batch_done = all(map(lambda s : not s in ['completed','force-complete','running-open','running-closed','acquired','staged','staging','assigned','assignment-approved'], [wf['RequestStatus']for wf in all_in_batch]))
+        is_batch_done = all([not s in ['completed','force-complete','running-open','running-closed','acquired','staged','staging','assigned','assignment-approved'] for s in [wf['RequestStatus']for wf in all_in_batch]])
         ## check all statuses
         if is_batch_done:
             #print "batch",old_campaign,"can be closed or removed if necessary"
             #campaigns[old_campaign]['go'] = False ## disable
             CI.pop( old_campaign ) ## or just drop it all together ?
             BI.pop( old_campaign )
-            print "batch",old_campaign," configuration was removed"
+            print("batch",old_campaign," configuration was removed")
             res = deleteCampaignConfig(old_campaign)
-            print "Campaign %s correctly deleted in ReqMgr2: %s" % (old_campaign, res)
+            print("Campaign %s correctly deleted in ReqMgr2: %s" % (old_campaign, res))
 
 
     ## merge all anyways
