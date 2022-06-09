@@ -600,7 +600,7 @@ class componentCheck(threading.Thread):
         data = getReqmgrInfo(reqmgr_url)
 
     def check_mcm(self):
-        from .McMClient import McMClient
+        from McMClient import McMClient
         mcmC = McMClient(dev=False)
         test = mcmC.getA('requests', page=0)
         time.sleep(1)
@@ -622,7 +622,7 @@ class componentCheck(threading.Thread):
             raise Exception("dbs corrupted")
 
     def check_wtc(self):
-        from .wtcClient import wtcClient
+        from wtcClient import wtcClient
         WC = wtcClient()
         a = WC.get_actions()
         if a is None:
@@ -643,7 +643,7 @@ class componentCheck(threading.Thread):
         infos = [a['status'] for a in db.find()]
 
     def check_jira(self):
-        from .JIRAClient import JIRAClient
+        from JIRAClient import JIRAClient
         JC = JIRAClient()
         opened = JC.find({'status': 'OPEN'})
 
@@ -3086,7 +3086,7 @@ def invalidate(url, wfi, only_resub=False, with_output=True):
 
 
 def _invalidate(url, wfi, only_resub=False, with_output=True):
-    from . import reqMgrClient
+    import reqMgrClient
     familly = wfi.getFamilly(and_self=True, only_resub=only_resub)
     outs = set()
     check = []
@@ -3104,7 +3104,7 @@ def _invalidate(url, wfi, only_resub=False, with_output=True):
 
 
 def forceComplete(url, wfi):
-    from . import reqMgrClient
+    import reqMgrClient
     familly = getWorkflowById(url, wfi.request['PrepID'], details=True)
     for member in familly:
         print("considering", member['RequestName'], "as force complete")
@@ -3185,7 +3185,7 @@ class agentInfo:
         return self._get(agent, 'status', 'N/A')
 
     def checkTrello(self, sync_trello=None, sync_agents=None, acting=False):
-        from .TrelloClient import TrelloClient
+        from TrelloClient import TrelloClient
         if not hasattr(self, 'tc'):
             self.tc = TrelloClient()
         tc = self.tc
@@ -4139,7 +4139,7 @@ class workflowInfo:
         try:
 
             if mcm == None:
-                from .McMClient import McMClient
+                from McMClient import McMClient
                 mcm = McMClient(dev=False)
             pids = self.getPrepIDs()
             wf_name = self.request['RequestName']
