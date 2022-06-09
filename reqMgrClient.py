@@ -770,7 +770,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
     defaults["RequestName"] = workflowname
     defaults["RequestStatus"] = 'assigned'
 
-    from .utils import workflowInfo
+    from utils import workflowInfo
 
     wf = workflowInfo(url, workflowname)
 
