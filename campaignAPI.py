@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import json
 
-from .utils import make_x509_conn, reqmgr_url
+from utils import make_x509_conn, reqmgr_url
 
 
 def getCampaignConfig(docName, url=reqmgr_url):
