@@ -992,6 +992,10 @@
       "fractionpass": 0.95,
       "go": false
   },
+  "Run3Summer22GS":{
+      "fractionpass": 0.95,
+      "go": false
+  },
   "Run3Summer22NanoAOD" :{
         "fractionpass": 0.95,
         "go": true
