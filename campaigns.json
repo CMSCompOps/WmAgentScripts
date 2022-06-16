@@ -988,6 +988,10 @@
     "maxcopies": 1,
     "resize": "auto"
   },
+  "Run3Winter22NanoAOD": {
+      "fractionpass": 0.95,
+      "go": false
+  },
   "Run3Summer22NanoAOD" :{
         "fractionpass": 0.95,
         "go": true
