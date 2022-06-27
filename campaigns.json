@@ -2902,6 +2902,26 @@
     }, 
     "secondary_AAA": false, 
     "tune": true
+  },
+  "RunIILowPUSummer20UL17GS": {
+     "fractionpass": 0.95,
+     "go": false
+  },
+  "RunIILowPUSummer20UL17wmLHEGS": {
+     "fractionpass": 0.95,
+     "go": false
+  },
+  "RunIILowPUSummer20UL17DR": {
+     "fractionpass": 0.95,
+     "go": false
+  },
+  "RunIILowPUSummer20UL17MiniAODv2": {
+     "fractionpass": 0.95,
+     "go": false
+  },
+  "RunIILowPUSummer20UL17NanoAODv9": {
+     "fractionpass": 0.95,
+     "go": false
   }, 
   "RunIIWinter15pLHE": {
     "fractionpass": 0.95, 
