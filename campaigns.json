@@ -937,7 +937,7 @@
   },
   "Run3Winter22pLHEGEN": {
      "fractionpass": 0.95,
-     "go": false
+     "go": true
   }, 
   "Run3Winter22GS": {
     "fractionpass": 0.95,
