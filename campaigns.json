@@ -992,13 +992,25 @@
       "fractionpass": 0.95,
       "go": false
   },
+  "Run3Summer22wmLHEGS": {
+      "fractionpass": 0.95,
+      "go": true
+  },
   "Run3Summer22GS":{
+      "fractionpass": 0.95,
+      "go": true
+  },
+  "Run3Summer22DR": {
       "fractionpass": 0.95,
       "go": false
   },
-  "Run3Summer22NanoAOD" :{
-        "fractionpass": 0.95,
-        "go": true
+  "Run3Summer22DRPremix": {
+      "fractionpass": 0.95,
+      "go": false
+  },
+  "Run3Summer22NanoAODv10": {
+      "fractionpass": 0.95,
+       "go": false
   },
   "Run3Winter22CosmicGS":{
       "fractionpass": 0.95,
