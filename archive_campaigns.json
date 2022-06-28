@@ -1,4 +1,8 @@
 {
+  "Run3Summer22NanoAOD" :{
+     "fractionpass": 0.95,
+     "go": true
+  },
   "Run3Autumn21GS": {
     "fractionpass": 0.95,
     "go": true,
