@@ -1,5 +1,5 @@
 import os
-from urllib.request import urlopen
+import argparse
 import json
 
 def getAMsFromQuery(query: str):
@@ -23,12 +23,20 @@ def getTasksAffectedByError(wfDict: dict, exitCode: str):
 
 
 # scipt parameters
-query = 'exitCode = 50660'
-outputFile = 'wf_test.txt'
+parser = argparse.ArgumentParser(description='Famous Submitter')
+parser.add_argument("-q"   , "--query" , type=str, help="Query", required=True)
+parser.add_argument("-o"   , "--output" , type=str, default="wf_list.txt", help="Output file")
+
+options = parser.parse_args()
+query = options.query
+outputFile = options.output
 
 # get workflows that match query
 result = getAMsFromQuery(query)
 workflows = getAllWorkflows(result)
+
+# grab only NANO workflows
+workflows = [w for w in workflows if 'nano' in w.lower()]
 
 # and write them to file
 with open(outputFile, 'w') as outfile:
