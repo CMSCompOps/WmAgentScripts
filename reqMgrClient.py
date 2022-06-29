@@ -13,7 +13,8 @@ import os
 import re
 import sys
 import time
-import urllib.request, urllib.parse, urllib.error
+# import urllib.request, urllib.parse, urllib.error
+import urllib 
 
 import dbs3Client as dbs3
 

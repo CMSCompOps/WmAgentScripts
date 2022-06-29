@@ -32,6 +32,9 @@ def makeACDC(**args):
     mcore = args.get('mcore',None)
     if mcore:
         actions.append( 'core-%s'% mcore)
+    xrootd = args.get('xrootd',None)
+    if xrootd:
+        actions.append( 'xrootd-%s'% xrootd)
         
     acdc = singleRecovery(url, task, initial.request, actions, do=True)
     if acdc:
@@ -59,6 +62,8 @@ def main():
                         help="Memory to override the original request memory")
     parser.add_option("-c","--mcore", dest="mcore", default=None,
                       help="Multicore to override the original request multicore")
+    parser.add_option("-x","--xrootd", dest="xrootd", default=None, type=int,
+                      help="Enable xrootd")
     parser.add_option("--testbed", default=False, action="store_true")
 
     (options, args) = parser.parse_args()
@@ -119,7 +124,8 @@ def main():
         for task in tasks:
             r = makeACDC(url=url, wfi=wfi, task=task,
                          memory = options.memory,
-                         mcore = options.mcore) 
+                         mcore = options.mcore,
+                         xrootd = options.xrootd) 
             if not r: 
                 print "Error in creating ACDC for",task,"on",wfname
                 break

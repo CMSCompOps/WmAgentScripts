@@ -81,6 +81,7 @@ def singleRecovery(url, task , initial, actions, do=False):
             if action.startswith('split') and (initial['RequestType'] in ['MonteCarlo'] or (initial['RequestType'] in ['TaskChain'] and not 'InputDataset' in initial['Task1'])):
                 print "I should not be doing splitting for this type of request",initial['RequestName']
                 return None
+
             if action.startswith('core'):
                 arg = action.split('-',1)[-1]
                 tasks,set_to = arg.split(':') if ':' in arg else (None,arg)
@@ -116,6 +117,12 @@ def singleRecovery(url, task , initial, actions, do=False):
                     ##payload['TimePerEvent'] = time_dict ## cannot be used yet
                 else:
                     payload['Multicore'] = increase
+
+            if action.startswith('xrootd'):
+                if actions['xrootd']:
+                    payload['TrustPUSitelists'] = True
+                else:
+                    payload['TrustPUSitelists'] = False
 
     acdc_round = 0
     initial_string = payload['RequestString']
