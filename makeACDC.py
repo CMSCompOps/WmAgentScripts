@@ -40,7 +40,7 @@ def makeACDC(**args):
     if acdc:
         return acdc
     else:
-        print "Issue while creating the acdc for",task
+        print("Issue while creating the acdc for",task)
         return None
 
 def main():
@@ -119,23 +119,31 @@ def main():
             tasks = sorted(tasks)
 
         created = {}
-        print "Workflow:",wfname
-        print "Tasks:",tasks
+        print("Workflow:",wfname)
+        print("Tasks:",tasks)
+
+        # FIXME: eventually, we want to be able to target each task
+        # with different options
+        if len(tasks) != 1:
+            print("WARNING: Multiple tasks were found in this workflow \
+                    be sure that you want to submit identical ACDCs for all tasks.")
+
         for task in tasks:
             r = makeACDC(url=url, wfi=wfi, task=task,
                          memory = options.memory,
                          mcore = options.mcore,
                          xrootd = options.xrootd) 
             if not r: 
-                print "Error in creating ACDC for",task,"on",wfname
+                print("Error in creating ACDC for",task,"on",wfname)
                 break
             created[task] = r
+
         if len(created)!=len(tasks):
-            print "Error in creating all required ACDCs"
+            print("Error in creating all required ACDCs")
             sys.exit(1)
-        print "Created:"
+        print("Created:")
         for task in created:
-            print created[task],"for",task
+            print(reated[task],"for",task)
 
 if __name__ == '__main__':
     main()
