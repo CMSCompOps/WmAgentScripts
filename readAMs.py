@@ -36,7 +36,8 @@ result = getAMsFromQuery(query)
 workflows = getAllWorkflows(result)
 
 # grab only NANO workflows
-workflows = [w for w in workflows if 'nano' in w.lower()]
+#print("WARNING: Only grabbing NANO workflows.")
+#workflows = [w for w in workflows if 'nano' in w.lower()]
 
 # and write them to file
 with open(outputFile, 'w') as outfile:

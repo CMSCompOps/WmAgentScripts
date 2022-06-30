@@ -143,7 +143,7 @@ def main():
             sys.exit(1)
         print("Created:")
         for task in created:
-            print(reated[task],"for",task)
+            print(created[task],"for",task)
 
 if __name__ == '__main__':
     main()
