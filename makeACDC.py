@@ -5,7 +5,7 @@
     It will copy all the original workflow parameters unless specified
 """
 import logging
-import sys
+import os, sys
 from optparse import OptionParser
 #from reqmgr import ReqMgrClient
 logging.basicConfig(level=logging.WARNING)
@@ -64,12 +64,18 @@ def main():
                       help="Multicore to override the original request multicore")
     parser.add_option("-x","--xrootd", dest="xrootd", default=None, type=int,
                       help="Enable xrootd")
+    parser.add_option("-o","--out", dest="out", default='acdc_wf_list.txt', type=str,
+                      help="Output file, to be filled with workflows for which ACDC was submitted.")
     parser.add_option("--testbed", default=False, action="store_true")
 
     (options, args) = parser.parse_args()
 
     global url
     url = testbed_url if options.testbed else prod_url
+
+    outACDClist = options.out
+    if os.path.isfile(outACDClist):
+        sys.exit("Make a new name for output file.")
 
     if options.all : options.task = 'all'
 
@@ -144,6 +150,7 @@ def main():
         print("Created:")
         for task in created:
             print(created[task],"for",task)
+            with open(outACDClist, 'w') as f: f.write(str(created[task])+","+str(task)+"\n")
 
 if __name__ == '__main__':
     main()
