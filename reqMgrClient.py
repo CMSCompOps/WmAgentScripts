@@ -1373,6 +1373,33 @@ def setStatusToStaged(url, workflowname, cascade=False):
             data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
     return data
 
+def setStatusToStaging(url, workflowname, cascade=False):
+    """
+    Closes out a workflow by changing the state to closed-out
+    This does not care about cascade workflows
+    """
+    if isRequestMgr2Request(url, workflowname):
+        params = {"RequestStatus" : "staging",
+                  "cascade": cascade}
+        try:
+            data = requestManagerPut(url,"/reqmgr2/data/request/%s"%workflowname, params)
+        except Exception as e:
+            print "ERROR:"
+            print e
+
+        try:
+            return None if (json.loads(data)['result'][0][workflowname] == 'OK') else "Error"
+        except:
+            return "Error"
+    else:
+        if cascade:
+            params = {"requestName" : workflowname,"cascade" : cascade}
+            data = requestManager1Post(url,"/reqmgr/reqMgr/staging", params)
+        else:
+            params = {"requestName" : workflowname,"status" : "staging"}
+            data = requestManager1Put(url,"/reqmgr/reqMgr/request", params)
+    return data
+
 
 if __name__ == "__main__":
     usage = "usage: reqMgrClient -j <file.json>"
