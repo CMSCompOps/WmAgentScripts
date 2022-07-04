@@ -3993,5 +3993,19 @@
         }
 
      }
+  },
+  "Run3DataHLT-GPU": {
+    "SiteWhitelist": [
+      "T2_US_Wisconsin"
+    ], 
+    "fractionpass": 0.0, 
+    "go": true 
+  },
+  "Run3DataHLT-CPU": {
+    "SiteWhitelist": [
+      "T2_US_Wisconsin"
+    ], 
+    "fractionpass": 0.0,
+    "go": true  
   } 
 }
