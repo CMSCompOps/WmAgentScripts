@@ -110,7 +110,8 @@ def assignor(url ,specific = None, talk=True, options=None):
             continue
 
 
-        if options.priority and int(wfh.request['RequestPriority']) < options.priority:
+        if options.priority and int(wfh.request['RequestPriority']) < int(options.priority):
+            print "Priority mode is ON: Stalling " + str(wfh.request['RequestName']) + " since its priority is below " + str(options.priority)
             continue
 
         options_text=""

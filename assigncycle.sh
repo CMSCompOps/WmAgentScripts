@@ -12,19 +12,16 @@ $BASE_DIR/cWrap.sh Unified/batchor.py
 
 ## this could replace stagor in much faster
 ## needs to put some work in stagor or not ?
-$BASE_DIR/cWrap.sh Unified/assignor.py --early
+$BASE_DIR/cWrap.sh Unified/assignor.py --early --priority 110000
 
 ## get the workflow in/out the system
 #$BASE_DIR/cWrap.sh Unified/injector.py
 
 ## assigned those that could have passed through directly
-$BASE_DIR/cWrap.sh Unified/assignor.py --from_status staged
-
-$BASE_DIR/cWrap.sh Unified/assignor.py _PR_newco
-$BASE_DIR/cWrap.sh Unified/assignor.py _PR_ref
+$BASE_DIR/cWrap.sh Unified/assignor.py --from_status staged --priority 110000
 
 ## assign the workflow to sites
-$BASE_DIR/cWrap.sh Unified/assignor.py
+$BASE_DIR/cWrap.sh Unified/assignor.py --priority 110000
 
 rm -f $lock_name
 
