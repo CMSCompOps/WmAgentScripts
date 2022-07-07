@@ -72,4 +72,5 @@ def sendResponse(method: str, url: str, endpoint: str, param: Union[str, dict] =
 
     except Exception as error:
         print(f"Failed to send response to {url + endpoint + param}\n{str(error)}")
+        print(f"Server response: \n {str(data)}")
         print(traceback.format_exc())
