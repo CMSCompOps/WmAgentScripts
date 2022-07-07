@@ -344,6 +344,8 @@ class Injector(OracleClient):
             wfsToConvert = set()
 
             workflows = self._filterBackfills(self._getWorkflowsByWMStatus())
+            # The ones to check in this round
+            workflows = workflows[:125]
             self.logger.info(f"Workflows to process: \n {pformat(workflows)}")
             for wf in workflows:
                 if self.specificWf and self.specificWf not in wf:

@@ -19,6 +19,7 @@ from WorkflowMgmt.WorkflowSchemaHandlers.BaseWfSchemaHandler import BaseWfSchema
 
 from typing import Optional, Tuple, List
 import traceback
+import time
 
 
 class Rejector(OracleClient):
@@ -313,6 +314,7 @@ class Rejector(OracleClient):
                     if rejected and self.options.get("clone"):
                         self.logger.info(f"Rejection is successful, cloning starts")
                         self._cloneWorkflow(wfController.request)
+                        time.sleep(3)
                     else:
                         self.logger.info(f"Rejection is failed")
 
