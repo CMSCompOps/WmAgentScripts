@@ -1106,7 +1106,7 @@
   },
   "PhaseIISpring22DRMiniAOD" : {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "secondaries": {
          "/MinBias_TuneCP5_14TeV-pythia8/PhaseIISpring22GS-123X_mcRun4_realistic_v11-v1/GEN-SIM": {
                  "SiteWhitelist": [
