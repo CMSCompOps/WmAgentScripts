@@ -4017,14 +4017,14 @@
 
      }
   },
-  "Run3DataHLT-GPU": {
+  "Run3DataHLTGPU": {
     "SiteWhitelist": [
       "T2_US_Wisconsin"
     ], 
     "fractionpass": 0.0, 
     "go": true 
   },
-  "Run3DataHLT-CPU": {
+  "Run3DataHLTCPU": {
     "SiteWhitelist": [
       "T2_US_Wisconsin"
     ], 
