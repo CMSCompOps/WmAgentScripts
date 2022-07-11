@@ -150,7 +150,7 @@ def main():
         print("Created:")
         for task in created:
             print(created[task],"for",task)
-            with open(outACDClist, 'w') as f: f.write(str(created[task])+","+str(task)+"\n")
+            with open(outACDClist, 'a') as f: f.write(str(created[task])+","+str(task)+"\n")
 
 if __name__ == '__main__':
     main()

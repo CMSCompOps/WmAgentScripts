@@ -116,6 +116,11 @@ def getRequestDict(url, workflow):
     request = json.loads(r2.read())
     return request
 
+def getACDCServerInfo(url):
+    conn = http.client.HTTPSConnection(url, cert_file=os.getenv(
+        'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
+    a = """https://cmsweb.cern.ch/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key=%22pdmvserv_task_HIG-RunIISummer20UL17NanoAODv9-03145__v1_T_220407_021816_1328%22&include_docs=true&reduce=false"""
+
 def main():
     url = 'cmsweb.cern.ch'
     url_tb = 'cmsweb-testbed.cern.ch'
@@ -346,7 +351,7 @@ def main():
             print("The taks in resubmission is:",schema['InitialTaskPath'])
             ## pick up the sites from acdc
             if options.sites.lower() == 'acdc':
-                where_to_run, _,_ =  original_wf.getRecoveryInfo()
+                where_to_run, missing_to_run, missing_to_run_at =  original_wf.getRecoveryInfo()
                 task = schema['InitialTaskPath']
                 sites = list(set([SI.SE_to_CE(site) for site in where_to_run[task]]) & set(SI.all_sites))
                 print("Found",sorted(sites),"as sites where to run the ACDC at, from the acdc doc of ",original_wf.request['RequestName'])
@@ -367,15 +372,24 @@ def main():
 
             #sites = sorted( set(sites) - set(not_matching) - set(not_existing))
             sites = sorted( set(sites) - set(not_ready) - set(not_existing))
-            
+    
             # print(sorted(memory_allowed),"to allow",check_mem,ncores)
-            if not_ready:
-                print(not_ready,"is/are not ready")
-                sys.exit(0)
+            # if not_ready:
+            #     print(not_ready,"is/are not ready")
+            #     sys.exit(0)
             #if not_matching:
             #    print("The memory requirement",check_mem,"is too much for",not_matching)
             #    sys.exit(0)
 
+            if options.sites.lower() == 'acdc':
+                if len(sites) == 0:
+                    print("None of the necessary sites are ready:", sites)
+                    sys.exit(0)
+                elif len(not_ready) > 0: 
+                    print("Some of the necessary sites are ready:", sites)
+                    xrootd = True
+                else:
+                    print("All necessary sites are available")
 
         ## need to play with memory setting
         if taskchain:
