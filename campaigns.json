@@ -1012,6 +1012,10 @@
       "fractionpass": 0.95,
       "go": false
   },
+  "Run3Summer22MiniAODv3":{
+      "fractionpass": 0.95,
+      "go": false
+  },
   "Run3Summer22NanoAODv10": {
       "fractionpass": 0.95,
        "go": false
@@ -1103,6 +1107,10 @@
   "PhaseIISpring22GS" :{
       "fractionpass": 0.95,
       "go": true
+  },
+  "PhaseIISpring22wmLHEGS": {
+      "fractionpass": 0.95,
+      "go": false
   },
   "PhaseIISpring22DRMiniAOD" : {
       "fractionpass": 0.95,
@@ -2919,6 +2927,10 @@
     "secondary_AAA": false, 
     "tune": true
   },
+  "RunIILowPUSummer20UL17GEN":{
+      "fractionpass": 0.95,
+      "go": false
+  },
   "RunIILowPUSummer20UL17GS": {
      "fractionpass": 0.95,
      "go": false
@@ -2929,8 +2941,19 @@
   },
   "RunIILowPUSummer20UL17DR": {
      "fractionpass": 0.95,
-     "go": false
+     "go": false,
+     "secondaries": {
+               "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL17SIM-106X_mc2017_realistic_v6-v2/GEN-SIM": {
+                        "SiteWhitelist": [
+                               "T1_IT_CNAF_Disk"
+                                         ]
+                        }
+                   }
   },
+  "RunIILowPUSummer20UL17SIM": {
+      "fractionpass": 0.95,
+      "go": false
+  },          
   "RunIILowPUSummer20UL17MiniAODv2": {
      "fractionpass": 0.95,
      "go": false
