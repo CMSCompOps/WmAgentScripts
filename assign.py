@@ -384,7 +384,7 @@ def main():
             if options.sites.lower() == 'acdc':
                 if len(sites) == 0:
                     print("None of the necessary sites are ready:", sites)
-                    sys.exit(0)
+                    continue
                 elif len(not_ready) > 0: 
                     print("Some of the necessary sites are ready:", sites)
                     xrootd = True
