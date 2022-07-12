@@ -1536,9 +1536,7 @@ class siteInfo:
         return s
 
     def fetch_glidein_info(self, talk=True):
-        print("ah")
         self.sites_memory = dataCache.get('gwmsmon_totals')
-        print("ahh")
         for site in list(self.sites_memory.keys()):
             if not site in self.sites_ready:
                 self.sites_memory.pop(site)
