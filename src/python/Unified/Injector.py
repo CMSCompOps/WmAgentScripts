@@ -112,6 +112,7 @@ class Injector(OracleClient):
             (self.users["relval"], "TaskChain"),
             (self.users["pnr"], "TaskChain"),
             (self.users["pnr"], "StepChain"),
+            (self.users["pnr"], "ReReco"),
         ]
 
         for users, requestType in userRequestTypePairs:
