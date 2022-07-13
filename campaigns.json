@@ -1110,7 +1110,7 @@
   },
   "PhaseIISpring22wmLHEGS": {
       "fractionpass": 0.95,
-      "go": false
+      "go": true
   },
   "PhaseIISpring22DRMiniAOD" : {
       "fractionpass": 0.95,
