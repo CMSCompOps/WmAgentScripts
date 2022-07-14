@@ -134,6 +134,7 @@ def main():
             print("WARNING: Multiple tasks were found in this workflow \
                     be sure that you want to submit identical ACDCs for all tasks.")
 
+        # create an ACDC workflow
         for task in tasks:
             r = makeACDC(url=url, wfi=wfi, task=task,
                          memory = options.memory,
@@ -147,6 +148,7 @@ def main():
         if len(created)!=len(tasks):
             print("Error in creating all required ACDCs")
             sys.exit(1)
+
         print("Created:")
         for task in created:
             print(created[task],"for",task)

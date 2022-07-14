@@ -133,6 +133,8 @@ def main():
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('-t', '--team', help='Type of Requests', dest='team', default='production')
     parser.add_option('-s', '--sites', help=' "t1" for Tier-1\'s and "t2" for Tier-2\'s', dest='sites', default='all')
+    parser.add_option('--checksite', default=False,action='store_true')
+    parser.add_option('-x', '--exclude', help='Exclude site name, or comma sperated list', default=None, dest='exclude_sites')
     parser.add_option('--special',  help='Use it for special workflows. You also have to change the code according to the type of WF', dest='special')
     parser.add_option('-r', '--replica', action='store_true', dest='replica', default=False, help='Adds a _Disk Non-Custodial Replica parameter')
     parser.add_option('-p', '--procversion', help='Processing Version, if empty it will leave the processing version that comes by default in the request', dest='procversion')
@@ -157,7 +159,6 @@ def main():
     parser.add_option('-c', '--multicore', help='Set the multicore parameter to the workfllow', dest='multicore', default=False)
     parser.add_option('-e', '--era', help='Acquistion era', dest='era')
     parser.add_option("--procstr", dest="procstring", help="Overrides Processing String with a single string")
-    parser.add_option('--checksite', default=False,action='store_true')
     (options, args) = parser.parse_args()
     
     if options.testbed:
@@ -390,6 +391,11 @@ def main():
                     xrootd = True
                 else:
                     print("All necessary sites are available")
+
+        # provide a list of site names to exclude
+        if options.exclude_sites is not None:
+            excludeSites = options.exclude_sites.split(',')
+            sites = sorted(set(sites) - set(excludeSites))
 
         ## need to play with memory setting
         if taskchain:
