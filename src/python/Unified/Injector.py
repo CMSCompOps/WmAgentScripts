@@ -126,6 +126,25 @@ class Injector(OracleClient):
         self.logger.info(self.logMsg["nWfs"], len(workflows))
         return workflows
 
+    def _filterInjectedWorkflows(self, workflows: List[str]) -> List[str]:
+        """
+            The function to filter out the processed workflows and return newly submitted ones
+            :workflows: workflows names
+            :return: workflows names
+        """
+        filteredWorkflows = []
+        for workflow in workflows:
+            wfExists = self.checkIfWorkflowExists(workflow)
+            if not wfExists:
+                filteredWorkflows.append(workflow)
+
+        self.logger.info("There are %s workflows in total. %s of them were already injected. Will process %s workflows in this cycle",
+                         str(len(workflows)),
+                         str( len(workflows) - len(filteredWorkflows) ),
+                         str(filteredWorkflows))
+
+        return filteredWorkflows
+
     def _getWorkflowFamily(self, wfController: WorkflowController) -> List[Workflow]:
         """
         The function to get the family for a given workflow
@@ -322,6 +341,9 @@ class Injector(OracleClient):
 
         self.session.commit()
 
+    def checkIfWorkflowExists(self, workflow: str) -> bool:
+        return self.session.query(Workflow).filter(Workflow.name == workflow).first()
+
     def go(self) -> bool:
         """
         The function to check if the injector can go
@@ -345,6 +367,7 @@ class Injector(OracleClient):
             wfsToConvert = set()
 
             workflows = self._filterBackfills(self._getWorkflowsByWMStatus())
+            workflows = self._filterInjectedWorkflows(workflows)
             # The ones to check in this round
             workflows = workflows[:125]
             self.logger.info(f"Workflows to process: \n {pformat(workflows)}")
@@ -352,7 +375,7 @@ class Injector(OracleClient):
                 if self.specificWf and self.specificWf not in wf:
                     continue
 
-                wfExists = self.session.query(Workflow).filter(Workflow.name == wf).first()
+                wfExists = self.checkIfWorkflowExists(wf)
                 if not wfExists:
                     self.logger.info(f"Current workflow to inject: {wf}")
                     wfController = WorkflowController(wf)
