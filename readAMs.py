@@ -22,6 +22,30 @@ def getTasksAffectedByError(wfDict: dict, exitCode: str):
 		if exitCode in exitCodes: affectedTasks.append(task)
 	return affectedTasks
 
+def getDictOfErrors(result: dict):
+	"""
+	compile information in a nested dictionary with form
+	workflow x task x errorCodes
+	"""
+	wfToFix = nested_dict(2, str)
+	for wf in result.keys():
+
+		# all tasks that failed in this wf
+		errors = result[wf]['errors']
+		failedTasks = list(errors.keys())
+
+		# only relevant tasks that failed in this wf
+		for task in failedTasks:
+			if any([sub in task for sub in ['LogCollect', 'Cleanup']]):
+				errors.pop(task)
+
+		# save dictionary
+		failedTasks = list(errors.keys())
+		for task in failedTasks:
+			wfToFix[wf][task] = list(errors[task].keys())
+
+	return wfToFix
+
 def nested_dict(n, type):
     if n == 1:
         return defaultdict(type)
@@ -39,30 +63,9 @@ outputFile = options.output
 
 # get workflows that match query
 result = getAMsFromQuery(query)
-workflows = getAllWorkflows(result)
 
-# and write them to file
-with open(outputFile, 'w') as outfile:
-  outfile.write('\n'.join(str(i) for i in workflows))
-
-# compile information in a nested dictionary with form
-# workflow x task x errorCodes
-wfToFix = nested_dict(2, str)
-for wf in result.keys():
-
-	# all tasks that failed in this wf
-	errors = result[wf]['errors']
-	failedTasks = list(errors.keys())
-
-	# only relevant tasks that failed in this wf
-	for task in failedTasks:
-		if any([sub in task for sub in ['LogCollect', 'Cleanup']]):
-			errors.pop(task)
-
-	# save dictionary
-	failedTasks = list(errors.keys())
-	for task in failedTasks:
-		wfToFix[wf][task] = list(errors[task].keys())
+# get dictionary of errors: workflows x tasks x errors
+wfToFix = getDictOfErrors(result)
 
 # loop over workflows, tasks, for each create ACDC and assign it
 # using default or custom configurations
@@ -84,6 +87,7 @@ for wf, tasks in wfToFix.items():
 			# add custom configs
 			if err == '8001':
 				exclude = 'T2_CH_CERN_HLT, T2_CH_CERN'
+				xrootd = True
 
 			# other custom configs ...
 
@@ -92,3 +96,6 @@ for wf, tasks in wfToFix.items():
 
 		# assign it
 		os.system('assign.py --memory {} --file {} --exclude {} --checksite --sites acdc'.format(mem, out, exclude))
+
+		# remove helper txt file
+		os.system('rm {}'.format(out))
