@@ -138,6 +138,11 @@ class Injector(OracleClient):
             if not wfExists:
                 filteredWorkflows.append(workflow)
 
+        self.logger.info("There are %s workflows in total. %s of them were already injected. Will process %s workflows in this cycle",
+                         str(len(workflows)),
+                         str( len(workflows) - len(filteredWorkflows) ),
+                         str(filteredWorkflows))
+
         return filteredWorkflows
 
     def _getWorkflowFamily(self, wfController: WorkflowController) -> List[Workflow]:
