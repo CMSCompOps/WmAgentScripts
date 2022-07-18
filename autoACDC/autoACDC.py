@@ -14,6 +14,7 @@
 import http.client
 import os, sys, re
 import logging
+from typing import Optional, List, Tuple
 import json
 import copy
 import optparse
@@ -33,12 +34,25 @@ logging.basicConfig(level=logging.WARNING)
 
 class autoACDC()
 
-    def __init__(self):
+    def __init__(self, taskName: str, testbed: Optional[bool] = False):
+
+        self.testbed = testbed
+        self.taskName = taskName
+        self.exclude_sites = None
+        self.xrootd = False
+        self.mem = None
+        self.mcore = None
 
         self.dbs3_url = r'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
-        self.url = 'cmsweb.cern.ch'
+        self.url_real = 'cmsweb.cern.ch'
         self.url_tb = 'cmsweb-testbed.cern.ch'
+        self.url = self.url_tb if self.testbed else self.url_real
+        self.wfInfo = workflowInfo(self.url, self.taskName)
+        self.sites  = self.setSites()
 
+        self.acdcWf = None
+        self.schema = None
+        
     def getRandomDiskSite(self, site=None):
         """
             Gets a random disk site and append _Disk
@@ -118,48 +132,69 @@ class autoACDC()
         if verbose:
             print(res)
 
-    def getRequestDict(self, url, workflow):
-        conn = http.client.HTTPSConnection(url, cert_file=os.getenv(
-            'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
-        r1 = conn.request("GET", '/reqmgr/reqMgr/request?requestName=' + workflow)
-        r2 = conn.getresponse()
-        request = json.loads(r2.read())
-        return request
-
-    def getACDCServerInfo(self, url):
-        conn = http.client.HTTPSConnection(url, cert_file=os.getenv(
-            'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
-        a = """https://cmsweb.cern.ch/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key=%22pdmvserv_task_HIG-RunIISummer20UL17NanoAODv9-03145__v1_T_220407_021816_1328%22&include_docs=true&reduce=false"""
-
     def makeACDCRequest(self, **args):
-        url = args.get('url')
-        wfi = args.get('wfi')
-        task = args.get('task')
-        initial = wfi
+        
         actions = []
-        memory = args.get('memory',None)
-        if memory:
-            #increment = initial.request['Memory'] - memory
-            #actions.append( 'mem-%d'% increment )
-            actions.append( 'mem-%s'% memory )
-        mcore = args.get('mcore',None)
-        if mcore:
-            actions.append( 'core-%s'% mcore)
-        xrootd = args.get('xrootd',None)
-        if xrootd:
-            actions.append( 'xrootd-%s'% xrootd)
+        if self.memory:
+            actions.append( 'mem-%s'% self.memory )
+        if self.mcore:
+            actions.append( 'core-%s'% self.mcore)
+        if self.xrootd:
+            actions.append( 'xrootd-%s'% self.xrootd)
             
-        acdc = singleRecovery(url, task, initial.request, actions, do=True)
+        acdc = singleRecovery(self.url, self.taskName, self.wfInfo.request, actions, do=True)
         if acdc:
-            return acdc
+            self.acdcWf = acdc
         else:
-            print("Issue while creating the acdc for",task)
-            return None
+            Exception("Issue while creating ACDC for "+task)
+
+    def checkSites(self, sites):
+
+        SI = siteInfo()
+
+        not_ready = sorted(set(sites) & set(SI.sites_not_ready))
+        not_existing = sorted(set(sites) - set(SI.all_sites))
+        not_matching = sorted((set(sites) - set(not_ready) - set(not_existing)))
+
+        sites = sorted(set(sites) - set(not_ready) - set(not_existing))
+
+        # if any (but not all) of the sites are down
+        # enable xrootd and run anyways
+        if sites.lower() == 'acdc':
+            if len(sites) == 0:
+                raise Exception("None of the necessary sites are ready")
+            elif len(not_ready) > 0: 
+                print("Some of the necessary sites are not ready:",  set(not_ready))
+                self.xrootd = True
+             else:
+                print("All necessary sites are available")
+
+        return sites
+
+
+    def setSites(self):
+
+        SI = siteInfo()
+        original_wf = workflowInfo(self.url, self.schema['OriginalRequestName']) 
+            
+        where_to_run, missing_to_run, missing_to_run_at =  original_wf.getRecoveryInfo()
+        task = schema['InitialTaskPath']
+        sites = list(set([SI.SE_to_CE(site) for site in where_to_run[task]]) & set(SI.all_sites))
+        print("Found",sorted(sites),"as sites where to run the ACDC at, from the acdc doc of ", original_wf.request['RequestName'])
+
+        sites = self.checkSites(sites)
+
+        # provide a list of site names to exclude
+        if self.exclude_sites is not None:
+            sites = sorted(set(sites) - set(self.excludeSites))
+
+        return sites
+
 
     def assign(self, **args):
         
         team = args.get('team')
-        sites = args.get('sites') # options: t1, t2, acdc
+        sites = args.get('sites') # options: t1, t2, acdc, original
         checksite = args.get('checksite') # bool
         exclude_sites = args.get('exclude_sites') # site name, or comma separated list
         special = args.get('special') # Use it for special workflows. You also have to change the code according to the type of WF
@@ -208,35 +243,15 @@ class autoACDC()
         taskchain = False
         xrootd= False
         secondary_xrootd= False
-
-        SI = siteInfo()
-            
-        getRandomDiskSite.T1 = SI.sites_T1s
-        # Handling the parameters given in the command line
-        # parse site list
-        if sites.lower() == "t1":
-            sites = SI.sites_T1s
-        elif sites.lower() == "t2":
-            sites = SI.sites_T2s
-        elif sites.lower() in ["all","t1+t2","t2+t1"] :
-            sites = SI.sites_T2s+SI.sites_T1s
-        elif sites.lower() == "mcore":
-            sites = SI.sites_mcore_ready
-        elif hasattr(SI,sites):
-            sites = getattr(SI,sites)
-        #elif sites.lower() == 'acdc':
-        #    sites = []
-        else: 
-            sites = [site for site in sites.split(',')]
         
-
         if replica:
             replica = True
 
         for wfn in wfs:
+
             # Getting the original dictionary
             wfi = workflowInfo( url, wfn )
-            schema = wfi.request
+            self.schema = wfi.request
 
             if 'OriginalRequestName' in schema:
                 print("Original workflow is:",schema['OriginalRequestName'])
@@ -393,15 +408,9 @@ class autoACDC()
 
                 #sites = sorted( set(sites) - set(not_matching) - set(not_existing))
                 sites = sorted( set(sites) - set(not_ready) - set(not_existing))
-        
-                # print(sorted(memory_allowed),"to allow",check_mem,ncores)
-                # if not_ready:
-                #     print(not_ready,"is/are not ready")
-                #     sys.exit(0)
-                #if not_matching:
-                #    print("The memory requirement",check_mem,"is too much for",not_matching)
-                #    sys.exit(0)
 
+                # if any (but not all) of the sites are down
+                # enable xrootd and run anyways
                 if sites.lower() == 'acdc':
                     if len(sites) == 0:
                         print("None of the necessary sites are ready:", sites)
@@ -485,8 +494,9 @@ class autoACDC()
                     multicore = multicore_dict
                     print(multicore)
                     print(timeperevent_dict,"cannot be used yet.")
-        # If the --test argument was provided, then just print the information
-        # gathered so far and abort the assignment
+
+            # If the --test argument was provided, then just print the information
+            # gathered so far and abort the assignment
             print(wf_name)
             print("Era:",era)
             print("ProcStr:",procstring)
@@ -499,7 +509,8 @@ class autoACDC()
             print("ACDC:", str(is_resubmission))
             print("Xrootd:", str(xrootd))
             print("Secondary_xrootd:", str(secondary_xrootd))
-            #if test:            continue
+            if test:
+                continue
             
             # Really assigning the workflow now
             #print wf_name, '\tEra:', era, '\tProcStr:', procstring, '\tProcVer:', procversion, '\tTeam:', team, '\tSite:', sites
@@ -524,100 +535,3 @@ class autoACDC()
                           )
         
         sys.exit(0)
-
-
-    def makeACDC(self, **args):
-
-        file = args.get('file') # Text file with a list of workflows
-        workflow = args.get('workflow') # Comma separated list of wf to handle
-        task = args.get('task') # Comma separated task to be recovered
-        path = args.get('path') # Comma separated list of paths to recover
-        recover_all = args.get('recover_all', False) # Make acdc for all tasks to be recovered
-        memory = args.get('memory') # Memory to override the original request memory
-        mcore = args.get('mcore') # Multicore to override the original request multicore
-        xrootd = args.get('xrootd') # Enable xrootd
-        out_file = args.get("out_file", 'acdc_wf_list.txt') # Output file, to be filled with workflows for which ACDC was submitted.
-        testbed = args.get('testbed', False)
-   
-        self.url = testbed_url if testbed else self.prod_url
-
-        outACDClist = out_file
-        if os.path.isfile(outACDClist):
-            sys.exit("Make a new name for output file.")
-
-        if recover_all : task = 'all'
-
-        if not task:
-            parser.error("Provide the -t Task Name or --all")
-            sys.exit(1)
-
-        if not ((workflow) or (path) or (file)):
-            parser.error("Provide the -w Workflow Name or the -p path or the -f workflow filelist")
-            sys.exit(1)
-        
-        wfs = None
-        wf_and_task = defaultdict(set)
-        if file:
-            wfs = [l.strip() for l in open(file) if l.strip()]
-        elif workflow:
-            wfs = workflow.split(',')
-        elif path:
-            ## self contained
-            paths = path.split(',')
-            for p in paths:
-                _,wf,t = p.split('/',2)
-                wf_and_task[wf].add('/%s/%s'%(wf,t))
-        else:
-            parser.error("Either provide a -f filelist or a -w workflow or -p path")
-            sys.exit(1)
-
-        if not wf_and_task:
-            if task == 'all':
-                for wfname in wfs: 
-                    wf_and_task[wfname] = None
-            else:
-                for wfname in wfs: 
-                    wf_and_task[wfname].update( [('/%s/%s'%(wfname,task)).replace('//','/') for task in task.split(',')] )
-
-        if not wf_and_task:
-            parser.error("Provide the -w Workflow Name and the -t Task Name or --all")
-            sys.exit(1)        
-
-        
-        for wfname,tasks in wf_and_task.items():
-            wfi = workflowInfo(url, wfname)
-            if tasks == None:
-                where,how_much,how_much_where = wfi.getRecoveryInfo()
-                tasks = sorted(how_much.keys())
-            else:
-                tasks = sorted(tasks)
-
-            created = {}
-            print("Workflow:",wfname)
-            print("Tasks:",tasks)
-
-            # FIXME: eventually, we want to be able to target each task
-            # with different options
-            if len(tasks) != 1:
-                print("WARNING: Multiple tasks were found in this workflow \
-                        be sure that you want to submit identical ACDCs for all tasks.")
-
-            # create an ACDC workflow
-            for task in tasks:
-                r = makeACDCRequest(url=url, wfi=wfi, task=task,
-                             memory = memory,
-                             mcore = mcore,
-                             xrootd = xrootd) 
-                if not r: 
-                    print("Error in creating ACDC for",task,"on",wfname)
-                    break
-                created[task] = r
-
-            if len(created)!=len(tasks):
-                print("Error in creating all required ACDCs")
-                sys.exit(1)
-
-            print("Created:")
-            for task in created:
-                print(created[task],"for",task)
-                with open(outACDClist, 'a') as f: f.write(str(created[task])+"\n")
