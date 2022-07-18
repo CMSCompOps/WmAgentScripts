@@ -222,12 +222,9 @@ class autoACDC()
 
         return actions
 
-    def getAssignParameters(self):
+    def setACDCWfInfo(self):
         """
-        Defines a dictionary of paremeters for assign based on the
-        original workflow, the ACDC created, and the options that
-        are passed to the class.
-        Returns: a dictionary of parameters for assign.
+        Sets the acdcInfo and schema of the submitted ACDC wf.
         """
 
         # grab the ACDC workflow information and schema
@@ -242,6 +239,11 @@ class autoACDC()
         if (self.schema["RequestStatus"] != "assignment-approved") and not self.options['testbed_assign']:
             raise Exception("RequestType is not 'assignment-approved'")
 
+    def getPreviousWfs(self):
+        """
+        Returns: the first (ancestor) and last (original) workflow infos.
+        """
+
         if 'OriginalRequestName' in self.schema:
             original_wf = workflowInfo(url, self.schema['OriginalRequestName'])            
             ancestor_wf = workflowInfo(url, self.schema['OriginalRequestName'])
@@ -253,6 +255,20 @@ class autoACDC()
                 ancestor_wf = workflowInfo(url, ancestor_wf.request['OriginalRequestName'])
         else:
             raise Exception("'OriginalRequestName' not in schema.")
+
+        return original_wf, ancestor_wf
+
+    def getAssignParameters(self):
+        """
+        Defines a dictionary of paremeters for assign based on the
+        original workflow, the ACDC created, and the options that
+        are passed to the class.
+        Returns: a dictionary of parameters for assign.
+        """
+
+        self.setACDCWfInfo()
+
+        original_wf, ancestor_wf = self.getPreviousWfs()
 
         # check to see if the workflow is a task chain or an ACDC of a taskchain
         taskchain = (schema["RequestType"] == "TaskChain") or (ancestor_wf and ancestor_wf.request["RequestType"] == "TaskChain")
