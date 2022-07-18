@@ -11,7 +11,6 @@ from typing import Optional, List, Tuple
 from random import choice
 
 from dbs.apis.dbsClient import DbsApi
-import reqMgrClient
 import reqMgrClient as reqMgr
 from utils import workflowInfo, siteInfo
 from collections import defaultdict 
@@ -20,7 +19,7 @@ from Unified.recoveror import singleRecovery
 logging.basicConfig(level=logging.WARNING)
 
 
-class autoACDC()
+class autoACDC():
     """
     This class is meant to automatically submit ACDCs and assign them 
     for a single task/workflow, and is based on makeACDC.py and assign.py.
@@ -102,7 +101,7 @@ class autoACDC()
         elif len(not_ready) > 0: 
             logging.info("Some of the necessary sites are not ready:",  set(not_ready))
             self.options['xrootd'] = True
-         else:
+        else:
             logging.info("All necessary sites are available")
 
         return sites
@@ -187,25 +186,26 @@ class autoACDC()
         while True:
             t = 'Task%d'%it
             it += 1
-            if t in schema:
-                tname = schema[t]['TaskName']
-                mcore = schema[t]['Multicore']
+            if t in self.schema:
+                tname = self.schema[t]['TaskName']
+                mcore = self.schema[t]['Multicore']
                 if tasks and not tname in tasks:
-                    multicore_dict[tname] = schema[t]['Multicore']
-                    timeperevent_dict[tname] = schema[t]['TimePerEvent']
+                    multicore_dict[tname] = self.schema[t]['Multicore']
+                    timeperevent_dict[tname] = self.schema[t]['TimePerEvent']
                     continue
-                if memory:
-                    mem = memory[tname]
+                if self.options['memory']:
+                    memory_dict = self.getTaskchainMemoryDict()
+                    mem = memory_dict[tname]
                     factor = (set_to / float(mcore))
                     fraction_constant = 0.4
                     mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))                    
-                    memory[tname] = mem + (set_to-mcore)*mem_per_core_c
-                    timeperevent_dict[tname] = schema[t]['TimePerEvent']/factor
+                    memory_dict[tname] = mem + (set_to-mcore)*mem_per_core_c
+                    timeperevent_dict[tname] = self.schema[t]['TimePerEvent']/factor
                 multicore_dict[tname] = set_to
             else:
                 break
 
-        return multicore_dict
+        return multicore_dict, memory_dict
 
     def getACDCParameters(self):
         """
@@ -245,14 +245,14 @@ class autoACDC()
         """
 
         if 'OriginalRequestName' in self.schema:
-            original_wf = workflowInfo(url, self.schema['OriginalRequestName'])            
-            ancestor_wf = workflowInfo(url, self.schema['OriginalRequestName'])
+            original_wf = workflowInfo(self.url, self.schema['OriginalRequestName'])            
+            ancestor_wf = workflowInfo(self.url, self.schema['OriginalRequestName'])
             ## go back as up as possible
             while ancestor_wf.request['RequestType'] == 'Resubmission':
                 if 'OriginalRequestName' not in ancestor_wf.request:
                     ancestor_wf = None
                     break
-                ancestor_wf = workflowInfo(url, ancestor_wf.request['OriginalRequestName'])
+                ancestor_wf = workflowInfo(self.url, ancestor_wf.request['OriginalRequestName'])
         else:
             raise Exception("'OriginalRequestName' not in schema.")
 
@@ -271,7 +271,7 @@ class autoACDC()
         original_wf, ancestor_wf = self.getPreviousWfs()
 
         # check to see if the workflow is a task chain or an ACDC of a taskchain
-        taskchain = (schema["RequestType"] == "TaskChain") or (ancestor_wf and ancestor_wf.request["RequestType"] == "TaskChain")
+        taskchain = (self.schema["RequestType"] == "TaskChain") or (ancestor_wf and ancestor_wf.request["RequestType"] == "TaskChain")
 
         # these are automatically determined from ancestor workflow
         era = ancestor_wf.acquisitionEra()
@@ -328,10 +328,13 @@ class autoACDC()
             params['LumisPerJob'] = self.options['lumisperjob']
 
         if self.options['memory']: 
-            if taskchain: params["Memory"] = getTaskchainMemoryDict()
+            if taskchain: params["Memory"] = self.getTaskchainMemoryDict()
             else: params["Memory"] = int(self.options['memory'])
         if self.options['multicore']:
-            if taskchain: params["Multicore"] = getTaskchainMulticoreDict()
+            if taskchain: 
+                multicore_dict, memory_dict = self.getTaskchainMulticoreDict()
+                params["Multicore"] = multicore_dict
+                params["Memory"] = memory_dict
             else: params["Multicore"] = int(self.options['multicore'])
 
         return params
@@ -354,14 +357,14 @@ class autoACDC()
             # save the name of the newly created ACDC workflow
             self.acdcName = acdc
         else:
-            raise Exception("Issue while creating ACDC for "+task)
+            raise Exception("Could not create ACDC.")
 
     def assign(self):
         """
         Gets the assign parameters and assigns the workflow.
         """
 
-        params = getAssignParameters()
+        params = self.getAssignParameters()
 
         # testing
         if self.options['testbed_assign']:
