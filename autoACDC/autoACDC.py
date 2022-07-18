@@ -4,14 +4,6 @@
 # Author: Luca Lavezzo
 # Date: July 2022
 
-"""
-    The script is meant to automatically submit ACDCs and assign them
-    for multiple tasks/workflows. The logic by which the options
-    of the ACDC are made are contained in a script that calls this
-    class to actually submit/assign them. This script is based on
-    makeACDC.py and assign.py.
-"""
-
 import http.client
 import os, sys, re
 import logging
@@ -29,6 +21,21 @@ logging.basicConfig(level=logging.WARNING)
 
 
 class autoACDC()
+    """
+    This class is meant to automatically submit ACDCs and assign them 
+    for a single task/workflow, and is based on makeACDC.py and assign.py.
+    The main functions are
+        makeACDC()
+        assign()
+    which are called by go(). Each of these two functions depends on some set of
+    parameters, which are specified by the respective
+        getACDCParameters()
+        getAssignParameters()
+
+    e.g.
+    auto = autoACDC('<taskName>', xrootd=True, memory=4000)
+    auto.go()
+    """
 
     def __init__(self, taskName, **args):
 
@@ -64,8 +71,8 @@ class autoACDC()
         
     def getRandomDiskSite(self, site=None):
         """
-            Gets a random disk site and append _Disk
-            """
+        Gets a random disk site and append _Disk
+        """
         if site == None:
             site = getRandomDiskSite.T1s
         s = choice(site)
@@ -74,6 +81,11 @@ class autoACDC()
         return s
 
     def checkSites(self, sites):
+        """
+        Checks whether all 'sites' are available.
+        Turns on xrootd if some are down, raises exception if all are down.
+        Returns: list of available sites, or exception.
+        """
 
         SI = siteInfo()
 
@@ -96,6 +108,10 @@ class autoACDC()
         return sites
 
     def getACDCsites(self):
+        """
+        Gets the sites of the original workflow.
+        Returns: list of sites.
+        """
 
         SI = siteInfo()
         original_wf = workflowInfo(self.url, self.schema['OriginalRequestName']) 
@@ -107,6 +123,11 @@ class autoACDC()
         return sites
 
     def getSites(self):
+        """
+        Gets the sites to run on based on the original workflow,
+        which are currently available, and which are excluded.
+        Returns: list of sites.
+        """
 
         sites = self.getACDCsites()
 
@@ -120,7 +141,10 @@ class autoACDC()
         return sites
 
     def getTaskchainMemoryDict(self):
-        ## transform into a dictionary
+        """
+        Returns: a dictionary of memory settings for taskchain.
+        """
+
         memory = self.options['memory']
         increase = set_to = None
         tasks,set_to = memory.split(':') if ':' in memory else ("",memory)
@@ -149,6 +173,10 @@ class autoACDC()
         return memory_dict
 
     def getTaskchainMulticoreDict(self):
+        """
+        Returns: a dictionary of multicore settings for taskchain.
+        """
+
         multicore = self.options['multicore']
         tasks,set_to = multicore.split(':') if ':' in multicore else ("",multicore)
         tasks = tasks.split(',') if tasks else []
@@ -180,6 +208,9 @@ class autoACDC()
         return multicore_dict
 
     def getACDCParameters(self):
+        """
+        Returns: a list of actions based on the desired ACDC parameters.
+        """
 
         actions = []
         if self.memory:
@@ -191,24 +222,15 @@ class autoACDC()
 
         return actions
 
-    def makeACDC(self):
-        
-        actions = self.getACDCParameters()
-
-        # testing
-        if self.options['testbed']:
-            logging.info(self.taskName)
-            logging.info(actions)
-            sys.exit("Running with testbed on, quitting.")
-            
-        acdc = singleRecovery(self.url, self.taskName, self.wfInfo.request, actions, do=True)
-        if acdc:
-            self.acdcName = acdc
-        else:
-            raise Exception("Issue while creating ACDC for "+task)
-
     def getAssignParameters(self):
+        """
+        Defines a dictionary of paremeters for assign based on the
+        original workflow, the ACDC created, and the options that
+        are passed to the class.
+        Returns: a dictionary of parameters for assign.
+        """
 
+        # grab the ACDC workflow information and schema
         self.acdcInfo = workflowInfo(self.url, self.acdcName)
         self.schema = self.acdcInfo.request
 
@@ -295,12 +317,35 @@ class autoACDC()
         if self.options['multicore']:
             if taskchain: params["Multicore"] = getTaskchainMulticoreDict()
             else: params["Multicore"] = int(self.options['multicore'])
-            
+
         return params
 
-    def assign(self, url, **args):
+    def makeACDC(self):
+        """
+        Gets the ACDC parameters and submits the ACDC.
+        """
+        
+        actions = self.getACDCParameters()
 
-        params = getAssignParameters(self)
+        # testing
+        if self.options['testbed']:
+            logging.info(self.taskName)
+            logging.info(actions)
+            sys.exit("Running with testbed on, quitting.")
+            
+        acdc = singleRecovery(self.url, self.taskName, self.wfInfo.request, actions, do=True)
+        if acdc:
+            # save the name of the newly created ACDC workflow
+            self.acdcName = acdc
+        else:
+            raise Exception("Issue while creating ACDC for "+task)
+
+    def assign(self):
+        """
+        Gets the assign parameters and assigns the workflow.
+        """
+
+        params = getAssignParameters()
 
         # testing
         if self.options['testbed_assign']:
@@ -313,5 +358,8 @@ class autoACDC()
             raise Exception("Could not assing workflow.")
 
     def go(self):
+        """
+        Run everything!
+        """
         self.makeACDC()
         self.assign()
