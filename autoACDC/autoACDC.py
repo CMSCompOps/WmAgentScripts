@@ -9,11 +9,14 @@ import os, sys, re
 import logging
 from typing import Optional, List, Tuple
 from random import choice
+from collections import defaultdict 
+
+import sys
+sys.path.append('..')
 
 from dbs.apis.dbsClient import DbsApi
 import reqMgrClient as reqMgr
 from utils import workflowInfo, siteInfo
-from collections import defaultdict 
 from Unified.recoveror import singleRecovery
 
 logging.basicConfig(level=logging.WARNING)
@@ -47,7 +50,7 @@ class autoACDC():
             "secondary_xrootd": args.get('secondary_xrootd', False),
             "memory": args.get('memory', None),
             "multicore": args.get('multicore', None),
-            "team": args.get('team'),
+            "team": args.get('team', None),
             "replica": args.get('replica', False), # Adds a _Disk Non-Custodial Replica parameter
             "activity": args.get('activity'), # Dashboard Activity (reprocessing, production or test), if empty will set reprocessing as default
             "lfn": args.get('lfn'), # Merged LFN base
@@ -59,11 +62,12 @@ class autoACDC():
         if self.options['testbed'] or self.options['testbed_assign']: self.url = 'cmsweb-testbed.cern.ch' 
         else: self.url = 'cmsweb.cern.ch'
 
-        # original task information
+        # original task information, used to create an ACDC
         self.taskName = taskName    
-        self.wfInfo = workflowInfo(self.url, self.taskName)
+        self.wfName = taskName.split("/")[1]
+        self.wfInfo = workflowInfo(self.url, self.wfName)
 
-        # to be created ACDC workflow info
+        # to be created ACDC workflow info, used to assign
         self.acdcName = None
         self.acdcInfo = None
         self.schema = None
@@ -99,7 +103,7 @@ class autoACDC():
         if len(sites) == 0:
             raise Exception("None of the necessary sites are ready")
         elif len(not_ready) > 0: 
-            logging.info("Some of the necessary sites are not ready:",  set(not_ready))
+            logging.info("Some of the necessary sites are not ready:" + str(list(set(not_ready))))
             self.options['xrootd'] = True
         else:
             logging.info("All necessary sites are available")
@@ -134,8 +138,9 @@ class autoACDC():
         sites = self.checkSites(sites)
 
         # provide a list of site names to exclude
-        if self.exclude_sites is not None:
-            sites = sorted(set(sites) - set(self.excludeSites))
+        if self.options['exclude_sites'] is not None:
+            if type(self.options['exclude_sites']) is not list: raise Exception("Option 'exclude_sites' must be a list of strings.")
+            sites = sorted(set(sites) - set(self.options['exclude_sites']))
 
         return sites
 
@@ -213,12 +218,12 @@ class autoACDC():
         """
 
         actions = []
-        if self.memory:
-            actions.append( 'mem-%s'% self.memory )
-        if self.multicore:
-            actions.append( 'core-%s'% self.multicore)
-        if self.xrootd:
-            actions.append( 'xrootd-%s'% self.xrootd)
+        if self.options['memory']:
+            actions.append( 'mem-%s'% self.options['memory'] )
+        if self.options['multicore']:
+            actions.append( 'core-%s'% self.options['multicore'])
+        if self.options['xrootd']:
+            actions.append( 'xrootd-%s'% int(self.options['xrootd']))
 
         return actions
 
@@ -283,8 +288,8 @@ class autoACDC():
         # some default options in case the arguments aren't passed
 
         # Must use --lfn option, otherwise workflow won't be assigned
-        if self.options['lnf']:
-            lfn = self.options['lnf']
+        if self.options['lfn']:
+            lfn = self.options['lfn']
         elif "MergedLFNBase" in self.schema:
             lfn = self.schema['MergedLFNBase']
         elif ancestor_wf and "MergedLFNBase" in ancestor_wf.request:
@@ -337,6 +342,9 @@ class autoACDC():
                 params["Memory"] = memory_dict
             else: params["Multicore"] = int(self.options['multicore'])
 
+        if self.options['team'] is not None: params['Team'] = self.options['team']
+        else: params['Team'] = self.schema['Team']
+
         return params
 
     def makeACDC(self):
@@ -355,6 +363,7 @@ class autoACDC():
         acdc = singleRecovery(self.url, self.taskName, self.wfInfo.request, actions, do=True)
         if acdc:
             # save the name of the newly created ACDC workflow
+            logging.info("Submitted " + acdc)
             self.acdcName = acdc
         else:
             raise Exception("Could not create ACDC.")
@@ -372,8 +381,10 @@ class autoACDC():
             logging.info(params)
             sys.exit("Running with testbed_assign on, quitting.")
 
-        res = reqMgr.assignWorkflow(self.url, self.acdcName, self.options['team'], params)
-        if not res:
+        res = reqMgr.assignWorkflow(self.url, self.acdcName, params['Team'], params)
+        if res:
+            logging.info("Assigned " + self.acdcName)
+        else:
             raise Exception("Could not assing workflow.")
 
     def go(self):
@@ -382,3 +393,16 @@ class autoACDC():
         """
         self.makeACDC()
         self.assign()
+
+    def setACDCName(self, acdcName):
+        """
+        Supposing you only want to assign an already created ACDC,
+        you can just set the acdcName here using this funciton, 
+        and then call assign()
+
+        e.g.
+        auto = autoACDC('<taskName>', ...)
+        auto.setACDCName('<acdcName>')
+        auto.assign()
+        """
+        self.acdcName = acdcName

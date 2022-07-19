@@ -3,6 +3,8 @@ import argparse
 import json
 from collections import defaultdict
 
+from autoACDC import autoACDC
+
 def getAMsFromQuery(query: str):
 	""" Get assistance-manuals from a query """
 	string = """curl -X POST -H "Content-Type: application/json" -d '{{"query": "{query}"}}' tni-test.cern.ch/search/search""".format(query=query)
@@ -24,7 +26,7 @@ def getTasksAffectedByError(wfDict: dict, exitCode: str):
 
 def getDictOfErrors(result: dict):
 	"""
-	compile information in a nested dictionary with form
+	compile information in a nested dictionary with dimensions
 	workflow x task x errorCodes
 	"""
 	wfToFix = nested_dict(2, str)
@@ -77,9 +79,9 @@ def main():
 		for task, errorCodes in tasks.items():
 
 			# default configs
-			mem = None
-			xrd = False
-			exclude = ''
+			memory = None
+			xrootd = False
+			exclude_sites = []
 
 			# file written by makeACDC.py to save the name of the new workflow-turned task
 			# read in by assign.py to know what it has to assign
@@ -89,19 +91,21 @@ def main():
 
 				# add custom configs
 				if err == '8001':
-					exclude = 'T2_CH_CERN_HLT, T2_CH_CERN'
+					exclude_sites = ['T2_CH_CERN_HLT', 'T2_CH_CERN']
 					xrootd = True
 
 				# other custom configs ...
 
 			# make ACDC
-			os.system('makeACDC.py --path {} --memory {} --xrootd {} --mcore {} --out {}'.format(task, mem, xrd, mcore, out))
+			auto = autoACDC(task, testbed=False, testbed_assign=False,
+							memory=memory, xrootd=xrootd, exclude_sites=exclude_sites)
+			auto.go()
 
-			# assign it
-			os.system('assign.py --memory {} --file {} --exclude {} --checksite --sites acdc'.format(mem, out, exclude))
+			# debug
+			break
 
-			# remove helper txt file
-			os.system('rm {}'.format(out))
+		# debug
+		break
 
 if __name__ == "__main__":
     main()
