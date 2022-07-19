@@ -13,6 +13,8 @@ from xml.dom.minidom import getDOMImplementation
 from dbs.apis.dbsClient import DbsApi
 from collections import defaultdict
 
+from utils import aggregateListFileLumis
+
 #das_host='https://das.cern.ch'
 das_host='https://cmsweb.cern.ch'
 #das_host='https://cmsweb-testbed.cern.ch'
@@ -74,7 +76,8 @@ def duplicateRunLumiFiles(dataset, verbose=False, skipInvalid=False):
             these = files[start:start+bucket]
             #print run,start,"=>",start+bucket
             if len(these)==0: break
-            rreply.extend( dbsapi.listFileLumiArray(logical_file_name=these,run_num=run))
+            #rreply.extend( dbsapi.listFileLumiArray(logical_file_name=these,run_num=run))
+            rreply.extend( aggregateListFileLumis(dbsapi.listFileLumiArray(logical_file_name=these,run_num=run)))
             start+=bucket
             
         #if verbose: print len(rreply),"files with their lumi info"
