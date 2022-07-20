@@ -3342,14 +3342,6 @@
     }
   }, 
   "UltraLegacy2017": {
-    "partial_copy": 0.20,
-    "SiteWhitelist": [
-      "T2_US_Vanderbilt",
-      "T1_US_FNAL",
-      "T2_US_MIT",
-      "T2_US_Nebraska",
-      "T2_US_Purdue"
-    ],
     "custodial_override": [
       "DQMIO"
     ], 
