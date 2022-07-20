@@ -125,6 +125,14 @@ class autoACDC():
 
         return sites
 
+    def excludeT3Sites(self, sites):
+        """
+        Excludes T3 sites from the input sites. Should always be
+        called for an ACDC.
+        Returns: list of sites.
+        """
+        return [s for s in sites if 'T3' not in s]
+
     def getSites(self):
         """
         Gets the sites to run on based on the original workflow,
@@ -133,6 +141,9 @@ class autoACDC():
         """
 
         sites = self.getACDCsites()
+
+        # exclude T3 sites
+        sites = self.excludeT3Sites(sites)
 
         # check if all desired sites are up and running
         sites = self.checkSites(sites)
@@ -303,7 +314,14 @@ class autoACDC():
         elif taskchain:
             activity = 'production'
         else:
-            activity = 'reprocessing'    
+            activity = 'reprocessing'   
+
+        if self.options['secondary_xrootd']:
+            secondary_xrootd =  self.options['secondary_xrootd']
+        elif ancestor_wf and "TrustPUSitelists" in ancestor_wf.request:
+            secondary_xrootd = ancestor_wf.request['TrustPUSitelists']
+        else:
+            secondary_xrootd = False
 
         params = {
             "SiteWhitelist": self.getSites(),
@@ -314,7 +332,7 @@ class autoACDC():
             "AcquisitionEra": era,
             "ProcessingString": procstring,
             "TrustSitelists": self.options['xrootd'],
-            "TrustPUSitelists": self.options['secondary_xrootd']
+            "TrustPUSitelists": secondary_xrootd
         }
 
         if self.options['replica']:
