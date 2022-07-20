@@ -17,7 +17,7 @@ sys.path.append('..')
 from dbs.apis.dbsClient import DbsApi
 import reqMgrClient as reqMgr
 from utils import workflowInfo, siteInfo
-from Unified.recoveror import singleRecovery
+from Unified.actor import singleRecovery
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -50,6 +50,7 @@ class autoACDC():
             "secondary_xrootd": args.get('secondary_xrootd', False),
             "memory": args.get('memory', None),
             "multicore": args.get('multicore', None),
+            "splitting": args.get('splitting', None), # Uses: '(number)x', 'Same', 'max'
             "team": args.get('team', None),
             "replica": args.get('replica', False), # Adds a _Disk Non-Custodial Replica parameter
             "activity": args.get('activity'), # Dashboard Activity (reprocessing, production or test), if empty will set reprocessing as default
@@ -228,13 +229,15 @@ class autoACDC():
         Returns: a list of actions based on the desired ACDC parameters.
         """
 
-        actions = []
+        actions = {}
         if self.options['memory']:
-            actions.append( 'mem-%s'% self.options['memory'] )
+            actions['memory'] =  self.options['memory']
         if self.options['multicore']:
-            actions.append( 'core-%s'% self.options['multicore'])
+            actions['multicore'] = self.options['multicore']
         if self.options['xrootd']:
-            actions.append( 'xrootd-%s'% int(self.options['xrootd']))
+            actions['xrootd'] = int(self.options['xrootd'])
+        if self.options['splitting']:
+            actions['split'] = self.options['splitting']
 
         return actions
 
@@ -316,6 +319,7 @@ class autoACDC():
         else:
             activity = 'reprocessing'   
 
+        # inherit or overwrite
         if self.options['secondary_xrootd']:
             secondary_xrootd =  self.options['secondary_xrootd']
         elif ancestor_wf and "TrustPUSitelists" in ancestor_wf.request:
