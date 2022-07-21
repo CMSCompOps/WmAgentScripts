@@ -62,8 +62,9 @@ def main():
 
 	# scipt parameters
 	parser = argparse.ArgumentParser(description='Famous Submitter')
-	parser.add_argument("-q"   , "--query", type=str, help="Query", required=True)
-	parser.add_argument("-o"   , "--output" , type=str, default="wf_list.txt", help="Output file")
+	parser.add_argument("-q"   , "--query", 	type=str, help="Query", required=True)
+	parser.add_argument("-o"   , "--output" , 	type=str, default="wf_list.txt", help="Output file")
+	parser.add_argument("-t"   , "--test" , 	action="store_true", help="Doesn't submit ACDCs")
 
 	options = parser.parse_args()
 	query = options.query
@@ -79,12 +80,9 @@ def main():
 	# using default or custom configurations
 	for wf, tasks in wfToFix.items():
 
-		if wf != 'pdmvserv_task_HIG-RunIISummer20UL16wmLHEGENAPV-04116__v1_T_220525_170353_6363': continue
-
 		for task, errorCodes in tasks.items():
 
 			print(task)
-			print(errorCodes)
 
 			# default configs
 			memory = None
@@ -95,20 +93,34 @@ def main():
 			for err in errorCodes:
 
 				# add custom configs
-				if err == '8001':
+				if err == '8001' and query == 'exitCodeSite = 8001-T2_CH_CERN_HLT':
 					exclude_sites += ['T2_CH_CERN_HLT', 'T2_CH_CERN']
 					xrootd = True
 
-				elif err == '50664':
+				if err == '8001' and query == 'exitCodeSite = 8001-T3_US_NERSC':
+					pass
+
+				if err == '50664':
 					splitting = '10x'
+
 				# other custom configs ...
+
+			
+			if options.test: 
+				continue
 
 			# make ACDC
 			auto = autoACDC(task, testbed=False, testbed_assign=False,
 							splitting=splitting,
 							memory=memory, xrootd=xrootd, exclude_sites=exclude_sites)
-			auto.go()
-			#with open(outputFile, 'a') as f: f.write(task+'\n') 
+			try:
+				auto.go()
+				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+'\n') 
+			except Exception as e:
+				print("Failed submission with excpetion", e)
+				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+', '+e+'\n') 
+			
+			print("#####################################################################\n\n")
 
 
 if __name__ == "__main__":
