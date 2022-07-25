@@ -84,6 +84,25 @@ class autoACDC():
             s += "_Disk"
         return s
 
+    def getRandomT1Site(self):
+        """
+        Gets a random T1 site.
+        Returns: site name.
+        """
+
+        # get all sites
+        SI = siteInfo()
+        sites = set(SI.all_sites)
+
+        # get only available ones
+        sites = self.checkSites(sites)
+
+        # get a random T1 site
+        sites = [s for s in sites if 'T1' in s]
+        site = choice(sites)
+
+        return site
+
     def checkSites(self, sites):
         """
         Checks whether all 'sites' are available.
@@ -102,7 +121,9 @@ class autoACDC():
         # if any (but not all) of the sites are down
         # enable xrootd and run anyways
         if len(sites) == 0:
-            raise Exception("None of the necessary sites are ready")
+            logging.info("None of the necessary sites are ready")
+            sites = [self.getRandomT1Site()]
+            logging.info("Set random site to " + str(sites))
         elif len(not_ready) > 0: 
             logging.info("Some of the necessary sites are not ready:" + str(list(set(not_ready))))
             self.options['xrootd'] = True
@@ -134,6 +155,26 @@ class autoACDC():
         """
         return [s for s in sites if 'T3' not in s]
 
+    def excludeSites(self, sites):
+        """
+        Excludes sites using the option of the class exclude_sites.
+        If there are no sites left after exclusion, it picks
+        a random T1 site to run on.
+        Returns: list of sites.
+        """
+        
+        if type(self.options['exclude_sites']) is not list: 
+            raise Exception("Option 'exclude_sites' must be a list of strings.")
+
+        sites = sorted(set(sites) - set(self.options['exclude_sites']))
+
+        if len(sites) == 0:
+            logging.info("No sites left after sites were excluded.")
+            sites = [self.getRandomT1Site()]
+            logging.info("Set random site to " + str(sites))
+
+        return sites
+
     def getSites(self):
         """
         Gets the sites to run on based on the original workflow,
@@ -150,9 +191,7 @@ class autoACDC():
         sites = self.checkSites(sites)
 
         # provide a list of site names to exclude
-        if self.options['exclude_sites'] is not None:
-            if type(self.options['exclude_sites']) is not list: raise Exception("Option 'exclude_sites' must be a list of strings.")
-            sites = sorted(set(sites) - set(self.options['exclude_sites']))
+        if self.options['exclude_sites'] is not None: sites = self.excludeSites(sites)
 
         return sites
 
@@ -407,7 +446,7 @@ class autoACDC():
         if res:
             logging.info("Assigned " + self.acdcName)
         else:
-            raise Exception("Could not assing workflow.")
+            raise Exception("Could not assign workflow.")
 
     def go(self):
         """

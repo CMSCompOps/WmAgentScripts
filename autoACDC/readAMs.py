@@ -78,11 +78,15 @@ def main():
 
 	# loop over workflows, tasks, for each create ACDC and assign it
 	# using default or custom configurations
-	for wf, tasks in wfToFix.items():
+	for iWorkflow, (wf, tasks) in enumerate(wfToFix.items()):
+
+		if iWorkflow > 2: break
+
+		print('-->',wf)
 
 		for task, errorCodes in tasks.items():
 
-			print(task)
+			print('\t|-->', task)
 
 			# default configs
 			memory = None
@@ -103,6 +107,9 @@ def main():
 				if err == '50664':
 					splitting = '10x'
 
+				if err == '99109' and query == "exitCodeSite = 99109-T2_IT_Bari":
+					exclude_sites += ['T2_IT_Bari']
+
 				# other custom configs ...
 
 			
@@ -118,7 +125,7 @@ def main():
 				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+'\n') 
 			except Exception as e:
 				print("Failed submission with excpetion", e)
-				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+', '+e+'\n') 
+				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+', '+str(e)+'\n') 
 			
 			print("#####################################################################\n\n")
 
