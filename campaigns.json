@@ -998,7 +998,7 @@
   },
   "Run3Summer22wmLHEGS": {
       "fractionpass": 0.95,
-      "go": false
+      "go": true
   },
   "Run3Summer22GS":{
       "fractionpass": 0.95,
@@ -1006,7 +1006,7 @@
   },
   "Run3Summer22DR": {
       "fractionpass": 0.95,
-      "go": false
+      "go": true
   },
   "Run3Summer22DRPremix": {
       "fractionpass": 0.95,
@@ -2929,15 +2929,15 @@
   },
   "RunIILowPUSummer20UL17GEN":{
       "fractionpass": 0.95,
-      "go": false
+      "go": true
   },
   "RunIILowPUSummer20UL17GS": {
      "fractionpass": 0.95,
-     "go": false
+     "go": true
   },
   "RunIILowPUSummer20UL17wmLHEGS": {
      "fractionpass": 0.95,
-     "go": false
+     "go": true
   },
   "RunIILowPUSummer20UL17DR": {
      "fractionpass": 0.95,
