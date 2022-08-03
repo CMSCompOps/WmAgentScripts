@@ -205,7 +205,8 @@ def filterWorkflowSchemaParam(wfSchema: dict) -> dict:
             "SiteBlacklist",
             "AllowOpportunistic",
             "Override",
-            "RequiresGPU"
+            "RequiresGPU",
+            "DatasetLifetime"
         ]
         paramsToKeep = set(wfSchema.keys()) - set(paramsToDrop)
         wfSchema = filterKeys(paramsToKeep, wfSchema)
