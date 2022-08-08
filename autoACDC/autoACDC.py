@@ -87,18 +87,27 @@ class autoACDC():
     def getRandomT1Site(self):
         """
         Gets a random T1 site.
+        Makes sure it's available, and not excluded.
+        Throws error if none match these criteria.
         Returns: site name.
         """
 
         # get all sites
         SI = siteInfo()
         sites = set(SI.all_sites)
+        sites = [s for s in sites if 'T1' in s]
 
         # get only available ones
         sites = self.checkSites(sites)
 
+        # make to exclude the desired sites
+        if self.options['exclude_sites'] is not None:  sites = self.excludeSites(sites)
+        
+        # if no available, non-excluded T1 sites
+        if len(sites) == 0:
+            raise Exception("You have excluded all avilable T1 sites.")
+
         # get a random T1 site
-        sites = [s for s in sites if 'T1' in s]
         site = choice(sites)
 
         return site
@@ -122,8 +131,6 @@ class autoACDC():
         # enable xrootd and run anyways
         if len(sites) == 0:
             logging.info("None of the necessary sites are ready")
-            sites = [self.getRandomT1Site()]
-            logging.info("Set random site to " + str(sites))
         elif len(not_ready) > 0: 
             logging.info("Some of the necessary sites are not ready:" + str(list(set(not_ready))))
             self.options['xrootd'] = True
@@ -162,7 +169,7 @@ class autoACDC():
         a random T1 site to run on.
         Returns: list of sites.
         """
-        
+
         if type(self.options['exclude_sites']) is not list: 
             raise Exception("Option 'exclude_sites' must be a list of strings.")
 
@@ -170,8 +177,6 @@ class autoACDC():
 
         if len(sites) == 0:
             logging.info("No sites left after sites were excluded.")
-            sites = [self.getRandomT1Site()]
-            logging.info("Set random site to " + str(sites))
 
         return sites
 
@@ -192,6 +197,12 @@ class autoACDC():
 
         # provide a list of site names to exclude
         if self.options['exclude_sites'] is not None: sites = self.excludeSites(sites)
+
+        # if no sites are left, sets to a random T1 site
+        # it makes sure to check that it's available and not excluded
+        if len(sites) == 0:
+            sites = [self.getRandomT1Site()]
+            logging.info("Set random site to " + str(sites))
 
         return sites
 

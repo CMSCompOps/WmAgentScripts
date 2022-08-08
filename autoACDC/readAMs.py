@@ -4,6 +4,7 @@ import json
 from collections import defaultdict
 
 sys.path.append('..')
+sys.path.append('../Unified')
 
 from utils import workflowInfo
 from autoACDC import autoACDC
@@ -30,7 +31,7 @@ def getTasksAffectedByError(wfDict: dict, exitCode: str):
 def getDictOfErrors(result: dict):
 	"""
 	compile information in a nested dictionary with dimensions
-	workflow x task x errorCodes
+	workflow x task x exitCodes
 	"""
 	wfToFix = nested_dict(2, str)
 	for wf in result.keys():
@@ -76,11 +77,11 @@ def main():
 	# get dictionary of errors: workflows x tasks x errors
 	wfToFix = getDictOfErrors(result)
 
+	print("Found", len(wfToFix.keys()), "workflows matching this query.")
+	
 	# loop over workflows, tasks, for each create ACDC and assign it
 	# using default or custom configurations
 	for iWorkflow, (wf, tasks) in enumerate(wfToFix.items()):
-
-		if iWorkflow > 2: break
 
 		print('-->',wf)
 
@@ -102,18 +103,24 @@ def main():
 					xrootd = True
 
 				if err == '8001' and query == 'exitCodeSite = 8001-T3_US_NERSC':
+					# would exclude NERSC, but we already don't run on T3s
 					pass
-
-				if err == '50664':
-					splitting = '10x'
 
 				if err == '99109' and query == "exitCodeSite = 99109-T2_IT_Bari":
 					exclude_sites += ['T2_IT_Bari']
 
+				if err == '50664':
+					splitting = '10x'
+
+				if err == '71304':
+					splitting = '10x'
+
+				
 				# other custom configs ...
 
 			
-			if options.test: 
+			if options.test:
+				print(splitting)
 				continue
 
 			# make ACDC
