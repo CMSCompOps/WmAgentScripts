@@ -52,6 +52,15 @@ def getDictOfErrors(result: dict):
 
 	return wfToFix
 
+def readInSubmittedTasks(file):
+
+	with open(file, 'r') as f: lines = f.readlines()
+
+	tasks = [line.split(', ')[0] for line in lines]
+
+	return tasks
+
+
 def nested_dict(n, type):
     if n == 1:
         return defaultdict(type)
@@ -92,6 +101,7 @@ def main():
 			# default configs
 			memory = None
 			xrootd = False
+			include_sites = []
 			exclude_sites = []
 			splitting = ''		# Uses: '(number)x', 'Same', 'max'
 
@@ -100,6 +110,7 @@ def main():
 				# add custom configs
 				if err == '8001' and query == 'exitCodeSite = 8001-T2_CH_CERN_HLT':
 					exclude_sites += ['T2_CH_CERN_HLT', 'T2_CH_CERN']
+					include_sites += ['T2_US_MIT', 'T2_IT_Pisa']
 					xrootd = True
 
 				if err == '8001' and query == 'exitCodeSite = 8001-T3_US_NERSC':
@@ -125,8 +136,9 @@ def main():
 
 			# make ACDC
 			auto = autoACDC(task, testbed=False, testbed_assign=False,
-							splitting=splitting,
-							memory=memory, xrootd=xrootd, exclude_sites=exclude_sites)
+							splitting=splitting, memory=memory, xrootd=xrootd,
+							include_sites=include_sites, exclude_sites=exclude_sites)
+
 			try:
 				auto.go()
 				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+'\n') 

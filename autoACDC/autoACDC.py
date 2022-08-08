@@ -45,6 +45,7 @@ class autoACDC():
         self.options = {
             "testbed": args.get('testbed', False),
             "testbed_assign": args.get('testbed_assign', False),
+            "include_sites": args.get('include_sites', None),
             "exclude_sites": args.get('exclude_sites', None),
             "xrootd": args.get('xrootd', False),
             "secondary_xrootd": args.get('secondary_xrootd', False),
@@ -162,11 +163,22 @@ class autoACDC():
         """
         return [s for s in sites if 'T3' not in s]
 
+    def includeSites(self, sites):
+        """
+        Include sites using the option of the class include_sites.
+        Returns: list of sites.
+        """
+
+        if type(self.options['include_sites']) is not list: 
+            raise Exception("Option 'include_sites' must be a list of strings.")
+
+        sites = sorted(set(sites) | set(self.options['include_sites']))
+
+        return sites
+
     def excludeSites(self, sites):
         """
         Excludes sites using the option of the class exclude_sites.
-        If there are no sites left after exclusion, it picks
-        a random T1 site to run on.
         Returns: list of sites.
         """
 
@@ -191,6 +203,15 @@ class autoACDC():
 
         # exclude T3 sites
         sites = self.excludeT3Sites(sites)
+
+        # debug
+        print("here ", sites)
+
+        # include sites
+        if self.options['include_sites'] is not None: sites = self.includeSites(sites)
+
+        # debug
+        print("there ", sites)
 
         # check if all desired sites are up and running
         sites = self.checkSites(sites)
