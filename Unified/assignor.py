@@ -146,16 +146,16 @@ def assignor(url ,specific = None, talk=True, options=None):
             print("The number of workflows in acquired: " + str(acquired_workflow_count))
             print("Threshold for the priority block of this request: " + str(acquired_threshold))
 
-            wfh.sendLog("Acquired check in ON: Stalling the assignment for " + str(wfh.request['RequestName']))
-            wfh.sendLog("The number of workflows in acquired: " + str(acquired_workflow_count))
-            wfh.sendLog("Threshold for the priority block of this request: " + str(acquired_threshold))
+            wfh.sendLog('assignor',"Acquired check in ON: Stalling the assignment for " + str(wfh.request['RequestName']))
+            wfh.sendLog('assignor',"The number of workflows in acquired: " + str(acquired_workflow_count))
+            wfh.sendLog('assignor',"Threshold for the priority block of this request: " + str(acquired_threshold))
 
 
             continue
         else:
             # Okay to assign
             print("Acquired check in ON: The following request has passed the check - okay to assign: " + str(wfh.request['RequestName']))
-            wfh.sendLog("Acquired check in ON: The following request has passed the check - okay to assign: " + str(wfh.request['RequestName']))
+            wfh.sendLog('assignor',"Acquired check in ON: The following request has passed the check - okay to assign: " + str(wfh.request['RequestName']))
 
         options_text=""
         if options.early: options_text+=", early option is ON"
