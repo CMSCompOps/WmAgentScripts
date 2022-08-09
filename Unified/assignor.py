@@ -13,6 +13,25 @@ import json
 import copy
 import os
 
+def get_priority_block(priority):
+    if priority >= 110000:
+        return "block1"
+    elif priority >= 90000:
+        return "block2"
+    elif priority >= 85000:
+        return "block3"
+    elif priority >= 80000:
+        return "block4"
+    elif priority >= 70000:
+        return "block5"
+    elif priority >= 63000:
+        return "block6"
+    else:
+        return "block7"
+
+def get_workflow_count_by_status(status):
+    pass
+
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock() and not options.manual: return
     mlock = moduleLock()
@@ -114,6 +133,20 @@ def assignor(url ,specific = None, talk=True, options=None):
             wfh.sendLog('assignor',"Priority mode is ON: Stalling this request since its priority is below %s"%(str(options.priority)))
             print "Priority mode is ON: Stalling " + str(wfh.request['RequestName']) + " since its priority is below " + str(options.priority)
             continue
+
+        # Control to keep the number of workflows in acquired under a limit
+        acquired_workflow_count = get_workflow_count_by_status("acquired")
+        priority_block = get_priority_block( int(wfh.request['RequestPriority']) )
+        acquired_threshold = UC.get('acquired_threshold_per_priority_block').get(priority_block, None)
+        if acquired_workflow_count > acquired_threshold:
+            # Stalling the assignment
+            print("Acquired check in ON: Stalling the assignment for " + str(wfh.request['RequestName']))
+            print("The number of workflows in acquired: " + str(acquired_workflow_count))
+            print("Threshold for the priority block of this request: " + str(acquired_threshold))
+            continue
+        else:
+            # Okay to assign
+            print("Acquired check in ON: The following request has passed the check - okay to assign: " + str(wfh.request['RequestName']))
 
         options_text=""
         if options.early: options_text+=", early option is ON"

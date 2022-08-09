@@ -454,5 +454,17 @@
   "prepIDs_to_skip": {
     "value" : [],
     "description" : "PrepIDs to skip from workflow assignment"
-  }
+  },
+  "acquired_threshold_per_priority_block" : {
+   "description" : "threshold per priority block above which assignment will be stalled",
+   "value" : {
+    "block1" : 20000,
+    "block2" : 16800,
+    "block3" : 1000,
+    "block4" : 0,
+    "block5" : 0,
+    "block6" : 0,
+    "block7" : 0
+   }
+ }
 }
