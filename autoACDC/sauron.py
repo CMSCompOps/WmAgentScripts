@@ -1,3 +1,18 @@
+""""
+SAURON:
+Semi AUtomatic Resubmission ONline
+
+Submits ACDCs with tasks that match a query en masse.
+e.g.
+python sauron.py --query "exitCode = 50664" 
+				--customise '{"8001": {"exclude_sites": ["T2_CH_CERN", "T2_CH_CERN_HLT"], 
+										"xrootd": "enabled"}, 
+							 "50664": {"splitting": "10x"}}'
+
+Author: Luca Lavezzo
+Date: July 2022
+"""
+
 import os, sys
 import argparse
 import json
@@ -52,12 +67,33 @@ def getDictOfErrors(result: dict):
 
 	return wfToFix
 
+def updateConfigs(configs, solutions):
+	for skey, sitem in solutions.items():
+
+		# check that the proposed parameter to change exists
+		if skey in configs.keys():
+
+			# we need to append to this list, not overwrite everytime
+			if skey == 'exclude_sites' or skey == 'include_sites':
+				if type(skey) == list:
+					configs[skey] += sitem
+				elif type(skey) == str:
+					configs[skey].append(sitem)
+				else:
+					raise Exception(type(skey) + " not an accepted type for " + skey)
+
+			# else, we can overwrite
+			else:
+				configs[skey] = sitem
+
+		else:
+			raise Exception(skey + " not in allowed configs.")
+
+	return configs
+
 def readInSubmittedTasks(file):
-
 	with open(file, 'r') as f: lines = f.readlines()
-
 	tasks = [line.split(', ')[0] for line in lines]
-
 	return tasks
 
 
@@ -72,13 +108,15 @@ def main():
 
 	# scipt parameters
 	parser = argparse.ArgumentParser(description='Famous Submitter')
-	parser.add_argument("-q"   , "--query", 	type=str, help="Query", required=True)
-	parser.add_argument("-o"   , "--output" , 	type=str, default="wf_list.txt", help="Output file")
-	parser.add_argument("-t"   , "--test" , 	action="store_true", help="Doesn't submit ACDCs")
+	parser.add_argument("-q"	, "--query",	type=str, help="Query to pass to search tool", required=True)
+	parser.add_argument("-c"	, "--customise",type=str, help="Dictionary of exitCodes and solutions.", required=True)
+	parser.add_argument("-o"	, "--output" , 	type=str, default="wf_list.txt", help="Output file")
+	parser.add_argument("-t"	, "--test" , 	action="store_true", help="Doesn't submit ACDCs")
 
 	options = parser.parse_args()
 	query = options.query
 	outputFile = options.output
+	solutions_dict = json.loads(options.customise)
 
 	# get wokrflow infos
 	result = getAMsFromQuery(query)
@@ -99,39 +137,25 @@ def main():
 			print('\t|-->', task)
 
 			# default configs
-			memory = None
-			xrootd = False
-			include_sites = []
-			exclude_sites = []
-			splitting = ''		# Uses: '(number)x', 'Same', 'max'
-
+			configs = {
+				"memory" : None,
+				"xrootd" : False,
+				"include_sites" : [],
+				"exclude_sites" : [],
+				"splitting" : ''		# Uses: '(number)x', 'Same', 'max'
+			}
+			
+			# for each error code in the task, if the errorCode is specified
+			# in the customisation, we update the configurations with the
+			# proposed solutions
 			for err in errorCodes:
-
-				# add custom configs
-				if err == '8001' and query == 'exitCodeSite = 8001-T2_CH_CERN_HLT':
-					exclude_sites += ['T2_CH_CERN_HLT', 'T2_CH_CERN']
-					include_sites += ['T2_US_MIT', 'T2_IT_Pisa']
-					xrootd = True
-
-				if err == '8001' and query == 'exitCodeSite = 8001-T3_US_NERSC':
-					# would exclude NERSC, but we already don't run on T3s
-					pass
-
-				if err == '99109' and query == "exitCodeSite = 99109-T2_IT_Bari":
-					exclude_sites += ['T2_IT_Bari']
-
-				if err == '50664':
-					splitting = '10x'
-
-				if err == '71304':
-					splitting = '10x'
-
-				
-				# other custom configs ...
+				for key, solutions in solutions_dict.items():
+					if err == key:
+						configs = updateConfigs(configs, solutions)
 
 			
 			if options.test:
-				print(splitting)
+				print(configs)
 				continue
 
 			# make ACDC
