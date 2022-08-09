@@ -30,7 +30,8 @@ def get_priority_block(priority):
         return "block7"
 
 def get_workflow_count_by_status(status):
-    pass
+    workflows = getWorkflows(reqmgr_url, status, details=False)
+    return len(workflows)
 
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock() and not options.manual: return
