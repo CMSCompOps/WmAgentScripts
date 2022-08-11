@@ -4022,5 +4022,13 @@
     ], 
     "fractionpass": 0.0,
     "go": true  
-  } 
+  },
+  "PhaseIISpring22pLHEGEN": {
+    "fractionpass": 0.95,
+    "go": false
+  },
+  "PhaseIISpring22SIM": {
+    "fractionpass": 0.95,
+    "go": false
+  }
 }
