@@ -3,10 +3,7 @@ runner.py
 
 Submits ACDCs with tasks that match a query en masse.
 e.g.
-python runner.py --query "exitCode = 50664"  --customise '{"8001": {"xrootd": "enabled"},  
-															"T2_US_MIT": {"splitting": "10x"},
-															"8001-T2_CH_CERN_HLT": {"exclude_sites": ["T2_CH_CERN", "T2_CH_CERN_HLT"],  "xrootd": "enabled"}
-															"RunIISummer": {"xrootd": 1}}'
+python runner.py --query "exitCode = 50664"  --customise '{"8001": {"exclude_sites": ["T2_CH_CERN", "T2_CH_CERN_HLT"],  "xrootd": "enabled"},  "50664": {"splitting": "10x"}}'
 
 Author: Luca Lavezzo
 Date: July 2022
@@ -33,7 +30,7 @@ def getAllWorkflows(wfDict: dict):
 	""" Get all workflows from dictionary """
 	return list(wfDict.keys())
 
-def getTasksWithError(wfDict: dict, exitCode: str):
+def getTasksAffectedByError(wfDict: dict, exitCode: str):
 	""" Get all tasks in a workflow that have an exitCode """
 	wfErrorsDict = wfDict['errors']
 	affectedTasks = []
@@ -42,53 +39,29 @@ def getTasksWithError(wfDict: dict, exitCode: str):
 		if exitCode in exitCodes: affectedTasks.append(task)
 	return affectedTasks
 
-def applySolutions(task_dict, solutions_dict):
+def getDictOfErrors(result: dict):
 	"""
-	Looks through the task information and matches it
-	with any of the proposed solution, updating the
-	configurations.
-
-	Returns: dict of configurations
+	compile information in a nested dictionary with dimensions
+	workflow x task x exitCodes
 	"""
+	wfToFix = nested_dict(2, str)
+	for wf in result.keys():
 
-	# default configs
-	configs = {
-		"memory" : None,
-		"xrootd" : False,
-		"include_sites" : [],
-		"exclude_sites" : [],
-		"splitting" : ''		# Uses: '(number)x', 'Same', 'max'
-	}
+		# all tasks that failed in this wf
+		errors = result[wf]['errors']
+		failedTasks = list(errors.keys())
 
-	for attr, solution in solutions_dict.items():
+		# only relevant tasks that failed in this wf
+		for task in failedTasks:
+			if any([sub in task for sub in ['LogCollect', 'Cleanup']]):
+				errors.pop(task)
 
-		# exitCode
-		if attr.isnumeric():
-			exitCode = attr
-			if exitCode in list(task_dict['errors'].keys()):
-				configs = updateConfigs(configs, solution)
+		# save dictionary
+		failedTasks = list(errors.keys())
+		for task in failedTasks:
+			wfToFix[wf][task] = list(errors[task].keys())
 
-		# exitCodeSite
-		elif '-' in attr and attr.split('-')[0].isnumeric() and any(site in attr.split('-')[1] for site in ['T0','T1','T2','T3']):
-			exitCode, site = attr.split("-")
-				if exitCode in list(task_dict['errors'].keys()):
-					if site in list(task_dict["errors"][exitCode].keys()):
-						configs = updateConfigs(configs, solution)
-
-		# site
-		elif any(site in attr for site in ['T0','T1','T2','T3']):
-			site = attr
-			for exitCode in list(task_dict['errors'].keys()):
-				if site in list(task_dict['errors'][exitCode].keys()):
-					configs = updateConfigs(configs, solution)
-
-		# campaign
-		else:
-			campaign = attr
-			if campaign in list(task_dict['campaigns'].keys()):
-				configs = updateConfigs(configs, solution)
-
-	return configs
+	return wfToFix
 
 def updateConfigs(configs, solutions):
 	for skey, sitem in solutions.items():
@@ -144,20 +117,39 @@ def main():
 	# get wokrflow infos
 	result = getAMsFromQuery(query)
 
-	print("Found", len(result.keys()), "workflows matching this query.")
+	# get dictionary of errors: workflows x tasks x errors
+	wfToFix = getDictOfErrors(result)
+
+	print("Found", len(wfToFix.keys()), "workflows matching this query.")
 
 	# loop over workflows, tasks, for each create ACDC and assign it
 	# using default or custom configurations
-	for iWorkflow, (wfName, workflow) in enumerate(result.items()):
-		print('-->',wfName)
+	for iWorkflow, (wf, tasks) in enumerate(wfToFix.items()):
+		print('-->',wf)
 
-		for task, attributes in workflow["tasks"].items():
+		for task, errorCodes in tasks.items():
 
 			print('\t|-->', task)
 			
-			# based on the tasks' attributes, apply the solutions
-			configs = applySolutions(attributes, solutions_dict)
-
+			# default configs
+			configs = {
+				"memory" : None,
+				"xrootd" : False,
+				"include_sites" : [],
+				"exclude_sites" : [],
+				"splitting" : ''		# Uses: '(number)x', 'Same', 'max'
+			}
+			
+			# for each error code in the task, if the errorCode is specified
+			# in the customisation, we update the configurations with the
+			# proposed solutions
+			foundSolvableError = False
+			for err in errorCodes:
+				for key, solutions in solutions_dict.items():
+					if err == key:
+						configs = updateConfigs(configs, solutions)
+						foundSolvableError = True
+			
 			if options.test:
 				print(configs)
 				continue
