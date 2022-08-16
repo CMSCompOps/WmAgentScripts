@@ -4,10 +4,7 @@ Semi AUtomatic Resubmission ONline
 
 Submits ACDCs with tasks that match a query en masse.
 e.g.
-python sauron.py --query "exitCode = 50664" 
-				--customise '{"8001": {"exclude_sites": ["T2_CH_CERN", "T2_CH_CERN_HLT"], 
-										"xrootd": "enabled"}, 
-							 "50664": {"splitting": "10x"}}'
+python sauron.py --query "exitCode = 50664"  --customise '{"8001": {"exclude_sites": ["T2_CH_CERN", "T2_CH_CERN_HLT"],  "xrootd": "enabled"},  "50664": {"splitting": "10x"}}'
 
 Author: Luca Lavezzo
 Date: July 2022
@@ -75,9 +72,9 @@ def updateConfigs(configs, solutions):
 
 			# we need to append to this list, not overwrite everytime
 			if skey == 'exclude_sites' or skey == 'include_sites':
-				if type(skey) == list:
+				if type(sitem) == list:
 					configs[skey] += sitem
-				elif type(skey) == str:
+				elif type(sitem) == str:
 					configs[skey].append(sitem)
 				else:
 					raise Exception(type(skey) + " not an accepted type for " + skey)
@@ -125,17 +122,16 @@ def main():
 	wfToFix = getDictOfErrors(result)
 
 	print("Found", len(wfToFix.keys()), "workflows matching this query.")
-	
+
 	# loop over workflows, tasks, for each create ACDC and assign it
 	# using default or custom configurations
 	for iWorkflow, (wf, tasks) in enumerate(wfToFix.items()):
-
 		print('-->',wf)
 
 		for task, errorCodes in tasks.items():
 
 			print('\t|-->', task)
-
+			
 			# default configs
 			configs = {
 				"memory" : None,
@@ -148,20 +144,21 @@ def main():
 			# for each error code in the task, if the errorCode is specified
 			# in the customisation, we update the configurations with the
 			# proposed solutions
+			foundSolvableError = False
 			for err in errorCodes:
 				for key, solutions in solutions_dict.items():
 					if err == key:
 						configs = updateConfigs(configs, solutions)
+						foundSolvableError = True
 
+			if not foundSolvableError: continue
 			
 			if options.test:
 				print(configs)
 				continue
 
 			# make ACDC
-			auto = autoACDC(task, testbed=False, testbed_assign=False,
-							splitting=splitting, memory=memory, xrootd=xrootd,
-							include_sites=include_sites, exclude_sites=exclude_sites)
+			auto = autoACDC(task, testbed=False, testbed_assign=False, **configs)
 
 			try:
 				auto.go()
@@ -171,7 +168,6 @@ def main():
 				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+', '+str(e)+'\n') 
 			
 			print("#####################################################################\n\n")
-
 
 if __name__ == "__main__":
     main()
