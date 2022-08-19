@@ -60,6 +60,8 @@ def applySolutions(task_dict, solutions_dict):
 		"splitting" : ''		# Uses: '(number)x', 'Same', 'max'
 	}
 
+	if 'errors' not in list(task_dict.keys()): sys.exit()
+
 	for attr, solution in solutions_dict.items():
 
 		# exitCode
@@ -71,9 +73,9 @@ def applySolutions(task_dict, solutions_dict):
 		# exitCodeSite
 		elif '-' in attr and attr.split('-')[0].isnumeric() and any(site in attr.split('-')[1] for site in ['T0','T1','T2','T3']):
 			exitCode, site = attr.split("-")
-				if exitCode in list(task_dict['errors'].keys()):
-					if site in list(task_dict["errors"][exitCode].keys()):
-						configs = updateConfigs(configs, solution)
+			if exitCode in list(task_dict['errors'].keys()):
+				if site in list(task_dict["errors"][exitCode].keys()):
+					configs = updateConfigs(configs, solution)
 
 		# site
 		elif any(site in attr for site in ['T0','T1','T2','T3']):
@@ -85,7 +87,7 @@ def applySolutions(task_dict, solutions_dict):
 		# campaign
 		else:
 			campaign = attr
-			if campaign in list(task_dict['campaigns'].keys()):
+			if campaign in list(task_dict['campaigns']):
 				configs = updateConfigs(configs, solution)
 
 	return configs
