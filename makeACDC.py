@@ -5,7 +5,7 @@
     It will copy all the original workflow parameters unless specified
 """
 import logging
-import sys
+import os, sys
 from optparse import OptionParser
 #from reqmgr import ReqMgrClient
 logging.basicConfig(level=logging.WARNING)
@@ -32,12 +32,15 @@ def makeACDC(**args):
     mcore = args.get('mcore',None)
     if mcore:
         actions.append( 'core-%s'% mcore)
+    xrootd = args.get('xrootd',None)
+    if xrootd:
+        actions.append( 'xrootd-%s'% xrootd)
         
     acdc = singleRecovery(url, task, initial.request, actions, do=True)
     if acdc:
         return acdc
     else:
-        print "Issue while creating the acdc for",task
+        print("Issue while creating the acdc for",task)
         return None
 
 def main():
@@ -59,12 +62,20 @@ def main():
                         help="Memory to override the original request memory")
     parser.add_option("-c","--mcore", dest="mcore", default=None,
                       help="Multicore to override the original request multicore")
+    parser.add_option("-x","--xrootd", dest="xrootd", default=None, type=int,
+                      help="Enable xrootd")
+    parser.add_option("-o","--out", dest="out", default='acdc_wf_list.txt', type=str,
+                      help="Output file, to be filled with workflows for which ACDC was submitted.")
     parser.add_option("--testbed", default=False, action="store_true")
 
     (options, args) = parser.parse_args()
 
     global url
     url = testbed_url if options.testbed else prod_url
+
+    outACDClist = options.out
+    if os.path.isfile(outACDClist):
+        sys.exit("Make a new name for output file.")
 
     if options.all : options.task = 'all'
 
@@ -114,22 +125,34 @@ def main():
             tasks = sorted(tasks)
 
         created = {}
-        print "Workflow:",wfname
-        print "Tasks:",tasks
+        print("Workflow:",wfname)
+        print("Tasks:",tasks)
+
+        # FIXME: eventually, we want to be able to target each task
+        # with different options
+        if len(tasks) != 1:
+            print("WARNING: Multiple tasks were found in this workflow \
+                    be sure that you want to submit identical ACDCs for all tasks.")
+
+        # create an ACDC workflow
         for task in tasks:
             r = makeACDC(url=url, wfi=wfi, task=task,
                          memory = options.memory,
-                         mcore = options.mcore) 
+                         mcore = options.mcore,
+                         xrootd = options.xrootd) 
             if not r: 
-                print "Error in creating ACDC for",task,"on",wfname
+                print("Error in creating ACDC for",task,"on",wfname)
                 break
             created[task] = r
+
         if len(created)!=len(tasks):
-            print "Error in creating all required ACDCs"
+            print("Error in creating all required ACDCs")
             sys.exit(1)
-        print "Created:"
+
+        print("Created:")
         for task in created:
-            print created[task],"for",task
+            print(created[task],"for",task)
+            with open(outACDClist, 'a') as f: f.write(str(created[task])+"\n")
 
 if __name__ == '__main__':
     main()

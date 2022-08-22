@@ -11,7 +11,7 @@
     
 """
 
-import httplib
+import http.client
 import re
 import os
 import sys
@@ -102,19 +102,24 @@ def assignRequest(url, **args):
 
     res = reqMgr.assignWorkflow(url, workflow, team, params)
     if res:
-        print 'Assigned workflow:', workflow, 'to site:', sites, 'with processing version', procversion
+        print('Assigned workflow:', workflow, 'to site:', sites, 'with processing version', procversion)
     else:
-        print 'Could not assign workflow:', workflow, 'to site:', sites, 'with processing version', procversion
+        print('Could not assign workflow:', workflow, 'to site:', sites, 'with processing version', procversion)
     if verbose:
-        print res
+        print(res)
 
 def getRequestDict(url, workflow):
-    conn = httplib.HTTPSConnection(url, cert_file=os.getenv(
+    conn = http.client.HTTPSConnection(url, cert_file=os.getenv(
         'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
     r1 = conn.request("GET", '/reqmgr/reqMgr/request?requestName=' + workflow)
     r2 = conn.getresponse()
     request = json.loads(r2.read())
     return request
+
+def getACDCServerInfo(url):
+    conn = http.client.HTTPSConnection(url, cert_file=os.getenv(
+        'X509_USER_PROXY'), key_file=os.getenv('X509_USER_PROXY'))
+    a = """https://cmsweb.cern.ch/couchdb/acdcserver/_design/ACDC/_view/byCollectionName?key=%22pdmvserv_task_HIG-RunIISummer20UL17NanoAODv9-03145__v1_T_220407_021816_1328%22&include_docs=true&reduce=false"""
 
 def main():
     url = 'cmsweb.cern.ch'
@@ -127,7 +132,9 @@ def main():
     
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('-t', '--team', help='Type of Requests', dest='team', default='production')
-    parser.add_option('-s', '--sites', help=' "t1" for Tier-1\'s and "t2" for Tier-2\'s', dest='sites')
+    parser.add_option('-s', '--sites', help=' "t1" for Tier-1\'s and "t2" for Tier-2\'s', dest='sites', default='all')
+    parser.add_option('--checksite', default=False,action='store_true')
+    parser.add_option('-x', '--exclude', help='Exclude site name, or comma sperated list', default=None, dest='exclude_sites')
     parser.add_option('--special',  help='Use it for special workflows. You also have to change the code according to the type of WF', dest='special')
     parser.add_option('-r', '--replica', action='store_true', dest='replica', default=False, help='Adds a _Disk Non-Custodial Replica parameter')
     parser.add_option('-p', '--procversion', help='Processing Version, if empty it will leave the processing version that comes by default in the request', dest='procversion')
@@ -149,10 +156,9 @@ def main():
     parser.add_option('-m', '--memory', help='Set the Memory parameter to the workflow', dest='memory', default=None)
     parser.add_option('--lumisperjob',help='Set the number of lumis per job', default=None, type=int)
     parser.add_option('--maxmergeevents',help='Set the number of event to merge at max', default=None, type=int)
-    parser.add_option('-c', '--multicore', help='Set the multicore parameter to the workfllow', dest='multicore', default=None)
+    parser.add_option('-c', '--multicore', help='Set the multicore parameter to the workfllow', dest='multicore', default=False)
     parser.add_option('-e', '--era', help='Acquistion era', dest='era')
     parser.add_option("--procstr", dest="procstring", help="Overrides Processing String with a single string")
-    parser.add_option('--checksite', default=False,action='store_true')
     (options, args) = parser.parse_args()
     
     if options.testbed:
@@ -175,7 +181,7 @@ def main():
     procversion = 1
     procstring = {}
     memory = None
-    multicore = None
+    multicore = False
     replica = False
     sites = []
     specialStr = ''
@@ -184,26 +190,25 @@ def main():
     secondary_xrootd= False
 
     SI = siteInfo()
+        
     getRandomDiskSite.T1 = SI.sites_T1s
     # Handling the parameters given in the command line
     # parse site list
-    if options.sites:
-        if options.sites.lower() == "t1":
-            sites = SI.sites_T1s
-        elif options.sites.lower() == "t2":
-            sites = SI.sites_T2s
-        elif options.sites.lower() in ["all","t1+t2","t2+t1"] :
-            sites = SI.sites_T2s+SI.sites_T1s
-        elif options.sites.lower() == "mcore":
-            sites = SI.sites_mcore_ready
-        elif hasattr(SI,options.sites):
-            sites = getattr(SI,options.sites)
-        #elif options.sites.lower() == 'acdc':
-        #    sites = []
-        else: 
-            sites = [site for site in options.sites.split(',')]
+    if options.sites.lower() == "t1":
+        sites = SI.sites_T1s
+    elif options.sites.lower() == "t2":
+        sites = SI.sites_T2s
+    elif options.sites.lower() in ["all","t1+t2","t2+t1"] :
+        sites = SI.sites_T2s+SI.sites_T1s
+    elif options.sites.lower() == "mcore":
+        sites = SI.sites_mcore_ready
+    elif hasattr(SI,options.sites):
+        sites = getattr(SI,options.sites)
+    #elif options.sites.lower() == 'acdc':
+    #    sites = []
     else: 
-        sites = SI.sites_T1s + SI.sites_T2s
+        sites = [site for site in options.sites.split(',')]
+    
 
     if options.replica:
         replica = True
@@ -212,8 +217,9 @@ def main():
         # Getting the original dictionary
         wfi = workflowInfo( url, wfn )
         schema = wfi.request
+
         if 'OriginalRequestName' in schema:
-            print "Original workflow is:",schema['OriginalRequestName']
+            print("Original workflow is:",schema['OriginalRequestName'])
             original_wf = workflowInfo(url, schema['OriginalRequestName'])            
             ancestor_wf = workflowInfo(url, schema['OriginalRequestName'])
             ## go back as up as possible
@@ -230,7 +236,7 @@ def main():
 
         if options.sites.lower() == 'original' and original_wf:
             sites = original_wf.request['SiteWhitelist']
-            print "Using",sorted(sites),"from the original request",original_wf.request['RequestName']
+            print("Using",sorted(sites),"from the original request",original_wf.request['RequestName'])
 
         #print json.dumps( schema, indent=2 )
         wf_name = wfn
@@ -238,7 +244,7 @@ def main():
 
         # WF must be in assignment-approved in order to be assigned
         if (schema["RequestStatus"] != "assignment-approved") and not options.test:
-            print("The workflow '" + wf_name + "' you are trying to assign is not in assignment-approved")
+            print(("The workflow '" + wf_name + "' you are trying to assign is not in assignment-approved"))
             sys.exit(1)
 
         #Check to see if the workflow is a task chain or an ACDC of a taskchain
@@ -247,7 +253,7 @@ def main():
         # Adding the special string - in case it was provided in the command line
         if options.special:
             specialStr = '_' + str(options.special)
-            for key, value in procstring.items():
+            for key, value in list(procstring.items()):
                 procstring[key] = value + specialStr
 
         # Override if a value is given using the procstring command
@@ -266,7 +272,7 @@ def main():
             era = wfi.acquisitionEra()
         #Dealing with era and proc string
         if (not era or not procstring) or (taskchain and (type(era)!=dict or type(procstring)!=dict)):
-            print "We do not have a valid AcquisitionEra and ProcessingString"
+            print("We do not have a valid AcquisitionEra and ProcessingString")
             sys.exit(1)
 
         # Must use --lfn option, otherwise workflow won't be assigned
@@ -277,7 +283,7 @@ def main():
         elif ancestor_wf and "MergedLFNBase" in ancestor_wf.request:
             lfn = ancestor_wf.request['MergedLFNBase']
         else:
-            print "Can't assign the workflow! Please include workflow lfn using --lfn option."
+            print("Can't assign the workflow! Please include workflow lfn using --lfn option.")
             sys.exit(0)
         # activity production by default for taskchains, reprocessing for default by workflows
         if options.activity:
@@ -320,7 +326,7 @@ def main():
         if not is_resubmission:
             exist = False
             maxv = 1
-            for key, value in schema.items():
+            for key, value in list(schema.items()):
                 if type(value) is dict and key.startswith("Task"):
                     dbsapi = DbsApi(url=dbs3_url)
                     
@@ -331,7 +337,7 @@ def main():
                     # see if any of the dataset names is a match
                     for ds in datasets:
                         if re.match(processedName, ds['processed_ds_name']):
-                            print "Existing dset:", ds['dataset'], "(%s)" % ds['dataset_access_type']
+                            print("Existing dset:", ds['dataset'], "(%s)" % ds['dataset_access_type'])
                             maxv = max(maxv, ds['processing_version'])
                             exist = True
                         else:
@@ -339,41 +345,57 @@ def main():
                     i += 1
             # suggest max version
             if exist and procversion <= maxv:
-                print "Some output datasets exist, its advised to assign with v ==", maxv + 1
+                print("Some output datasets exist, its advised to assign with v ==", maxv + 1)
                 sys.exit(0)
         else:
             ## this is a resubmission !
-            print "The taks in resubmission is:",schema['InitialTaskPath']
+            print("The taks in resubmission is:",schema['InitialTaskPath'])
             ## pick up the sites from acdc
             if options.sites.lower() == 'acdc':
-                where_to_run, _,_ =  original_wf.getRecoveryInfo()
+                where_to_run, missing_to_run, missing_to_run_at =  original_wf.getRecoveryInfo()
                 task = schema['InitialTaskPath']
                 sites = list(set([SI.SE_to_CE(site) for site in where_to_run[task]]) & set(SI.all_sites))
-                print "Found",sorted(sites),"as sites where to run the ACDC at, from the acdc doc of ",original_wf.request['RequestName']
+                print("Found",sorted(sites),"as sites where to run the ACDC at, from the acdc doc of ",original_wf.request['RequestName'])
 
         if options.checksite:
             ## check that the sites are all compatible and up
             check_mem = schema['Memory'] if not memory else memory
-            ncores = wfi.getMulticore() if not multicore else multicore
-            memory_allowed = SI.sitesByMemory( float(check_mem), maxCore=ncores)
+            # ncores = wfi.getMulticore() if not multicore else multicore
+            # memory_allowed = SI.sitesByMemory( float(check_mem), maxCore=ncores)
             not_ready = sorted(set(sites) & set(SI.sites_not_ready))
             not_existing = sorted(set(sites) - set(SI.all_sites))
-            not_matching = sorted((set(sites) - set(memory_allowed) - set(not_ready) - set(not_existing)))
+            #not_matching = sorted((set(sites) - set(memory_allowed) - set(not_ready) - set(not_existing)))
+            not_matching = sorted((set(sites) - set(not_ready) - set(not_existing)))
             previously_used = []
             if schema['SiteWhitelist']: previously_used = schema['SiteWhitelist']
             if original_wf: previously_used = original_wf.request['SiteWhitelist']
-            if previously_used: not_matching = sorted(set(not_matching) & set(previously_used))
-            
-            sites = sorted( set(sites) - set(not_matching) - set(not_existing))
-            
-            print sorted(memory_allowed),"to allow",check_mem,ncores
-            if not_ready:
-                print not_ready,"is/are not ready"
-                sys.exit(0)
-            if not_matching:
-                print "The memory requirement",check_mem,"is too much for",not_matching
-                sys.exit(0)
+            #if previously_used: not_matching = sorted(set(not_matching) & set(previously_used))
 
+            #sites = sorted( set(sites) - set(not_matching) - set(not_existing))
+            sites = sorted( set(sites) - set(not_ready) - set(not_existing))
+    
+            # print(sorted(memory_allowed),"to allow",check_mem,ncores)
+            # if not_ready:
+            #     print(not_ready,"is/are not ready")
+            #     sys.exit(0)
+            #if not_matching:
+            #    print("The memory requirement",check_mem,"is too much for",not_matching)
+            #    sys.exit(0)
+
+            if options.sites.lower() == 'acdc':
+                if len(sites) == 0:
+                    print("None of the necessary sites are ready:", sites)
+                    continue
+                elif len(not_ready) > 0: 
+                    print("Some of the necessary sites are ready:", sites)
+                    xrootd = True
+                else:
+                    print("All necessary sites are available")
+
+        # provide a list of site names to exclude
+        if options.exclude_sites is not None:
+            excludeSites = options.exclude_sites.split(',')
+            sites = sorted(set(sites) - set(excludeSites))
 
         ## need to play with memory setting
         if taskchain:
@@ -394,7 +416,7 @@ def main():
                     if t in schema:
                         tname = schema[t]['TaskName']
                         if tasks and not tname in tasks:
-                            print tname,"not concerned"
+                            print(tname,"not concerned")
                             memory_dict[tname] = schema[t]['Memory']
                             continue
                         if set_to:
@@ -404,7 +426,7 @@ def main():
                     else:
                         break
                 memory = memory_dict
-                print memory_dict
+                print(memory_dict)
             ## need to play with multicore setting
             if multicore:
                 tasks,set_to = multicore.split(':') if ':' in multicore else ("",multicore)
@@ -420,43 +442,43 @@ def main():
                         tname = schema[t]['TaskName']
                         mcore = schema[t]['Multicore']
                         if tasks and not tname in tasks:
-                            print tname,"not concerned"
+                            print(tname,"not concerned")
                             multicore_dict[tname] = schema[t]['Multicore']
                             timeperevent_dict[tname] = schema[t]['TimePerEvent']
                             continue
                         if memory:
                             mem = memory[tname]
-                            print mem, memory
+                            print(mem, memory)
                             factor = (set_to / float(mcore))
                             fraction_constant = 0.4
                             mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))
-                            print "mem per core", mem_per_core_c
-                            print "base mem", mem
+                            print("mem per core", mem_per_core_c)
+                            print("base mem", mem)
                             
                             memory[tname] = mem + (set_to-mcore)*mem_per_core_c
-                            print "final mem",memory[tname]
+                            print("final mem",memory[tname])
                             timeperevent_dict[tname] = schema[t]['TimePerEvent']/factor
-                        print "setting mcore",set_to
+                        print("setting mcore",set_to)
                         multicore_dict[tname] = set_to
                     else:
                         break
                 multicore = multicore_dict
-                print multicore
-                print timeperevent_dict,"cannot be used yet."
+                print(multicore)
+                print(timeperevent_dict,"cannot be used yet.")
     # If the --test argument was provided, then just print the information
     # gathered so far and abort the assignment
-        print wf_name
-        print "Era:",era
-        print "ProcStr:",procstring
-        print "ProcVer:",procversion
-        print "LFN:",lfn
-        print "Team:",options.team
-        print "Site:",sites
-        print "Taskchain? ", str(taskchain)
-        print "Activity:", activity
-        print "ACDC:", str(is_resubmission)
-        print "Xrootd:", str(xrootd)
-        print "Secondary_xrootd:", str(secondary_xrootd)
+        print(wf_name)
+        print("Era:",era)
+        print("ProcStr:",procstring)
+        print("ProcVer:",procversion)
+        print("LFN:",lfn)
+        print("Team:",options.team)
+        print("Site:",sites)
+        print("Taskchain? ", str(taskchain))
+        print("Activity:", activity)
+        print("ACDC:", str(is_resubmission))
+        print("Xrootd:", str(xrootd))
+        print("Secondary_xrootd:", str(secondary_xrootd))
         #if options.test:            continue
         
         # Really assigning the workflow now

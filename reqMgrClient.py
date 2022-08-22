@@ -13,7 +13,8 @@ import os
 import re
 import sys
 import time
-import urllib.request, urllib.parse, urllib.error
+# import urllib.request, urllib.parse, urllib.error
+import urllib 
 
 import dbs3Client as dbs3
 
@@ -896,6 +897,7 @@ def assignWorkflow(url, workflowname, team, parameters ):
     if not 'execute' in defaults or not defaults['execute']:
         assignWorkflow.errorMessage = json.dumps( defaults ,indent=2)
         print(assignWorkflow.errorMessage)
+        print('here')
         return False
     else:
         defaults.pop('execute')

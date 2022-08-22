@@ -8,7 +8,9 @@
 """
 
 
-import urllib.request, urllib.error, urllib.parse,urllib.request,urllib.parse,urllib.error, http.client, sys, re, os, json, datetime
+# import urllib.request, urllib.error, urllib.parse,urllib.request,urllib.parse,urllib.error
+import urllib
+import http.client, sys, re, os, json, datetime
 from xml.dom.minidom import getDOMImplementation
 from dbs.apis.dbsClient import DbsApi
 from collections import defaultdict
