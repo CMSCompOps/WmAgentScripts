@@ -1034,6 +1034,10 @@
       "fractionpass": 0.95,
       "go": true
   },
+  "Run3Winter22NanoAODv10": {
+      "fractionpass": 0.95,
+      "go": false
+  },
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
     "go": true, 
