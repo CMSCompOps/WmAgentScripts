@@ -1038,6 +1038,10 @@
       "fractionpass": 0.95,
       "go": false
   },
+  "Run3Winter22wmLHEGEN": {
+      "fractionpass": 0.95,
+      "go": false
+  },
   "PromptNanoAODv10": {
       "fractionpass": 0.95,
       "go" : false
