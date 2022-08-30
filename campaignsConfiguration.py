@@ -48,7 +48,7 @@ def main():
             print k,v
 
             # Create the campaign if it doesn't exist
-            found = db.find_one({"name": v})
+            found = db.find_one(v)
 
             if not found:
                 db.insert_one(up)
