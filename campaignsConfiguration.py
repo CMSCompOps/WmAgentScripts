@@ -51,10 +51,10 @@ def main():
             found = db.find_one(v)
 
             if not found:
-                db.insert_one(up)
-                createCampaign(up)
+                db.insert_one(v)
+                createCampaign(v)
                 print "Following campaign couldn't be found in the database. Inserting it"
-                print up
+                print v
 
         replaceCampaigns(campaigns)
         sys.exit(0)
