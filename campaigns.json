@@ -1047,8 +1047,8 @@
       "go": false
   },
   "PromptNanoAODv10": {
-      "fractionpass": 0.95,
-      "go" : false
+      "fractionpass": 1,
+      "go" : true
   },
   "RunIIAutumn18DR": {
     "fractionpass": 0.95, 
