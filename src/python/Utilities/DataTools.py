@@ -207,11 +207,11 @@ def filterWorkflowSchemaParam(wfSchema: dict) -> dict:
             "Override",
             "RequiresGPU",
             "DatasetLifetime",
-            "custodialSubType",
-            "custodialGroup",
-            "nonCustodialSubType",
-            "autoApproveSites",
-            "nonCustodialGroup"
+            "AutoApproveSubscriptionSites",
+            "NonCustodialSubType",
+            "NonCustodialGroup",
+            "CustodialSubType",
+            "CustodialGroup"
         ]
         paramsToKeep = set(wfSchema.keys()) - set(paramsToDrop)
         wfSchema = filterKeys(paramsToKeep, wfSchema)
