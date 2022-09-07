@@ -206,7 +206,12 @@ def filterWorkflowSchemaParam(wfSchema: dict) -> dict:
             "AllowOpportunistic",
             "Override",
             "RequiresGPU",
-            "DatasetLifetime"
+            "DatasetLifetime",
+            "custodialSubType",
+            "custodialGroup",
+            "nonCustodialSubType",
+            "autoApproveSites",
+            "nonCustodialGroup"
         ]
         paramsToKeep = set(wfSchema.keys()) - set(paramsToDrop)
         wfSchema = filterKeys(paramsToKeep, wfSchema)
