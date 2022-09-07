@@ -792,6 +792,11 @@ def assignWorkflow(url, workflowname, team, parameters ):
         if defaults[what] == None:
             defaults.pop(what)
 
+    pop_forbidden = ['AutoApproveSubscriptionSites', 'NonCustodialSubType', 'NonCustodialGroup', 'CustodialSubType', 'CustodialGroup']
+    for item in pop_forbidden:
+        if item in defaults:
+            defaults.pop(item)
+
     if not set(assignWorkflow.mandatories).issubset( set(parameters.keys())):
         assignWorkflow.errorMessage = "There are missing parameters\n"
         assignWorkflow.errorMessage += str(list(set(assignWorkflow.mandatories) - set(parameters.keys())))
