@@ -1127,7 +1127,7 @@ def purgeClonedSchema(schema):
                       'DN', 'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 
                       'OriginalRequestName', 'IgnoredOutputModules', 'OutputModulesLFNBases', 'SiteBlacklist', 'AllowOpportunistic', '_id',
                       'min_merge_size', 'events_per_lumi', 'max_merge_size', 'max_events_per_lumi', 'max_merge_events', 'max_wait_time', 'events_per_job',
-                      'SiteBlacklist', 'AllowOpportunistic', 'Override', 'DatasetLifetime']
+                      'SiteBlacklist', 'AllowOpportunistic', 'Override', 'DatasetLifetime', 'custodialSubType', 'custodialGroup', 'nonCustodialSubType', 'autoApproveSites', 'nonCustodialGroup']
     for p in paramBlacklist:
         if p in schema:
             schema.pop( p )
