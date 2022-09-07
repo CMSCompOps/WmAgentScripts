@@ -412,9 +412,6 @@ class autoACDC():
 
         if self.options['replica']:
             params["NonCustodialSites"] = self.getRandomDiskSite(),
-            params["NonCustodialSubType"] = "Replica"
-            if taskchain:
-                params['AutoApproveSubscriptionSites'] = [params["NonCustodialSites"]]
 
         if self.options['testbed_assign']:
             params['execute'] = False    
