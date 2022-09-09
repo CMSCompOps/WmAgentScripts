@@ -204,20 +204,16 @@ class autoACDC():
         # exclude T3 sites
         sites = self.excludeT3Sites(sites)
 
-        # debug
-        print("here ", sites)
-
         # include sites
         if self.options['include_sites'] is not None: sites = self.includeSites(sites)
-
-        # debug
-        print("there ", sites)
 
         # check if all desired sites are up and running
         sites = self.checkSites(sites)
 
         # provide a list of site names to exclude
         if self.options['exclude_sites'] is not None: sites = self.excludeSites(sites)
+
+        xrootd_sites, secondary_xrootd_sites = False, False
 
         # if no sites are left, sets to a random T1 site
         # it makes sure to check that it's available and not excluded
@@ -237,7 +233,9 @@ class autoACDC():
         increase = set_to = None
         tasks,set_to = memory.split(':') if ':' in memory else ("",memory)
         tasks = tasks.split(',') if tasks else []
-        if set_to.startswith('+'):
+        if set_to.startswith('+') and set_to.endswith("%"):
+            percent_incrase = int(set_to[1:-1])
+        elif set_to.startswith('+') and not set_to.endswith("%"):
             increase = int(set_to[1:])
         else:
             set_to = int(set_to)
@@ -253,8 +251,10 @@ class autoACDC():
                     continue
                 if set_to:
                     memory_dict[tname] = set_to
-                else:
-                    memory_dict[tname] = self.schema[t]['Memory'] + increase
+                elif increase:
+                    memory_dict[tname] = int(self.schema[t]['Memory'] + increase)
+                elif percent_incrase:
+                    memory_dict[tname] = int(self.schema[t]['Memory']*percent_incrase)
             else:
                 break
 
@@ -296,14 +296,44 @@ class autoACDC():
 
         return multicore_dict, memory_dict
 
+
+    def getMemory(self):
+        """
+        Sets memory to either:
+            1. A numerical increase (e.g. +100 sets to original+100)
+            2. A percentage increasse (e.g. +10% sets to original*(1.1))
+            3. The memory passed in options (e.g. 1000 sets to 1000)
+            4. If no options['memory'] is passed, returns False, memory is not changed from default.
+
+        Returns: memory, either a value or boolean
+        """
+        memory_option = self.options['memory']
+        original_memory = self.wfInfo.request.get('Memory')
+
+        if memory_option:
+            if memory_option.startswith("+") and not memory_option.endswith("%") and original_memory:
+                increase = int(memory_option[1:])
+                memory = original_memory + increase
+            elif memory_option.startswith("+") and memory_option.endswith("%") and original_memory:
+                percent_incrase = int(memory_option[1:-1])
+                memory = int(original_memory*(1 + percent_incrase/100.0))
+            else:
+                memory = memory_option
+        else:
+            memory = False
+
+        return memory
+
     def getACDCParameters(self):
         """
         Returns: a list of actions based on the desired ACDC parameters.
         """
 
+        memory = self.getMemory()
+
         actions = {}
-        if self.options['memory']:
-            actions['memory'] =  self.options['memory']
+        if memory:
+            actions['memory'] =  memory
         if self.options['multicore']:
             actions['multicore'] = self.options['multicore']
         if self.options['xrootd']:
@@ -433,7 +463,7 @@ class autoACDC():
 
         if self.options['memory']: 
             if taskchain: params["Memory"] = self.getTaskchainMemoryDict()
-            else: params["Memory"] = int(self.options['memory'])
+            else: params["Memory"] = self.getMemory()
         if self.options['multicore']:
             if taskchain: 
                 multicore_dict, memory_dict = self.getTaskchainMulticoreDict()
