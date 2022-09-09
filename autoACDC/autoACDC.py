@@ -223,9 +223,10 @@ class autoACDC():
         # it makes sure to check that it's available and not excluded
         if len(sites) == 0:
             sites = [self.getRandomT1Site()]
+            xrootd_sites, secondary_xrootd_sites = True, True
             logging.info("Set random site to " + str(sites))
 
-        return sites
+        return sites, xrootd_sites, secondary_xrootd_sites
 
     def getTaskchainMemoryDict(self):
         """
@@ -398,15 +399,23 @@ class autoACDC():
         else:
             secondary_xrootd = False
 
+        # inherit xrootd settings from init
+        xrootd = self.options['xrootd']
+
+        # get sites, and turn on xrootd in case we use a random site
+        sites, xrootd_sites, secondary_xrootd_sites = self.getSites()
+        xrootd = xrootd or xrootd_sites
+        secondary_xrootd = secondary_xrootd or secondary_xrootd_sites
+
         params = {
-            "SiteWhitelist": self.getSites(),
+            "SiteWhitelist": sites,
             "MergedLFNBase": lfn,
             "Dashboard": activity,
             "ProcessingVersion": procversion,
             "execute": True,
             "AcquisitionEra": era,
             "ProcessingString": procstring,
-            "TrustSitelists": self.options['xrootd'],
+            "TrustSitelists": xrootd,
             "TrustPUSitelists": secondary_xrootd
         }
 
