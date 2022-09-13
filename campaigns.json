@@ -1044,7 +1044,7 @@
   },
   "Run3Winter22GEN": {
       "fractionpass": 0.95,
-      "go": false
+      "go": true
   },
   "PromptNanoAODv10": {
       "fractionpass": 1,
