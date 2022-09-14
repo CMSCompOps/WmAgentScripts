@@ -254,7 +254,7 @@ class autoACDC():
                 elif increase:
                     memory_dict[tname] = int(self.schema[t]['Memory'] + increase)
                 elif percent_incrase:
-                    memory_dict[tname] = int(self.schema[t]['Memory']*percent_incrase)
+                    memory_dict[tname] = int(self.schema[t]['Memory']*(1+(percent_incrase/100)))
             else:
                 break
 
@@ -313,14 +313,14 @@ class autoACDC():
         if memory_option:
             if memory_option.startswith("+") and not memory_option.endswith("%") and original_memory:
                 increase = int(memory_option[1:])
-                memory = original_memory + increase
+                memory = int(original_memory + increase)
             elif memory_option.startswith("+") and memory_option.endswith("%") and original_memory:
                 percent_incrase = int(memory_option[1:-1])
-                memory = int(original_memory*(1 + percent_incrase/100.0))
+                memory = int(original_memory*(1 + (percent_incrase/100.0)))
             else:
                 memory = memory_option
         else:
-            memory = False
+            False
 
         return memory
 
