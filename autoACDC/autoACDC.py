@@ -337,7 +337,7 @@ class autoACDC():
         if self.options['multicore']:
             actions['multicore'] = self.options['multicore']
         if self.options['xrootd']:
-            actions['xrootd'] = int(self.options['xrootd'])
+            actions['xrootd'] = bool(self.options['xrootd'])
         if self.options['splitting']:
             actions['split'] = self.options['splitting']
 
@@ -430,7 +430,7 @@ class autoACDC():
             secondary_xrootd = False
 
         # inherit xrootd settings from init
-        xrootd = self.options['xrootd']
+        xrootd = bool(self.options['xrootd'])
 
         # get sites, and turn on xrootd in case we use a random site
         sites, xrootd_sites, secondary_xrootd_sites = self.getSites()
