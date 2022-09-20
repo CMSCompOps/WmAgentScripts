@@ -25,8 +25,8 @@ from email.utils import make_msgid
 from RucioClient import RucioClient
 
 ## add local python paths
-for p in ['/usr/lib64/python2.7/site-packages', '/usr/lib/python2.7/site-packages']:
-    if not p in sys.path: sys.path.append(p)
+#for p in ['/usr/lib64/python2.7/site-packages', '/usr/lib/python2.7/site-packages']:
+#    if not p in sys.path: sys.path.append(p)
 
 
 def mongo_client():
