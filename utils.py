@@ -156,7 +156,7 @@ def _searchLog(q, actor, limit, conn, prefix, h=None):
 def es_header():
     entrypointname, password = open('Unified/secret_es.txt').readline().split(':')
     import base64
-    auth = base64.encodestring(('%s:%s' % (entrypointname, password)).replace('\n', '')).replace('\n', '')
+    auth = base64.encodestring(('%s:%s' % (entrypointname, password)).strip().encode()).decode().strip()
     header = {"Authorization": "Basic %s" % auth, "Content-Type": "application/json"}
     return header
 
