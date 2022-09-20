@@ -1,4 +1,4 @@
-BASE_DIR=/data/unified/WmAgentScripts/
+BASE_DIR=/data/unifiedPy3-fast/WmAgentScripts
 HTML_DIR=/var/www/html/unified/
 
 lock_name=$1
