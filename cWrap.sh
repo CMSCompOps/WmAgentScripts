@@ -39,9 +39,7 @@ fi
 
 echo $USER >> $log
 echo $HOSTNAME >> $log
-echo module $modulename>> $log 
-
-source ./set.sh
+echo module $modulename>> $log
 
 echo >> $log
 
