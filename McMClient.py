@@ -5,6 +5,7 @@ import urllib.request, urllib.parse, urllib.error
 import pprint
 import pycurl
 import io
+from io import BytesIO
 import traceback 
 
 class McMClient:
@@ -51,7 +52,8 @@ class McMClient:
             self.curl = pycurl.Curl()
             print("Using sso-cookie file",self.cookieFilename)
             self.curl.setopt(pycurl.COOKIEFILE,self.cookieFilename)
-            self.output = io.StringIO()
+            #self.output = io.StringIO()
+            self.output = BytesIO()
             self.curl.setopt(pycurl.SSL_VERIFYPEER, 1)
             self.curl.setopt(pycurl.SSL_VERIFYHOST, 2)
             self.curl.setopt(pycurl.CAPATH, '/etc/pki/tls/certs')  
@@ -88,9 +90,9 @@ class McMClient:
             print('url=|'+fullurl+'|')
         if self.id=='sso':
             self.curl.setopt(pycurl.URL, str(fullurl))
-            p_data=io.StringIO(json.dumps(data))
+            p_data=BytesIO(json.dumps(data))
             self.curl.setopt(pycurl.UPLOAD, 1)
-            self.curl.setopt(pycurl.READFUNCTION, io.StringIO(json.dumps(data)).read)
+            self.curl.setopt(pycurl.READFUNCTION, BytesIO(json.dumps(data)).read)
             if self.debug:
                 print('message=|'+p_data.read()+'|')
             self.curl.perform()
@@ -130,7 +132,7 @@ class McMClient:
     #### generic methods for i/o
     def clear(self):
         if self.id=='sso':
-            self.output = io.StringIO()
+            self.output = BytesIO()
             self.curl.setopt(pycurl.WRITEFUNCTION, self.output.write)
             
     def response(self):

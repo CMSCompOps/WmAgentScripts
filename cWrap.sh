@@ -1,4 +1,4 @@
-BASE_DIR=/data/unified/WmAgentScripts/
+BASE_DIR=/data/unifiedPy3-fast/WmAgentScripts/
 
 HTML_DIR=/data/unified/www
 FINAL_HTML_DIR=/eos/cms/store/unified/www/
@@ -39,9 +39,7 @@ fi
 
 echo $USER >> $log
 echo $HOSTNAME >> $log
-echo module $modulename>> $log 
-
-source ./set.sh
+echo module $modulename>> $log
 
 echo >> $log
 

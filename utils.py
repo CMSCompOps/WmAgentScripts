@@ -24,15 +24,10 @@ from email.utils import make_msgid
 
 from RucioClient import RucioClient
 
-## add local python paths
-for p in ['/usr/lib64/python2.7/site-packages', '/usr/lib/python2.7/site-packages']:
-    if not p in sys.path: sys.path.append(p)
-
 
 def mongo_client():
     import pymongo, ssl
-    return pymongo.MongoClient('mongodb://%s/?ssl=true' % mongo_db_url,
-                               ssl_cert_reqs=ssl.CERT_NONE)
+    return pymongo.MongoClient('mongodb://%s/?ssl=true' % mongo_db_url, tlsAllowInvalidCertificates=True)
 
 
 class unifiedConfiguration:
@@ -156,7 +151,7 @@ def _searchLog(q, actor, limit, conn, prefix, h=None):
 def es_header():
     entrypointname, password = open('Unified/secret_es.txt').readline().split(':')
     import base64
-    auth = base64.encodestring(('%s:%s' % (entrypointname, password)).replace('\n', '')).replace('\n', '')
+    auth = base64.encodestring(('%s:%s' % (entrypointname, password)).strip().encode()).decode().strip()
     header = {"Authorization": "Basic %s" % auth, "Content-Type": "application/json"}
     return header
 
