@@ -31,8 +31,7 @@ from RucioClient import RucioClient
 
 def mongo_client():
     import pymongo, ssl
-    return pymongo.MongoClient('mongodb://%s/?ssl=true' % mongo_db_url,
-                               ssl_cert_reqs=ssl.CERT_NONE)
+    return pymongo.MongoClient('mongodb://%s/?ssl=true' % mongo_db_url, tlsAllowInvalidCertificates=True)
 
 
 class unifiedConfiguration:
