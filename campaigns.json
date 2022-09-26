@@ -1038,7 +1038,7 @@
   },
   "Run3Summer22MiniAODv3":{
       "fractionpass": 0.95,
-      "go": false
+      "go": true
   },
   "Run3Summer22NanoAODv10": {
       "fractionpass": 0.95,
