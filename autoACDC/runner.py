@@ -92,11 +92,24 @@ def applySolutions(task_dict, solutions_dict):
 
 	return configs
 
+def checkType(key, item):
+	if key == 'memory': return type(item) is str
+	elif key == 'xrootd': 
+		if item.lower() == 'true' or item.lower() == 'false': return True
+		else: return type(item) is bool
+	elif key == 'include_sites': return (type(item) is str or type(item) is list)
+	elif key == 'exclude_sites': return (type(item) is str or type(item) is list)
+	elif key == 'splitting': return type(item) is str
+	else: raise Exception(key + " not accepted.")
+
 def updateConfigs(configs, solutions):
 	for skey, sitem in solutions.items():
 
 		# check that the proposed parameter to change exists
 		if skey in configs.keys():
+
+			# check type
+			if not checkType(skey, sitem): raise Exception(skey + " is wrong type.")
 
 			# we need to append to this list, not overwrite everytime
 			if skey == 'exclude_sites' or skey == 'include_sites':
@@ -179,7 +192,6 @@ def main():
 				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+', '+str(e)+'\n') 
 			
 			print("#####################################################################\n\n")
-			import sys
-			sys.exit()
+
 if __name__ == "__main__":
     main()
