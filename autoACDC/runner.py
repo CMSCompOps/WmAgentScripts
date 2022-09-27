@@ -20,6 +20,7 @@ from collections import defaultdict
 sys.path.append('..')
 sys.path.append('../Unified')
 
+from rejectWorkflows import rejectWorkflow
 from utils import workflowInfo
 from autoACDC import autoACDC
 
@@ -188,6 +189,7 @@ def main():
 				auto.go()
 				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+'\n') 
 			except Exception as e:
+				if auto.acdcName: rejectWorkflow(auto.acdcName, url='cmsweb.cern.ch', invalidate=True)
 				print("Failed submission with exception", e)
 				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+', '+str(e)+'\n') 
 			
