@@ -320,7 +320,7 @@ class autoACDC():
             else:
                 memory = memory_option
         else:
-            False
+            memory = False
 
         return memory
 

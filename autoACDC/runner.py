@@ -175,10 +175,11 @@ def main():
 				auto.go()
 				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+'\n') 
 			except Exception as e:
-				print("Failed submission with excpetion", e)
+				print("Failed submission with exception", e)
 				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+', '+str(e)+'\n') 
 			
 			print("#####################################################################\n\n")
-
+			import sys
+			sys.exit()
 if __name__ == "__main__":
     main()
