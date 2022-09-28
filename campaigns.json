@@ -2015,6 +2015,7 @@
         "SiteWhitelist": [
           "T2_US_Florida",
           "T1_IT_CNAF"
+        ]
       }
     }, 
     "secondary_AAA": false, 
