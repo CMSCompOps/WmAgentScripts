@@ -1989,7 +1989,8 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL16SIM-106X_mcRun2_asymptotic_v13-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Nebraska"
+          "T2_US_Florida",
+          "T1_IT_CNAF"
         ]
       }
     }, 
@@ -2012,8 +2013,8 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL16SIM-106X_mcRun2_asymptotic_v13-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Nebraska"
-        ]
+          "T2_US_Florida",
+          "T1_IT_CNAF"
       }
     }, 
     "secondary_AAA": false, 
@@ -2954,7 +2955,8 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL16SIM-106X_mcRun2_asymptotic_v13-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Nebraska"
+          "T2_US_Florida",
+          "T1_IT_CNAF"
         ]
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL17SIM-106X_mc2017_realistic_v6-v2/GEN-SIM": {
