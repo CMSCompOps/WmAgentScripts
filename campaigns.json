@@ -1,4 +1,8 @@
 {
+  "Run3ReReco": {
+    "fractionpass": 1, 
+    "go": false
+  },
   "Commissioning2021": {
       "go": true,
       "lumisize": -1,
