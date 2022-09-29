@@ -91,22 +91,17 @@ def assignor(url ,specific = None, talk=True, options=None):
     max_per_round = UC.get('max_per_round').get('assignor',None)
     max_cpuh_block = UC.get('max_cpuh_block')
 
-    # Temporarily switch off prioritization
-    random.shuffle(wfos)
     ##order by priority instead of random
-    """
-    if options.early:
-        cache = sorted(getWorkflows(url, 'assignment-approved', details=True), key = lambda r : r['RequestPriority'])
-        cache = [r['RequestName'] for r in cache]
-        def rank( wfn ):
-            return cache.index( wfn ) if wfn in cache else 0
+    cache = sorted(getWorkflows(url, 'assignment-approved', details=True), key = lambda r : r['RequestPriority'])
+    cache = [r['RequestName'] for r in cache]
+    def rank( wfn ):
+        return cache.index( wfn ) if wfn in cache else 0
 
-        wfos = sorted(wfos, key = lambda wfo : rank( wfo.name ),reverse=True)
-        print "10 first",[wfo.name for wfo in wfos[:10]]
-        print "10 last",[wfo.name for wfo in wfos[-10:]]
-    else:
-        random.shuffle( wfos )
-    """
+    wfos = sorted(wfos, key = lambda wfo : rank( wfo.name ),reverse=True)
+    print "10 first",[wfo.name for wfo in wfos[:10]]
+    print "10 last",[wfo.name for wfo in wfos[-10:]]
+
+
 
     pending_workflow_count = get_pending_workflow_count()
     # In how many workflows are we going to update the pending_workflow_count?
