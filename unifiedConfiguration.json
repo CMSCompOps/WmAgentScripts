@@ -393,7 +393,7 @@
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : ["jinfeng","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob","bbilin","kskovpen","pkalbhor","kaura","jordanm", "alcauser", "alcadb.user", "haozturk"]
+   "value" : ["jinfeng","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob","bbilin","kskovpen","pkalbhor","kaura","jordanm", "alcauser", "alcadb.user", "haozturk", "subansal"]
   },
   "user_storeresults":{
    "description" : "The users from which we expect StoreResults requests",
