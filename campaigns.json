@@ -1069,7 +1069,7 @@
       "go": true
   },
   "PromptNanoAODv10": {
-      "fractionpass": 0.97,
+      "fractionpass": 1,
       "go" : true,
       "SiteBlacklist": [
         "T1_ES_PIC",
