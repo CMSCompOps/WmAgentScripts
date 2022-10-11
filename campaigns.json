@@ -1,13 +1,25 @@
 {
+  "2022CommissionMiniAOD": {
+    "go": false,
+    "fractionpass": 1
+  },
+  "2022CommissionDR": {
+    "go": false,
+    "fractionpass": 1
+  },
+  "2022CommissionGS": {
+    "go": false,
+    "fractionpass": 1
+  },
   "Run3ReReco": {
     "fractionpass": 1, 
     "go": false
   },
   "Commissioning2021": {
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "fractionpass": 1
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "fractionpass": 1
   },
   "Commissioning2020": {
     "fractionpass": 0.99, 
