@@ -13,7 +13,7 @@
   },
   "Run3ReReco": {
     "fractionpass": 1, 
-    "go": false
+    "go": true
   },
   "Commissioning2021": {
     "go": true,
