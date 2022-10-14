@@ -1,4 +1,16 @@
 {
+  "Phase2Fall22wmLHEGS": {
+    "go": false,
+    "fractionpass": 0.95
+  },
+  "Phase2Fall22GS": {
+    "go": false,
+    "fractionpass": 0.95
+  },
+  "Phase2Fall22DRMiniAOD": {
+    "go": false,
+    "fractionpass": 0.95
+  },
   "Commission22MiniAOD": {
     "go": false,
     "fractionpass": 1
