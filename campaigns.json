@@ -1,13 +1,13 @@
 {
-  "2022CommissionMiniAOD": {
+  "Commission22MiniAOD": {
     "go": false,
     "fractionpass": 1
   },
-  "2022CommissionDR": {
+  "Commission22DR": {
     "go": false,
     "fractionpass": 1
   },
-  "2022CommissionGS": {
+  "Commission22GS": {
     "go": false,
     "fractionpass": 1
   },
