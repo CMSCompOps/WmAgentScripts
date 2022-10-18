@@ -168,7 +168,7 @@
    "description" : "limitation on the number of wf to process per module",
    "value" : {
     "transferor" : 500,
-    "assignor" : 7000,
+    "assignor" : 500,
     "actor" : 10,
     "closor" : null,
     "checkor" : 500,
@@ -393,7 +393,7 @@
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : ["jinfeng","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob","bbilin","kskovpen","pkalbhor","kaura","jordanm", "alcauser", "alcadb.user", "haozturk"]
+   "value" : ["jinfeng","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob","bbilin","kskovpen","pkalbhor","kaura","jordanm", "alcauser", "alcadb.user", "haozturk", "subansal"]
   },
   "user_storeresults":{
    "description" : "The users from which we expect StoreResults requests",
@@ -408,7 +408,8 @@
 	       	       	   "parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}
 			},
 	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50, "LumisPerJob" : 1000 }},
-               "M100PPC" : {"parameters" : { "SiteWhitelist" : ["T1_IT_CNAF"]}}
+               "M100PPC" : {"parameters" : { "SiteWhitelist" : ["T1_IT_CNAF"]}},
+               "UWGPU" : {"parameters" : { "SiteWhitelist" : ["T2_US_Wisconsin"]}}
              }
   },
   "batch_goodness":{
@@ -460,7 +461,7 @@
    "value" : {
     "block1" : 20000,
     "block2" : 16800,
-    "block3" : 1000,
+    "block3" : 3000,
     "block4" : 0,
     "block5" : 0,
     "block6" : 0,

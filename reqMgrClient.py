@@ -792,6 +792,11 @@ def assignWorkflow(url, workflowname, team, parameters ):
         if defaults[what] == None:
             defaults.pop(what)
 
+    pop_forbidden = ['AutoApproveSubscriptionSites', 'NonCustodialSubType', 'NonCustodialGroup', 'CustodialSubType', 'CustodialGroup']
+    for item in pop_forbidden:
+        if item in defaults:
+            defaults.pop(item)
+
     if not set(assignWorkflow.mandatories).issubset( set(parameters.keys())):
         assignWorkflow.errorMessage = "There are missing parameters\n"
         assignWorkflow.errorMessage += str(list(set(assignWorkflow.mandatories) - set(parameters.keys())))
@@ -1127,7 +1132,7 @@ def purgeClonedSchema(schema):
                       'DN', 'AutoApproveSubscriptionSites', 'NonCustodialSites', 'CustodialSites', 
                       'OriginalRequestName', 'IgnoredOutputModules', 'OutputModulesLFNBases', 'SiteBlacklist', 'AllowOpportunistic', '_id',
                       'min_merge_size', 'events_per_lumi', 'max_merge_size', 'max_events_per_lumi', 'max_merge_events', 'max_wait_time', 'events_per_job',
-                      'SiteBlacklist', 'AllowOpportunistic', 'Override', 'DatasetLifetime']
+                      'SiteBlacklist', 'AllowOpportunistic', 'Override', 'DatasetLifetime', 'AutoApproveSubscriptionSites', 'NonCustodialSubType', 'NonCustodialGroup', 'CustodialSubType', 'CustodialGroup']
     for p in paramBlacklist:
         if p in schema:
             schema.pop( p )
