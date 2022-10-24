@@ -34,7 +34,7 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None):
+def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, scramArch = None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -146,16 +146,19 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
         else:
             raise Exception("A task number should be provided for which to update filter efficiency")
 
+    if scramArch:
+        result["ScramArch"].append(scramArch)
+
     return result
 
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, scramArch=None):
     """
     clones a workflow
     """
     # Adapt schema and add original request to it
     cache = reqMgrClient.getWorkflowInfo(url, workflow)
 
-    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber)
+    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, scramArch)
 
     if verbose:
         pprint(schema)
@@ -293,6 +296,7 @@ def main():
                       help="Clone to testbed reqmgr insted of production")
     parser.add_option('--filterEff', help='filter efficiency of given task/step', dest='filterEff', default=None)
     parser.add_option('--taskNumber', help='taskNumber for which to change filterEff', dest='taskNumber', default=None)
+    parser.add_option('--scramArch', help='Add ScramArch on top of the existing one', dest='scramArch', default=None)
     (options, args) = parser.parse_args()
 
     # Check the arguments, get info from them
@@ -322,7 +326,7 @@ def main():
             if options.TimePerEvent:
                 timeperevent = float(options.TimePerEvent)
             cloneWorkflow(
-                wf, user, options.group, options.verbose, options.backfill, options.testbed, memory,timeperevent,bwl=options.bwl, filterEff=options.filterEff, taskNumber=options.taskNumber)
+                wf, user, options.group, options.verbose, options.backfill, options.testbed, memory,timeperevent,bwl=options.bwl, filterEff=options.filterEff, taskNumber=options.taskNumber, scramArch = options.scramArch)
     elif options.action == 'extend':
         for wf in wfs:
             extendWorkflow(wf, user, options.group, options.verbose, options.events, options.firstlumi)
