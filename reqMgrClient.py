@@ -777,6 +777,9 @@ def assignWorkflow(url, workflowname, team, parameters ):
     if 'Memory' in parameters:
         wf.request['Memory'] = parameters['Memory']
 
+    if 'scramArch' in parameters:
+        wf.request['ScramArch'].append( parameters['ScramArch'] )
+
     defaults.update( parameters )
 
     if 'Multicore' in parameters:

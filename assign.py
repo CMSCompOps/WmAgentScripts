@@ -59,13 +59,15 @@ def assignRequest(url, **args):
     trust_secondary_site = args.get('trust_secondary_site',False)
     memory = args.get('memory',None)
     multicore = args.get('multicore',None)
+    scramArch = args.get('scramArch')
     #params = copy.deepcopy(reqMgr.assignWorkflow.defaults)
     params = {
               "SiteWhitelist": sites,
               "MergedLFNBase": lfn,
               "Dashboard": activity,
               "ProcessingVersion": procversion,
-              "execute": True
+              "execute": True,
+              "ScramArch": scramArch
               }
     
     # add xrootd (trustSiteList)
@@ -153,6 +155,7 @@ def main():
     parser.add_option('-e', '--era', help='Acquistion era', dest='era')
     parser.add_option("--procstr", dest="procstring", help="Overrides Processing String with a single string")
     parser.add_option('--checksite', default=False,action='store_true')
+    parser.add_option('--scramArch', help='Add one ScramArch on top of the existing one' , dest='scramArch')
     (options, args) = parser.parse_args()
     
     if options.testbed:
@@ -478,7 +481,8 @@ def main():
                       memory=memory,
                       multicore=multicore,
                       lumisperjob = options.lumisperjob,
-                      maxmergeevents = options.maxmergeevents
+                      maxmergeevents = options.maxmergeevents,
+                      scramArch = options.scramArch
                       )
     
     sys.exit(0)
