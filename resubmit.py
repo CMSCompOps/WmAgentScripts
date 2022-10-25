@@ -111,8 +111,8 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
             # delete entry
             del result["PrepID"]
         if result["RequestType"] == 'TaskChain':
-            for taskNumber in range(1, result['TaskChain'] + 1):
-                taskName = 'Task%s' % taskNumber
+            for taskNum in range(1, result['TaskChain'] + 1):
+                taskName = 'Task%s' % taskNum
                 if 'ProcessingString' in result[taskName]:
                     result[taskName]['ProcessingString'] = "BACKFILL"
                 if 'AcquisitionEra' in result[taskName]:
