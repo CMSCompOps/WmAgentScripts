@@ -399,10 +399,7 @@ class CloseBuster(threading.Thread):
             odb.nlumis = lumi_count
             odb.nevents = event_count
             odb.workfow_id = wfo.id
-            if odb.expectedlumis < expected_lumis:
-                odb.expectedlumis = expected_lumis
-            else:
-                expected_lumis = odb.expectedlumis
+            odb.expectedlumis = expected_lumis
             odb.date = time.mktime(time.gmtime())
 
             fraction = lumi_count/float(expected_lumis)*100.
