@@ -676,7 +676,8 @@ class CheckBuster(threading.Thread):
         if event_expected == None:
             sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name)
             sendLog('checkor',"TotalInputEvents is missing from the workload of %s"% wfo.name, level='critical')
-            event_expected = 0 
+            event_expected = 0
+            assistance_tags.add('missingParam')
 
         ttype = 'Task' if 'TaskChain' in wfi.request else 'Step'
         it = 1
