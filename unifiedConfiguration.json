@@ -167,7 +167,7 @@
     "transferor" : 500,
     "assignor" : null,
     "actor" : 10,
-    "closor" : 3,
+    "closor" : null,
     "checkor" : 500,
     "completor" : null
     }
