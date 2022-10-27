@@ -19,7 +19,6 @@ from JIRAClient import JIRAClient
 from campaignAPI import deleteCampaignConfig
 
 
-#def spawn_harvesting(url, wfi , in_full):
 def spawn_harvesting(url, wfi , sites_for_DQMHarvest):
     SI = global_SI()
 
@@ -35,11 +34,6 @@ def spawn_harvesting(url, wfi , sites_for_DQMHarvest):
 
         wfi = workflowInfo(url, wfi.request['RequestName'])
         dqms = [out for out in outputs if '/DQM' in out]
-        #if not all([in_full[dqm_input] for dqm_input in dqms]):
-        #    wfi.sendLog('closor',"will not be able to assign the harvesting: holding up")
-        #    for dqm_input in dqms:
-        #        all_OK[dqm_input] = False
-                ## raise the subscription to high priority
 
         for dqm_input in dqms:
             ## handle it properly
@@ -71,14 +65,14 @@ def spawn_harvesting(url, wfi , sites_for_DQMHarvest):
                 if item in wfi.request:
                     harvesting_schema[item] = copy.deepcopy(wfi.request[item])
                 else:
-                    print(item,"is not in initial schema")
+                    print((item,"is not in initial schema"))
 
             harvesting_schema['InputDataset'] = dqm_input
             harvesting_schema['TimePerEvent'] = 1
             harvesting_schema['PrepID'] = 'Harvest-'+wfi.request['PrepID']
             if len(wfi.request['RequestString'])>60:
                 wfi.request['RequestString']= wfi.request['RequestString'][:60]
-                print("truncating request string",wfi.request['RequestString'])
+                print(("truncating request string",wfi.request['RequestString']))
                 
             harvesting_schema['RequestString'] = 'HARVEST-'+wfi.request['RequestString']
             harvesting_schema['DQMHarvestUnit'] = 'byRun'
@@ -86,20 +80,20 @@ def spawn_harvesting(url, wfi , sites_for_DQMHarvest):
 
             harvest_request = reqMgrClient.submitWorkflow(url, harvesting_schema)
             if not harvest_request:
-                print("Error in making harvesting for",wfi.request['RequestName'])
+                print(("Error in making harvesting for",wfi.request['RequestName']))
                 print("schema")
-                print(json.dumps( harvesting_schema, indent = 2))
+                print((json.dumps( harvesting_schema, indent = 2)))
                 harvest_request = reqMgrClient.submitWorkflow(url, harvesting_schema)
                 if not harvest_request:
-                    print("Error twice in harvesting for",wfi.request['RequestName'])
+                    print(("Error twice in harvesting for",wfi.request['RequestName']))
                     print("schema")
-                    print(json.dumps( harvesting_schema, indent = 2))
+                    print((json.dumps( harvesting_schema, indent = 2)))
 
             if harvest_request:
                 requests.append( harvest_request )
                 ## should we protect for setting approved ? no, it's notified below, assignment will fail, likely
                 data = reqMgrClient.setWorkflowApproved(url, harvest_request)
-                print("created",harvest_request,"for harvesting of",dqm_input)
+                print(("created",harvest_request,"for harvesting of",dqm_input))
                 wfi.sendLog('closor',"created %s for harvesting of %s"%( harvest_request, dqm_input))
                 ## assign it directly
                 team = wfi.request['Team']
@@ -111,27 +105,17 @@ def spawn_harvesting(url, wfi , sites_for_DQMHarvest):
                     'ProcessingVersion' : wfi.request['ProcessingVersion'],
                     'execute' : True
                     }
-                #if in_full[dqm_input]:
-                #    print "using full copy at",in_full[dqm_input]
-                #    parameters['SiteWhitelist'] = [SI.SE_to_CE(se) for se in in_full[dqm_input]]
-                #else:
-                #    print "cannot do anything if not having a full copy somewhere"
-                    
-                #    all_OK[dqm_input]=False
-                #    continue
+
                 parameters['SiteWhitelist'] = sites_for_DQMHarvest
 
                 result = reqMgrClient.assignWorkflow(url, harvest_request, team, parameters)
                 if not result:
-                    #sendEmail('harvesting request created','%s was created at announcement of %s in %s, failed to assign'%(harvest_request, dqm_input, wfi.request['RequestName']), destination=[wfi.request['Requestor']+'@cern.ch'])
                     wfi.sendLog('closor','%s was created at announcement of %s in %s, failed to assign'%(harvest_request, dqm_input, wfi.request['RequestName']))
                     sendLog('closor','%s was created at announcement of %s in %s, failed to assign'%(harvest_request, dqm_input, wfi.request['RequestName']), level='critical')
                 else:
-                    #sendEmail('harvesting request assigned','%s was created at announcement of %s in %s, and assigned'%(harvest_request, dqm_input, wfi.request['RequestName']), destination=[wfi.request['Requestor']+'@cern.ch']) 
                     wfi.sendLog('closor','%s was created at announcement of %s in %s, and assigned'%(harvest_request, dqm_input, wfi.request['RequestName']))
 
             else:
-                #print "could not make the harvesting for",wfo.name,"not announcing"
                 wfi.sendLog('closor',"could not make the harvesting request")
                 sendLog('closor',"could not make the harvesting request for %s"% wfi.request['RequestName'], level='critical')
                 all_OK[dqm_input]=False                    
@@ -165,11 +149,11 @@ def closor(url, specific=None, options=None):
     wfs_n = [w.name for w in wfs]
 
     print("unique names?")
-    print(len(set(wfs_n)) == len(wfs_n))
+    print((len(set(wfs_n)) == len(wfs_n)))
     
     held = set()
 
-    print(len(wfs),"closing")
+    print((len(wfs),"closing"))
     random.shuffle( wfs )    
     max_per_round = UC.get('max_per_round').get('closor',None)
     if options.limit: max_per_round = options.limit
@@ -191,7 +175,7 @@ def closor(url, specific=None, options=None):
 
     closers = []
 
-    print(len(wfs),"closing")
+    print((len(wfs),"closing"))
     th_start = time.mktime(time.gmtime())
 
     for iwfo,wfo in enumerate(wfs):
@@ -229,7 +213,7 @@ def closor(url, specific=None, options=None):
         time.sleep(5)
 
     JC = JIRAClient() if up.status.get('jira',False) else None
-    print(len(run_threads.threads),"finished thread to gather information from")
+    print((len(run_threads.threads),"finished thread to gather information from"))
     failed_threads = 0
     for to in run_threads.threads:
         if to.failed:
@@ -240,7 +224,7 @@ def closor(url, specific=None, options=None):
                 out = outO.datasetname
                 odb = session.query(Output).filter(Output.datasetname==out).first()
                 if not odb:
-                    print("adding an output object",out)
+                    print(("adding an output object",out))
                     session.add( outO )
                 else:
                     odb.date = outO.date
@@ -263,7 +247,7 @@ def closor(url, specific=None, options=None):
 
     if wfs:
         time_spend_per_workflow = (th_stop-th_start) / float(len(wfs))
-        print("Average time spend per workflow is", time_spend_per_workflow)
+        print(("Average time spend per workflow is", time_spend_per_workflow))
 
     if float(failed_threads/run_threads.n_threads) > 0:
         sendLog('checkor','%d/%d threads have failed, better check this out'% (failed_threads, run_threads.n_threads), level='critical')
@@ -290,10 +274,6 @@ def closor(url, specific=None, options=None):
         if go:
             subject = "Release Validation Samples Batch %s"% bname
             issues=""
-            #if batch_warnings[ bname ]:
-            #    issues="The following datasets have outstanding completion (<%d%%) issues:\n\n"% batch_goodness
-            #    issues+="\n".join( sorted( batch_warnings[ bname ] ))
-            #    issues+="\n\n"
             if batch_extreme_warnings[ bname ]:
                 subject = "Low Statistics for %s"% bname
                 issues="The following datasets have outstanding completion (<50%%) issues:\n\n"
@@ -398,9 +378,9 @@ class CloseBuster(threading.Thread):
 
         expected_lumis = 1
         if not 'TotalInputLumis' in wfi.request:
-            print(wfo.name,"has not been assigned yet, or the database is corrupted")
+            print((wfo.name,"has not been assigned yet, or the database is corrupted"))
         elif wfi.request['TotalInputLumis']==0:
-            print(wfo.name,"is corrupted with 0 expected lumis")
+            print((wfo.name,"is corrupted with 0 expected lumis"))
         else:
             expected_lumis = wfi.request['TotalInputLumis']
 
@@ -409,9 +389,8 @@ class CloseBuster(threading.Thread):
         ## check whether the number of lumis is as expected for each
         all_OK = defaultdict(lambda : False)
         stats = defaultdict(int)
-        #print outputs
         if len(outputs): 
-            print(wfo.name,wfi.request['RequestStatus'])
+            print((wfo.name,wfi.request['RequestStatus']))
         for out in outputs:
             event_count,lumi_count = getDatasetEventsAndLumis(dataset=out)
             self.outs.append( Output( datasetname = out ))
@@ -420,10 +399,7 @@ class CloseBuster(threading.Thread):
             odb.nlumis = lumi_count
             odb.nevents = event_count
             odb.workfow_id = wfo.id
-            if odb.expectedlumis < expected_lumis:
-                odb.expectedlumis = expected_lumis
-            else:
-                expected_lumis = odb.expectedlumis
+            odb.expectedlumis = expected_lumis
             odb.date = time.mktime(time.gmtime())
 
             fraction = lumi_count/float(expected_lumis)*100.
@@ -439,51 +415,16 @@ class CloseBuster(threading.Thread):
 
 
         ## check for at least one full copy prior to moving on
-        #in_full = {}
         for out in outputs:
             all_OK[out] = True
-            #in_full[out] = []
-            #presence = getDatasetPresence( url, out )
-            #where = [site for site,info in presence.items() if info[0]]
-            #if where:
-            #    all_OK[out] = True
-            #    print out,"is in full at",",".join(where)
-            #    in_full[out] = copy.deepcopy(where)
-            #else:
-
-            #    going_to = wfi.request['NonCustodialSites']+wfi.request['CustodialSites']
-            #    wfi.sendLog('closor',"%s is not in full anywhere. send to %s"%(out, ",".join(sorted(going_to))))
-            #    at_destination = dict([(k,v) for (k,v) in presence.items() if k in going_to])
-            #    else_where = dict([(k,v) for (k,v) in presence.items() if not k in going_to])
-            #    print json.dumps( at_destination )
-            #    print json.dumps( else_where, indent=2 )
-                ## do the full stuck transfer study, missing files and shit !
-                #for there in going_to:
-                #    late_info = findLateFiles(url, out, going_to = there )
-                #    for l in late_info:
-                #        l.update({"workflow":wfo.name,"dataset":out})
-                #    self.all_late_files.extend( late_info )
-            #    if check_fullcopy_to_announce:
-                    ## only set this false if the check is relevant
-            #        all_OK[out] = False
-
-    
-        ## verify if we have to do harvesting
-        #if not options.no_harvest and not jump_the_line:
-        #    #(OK, requests) = spawn_harvesting(url, wfi, in_full)
-        #    sites_for_DQMHarvest = UC.get("sites_for_DQMHarvest")
-        #    (OK, requests) = spawn_harvesting(url, wfi, sites_for_DQMHarvest)
-        #    print "Harvesting workflow has been created and assigned to: "
-        #    print sites_for_DQMHarvest
-        #    all_OK.update( OK )
 
         ## only that status can let me go into announced
         if all(all_OK.values()) and ((wfi.request['RequestStatus'] in ['closed-out']) or options.force or jump_the_line):
-            print(wfo.name,"to be announced")
+            print((wfo.name,"to be announced"))
             results=[]
             if not results:
                 for out in outputs:
-                    print("dealing with",out)
+                    print(("dealing with",out))
                     if out in stats and not stats[out]: 
                         continue
                     _,dsn,process_string,tier = out.split('/')
@@ -538,7 +479,7 @@ class CloseBuster(threading.Thread):
                             to_DDM = True
                         ## check for unitarity
                         if not tier in UC.get("tiers_no_DDM")+UC.get("tiers_to_DDM"):
-                            print("tier",tier,"neither TO or NO DDM for",out)
+                            print(("tier",tier,"neither TO or NO DDM for",out))
                             results.append('Not recognitized tier %s'%tier)
                             #sendEmail("failed DDM injection","could not recognize %s for injecting in DDM"% out)
                             sendLog('closor', "could not recognize %s for injecting in DDM"% out, level='critical')
@@ -565,7 +506,7 @@ class CloseBuster(threading.Thread):
                             destination_spec = "--destination="+",".join( destinations )
                         group_spec = "" ## not used yet
                     else:
-                        print(wfo.name,"no stats for announcing",out)
+                        print((wfo.name,"no stats for announcing",out))
                         results.append('No Stats')
 
                 # adding check for PrentageResolved flag from ReqMgr:
@@ -614,7 +555,7 @@ class CloseBuster(threading.Thread):
                 self.to_status = 'trouble'
                 self.to_wm_status = wfi.request['RequestStatus']
         else:
-            print(wfo.name,"not good for announcing:",wfi.request['RequestStatus'])
+            print((wfo.name,"not good for announcing:",wfi.request['RequestStatus']))
             wfi.sendLog('closor',"cannot be announced")
             self.held.add( wfo.name )
 
