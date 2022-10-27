@@ -942,7 +942,7 @@ class CheckBuster(threading.Thread):
 
         if not all(pass_stats_check.values()):
             possible_recoveries = wfi.getRecoveryDoc()
-            if possible_recoveries == []:
+            if possible_recoveries == [] or possible_recoveries == None:
                 wfi.sendLog('checkor','%s has missing statistics \n%s \n%s, but nothing is recoverable. passing through to annoucement'%( 
                         wfo.name, json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
                 sendLog('checkor','%s is not completed, but has nothing to be recovered, passing along ?'%wfo.name, level='critical')
