@@ -132,7 +132,7 @@
     ]
   },
   "Commission22MiniAOD": {
-    "go": false,
+    "go": true,
     "fractionpass": 1,
     "SiteBlacklist": [
       "T1_ES_PIC",
@@ -176,7 +176,7 @@
     ]
   },
   "Commission22DR": {
-    "go": false,
+    "go": true,
     "fractionpass": 1,
     "SiteBlacklist": [
       "T1_ES_PIC",
@@ -220,7 +220,7 @@
     ]
   },
   "Commission22GS": {
-    "go": false,
+    "go": true,
     "fractionpass": 1,
     "SiteBlacklist": [
       "T1_ES_PIC",
