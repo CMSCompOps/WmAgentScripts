@@ -151,9 +151,9 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
     elif scramArch and taskNumber:
         # Question: does the global scramArch have any use for taskchains and stepchains
         if result["RequestType"] == "TaskChain":
-            result["Task" + str(taskNumber)]["ScramArch"].append(scramArch)
+            result["Task" + str(taskNumber)]["ScramArch"] = scramArch
         elif result["RequestType"] == "StepChain":
-            result["Step" + str(taskNumber)]["ScramArch"].append(scramArch)
+            result["Step" + str(taskNumber)]["ScramArch"] = scramArch
         else:
             print("You're trying to change the scramArch in task level while the request isn't a task or stepchain")
             sys.exit()
