@@ -217,7 +217,16 @@
       "T2_US_MIT",
       "T2_US_Purdue",
       "T2_US_Vanderbilt"
-    ]
+    ],
+    "secondaries": { 
+      "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter21GS-112X_mcRun3_2021_realistic_v15-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk", 
+          "T1_UK_RAL_Disk",
+          "T1_DE_KIT_Disk",
+          "T1_ES_PIC_Disk"
+        ]
+    }
   },
   "Commission22GS": {
     "go": true,
