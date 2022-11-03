@@ -6,7 +6,6 @@ from utils import getDatasetEventsPerLumi, getLFNbase, lockInfo, do_html_in_each
 from utils import componentInfo, sendEmail, sendLog, getWorkflows, eosRead
 from utils import moduleLock
 import optparse
-from htmlor import htmlor
 import random
 import json
 import copy
@@ -45,12 +44,12 @@ def assignor(url ,specific = None, talk=True, options=None):
 
     if options.from_status:
         fetch_from = options.from_status.split(',')
-        print("Overriding to read from",fetch_from)
+        print(("Overriding to read from",fetch_from))
 
     for status in fetch_from:
-        print("getting wf in",status)
+        print(("getting wf in",status))
         wfos.extend(session.query(Workflow).filter(Workflow.status==status).all())
-        print(len(wfos))
+        print((len(wfos)))
 
     ## in case of partial, go for fetching a list from json ?
     #if options.partial and not specific:
@@ -188,7 +187,7 @@ def assignor(url ,specific = None, talk=True, options=None):
                 session.commit()
                 continue
             else:
-                print(wfo.name,wfh.request['RequestStatus'])
+                print((wfo.name,wfh.request['RequestStatus']))
 
         ## retrieve from the schema, dbs and reqMgr what should be the next version
         version=wfh.getNextVersion()
@@ -316,7 +315,7 @@ def assignor(url ,specific = None, talk=True, options=None):
         else:
             sites_out = [SI.pick_dSE([SI.CE_to_SE(ce) for ce in sites_allowed])]
             
-        print("available=",SI.disk[sites_out[0]])    
+        print(("available=",SI.disk[sites_out[0]]))    
         wfh.sendLog('assignor',"Placing the output on %s"%sites_out)
         parameters={
             'SiteWhitelist' : sites_allowed,
@@ -459,14 +458,14 @@ def assignor(url ,specific = None, talk=True, options=None):
                 except Exception as e:
                     print("fail in locking output")
                     
-                    print(str(e))
+                    print((str(e)))
                     sendEmail("failed locking of output",str(e))
 
 
             else:
                 wfh.sendLog('assignor',"Failed to assign %s.\n%s \n Please check the logs"%(wfo.name, reqMgrClient.assignWorkflow.errorMessage))
                 sendLog('assignor',"Failed to assign %s.\n%s \n Please check the logs"%(wfo.name, reqMgrClient.assignWorkflow.errorMessage), level='critical')
-                print("ERROR could not assign",wfo.name)
+                print(("ERROR could not assign",wfo.name))
         else:
             pass
     print("Assignment summary:")
@@ -498,6 +497,3 @@ if __name__=="__main__":
         spec = args[0]
 
     assignor(url,spec, options=options)
-
-    if not spec and do_html_in_each_module:
-        htmlor()
