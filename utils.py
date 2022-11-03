@@ -5384,11 +5384,11 @@ class workflowInfo:
             if 'pilot' in label.lower():
                 msg = "Detected 'pilot' keyword in processingString {} in campaign {}. Assigning the workflow.".format(
                     label, campaign)
-            if log:
-                self.sendLog('go', msg)
-            else:
-                print(msg)
-            return True
+                if log:
+                    self.sendLog('go', msg)
+                else:
+                    print(msg)
+                return True
         # If there is 'pilot' in SubRequestType (an alternative pilot)
         if 'SubRequestType' in self.request:
             if 'pilot' in self.request['SubRequestType'].lower():
