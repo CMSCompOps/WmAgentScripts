@@ -440,12 +440,12 @@ def assignor(url ,specific = None, talk=True, options=None):
                 session.commit()
                 n_assigned+=1
                 wfh.sendLog('assignor',"Properly assigned\n%s"%(json.dumps( parameters, indent=2)))
-		if wfh.producePremix() and (not wfh.isRelval()):
-		    title = "Heavy workflow assigned to {}".format(parameters['SiteWhitelist'])
-		    body = "Workflow name: {}".format(wfh.request['RequestName'])
-		    body += "\nOutput dataset(s): {}".format(wfh.request['OutputDatasets'])
-		    body += "\nAssigned to: {}".format(parameters['SiteWhitelist'])
-		    sendEmail(title, body, destination=['cms-production-heavy-workflow-notifications@cern.ch'])
+                if wfh.producePremix() and (not wfh.isRelval()):
+                    title = "Heavy workflow assigned to {}".format(parameters['SiteWhitelist'])
+                    body = "Workflow name: {}".format(wfh.request['RequestName'])
+                    body += "\nOutput dataset(s): {}".format(wfh.request['OutputDatasets'])
+                    body += "\nAssigned to: {}".format(parameters['SiteWhitelist'])
+                    sendEmail(title, body, destination=['cms-production-heavy-workflow-notifications@cern.ch'])
 
                 try:
                     ## refetch information and lock output
