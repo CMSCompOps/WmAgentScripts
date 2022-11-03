@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from assignSession import *
 import reqMgrClient
-from .utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_pub_dir, \
+from utils import workflowInfo, campaignInfo, siteInfo, userLock, unifiedConfiguration, reqmgr_url, monitor_pub_dir, \
     monitor_dir, global_SI
 from utils import getDatasetEventsPerLumi, getLFNbase, lockInfo, do_html_in_each_module
 from utils import componentInfo, sendEmail, sendLog, getWorkflows, eosRead
