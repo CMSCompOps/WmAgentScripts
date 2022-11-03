@@ -5388,7 +5388,7 @@ class workflowInfo:
                     self.sendLog('go', msg)
                 else:
                     print(msg)
-            return True
+                return True
         # If there is 'pilot' in SubRequestType (an alternative pilot)
         if 'SubRequestType' in self.request:
             if 'pilot' in self.request['SubRequestType'].lower():
