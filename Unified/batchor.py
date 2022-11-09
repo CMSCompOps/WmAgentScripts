@@ -30,12 +30,12 @@ def batchor( url ):
     by_campaign = defaultdict(set)
     by_hi_campaign = defaultdict(set)
     for wf in wfs:
-        print("Relval:",wf['RequestName'], wf['Campaign'])
+        print(("Relval:",wf['RequestName'], wf['Campaign']))
         by_campaign[wf['Campaign']].add( wf['PrepID'] )
 
 
     for wf in hi_wfs:
-        print("HI Relval:",wf['RequestName'], wf['Campaign'])
+        print(("HI Relval:",wf['RequestName'], wf['Campaign']))
         by_hi_campaign[wf['Campaign']].add( wf['PrepID'] )
         
     default_setup = {
@@ -61,7 +61,7 @@ def batchor( url ):
         if "parameters" in p and "SiteWhitelist" in p["parameters"] and len(p["parameters"]["SiteWhitelist"])>1:
             choose_from = list(set(p["parameters"]["SiteWhitelist"]) & set(SI.sites_ready))
             picked = random.choice( choose_from )
-            print("picked",picked,"from",choose_from)
+            print(("picked",picked,"from",choose_from))
             p["parameters"]["SiteWhitelist"] = [picked]
             
     batches = BI.all()
@@ -74,8 +74,8 @@ def batchor( url ):
             if key in campaign:
                 ## augment with the routing information
                 augment_with = relval_routing[key]
-                print("Modifying the batch configuration because of keyword",key)
-                print("with",augment_with)
+                print(("Modifying the batch configuration because of keyword",key))
+                print(("with",augment_with))
                 setup = deep_update( setup, augment_with )
 
         pick_one_site( setup )
@@ -86,7 +86,7 @@ def batchor( url ):
         setup['name'] = campaign
         wmcoreCamp = parseMongoCampaigns(setup)[0]
         res = createCampaignConfig(wmcoreCamp)
-        print("Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res))
+        print(("Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res)))
 
     for campaign in by_hi_campaign:
         if campaign in batches: continue
@@ -105,12 +105,12 @@ def batchor( url ):
         setup['name'] = campaign
         wmcoreCamp = parseMongoCampaigns(setup)[0]
         res = createCampaignConfig(wmcoreCamp)
-        print("Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res))
+        print(("Campaign %s correctly created in ReqMgr2: %s" % (wmcoreCamp['CampaignName'], res)))
 
     ## only new campaigns in announcement
     for new_campaign in list(set(add_on.keys())-set(CI.all(c_type='relval'))):
         ## this is new, and can be announced as such
-        print(new_campaign,"is new stuff")
+        print((new_campaign,"is new stuff"))
         subject = "Request of RelVal samples batch %s"% new_campaign
         text="""Dear all, 
 A new batch of relval workflows was requested.
@@ -146,9 +146,9 @@ This is an automated message"""%( new_campaign,
             #campaigns[old_campaign]['go'] = False ## disable
             CI.pop( old_campaign ) ## or just drop it all together ?
             BI.pop( old_campaign )
-            print("batch",old_campaign," configuration was removed")
+            print(("batch",old_campaign," configuration was removed"))
             res = deleteCampaignConfig(old_campaign)
-            print("Campaign %s correctly deleted in ReqMgr2: %s" % (old_campaign, res))
+            print(("Campaign %s correctly deleted in ReqMgr2: %s" % (old_campaign, res)))
 
 
     ## merge all anyways
