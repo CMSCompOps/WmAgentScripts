@@ -17,7 +17,6 @@ import math
 from RucioClient import RucioClient
 from McMClient import McMClient
 from JIRAClient import JIRAClient
-from htmlor import htmlor
 from utils import sendEmail
 from utils import closeoutInfo
 from showError import parse_one, showError_options
