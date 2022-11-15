@@ -146,8 +146,15 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
         else:
             raise Exception("A task number should be provided for which to update filter efficiency")
 
+    # Assign a scramArch to all the tasks/steps
     if scramArch and not taskNumber:
-        result["ScramArch"].append(scramArch)
+        requestType = result["RequestType"]
+        prefix = requestType[:4]
+        nTasks = result[requestType]
+        for i in range(nTasks):
+            result[prefix + str(i + 1)]["ScramArch"] = scramArch
+
+    # Assign a given ScramArch to a given task
     elif scramArch and taskNumber:
         # Question: does the global scramArch have any use for taskchains and stepchains
         if result["RequestType"] == "TaskChain":
