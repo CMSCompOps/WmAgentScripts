@@ -4635,6 +4635,7 @@ class workflowInfo:
                 rucioClient = RucioClient()
                 for sec in secondary:
                     pileup_locations = rucioClient.getDatasetLocationsByAccount(sec, "wmcore_transferor")
+                    pileup_locations += rucioClient.getDatasetLocationsByAccount(sec, "transfer_ops")
                     sites_allowed += pileup_locations
                 sites_allowed = sorted(set(sites_allowed))
                 print("Reading minbias")
