@@ -129,7 +129,16 @@
       "T2_US_MIT",
       "T2_US_Purdue",
       "T2_US_Vanderbilt"
-    ]
+    ],
+    "secondaries": { 
+      "/MinBias_TuneCP5_14TeV-pythia8/Phase2Fall22GS-HCalDetIDFix_125X_mcRun4_realistic_v2-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk", 
+          "T1_DE_KIT_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "Commission22MiniAOD": {
     "go": true,
