@@ -87,9 +87,9 @@ def assignor(url, specific=None, talk=True, options=None):
     # if options.partial and not specific:
     #    pass
 
-    aaa_mapping = json.loads(eosRead('%s/equalizor.json' % monitor_pub_dir))['mapping']
-    all_stuck = set()
-    all_stuck.update(json.loads(eosRead('%s/stuck_transfers.json' % monitor_pub_dir)))
+    #aaa_mapping = json.loads(eosRead('%s/equalizor.json' % monitor_pub_dir))['mapping']
+    #all_stuck = set()
+    #all_stuck.update(json.loads(eosRead('%s/stuck_transfers.json' % monitor_pub_dir)))
 
     max_per_round = UC.get('max_per_round').get('assignor', None)
     max_cpuh_block = UC.get('max_cpuh_block')
@@ -186,9 +186,9 @@ def assignor(url, specific=None, talk=True, options=None):
             sendLog('assignor', 'Workflow %s has no output at all' % (wfo.name), level='critical')
             continue
 
-        is_stuck = (all_stuck & primary)
-        if is_stuck:
-            wfh.sendLog('assignor', "%s are stuck input" % (','.join(is_stuck)))
+        #is_stuck = (all_stuck & primary)
+        #if is_stuck:
+        #    wfh.sendLog('assignor', "%s are stuck input" % (','.join(is_stuck)))
 
         ## check if by configuration we gave it a GO
         no_go = False
@@ -310,17 +310,17 @@ def assignor(url, specific=None, talk=True, options=None):
         wfh.sendLog('assignor', "Allowed sites :%s" % sorted(sites_allowed))
 
         # TODO Alan on 1/april/2020: keep the AAA functionality
-        if primary_aaa:
+        #if primary_aaa:
             ## remove the sites not reachable localy if not in having the data
-            if not sites_allowed:
-                wfh.sendLog('assignor', "Overiding the primary on AAA setting to Off")
-                primary_aaa = False
-            else:
-                aaa_grid = set(sites_allowed)
-                for site in list(aaa_grid):
-                    aaa_grid.update(aaa_mapping.get(site, []))
-                sites_allowed = list(set(initial_sites_allowed) & aaa_grid)
-                wfh.sendLog('assignor', "Selected to read primary through xrootd %s" % sorted(sites_allowed))
+        #    if not sites_allowed:
+        #        wfh.sendLog('assignor', "Overiding the primary on AAA setting to Off")
+        #        primary_aaa = False
+        #    else:
+        #        aaa_grid = set(sites_allowed)
+        #        for site in list(aaa_grid):
+        #            aaa_grid.update(aaa_mapping.get(site, []))
+        #        sites_allowed = list(set(initial_sites_allowed) & aaa_grid)
+        #        wfh.sendLog('assignor', "Selected to read primary through xrootd %s" % sorted(sites_allowed))
 
         isStoreResults = ('StoreResults' == wfh.request.setdefault('RequestType', None))
 
