@@ -410,7 +410,8 @@
 	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50, "LumisPerJob" : 1000 }},
                "M100PPC" : {"parameters" : { "SiteWhitelist" : ["T1_IT_CNAF"]}},
                "UWGPU" : {"parameters" : { "SiteWhitelist" : ["T2_US_Wisconsin"]}},
-               "KITGPU" : {"parameters" : { "SiteWhitelist" : ["T1_DE_KIT"]}}
+               "KITGPU" : {"parameters" : { "SiteWhitelist" : ["T1_DE_KIT"]}},
+               "CERNCPU" : {"parameters" : { "SiteWhitelist" : ["T2_CH_CERN", "T2_CH_CERN_HLT"]}}
              }
   },
   "batch_goodness":{
