@@ -112,10 +112,6 @@
    "value" : 20,
    "description" : "The value in GB that we allow the output size to be before adapting the splitting"
  },
-  "output_size_correction": {
-   "value" : { "Phase" : 1 },
-   "description" : "The correction factor to be applied to SizePerEvent per keyword."
- },
  "memory_correction": {
    "value" : { "RunIIFall17DRPremix" : 14900 },
    "description" : "The memory setting to be set for task with that keyword in"
