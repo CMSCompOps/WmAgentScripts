@@ -1462,7 +1462,7 @@
   },
   "Run3Summer22EEGS":{
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
@@ -1559,7 +1559,7 @@
   },
   "Run3Summer22EEDR": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "secondaries": {
         "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Summer22GS-124X_mcRun3_2022_realistic_v10-v1/GEN-SIM": {
           "SiteWhitelist": [
