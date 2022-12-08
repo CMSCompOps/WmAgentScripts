@@ -589,7 +589,8 @@ class componentCheck(threading.Thread):
 
     def check_cmsr(self):
         from assignSession import session, Workflow
-        all_info = session.query(Workflow).filter(Workflow.name.contains('1')).all()
+        test_workflow = "cmsunified_task_PPD-Run3Summer22EEwmLHEGS-00001__v1_T_221128_175013_6024"
+        all_info = session.query(Workflow).filter(Workflow.name == test_workflow).all()
 
     def check_reqmgr(self):
         data = getReqmgrInfo(reqmgr_url)
