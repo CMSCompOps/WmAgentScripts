@@ -460,10 +460,10 @@
     "block1" : 20000,
     "block2" : 16800,
     "block3" : 3000,
-    "block4" : 0,
-    "block5" : 0,
-    "block6" : 0,
-    "block7" : 0
+    "block4" : 2000,
+    "block5" : 2000,
+    "block6" : 2000,
+    "block7" : 2000
    }
  }
 }
