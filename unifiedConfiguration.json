@@ -458,12 +458,12 @@
    "description" : "threshold per priority block above which assignment will be stalled",
    "value" : {
     "block1" : 20000,
-    "block2" : 16800,
-    "block3" : 3000,
-    "block4" : 2000,
-    "block5" : 2000,
-    "block6" : 2000,
-    "block7" : 2000
+    "block2" : 1000,
+    "block3" : 1000,
+    "block4" : 1000,
+    "block5" : 1000,
+    "block6" : 1000,
+    "block7" : 1000
    }
  }
 }
