@@ -1,4 +1,12 @@
 {
+  "Run3Summer22pLHE": {
+    "fractionpass": 0.95,
+    "go": false
+  },
+  "Run3Summer22EEpLHE": {
+    "fractionpass": 0.95,
+    "go": false
+  },
   "Phase2Fall22wmLHEGS": {
     "go": false,
     "fractionpass": 0.95,
@@ -5044,7 +5052,7 @@
   },
   "PhaseIISpring22pLHEGEN": {
     "fractionpass": 0.95,
-    "go": false
+    "go": true 
   },
   "PhaseIISpring22SIM": {
     "fractionpass": 0.95,
