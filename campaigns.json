@@ -1,11 +1,11 @@
 {
   "Run3Summer22pLHE": {
     "fractionpass": 0.95,
-    "go": false
+    "go": true
   },
   "Run3Summer22EEpLHE": {
     "fractionpass": 0.95,
-    "go": false
+    "go": true
   },
   "Phase2Fall22wmLHEGS": {
     "go": false,
