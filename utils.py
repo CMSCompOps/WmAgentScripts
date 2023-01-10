@@ -34,6 +34,9 @@ def mongo_client():
     return pymongo.MongoClient('mongodb://%s/?ssl=true' % mongo_db_url,
                                ssl_cert_reqs=ssl.CERT_NONE)
 
+def open_json_file(filename):
+    with open(filename) as f:
+        return json.loads(f.read())
 
 class unifiedConfiguration:
     def __init__(self, configFile='unifiedConfiguration.json'):
@@ -43,7 +46,7 @@ class unifiedConfiguration:
             self.configs = self.configFile
         else:
             try:
-                self.configs = json.loads(open(self.configFile).read())
+                self.configs = open_json_file(self.configFile)
             except Exception as ex:
                 print("Could not read configuration file: %s\nException: %s" %
                       (self.configFile, str(ex)))
