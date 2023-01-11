@@ -112,10 +112,6 @@
    "value" : 20,
    "description" : "The value in GB that we allow the output size to be before adapting the splitting"
  },
-  "output_size_correction": {
-   "value" : { "Phase" : 1 },
-   "description" : "The correction factor to be applied to SizePerEvent per keyword."
- },
  "memory_correction": {
    "value" : { "RunIIFall17DRPremix" : 14900 },
    "description" : "The memory setting to be set for task with that keyword in"
@@ -168,9 +164,9 @@
    "description" : "limitation on the number of wf to process per module",
    "value" : {
     "transferor" : 500,
-    "assignor" : 100,
+    "assignor" : 200,
     "actor" : 10,
-    "closor" : null,
+    "closor" : 200,
     "checkor" : 100,
     "completor" : null
     }
@@ -410,7 +406,8 @@
 	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50, "LumisPerJob" : 1000 }},
                "M100PPC" : {"parameters" : { "SiteWhitelist" : ["T1_IT_CNAF"]}},
                "UWGPU" : {"parameters" : { "SiteWhitelist" : ["T2_US_Wisconsin"]}},
-               "KITGPU" : {"parameters" : { "SiteWhitelist" : ["T1_DE_KIT"]}}
+               "KITGPU" : {"parameters" : { "SiteWhitelist" : ["T1_DE_KIT"]}},
+               "CERNCPU" : {"parameters" : { "SiteWhitelist" : ["T2_CH_CERN", "T2_CH_CERN_HLT"]}}
              }
   },
   "batch_goodness":{
@@ -461,12 +458,12 @@
    "description" : "threshold per priority block above which assignment will be stalled",
    "value" : {
     "block1" : 20000,
-    "block2" : 16800,
-    "block3" : 3000,
-    "block4" : 0,
-    "block5" : 0,
-    "block6" : 0,
-    "block7" : 0
+    "block2" : 10000,
+    "block3" : 10000,
+    "block4" : 10000,
+    "block5" : 10000,
+    "block6" : 10000,
+    "block7" : 10000
    }
  }
 }

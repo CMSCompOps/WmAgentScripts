@@ -589,7 +589,8 @@ class componentCheck(threading.Thread):
 
     def check_cmsr(self):
         from assignSession import session, Workflow
-        all_info = session.query(Workflow).filter(Workflow.name.contains('1')).all()
+        test_workflow = "cmsunified_task_PPD-Run3Summer22EEwmLHEGS-00001__v1_T_221128_175013_6024"
+        all_info = session.query(Workflow).filter(Workflow.name == test_workflow).all()
 
     def check_reqmgr(self):
         data = getReqmgrInfo(reqmgr_url)
@@ -4635,6 +4636,7 @@ class workflowInfo:
                 rucioClient = RucioClient()
                 for sec in secondary:
                     pileup_locations = rucioClient.getDatasetLocationsByAccount(sec, "wmcore_transferor")
+                    pileup_locations += rucioClient.getDatasetLocationsByAccount(sec, "transfer_ops")
                     sites_allowed += pileup_locations
                 sites_allowed = sorted(set(sites_allowed))
                 print("Reading minbias")
@@ -4712,7 +4714,6 @@ class workflowInfo:
         modified_splits = []
         config_GB_space_limit = unifiedConfiguration().get('GB_space_limit')
         GB_space_limit = config_GB_space_limit * ncores
-        output_size_correction = unifiedConfiguration().get('output_size_correction')
 
         if self.request['RequestType'] == 'StepChain':
             ## the number of event/lumi should not matter at all.
@@ -4774,10 +4775,6 @@ class workflowInfo:
                     print("the output is not kept, but keeping the output size to", GB_space_limit)
 
                 sizeperevent = t.get('SizePerEvent', None)
-                for keyword, factor in list(output_size_correction.items()):
-                    if keyword in spl['taskName']:
-                        sizeperevent *= factor
-                        break
 
                 inputs = t.get('InputDataset', None)
                 events_per_lumi_inputs = getDatasetEventsPerLumi(inputs) if inputs else events_per_lumi_inputs

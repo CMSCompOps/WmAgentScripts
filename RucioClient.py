@@ -104,10 +104,9 @@ class RucioClient(Client):
         """
         try:
             rules = self.list_did_rules(self.scope, dataset)
-            RSEs = []
             for rule in rules:
                 if rule['account'] == account:
-                    RSEs.append(rule['rse_expression'])
+                    RSEs = rule['rse_expression'].split("|")
 
             #RSE to CE conversion
             cric = CRIC()
