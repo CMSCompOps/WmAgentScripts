@@ -239,7 +239,8 @@
       "T2_FI_HIP",
       "T2_CH_CERN_HLT",
       "T2_RU_INR"
-    ]
+    ],
+    "partial_copy": 0.05
   },
   "Commissioning2021": {
     "go": true,
