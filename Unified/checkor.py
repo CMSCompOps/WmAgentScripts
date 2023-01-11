@@ -24,7 +24,7 @@ from McMClient import McMClient
 from JIRAClient import JIRAClient
 from utils import sendEmail
 from utils import closeoutInfo
-from showError import parse_one, showError_options
+#from showError import parse_one, showError_options
 import threading
 import sys
 
@@ -1458,9 +1458,10 @@ class CheckBuster(threading.Thread):
             wfi.sendLog('checkor', "setting %s closed-out" % wfo.name)
             if wfi.isRelval():
                 ## error report for relval regardless
-                so = showError_options(expose=2)
+                ###so = showError_options(expose=2)
                 try:
-                    parse_one(url, wfo.name, so)
+                    ###parse_one(url, wfo.name, so)
+                    pass
                 except Exception as e:
                     print("Could not make error report for", wfo.name)
                     print("because", str(e))
@@ -1498,22 +1499,22 @@ class CheckBuster(threading.Thread):
                 else:
                     print("could not close out", wfo.name, "will try again next time")
         else:
-            if not 'custodial' in assistance_tags or wfi.isRelval():
+            #if not 'custodial' in assistance_tags or wfi.isRelval():
                 ## do only the report for those
-                time_point("Going on and making error reports")
-                for member in acdc + acdc_inactive + [wfo.name]:
-                    try:
-                        if options and options.no_report: continue
+            #    time_point("Going on and making error reports")
+            #    for member in acdc + acdc_inactive + [wfo.name]:
+            #        try:
+            #            if options and options.no_report: continue
                         # expose = UC.get('n_error_exposed') if (report_created < 50 and 'manual' in assistance_tags) else 0
-                        expose = UC.get('n_error_exposed') if ('manual' in assistance_tags) else 0
-                        so = showError_options(expose=expose)
-                        parse_one(url, member, so)
-                        self.report_created += 1
-                    except Exception as e:
-                        print("Could not make error report for", member)
-                        print("because", str(e))
+            #            expose = UC.get('n_error_exposed') if ('manual' in assistance_tags) else 0
+            #            so = showError_options(expose=expose)
+            #            parse_one(url, member, so)
+            #            self.report_created += 1
+            #        except Exception as e:
+            #            print("Could not make error report for", member)
+            #            print("because", str(e))
 
-                time_point("Done with reports")
+            #    time_point("Done with reports")
 
             ## full known list
             # recovering # has active ACDC
