@@ -10,6 +10,7 @@ import random
 from McMClient import McMClient
 from JIRAClient import JIRAClient
 import random
+import time
 
 def completor(url, specific):
     mlock = moduleLock(silent=True)
