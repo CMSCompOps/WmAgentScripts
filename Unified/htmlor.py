@@ -17,11 +17,6 @@ def htmlor( caller = ""):
     up = componentInfo(soft=['mcm','wtc','jira'])
     if not up.check(): return  
 
-    #for backup in ['statuses.json','siteInfo.json','equalizor.json']:
-    #    print "copying",backup,"to old location"
-    #    os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s/%s /afs/cern.ch/user/c/cmst2/www/unified/.'%(monitor_pub_dir, backup))
-    #    #os.system('cp %s/%s %s/.'%(monitor_dir, backup, monitor_pub_dir))
-
     try:
         boost = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['modifications']
     except:
@@ -29,7 +24,7 @@ def htmlor( caller = ""):
     #cache = getWorkflows(reqmgr_url,'assignment-approved', details=True)
     cache = []
     def getWL( wfn ):
-        cached = filter(lambda d : d['RequestName']==wfn, cache)
+        cached = [d for d in cache if d['RequestName']==wfn]
         if cached:
             wl = cached[0]
         else:
@@ -42,7 +37,7 @@ def htmlor( caller = ""):
         wl = None
         pid = None
         wl_pid = None
-        pids=filter(lambda seg: seg.count('-')==2, wf.name.split('_'))
+        pids=[seg for seg in wf.name.split('_') if seg.count('-')==2]
         if len(pids):
             pids = pids[:1]
             pid=pids[0]
@@ -58,31 +53,17 @@ def htmlor( caller = ""):
 
         
         text = "<div>%s</div> "%wfn
-        #text=', '.join([
-                #wfn,
-                #'<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">%s</a> '%(wfn,wfn),
-                #'<table><tr><td>%s</td></tr></table>'%(wfn),
-                #'<span>%s</span>'%(wfn),
-                #"<div>%s</div> "%wfn,
-                #'(%s)'%wfs])
         text+=', '.join([
                 '(%s)'%wfs,
                 '<a href="https://%s/reqmgr2/fetch?rid=%s" target="_blank">dts</a>'%(reqmgr_url,wfn),
-                ##'<a href="https://cmsweb.cern.ch/reqmgr/view/details/%s" target="_blank">dts-req1</a>'%wfn,
-                #TOFIX '<a href=https://cmsweb.cern.ch/reqmgr/view/showWorkload?requestName=%s target="_blank">wkl</a>'%wfn,
-                #'<a href="https://%s/couchdb/reqmgr_workload_cache/%s" target="_blank">wfc</a>'%(reqmgr_url,wfn),
                 '<a href="https://%s/reqmgr2/data/request?name=%s" target="_blank">req</a>'%(reqmgr_url,wfn),
-                #'<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/request?requestName=%s" target="_blank">dwkc</a>'%wfn,
-                #TOFIX '<a href="https://cmsweb.cern.ch/reqmgr/view/splitting/%s" target="_blank">spl</a>'%wfn,
                 '<a href="https://cms-pdmv.cern.ch/stats/?RN=%s" target="_blank">vw</a>'%wfn,
                 '<a href="https://cms-pdmv.cern.ch/stats/restapi/get_one/%s" target="_blank">vwo</a>'%wfn,
                 '<a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=full&reverse=0&reverse=1&npp=20&subtext=%s&sall=q" target="_blank">elog</a>'%pid,
                 '<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank">pv</a>'%wfn,
-                #deprecated '<a href="https://cmsweb.cern.ch/reqmgr/reqMgr/outputDatasetsByRequestName/%s" target="_blank">out</a>'%wfn,
                 '<a href="closeout.html#%s" target="_blank">clo</a>'%wfn,
                 '<a href="statuses.html#%s" target="_blank">st</a>'%wfn,
                 '<a href="https://%s/couchdb/workloadsummary/_design/WorkloadSummary/_show/histogramByWorkflow/%s" target="_blank">perf</a>'%(reqmgr_url,wfn),
-                #'<a href="http://dabercro.web.cern.ch/dabercro/unified/showlog/?search=%s" target="_blank">history</a>'%(pid),
                 '<a href="https://cms-unified.web.cern.ch/cms-unified/showlog/?search=%s" target="_blank">history</a>'%(pid),
                 ])
         if within and (not view or wfs=='completed'):
@@ -102,7 +83,7 @@ def htmlor( caller = ""):
                                  ])
 
         if p:
-            cached = filter(lambda d : d['RequestName']==wfn, cache)
+            cached = [d for d in cache if d['RequestName']==wfn]
             if cached:
                 wl = cached[0]
             else:
@@ -124,43 +105,19 @@ def htmlor( caller = ""):
                 text+=', <a href="assistance.html#%s" target="_blank">assist</a>'%wfn
             text+=' : %s '%(wf.status)
 
-        #if view and not wfs in ['acquired','assigned','assignment-approved']:
-        #    text+='<a href="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" target="_blank"><img src="https://cms-pdmv.web.cern.ch/cms-pdmv/stats/growth/%s.gif" style="height:50px"></a>'%(wfn.replace('_','/'),wfn.replace('_','/'))
-
         if ongoing:
-            #wl = getWL( wfn )            
-            #if 'running' in wl['RequestStatus']:
             if wfs!='acquired':
                 text+='<a href="https://cms-gwmsmon.cern.ch/prodview/%s" target="_blank"><img src="https://cms-gwmsmon.cern.ch/prodview/graphs/%s/daily" style="height:50px"></a>'%(wfn,wfn)
 
         if ongoing:
             if not os.path.isfile('%s/report/%s'%(monitor_dir,wfn)):
                 if (random.random() < 0.005):
-                    #print wfn,"report absent, doing it"
-                    print wfn,"report absent, NOT doing i. Too expensive"
+                    print(wfn,"report absent, NOT doing i. Too expensive")
                     pass
-                    #os.system('python Unified/showError.py -w %s'%(wfn))
-                    #text += '<a href=report/%s target=_blank>report</a>'%wfn
                 else:
-                    #print wfn,"report absent, could be doing it"
                     pass
             else:
                 text += '<a href=report/%s target=_blank>report</a>'%wfn
-                #text += ' <a href=%/report/%s target=_blank>e_report</a>'%(unified_url_eos,wfn)
-
-           #date2 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
-
-            #date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(30*24*60*60)) )
-            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1m</a>'%( date1, date2, wfn )
-            #date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(7*24*60*60)) )
-            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1w</a>'%( date1, date2, wfn )
-            #date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*24*60*60)) )
-            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s">1d</a>'%( date1, date2, wfn )
-            #date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(5*60*60)) )
-            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 5h</a>'%( date1, date2, wfn )
-            #date1 = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*60*60)) )
-            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#table=Jobs&date1=%s&date2=%s&sortby=site&task=wmagent_%s"> 1h</a>'%( date1, date2, wfn )
-
         if ongoing and wfn in boost:
             for task in boost[wfn]:
                 overflow = boost[wfn][task].get('ReplaceSiteWhitelist',None)
@@ -169,7 +126,6 @@ def htmlor( caller = ""):
                 if overflow:
                     text+=',boost (<a href=public/equalizor.json>%d</a>)'%len(overflow)
 
-        #text+="<hr>"
         return text
 
 
@@ -191,25 +147,24 @@ def htmlor( caller = ""):
         l = time.mktime(time.gmtime())
         spend = l-lap.start
         lap.start =l 
-        print "Spend %d [s] for %s"%( spend, comment )
+        print("Spend %d [s] for %s"%( spend, comment ))
     lap.start = time.mktime(time.gmtime())
 
     ## start to write it
     html_doc = eosFile('%s/index.html'%monitor_dir)
-    print "Updating the status page ..." 
+    print("Updating the status page ...") 
 
     UC = unifiedConfiguration()
 
     if not caller:
         try:
-            #caller = sys._getframe(1).f_code.co_name
             caller = sys.argv[0].split('/')[-1].replace('.py','')
-            print "caller is"
-            print caller
+            print("caller is")
+            print(caller)
         except Exception as es:
             caller = 'none found'
-            print "not getting frame"
-            print str(es)
+            print("not getting frame")
+            print(str(es))
 
 
     summary_content = {}
@@ -280,7 +235,6 @@ Last update on <b>%s(CET), %s(GMT)</b>
     for wf in session.query(Workflow).filter(Workflow.status.startswith('considered')).all():
         wl = getWL( wf.name )
         count_by_campaign[wl['Campaign']][int(wl['RequestPriority'])]+=1
-        #print wf.name
         text+="<li> %s (%d) </li> \n"%(wfl(wf,p=True), int(wl['RequestPriority']))
         count+=1
     text_by_c=""
@@ -377,7 +331,6 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
 
         stext+="</ul></li>\n"
         if hide:
-            #text+="<li> %s not needed anymore to start running (does not mean it went through completely)</li>"%phl(ts.phedexid)
             pass
         else:
             count+=1
@@ -399,7 +352,7 @@ Worflow waiting in staging (%d) <a href=logs/transferor/last.log target=_blank>l
         stuck_transfer = json.loads(eosRead('%s/stuck_transfers.json'%monitor_pub_dir))
     except:
         stuck_transfer = {}
-        print "eos is screwing with us"
+        print("eos is screwing with us")
 
     html_doc.write("""
 Transfer on-going (%d) <a href=http://cmstransferteam.web.cern.ch/cmstransferteam/ target=_blank>dashboard</a> <a href=logs/transferor/last.log target=_blank>log</a> <a href=logs/stagor/last.log target=_blank>postlog</a> <a href=public/stuck_transfers.json target=_blank> %d stuck</a>
@@ -664,32 +617,32 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     try:
         waiting_custodial = json.loads(eosRead('%s/waiting_custodial.json'%monitor_dir))
     except Exception as e:
-        print str(e)
-        print "eos is screwing with us"
+        print(str(e))
+        print("eos is screwing with us")
         waiting_custodial = {}
-    all_pending_approval_custodial = dict([(k,item) for k,item in waiting_custodial.items() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values()]) ])
+    all_pending_approval_custodial = dict([(k,item) for k,item in list(waiting_custodial.items()) if 'nodes' in item and not any([node['decided'] for node in list(item['nodes'].values())]) ])
     n_pending_approval = len( all_pending_approval_custodial )
     #n_pending_approval = len([item for item in waiting_custodial.values() if 'nodes' in item and not any([node['decided'] for node in item['nodes'].values() ])])
     try:
         missing_approval_custodial = json.loads(eosRead('%s/missing_approval_custodial.json'%monitor_dir))
     except Exception as e:
-        print str(e)
-        print "eos is screwing with us"
+        print(str(e))
+        print("eos is screwing with us")
         missing_approval_custodial = {}
 
     try:
         stuck_custudial = json.loads(eosRead('%s/stuck_custodial.json'%monitor_pub_dir))
     except Exception as e:
         stuck_custudial = {}
-        print str(e)
-        print "eos is screwing with us"
+        print(str(e))
+        print("eos is screwing with us")
 
     try:
         lagging_custudial = json.loads(eosRead('%s/lagging_custodial.json'%monitor_dir))
     except Exception as e:
         lagging_custudial = {}
-        print str(e)
-        print "eos is screwing with us"
+        print(str(e))
+        print("eos is screwing with us")
 
     if len(stuck_custudial):
         stuck_string = ', <font color=red>%d appear to be <a href=public/stuck_custodial.json>stuck</a></font>'% len(stuck_custudial)
@@ -707,7 +660,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     for ds in waiting_custodial:
         out = None
         ## lots of it will be within two weeks
-        of = filter(lambda odb: odb.datasetname == ds, output_within_two_weeks)
+        of = [odb for odb in output_within_two_weeks if odb.datasetname == ds]
         if of:
             out = of[0]
         else:
@@ -722,7 +675,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             except:
                 size = "x"
 
-            destination = ",".join(info['nodes'].keys())
+            destination = ",".join(list(info['nodes'].keys()))
             if not destination:
                 destination ='<font color=red>NO SITE</font>'
 
@@ -739,7 +692,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     per_day_this_week = defaultdict(int)
     for out in output_within_two_weeks:
         if not out.workflow: 
-            print "This is a problem with",out.datasetname
+            print("This is a problem with",out.datasetname)
             continue
         if  out.workflow.status in ['done-unlock','done','clean','clean-out','clean-unlock']:
             custodial=''
@@ -750,7 +703,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
                         size = str(info['size'])
                     except:
                         size = "x"
-                    destination = ",".join(info['nodes'].keys())
+                    destination = ",".join(list(info['nodes'].keys()))
                     if not destination:
                         destination ='<font color=red>NO SITE</font>'
                     action = 'going'
@@ -858,7 +811,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         if last_module[ module_name]:
             last_module[ module_name] = max(last_module[ module_name])
         else:
-            print "no mongod record of SS for",module_name
+            print("no mongod record of SS for",module_name)
             last_module[ module_name] = None
 
 
@@ -875,7 +828,7 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
         if since_last > (heart_beat_time_out*60*60): #6h heart beat
             sendLog('heartbeat',"The module %s has not ran in %s hours, now %s"%(m, heart_beat_time_out, display_time( since_last )), level='critical')
         else:
-            print "module %s has ran last since %s"%( m , display_time( since_last ))
+            print("module %s has ran last since %s"%( m , display_time( since_last )))
         last_module[m] = "%s ago"%( display_time( since_last ) )
 
     for m in sorted(per_module.keys()):
@@ -940,32 +893,21 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     count=0
     n_column = 4
     SI = siteInfo()
-    #date1m = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(30*24*60*60)) )
-    #date7d = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(7*24*60*60)) )
-    #date1d = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(24*60*60)) )
-    #date1h = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(1*60*60)) )
-    #date5h = time.strftime('%Y-%m-%d+%H:%M', time.gmtime(time.mktime(time.gmtime())-(5*60*60)) )
     now = time.strftime('%Y-%m-%d+%H:%M', time.gmtime())
     upcoming = json.loads( eosRead('%s/GQ.json'%monitor_dir))
 
     text +='<ul>'
-# """
-#<ul><li>Sites in use<br><a href="javascript:showhide('site_types')">[Click to show/hide]</a></li>
-#<ul>"""
     for_max_running = dataCache.get('gwmsmon_prod_site_summary')
     upcoming_by_site = defaultdict( lambda : defaultdict(int))
     available_ratios = defaultdict(float)
     upcoming_ratios = defaultdict(float)
 
-    for team,agents in getAllAgents(reqmgr_url).items():
+    for team,agents in list(getAllAgents(reqmgr_url).items()):
         for agent in agents:
             if not 'WMBS_INFO' in agent: continue
             if not 'sitePendCountByPrio' in agent['WMBS_INFO']: continue
             for site in agent['WMBS_INFO']['sitePendCountByPrio']:
                 a = sum(agent['WMBS_INFO']['sitePendCountByPrio'][site].values())
-                #print site,team,a
-                #print a
-                #print agent['WMBS_INFO']['sitePendCountByPrio'][site]
                 if a: upcoming_by_site[team][site] += a
         
 
@@ -974,11 +916,6 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
     except:
         sites_full = []
     for t in ['sites_T0s_all','sites_T1s_all','sites_T2s_all','sites_T3s_all']:
-#        text+="""
-#<li>%s<a href="javascript:showhide('%s')">[Click to show/hide]</a><br>
-#<div id="%s" style="display:none;">
-#<table border=1>
-#"""%( t, t, t)
         text +='<li>%s<div id="%s"><table border=1>'%( t, t )
         c=0
 
@@ -1023,12 +960,6 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
             text+='<img src="https://cms-gwmsmon.cern.ch/totalview/graphs/%s/fairshare/daily" style="height:75px"><br>'%(site)
             text+='<img src="https://cms-gwmsmon.cern.ch/prodview/graphs/siteprioritysummarycpuspending/%s/daily" style="height:75px">'%(site)
             text+='<img src="https://cms-gwmsmon.cern.ch/prodview/graphs/siteprioritysummarycpusinuse/%s/daily" style="height:75px"><br>'%(site)
-
-            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1m</a>'%( site,date1m,now )
-            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1w</a>'%( site,date7d,now )
-            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1d</a>'%( site,date1d,now )
-            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">5h</a>'%( site,date5h,now )
-            #text+=', <a href="http://dashb-cms-job.cern.ch/dashboard/templates/web-job2/#user=&refresh=0&table=Jobs&p=1&records=25&activemenu=1&site=%s&submissiontool=&check=submitted&sortby=activity&scale=linear&bars=20&date1=%s&date2=%s">1h</a>'%( site,date1h,now )
             text+=', <a href="https://cms-site-readiness.web.cern.ch/cms-site-readiness/SiteReadiness/HTML/SiteReadinessReport.html#%s">SAM</a><br>'%( site )
             text+='%s<br>'%(ht_cpu)
             text+='%s%s'%(ht_disk,up_com)
@@ -1041,26 +972,25 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
 
     def outliers( val_d , trunc=0.9, N=4):
-        sub_vals = filter( lambda v :v< trunc*max(val_d.values()), val_d.values())
+        sub_vals = [v for v in list(val_d.values()) if v< trunc*max(val_d.values())]
         outl = {}
         if sub_vals:
             avg = sum(sub_vals) / len(sub_vals)
             std = (sum([(x-avg)**2 for x in sub_vals]) / len(sub_vals))**0.5
             upper = (avg+N*std)
-            print avg,std,upper
-            outl = dict([(k,v) for (k,v) in val_d.items() if v> upper] )
+            print(avg,std,upper)
+            outl = dict([(k,v) for (k,v) in list(val_d.items()) if v> upper] )
         return outl
 
-    print "These are the possible outliers"
-    print available_ratios
-    print json.dumps(upcoming_ratios, indent=2)
+    print("These are the possible outliers")
+    print(available_ratios)
+    print(json.dumps(upcoming_ratios, indent=2))
     outlier_upcoming =  outliers( upcoming_ratios )
-    print outlier_upcoming
+    print(outlier_upcoming)
     if outlier_upcoming:
         sendLog('GQ','There is an inbalance of upcoming work at %s'%(', '.join([site for site in sorted(outlier_upcoming.keys())])),level='warning')
-        #open('%s/sites_full.json'%base_eos_dir,'w').write( json.dumps( outlier_upcoming.keys() ))
         oo = eosFile('%s/sites_full.json'%base_eos_dir)
-        oo.write( json.dumps( outlier_upcoming.keys() ) )
+        oo.write( json.dumps( list(outlier_upcoming.keys()) ) )
         oo.close()
         
     def site_div_header(desc):
@@ -1104,20 +1034,6 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     text += site_div_header("Approximate Free Tape")
     for mss in SI.storage:
-        ## this does not work anymore since unified does not check on tape anymore
-        #waiting = 0
-        #try:
-        #    waiting = float(os.popen("grep '%s is pending . Created since' %s/logs/lockor/last.log  -B 3 | grep size | awk '{ sum+=$6 ; print sum }' | tail -1" % (mss,monitor_dir)).readline())
-        #except Exception as e:
-        #    print str(e)
-        #oldest = ""
-        #os.system('grep pending %s/logs/lockor/last.log | sort -u > %s/logs/pending.log'%(monitor_dir,monitor_dir))
-        #try:
-        #    oldest = os.popen("grep '%s is pending . Created since ' %s/logs/lockor/last.log | sort | awk '{print $10, $11, $12, $13, $14 }' | head -1"% (mss,monitor_dir)).readline()
-        #except Exception as e:
-        #    print str(e)
-        #waiting /= 1024.
-        #text+="<li>%s : %d [TB]. Waiting for approval %d [TB] since %s </li>"%(mss, SI.storage[mss], waiting, oldest)
 
         text+="<li>%s : %d [TB]</li>"%(mss, SI.storage[mss])
 
@@ -1145,7 +1061,6 @@ Worflow through (%d) <a href=logs/closor/last.log target=_blank>log</a> <a href=
 
     lap ( 'done with sites' )
 
-    #open('%s/siteInfo.json'%monitor_pub_dir,'w').write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T0s','sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
     oo = eosFile('%s/siteInfo.json'%monitor_pub_dir)
     oo.write(json.dumps(dict([(t,getattr(SI,t)) for t in ['sites_T0s','sites_T1s','sites_T2s','sites_with_goodIO']]),indent=2))
     oo.close()
@@ -1185,22 +1100,15 @@ chart_%s.draw(data_%s, {title: '%s %s / %s [TB]', pieHole:0.4, slices:{0:{color:
 """%(site))
 
 
-        
-    ## make the locked/available donut chart
-    #donut_html = open('%s/locked.html'%monitor_dir,'w')
-    #tight_donut_html = open('%s/outofspace.html'%monitor_dir,'w')
-    #remain_reason_html = open('%s/remaining.html'%monitor_dir,'w')
     donut_html = eosFile('%s/locked.html'%monitor_dir)
     tight_donut_html = eosFile('%s/outofspace.html'%monitor_dir)
     remain_reason_html = eosFile('%s/remaining.html'%monitor_dir)
 
-    tables = "\n".join([info[0] for site,info in chart_data.items()])
-    draws = "\n".join([info[1] for site,info in chart_data.items()])
-    #divs = "\n".join([info[2] for site,info in chart_data.items()])
+    tables = "\n".join([info[0] for site,info in list(chart_data.items())])
+    draws = "\n".join([info[1] for site,info in list(chart_data.items())])
 
-    oos_tables = "\n".join([info[0] for site,info in chart_data.items() if site in out_of_space])
-    oos_draws = "\n".join([info[1] for site,info in chart_data.items() if site in out_of_space])
-    #oos_divs = "\n".join([info[2] for site,info in chart_data.items() if site in out_of_space])
+    oos_tables = "\n".join([info[0] for site,info in list(chart_data.items()) if site in out_of_space])
+    oos_draws = "\n".join([info[1] for site,info in list(chart_data.items()) if site in out_of_space])
 
     
     divs_table="<table border=0>"
@@ -1232,7 +1140,7 @@ chart_%s.draw(data_%s, {title: '%s %s / %s [TB]', pieHole:0.4, slices:{0:{color:
 
             remaining_reasons = RDI.get( site )
 
-            for ds,info in remaining_reasons.items():
+            for ds,info in list(remaining_reasons.items()):
                 all_reasons.update( info['reasons'] )
                 for reason in info['reasons']:
                     if reason == 'lock': continue
@@ -1245,13 +1153,6 @@ chart_%s.draw(data_%s, {title: '%s %s / %s [TB]', pieHole:0.4, slices:{0:{color:
     rem_chart_data = defaultdict(list)
     ## now make bar charts DATA per site
     for i_oos,site in enumerate(sorted(by_reason_at_site.keys())):
-#        rem_chart_data[site].append("""
-#var data_remain_%s = google.visualization.arrayToDataTable([
-#['Overall', 'Space in TB'],
-#%s
-#]);
-#"""%( site,
-#      ','.join(["['%s' , %s]"%( reason, by_reason_at_site[site][reason]) for reason in sorted(all_reasons)])))
 
         rem_chart_data[site].append("""
 var data_remain_%s = google.visualization.arrayToDataTable([
@@ -1277,15 +1178,14 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
     ## now make bar charts per site
     for i_oos,site in enumerate(sorted(by_reason_at_site.keys())):
         rem_link = "<br><a href=remaining_%s.html>remaining datasets</a>"% site if site in out_of_space else ""
-        #rem_link = "<br><a href=remaining_%s.html>remaining datasets</a>"% site
-        print rem_link
+        print(rem_link)
         rem_divs_table += "<td>%s %s</td>"%(rem_chart_data[site][2], rem_link)
         
         if (i_oos+1)%5==0:
             rem_divs_table += "<tr>"
     
-    rem_tables = "\n".join([info[0] for site,info in rem_chart_data.items()])
-    rem_draws = "\n".join([info[1] for site,info in rem_chart_data.items()])
+    rem_tables = "\n".join([info[0] for site,info in list(rem_chart_data.items())])
+    rem_draws = "\n".join([info[1] for site,info in list(rem_chart_data.items())])
             
     divs_table += "</table>"
     oos_divs_table += "</table>"
@@ -1415,12 +1315,11 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
     JC = JIRAClient() if up.status.get('jira',True) else None
     now = time.mktime(time.gmtime())
     #####
-    #speed_d = json.loads( eosRead('%s/speed_draining.json'%base_eos_dir))
     speed_d = list(agent_speed_draining())
     component_auto_restart = ["ErrorHandler", "JobSubmitter", "CouchServer" ]
     agent_comment_graceperiod = 4 ## ping the JIRA with a comment > N hours
 
-    for team,agents in getAllAgents(reqmgr_url).items():
+    for team,agents in list(getAllAgents(reqmgr_url).items()):
         if not team in ['production','relval','highprio']: continue
         html_doc.write("<tr><td bgcolor=lightblue>%s</td></tr>"% team)
         for agent in agents:
@@ -1450,19 +1349,17 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
                         if not JC: continue
                         if component in component_auto_restart: continue
                         #trying to check the value why it's none
-                        print "/n/nCHECK ME OUT/n/n"
-                        print det
-                        print "/n/n"
+                        print("/n/nCHECK ME OUT/n/n")
+                        print(det)
+                        print("/n/n")
                         if 'thread heartbeat' in det['error_message']:
                             alert_type = 'heartbeat'
 
-                        #alert_summary = '%s %s %s week %s'%( short_name, component, alert_type, this_week)
                         alert_summary = '%s %s %s'%( short_name, component, alert_type)
-                        #alert_summary = '%s %s issue'%( short_name, component )
                         if alert_type is not 'heartbeat':
                             jiras = JC.find( {'summary' : alert_summary })
                             if len(jiras)==0:
-                                print "creating a JIRA for", alert_summary
+                                print("creating a JIRA for", alert_summary)
                                 j = JC.create(
                                     {
                                         'summary' : alert_summary,
@@ -1478,10 +1375,9 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
                                 seconds_since = now - last_comment_time
                                 ## 4h at least between pings in the agent comment
                                 if reopened or (seconds_since > (agent_comment_graceperiod*60*60)):
-                                    #print j.key,reopened,now,last_comment_time,JC.created(j),seconds_since, agent_comment_graceperiod
                                     JC.comment(j.key, det['error_message'])
                                 else:
-                                    print "last comment in the JIRA %s was %s ago"%( j.key, display_time(seconds_since))
+                                    print("last comment in the JIRA %s was %s ago"%( j.key, display_time(seconds_since)))
 
             message += '<br><a href="https://cms-logbook.cern.ch/elog/GlideInWMS/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">gwms elog</a>, <a href="https://cms-logbook.cern.ch/elog/Workflow+processing/?mode=summary&reverse=0&reverse=1&npp=20&subtext=%s">elog</a>, <a href="https://its.cern.ch/jira/issues/?jql=text~%s* AND project = CMSCOMPPR AND status != CLOSED">jira</a>'%( short_name, short_name, short_name )
             message += '<br>Unified status : %s'% uas
@@ -1493,7 +1389,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
             for site in agent['WMBS_INFO']['sitePendCountByPrio']:
                 by_site[site] = sum(agent['WMBS_INFO']['sitePendCountByPrio'][site].values())
 
-            top5 = sorted(by_site.items(), key = lambda v: v[1], reverse=True)[:5]
+            top5 = sorted(list(by_site.items()), key = lambda v: v[1], reverse=True)[:5]
             for (site,p) in top5:
                 pend_txt+="<li> %s : %s "%( site, p)
             pend_txt+="</ul>"
@@ -1518,7 +1414,7 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
     lap( 'done with agents' )
 
 
-    print "... done with status page."
+    print("... done with status page.")
     html_doc.write("""
 </body>
 </html>
