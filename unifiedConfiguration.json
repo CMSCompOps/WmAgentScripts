@@ -168,7 +168,7 @@
     "actor" : 10,
     "closor" : 200,
     "checkor" : 100,
-    "completor" : 1
+    "completor" : null
     }
  },
  "default_fraction_overdoing" :{
