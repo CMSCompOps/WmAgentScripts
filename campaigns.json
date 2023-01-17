@@ -1,4 +1,20 @@
 {
+  "Run3Winter23GS": {
+    "fractionpass": 0.95,
+    "go": false
+  },
+  "Run3Winter23wmLHEGS": {
+    "fractionpass": 0.95,
+    "go": false
+  },
+  "Run3Winter23Digi": {
+    "fractionpass": 0.95,
+    "go": false
+  },
+  "Run3Winter23DigiPremix": {
+    "fractionpass": 0.95,
+    "go": false
+  },
   "Run3Summer22pLHE": {
     "fractionpass": 0.95,
     "go": false
