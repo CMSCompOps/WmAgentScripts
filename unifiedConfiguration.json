@@ -1,5 +1,5 @@
 {
- "email_destination" : { 
+ "email_destination" : {
    "value" : ["h.ozturk@cern.ch","optimistcynic@gmail.com","jen_a@fnal.gov","sharad.agarwal@cern.ch","cmsunified@cern.ch","wangzqe@mit.edu"],
    "description" : "The list of people that get the emails notifications"
  },
@@ -35,7 +35,7 @@
    "value" : false,
    "descrition" : "Whether or not to overflow the second step (reco) for workfow with PU_overflow enabled"
  },
- "warning_short_time" : { 
+ "warning_short_time" : {
     "value" : 60,
     "description" : "Time in minutes per core below which jobs are considered too short and a warning is issued."
  },
@@ -86,13 +86,13 @@
 	      "T0_CH_CSCS_HPC"
  	      ],
    "description" : "The sites that are banned from production"
- },		 
+ },
  "sites_auto_approve": {
    "value" : ["T0_CH_CERN_MSS","T1_FR_CCIN2P3_MSS","T1_IT_CNAF_MSS", "T1_RU_JINR_MSS"],
    "description" : "The sites we can autoapprove tape request to"
  },
- "sites_space_override": {	
-   "value" : { 
+ "sites_space_override": {
+   "value" : {
 	       },
    "description" : "Over-ride the available space at a phedex end point"
  },
@@ -111,10 +111,6 @@
  "GB_space_limit" : {
    "value" : 20,
    "description" : "The value in GB that we allow the output size to be before adapting the splitting"
- },
-  "output_size_correction": {
-   "value" : { "Phase" : 1 },
-   "description" : "The correction factor to be applied to SizePerEvent per keyword."
  },
  "memory_correction": {
    "value" : { "RunIIFall17DRPremix" : 14900 },
@@ -138,7 +134,10 @@
 	      ["wangz","wangzqe@mit.edu"],
 	      ["haozturk","h.ozturk@cern.ch"],
               ["tyjyang","tyjyang@mit.edu"],
-              ["fuyan","furong.yan@cern.ch"]
+              ["fuyan","furong.yan@cern.ch"],
+              ["llavezzo","luca.marco.lavezzo@cern.ch"],
+	      ["madamec", "matous.adamec@cern.ch"],
+              ["wjang", "woojin.jang@cern.ch"]
              ]
  },
  "max_tail_priority" : {
@@ -148,7 +147,7 @@
  "injection_delay_threshold" : {
    "value" : 50,
    "description" : "Number of days after wich to increase the priority of a workflow"
- },  
+ },
  "delay_priority_increase" : {
    "value" : 10000,
    "description" : "Priority from original increase per week over the delay threshold"
@@ -165,10 +164,10 @@
    "description" : "limitation on the number of wf to process per module",
    "value" : {
     "transferor" : 500,
-    "assignor" : null,
+    "assignor" : 200,
     "actor" : 10,
-    "closor" : null,
-    "checkor" : 500,
+    "closor" : 200,
+    "checkor" : 100,
     "completor" : null
     }
  },
@@ -183,7 +182,7 @@
  "min_events_per_lumi_output" : {
    "value" : 20,
    "description": "minimum of events per lumisection allowed in the output"
- },    
+ },
  "cumulative_fraction_pass": {
    "value" : false,
    "description" : "Whether or not the pass threshold per campaign are counted as is, or cumulatively."
@@ -229,7 +228,7 @@
    "description": "The data tiers that do not pass closeout checks. Can be overidden by custodial overide at campaign level"
  },
  "tiers_no_DDM": {
-   "value" : ["GEN-SIM","GEN","SIM","DQM","DQMIO","GEN-SIM-DIGI-RAW","RAW","GEN-SIM-DIGI"],
+   "value" : ["GEN-SIM","GEN","SIM","DQM","DQMIO","GEN-SIM-DIGI-RAW","RAW","GEN-SIM-DIGI","GEN-SIM-DIGI-RAW-HLTDEBUG"],
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {
@@ -271,7 +270,7 @@
   "max_staging_workflows": {
    "value" : 700,
    "description": "The total number of workflows that we allow to stage at a time"
-  }, 
+  },
   "max_staging_workflows_per_site": {
    "value" : 700,
    "description": "The total number of workflows that we allow to stage at a time per site"
@@ -328,7 +327,7 @@
   "value" : { "50664" : [ { "legend" : "time-out",
   	           "solution" : "split-2" ,
                    "details" : null,
-                   "rate" : 20 
+                   "rate" : 20
                   } ],
         "50660" : [ { "legend" : "memory excess",
                   "solution" : "mem-+1000" ,
@@ -338,25 +337,25 @@
         "61104" : [ { "legend" : "failed submit",
                   "solution" : "recover" ,
                   "details" : null,
-                  "rate" : 20 
+                  "rate" : 20
                   } ],
         "8028" : [ { "legend" : "read error",
                  "solution" : "recover" ,
                  "details" : null,
-                 "rate" : 20 
+                 "rate" : 20
                  } ],
         "8021" : [ { "legend" : "cmssw failure",
-                 "solution" : "recover" , 
+                 "solution" : "recover" ,
                  "details" : "FileReadError",
                  "rate" : 20
                  } ],
         "71305" : [ { "legend" : "long pending",
-                 "solution" : "recover" , 
+                 "solution" : "recover" ,
                  "details" : null,
                  "rate" : 20
                  } ],
         "8001" : [ { "legend" : "lhe failure",
-                 "solution" : "split-4" , 
+                 "solution" : "split-4" ,
                  "details" : "No lhe event found in ExternalLHEProducer::produce()",
                  "rate" : 20
                  } ]
@@ -364,7 +363,7 @@
   "description" : "The error code, threshold and rules for auto-recovery"
   },
   "error_codes_to_block" : {
-  "value" : 
+  "value" :
       {
         "99109" : [{ "legend" : "stage-out",
                    "solution" : "recover",
@@ -384,13 +383,13 @@
    "description" : "The users from which we expect ReReco requests",
    "value" : ["cerminar","fabozzi","prebello","amaltaro","pgunnell"]
   },
-  "convert_to_stepchain":{	
+  "convert_to_stepchain":{
    "description" : "A list of keywords to match workflow campaigns and processing strings, and convert to StepChain if technical constraints are met",
    "value" : [ "StepChainTest","NOTYETENABLED_RunIIFall17wmLHEGS","UL" ]
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : ["jinfeng","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob","bbilin","kskovpen","pkalbhor","kaura","jordanm", "alcauser", "alcadb.user", "haozturk"]
+   "value" : ["jinfeng","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob","bbilin","kskovpen","pkalbhor","kaura","jordanm", "alcauser", "alcadb.user", "haozturk", "subansal"]
   },
   "user_storeresults":{
    "description" : "The users from which we expect StoreResults requests",
@@ -401,11 +400,14 @@
    "value" : { "highPU" : {"parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}},
 	       "highIO" : {"parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}},
 	       "pLHE" : {"parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}},
-	       "ALCA_" : { "primary_AAA" : true , 
+	       "ALCA_" : { "primary_AAA" : true ,
 	       	       	   "parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}
 			},
 	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50, "LumisPerJob" : 1000 }},
-               "M100PPC" : {"parameters" : { "SiteWhitelist" : ["T1_IT_CNAF"]}}
+               "M100PPC" : {"parameters" : { "SiteWhitelist" : ["T1_IT_CNAF"]}},
+               "UWGPU" : {"parameters" : { "SiteWhitelist" : ["T2_US_Wisconsin"]}},
+               "KITGPU" : {"parameters" : { "SiteWhitelist" : ["T1_DE_KIT"]}},
+               "CERNCPU" : {"parameters" : { "SiteWhitelist" : ["T2_CH_CERN", "T2_CH_CERN_HLT"]}}
              }
   },
   "batch_goodness":{
@@ -451,5 +453,17 @@
   "prepIDs_to_skip": {
     "value" : [],
     "description" : "PrepIDs to skip from workflow assignment"
-  }
+  },
+  "acquired_threshold_per_priority_block" : {
+   "description" : "threshold per priority block above which assignment will be stalled",
+   "value" : {
+    "block1" : 20000,
+    "block2" : 10000,
+    "block3" : 10000,
+    "block4" : 10000,
+    "block5" : 10000,
+    "block6" : 10000,
+    "block7" : 10000
+   }
+ }
 }

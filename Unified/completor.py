@@ -8,9 +8,9 @@ from collections import defaultdict
 import json
 import random
 from McMClient import McMClient
-from showError import parse_one
 from JIRAClient import JIRAClient
 import random
+import time
 
 def completor(url, specific):
     mlock = moduleLock(silent=True)
@@ -89,11 +89,11 @@ def completor(url, specific):
         overrides['mcm'] = mcm_force
 
     print("can force complete on")
-    print(json.dumps( good_fractions ,indent=2))
+    print((json.dumps( good_fractions ,indent=2)))
     print("can truncate complete on")
-    print(json.dumps( truncate_fractions ,indent=2))
+    print((json.dumps( truncate_fractions ,indent=2)))
     print("can overide on")
-    print(json.dumps( overrides, indent=2))
+    print((json.dumps( overrides, indent=2)))
     max_force = UC.get("max_force_complete")
     max_priority = UC.get("max_tail_priority")
     injection_delay_threshold = UC.get("injection_delay_threshold")
@@ -113,7 +113,7 @@ def completor(url, specific):
     for wfo in wfs:
         if specific and not specific in wfo.name: continue
 
-        print("looking at",wfo.name)
+        print(("looking at",wfo.name))
 
         ## get all of the same
         wfi = workflowInfo(url, wfo.name)
@@ -176,7 +176,7 @@ def completor(url, specific):
         else:
             then = max([change['UpdateTime'] for change in priority_log]) / (60.*60.*24.)
             priority_delay = now - then ## in days
-            print("priority was set to",priority,priority_delay,"[days] ago")
+            print(("priority was set to",priority,priority_delay,"[days] ago"))
 
         running_log = [change for change in wfi.request['RequestTransition'] if change["Status"] in ["running-open","running-closed"]]
         if not running_log:
@@ -209,7 +209,7 @@ def completor(url, specific):
         #delay_for_priority_increase = delay
 
         (w,d) = divmod(delay, 7 )
-        print("\t"*int(w)+"Running since",delay,"[days] priority=",priority)
+        print(("\t"*int(w)+"Running since",delay,"[days] priority=",priority))
         
         pop_a_jira = False
         ping_on_jira = 7 *(24*60*60) # 7 days
@@ -315,7 +315,7 @@ def completor(url, specific):
 
         ## find ACDCs that might be running
         if max_force>0:
-            print("going for force-complete of",wfo.name)
+            print(("going for force-complete of",wfo.name))
             if not safe_mode:
                 forceComplete(url, wfi )
                 set_force_complete.add( wfo.name )

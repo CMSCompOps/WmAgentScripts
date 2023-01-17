@@ -1,4 +1,4 @@
-from Unified.assignSchema import Base, Workflow, Output, Transfer, Lock, engine, TransferImp, LogRecord, LockOfLock
+from assignSchema import Base, Workflow, Output, Transfer, Lock, engine, TransferImp, LogRecord, LockOfLock
 from sqlalchemy.orm import sessionmaker
 
 Base.metadata.bind = engine

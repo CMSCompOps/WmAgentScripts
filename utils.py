@@ -24,15 +24,10 @@ from email.utils import make_msgid
 
 from RucioClient import RucioClient
 
-## add local python paths
-for p in ['/usr/lib64/python2.7/site-packages', '/usr/lib/python2.7/site-packages']:
-    if not p in sys.path: sys.path.append(p)
-
 
 def mongo_client():
     import pymongo, ssl
-    return pymongo.MongoClient('mongodb://%s/?ssl=true' % mongo_db_url,
-                               ssl_cert_reqs=ssl.CERT_NONE)
+    return pymongo.MongoClient('mongodb://%s/?ssl=true' % mongo_db_url, tlsAllowInvalidCertificates=True)
 
 
 class unifiedConfiguration:
@@ -156,7 +151,7 @@ def _searchLog(q, actor, limit, conn, prefix, h=None):
 def es_header():
     entrypointname, password = open('Unified/secret_es.txt').readline().split(':')
     import base64
-    auth = base64.encodestring(('%s:%s' % (entrypointname, password)).replace('\n', '')).replace('\n', '')
+    auth = base64.encodestring(('%s:%s' % (entrypointname, password)).strip().encode()).decode().strip()
     header = {"Authorization": "Basic %s" % auth, "Content-Type": "application/json"}
     return header
 
@@ -594,7 +589,8 @@ class componentCheck(threading.Thread):
 
     def check_cmsr(self):
         from assignSession import session, Workflow
-        all_info = session.query(Workflow).filter(Workflow.name.contains('1')).all()
+        test_workflow = "cmsunified_task_PPD-Run3Summer22EEwmLHEGS-00001__v1_T_221128_175013_6024"
+        all_info = session.query(Workflow).filter(Workflow.name == test_workflow).all()
 
     def check_reqmgr(self):
         data = getReqmgrInfo(reqmgr_url)
@@ -1031,14 +1027,14 @@ def _get_dashbssb(path_name, ssb_metric):
     with open('Unified/monit_secret.json') as monit:
         conf = json.load(monit)
     query = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
-{"size":1,"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-2d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: %s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+{"size":1,"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-2d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.monit_hdfs_path: %s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
 '""" % (str(path_name))
     TIMESTAMP = json.loads(os.popen(
         'curl -s -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s' % (
         conf["url"], conf["token"], query)).read())["responses"][0]["hits"]["hits"][0]["_source"]["metadata"][
         "timestamp"]
     query2 = """'{"search_type":"query_then_fetch","ignore_unavailable":true,"index":["monit_prod_cmssst_*","monit_prod_cmssst_*"]}
-{"size":500,"_source": {"includes":["data.name","data.%s"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-2d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.path: %s AND metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
+{"size":500,"_source": {"includes":["data.name","data.%s"]},"query":{"bool":{"filter":[{"range":{"metadata.timestamp":{"gte":"now-2d","lte":"now","format":"epoch_millis"}}},{"query_string":{"analyze_wildcard":true,"query":"metadata.type: ssbmetric AND metadata.type_prefix:raw AND metadata.monit_hdfs_path: %s AND metadata.timestamp:%s"}}]}},"sort":{"metadata.timestamp":{"order":"desc","unmapped_type":"boolean"}},"script_fields":{},"docvalue_fields":["metadata.timestamp"]}
 '""" % (str(ssb_metric), str(path_name), str(TIMESTAMP))
     result = json.loads(os.popen(
         'curl -s --retry 5 -X POST %s -H "Authorization: Bearer %s" -H "Content-Type: application/json" -d %s' % (
@@ -4640,6 +4636,7 @@ class workflowInfo:
                 rucioClient = RucioClient()
                 for sec in secondary:
                     pileup_locations = rucioClient.getDatasetLocationsByAccount(sec, "wmcore_transferor")
+                    pileup_locations += rucioClient.getDatasetLocationsByAccount(sec, "transfer_ops")
                     sites_allowed += pileup_locations
                 sites_allowed = sorted(set(sites_allowed))
                 print("Reading minbias")
@@ -4717,7 +4714,6 @@ class workflowInfo:
         modified_splits = []
         config_GB_space_limit = unifiedConfiguration().get('GB_space_limit')
         GB_space_limit = config_GB_space_limit * ncores
-        output_size_correction = unifiedConfiguration().get('output_size_correction')
 
         if self.request['RequestType'] == 'StepChain':
             ## the number of event/lumi should not matter at all.
@@ -4779,10 +4775,6 @@ class workflowInfo:
                     print("the output is not kept, but keeping the output size to", GB_space_limit)
 
                 sizeperevent = t.get('SizePerEvent', None)
-                for keyword, factor in list(output_size_correction.items()):
-                    if keyword in spl['taskName']:
-                        sizeperevent *= factor
-                        break
 
                 inputs = t.get('InputDataset', None)
                 events_per_lumi_inputs = getDatasetEventsPerLumi(inputs) if inputs else events_per_lumi_inputs
@@ -5389,11 +5381,11 @@ class workflowInfo:
             if 'pilot' in label.lower():
                 msg = "Detected 'pilot' keyword in processingString {} in campaign {}. Assigning the workflow.".format(
                     label, campaign)
-            if log:
-                self.sendLog('go', msg)
-            else:
-                print(msg)
-            return True
+                if log:
+                    self.sendLog('go', msg)
+                else:
+                    print(msg)
+                return True
         # If there is 'pilot' in SubRequestType (an alternative pilot)
         if 'SubRequestType' in self.request:
             if 'pilot' in self.request['SubRequestType'].lower():
