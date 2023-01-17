@@ -1395,7 +1395,8 @@
         "T2_US_MIT",
         "T2_FI_HIP",
         "T2_CH_CERN_HLT",
-        "T2_RU_INR"
+        "T2_RU_INR",
+        "T2_US_Caltech"
       ]
   },
   "Run3Summer22EEwmLHEGS": {
@@ -1416,7 +1417,8 @@
         "T2_US_MIT",
         "T2_FI_HIP",
         "T2_CH_CERN_HLT",
-        "T2_RU_INR"
+        "T2_RU_INR",
+        "T2_US_Caltech"
       ]
   },
   "Run3Summer22GS":{
