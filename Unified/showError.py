@@ -553,15 +553,15 @@ def parse_one(url, wfn, options=None):
                                         expose_archive_code[errorcode_s][agent]-=1
                                     print((errorcode_s,agent,"error count",expose_archive_code.get(errorcode_s,{}).get(agent,0)))
 
-                                    threads.append( LogBuster(
-                                                              out_lfn = out['lfn'],
-                                                              monitor_eos_dir = monitor_eos_dir,
-                                                              wfn = wfn,
-                                                              date = wfi.request.get('RequestDate',[]),
-                                                              errorcode_s = errorcode_s,
-                                                              task_short = task_short,
-                                                              from_eos = (not options.not_from_eos),# if options else True),
-                                                              ) )
+                                    #threads.append( LogBuster(
+                                    #                          out_lfn = out['lfn'],
+                                    #                          monitor_eos_dir = monitor_eos_dir,
+                                    #                          wfn = wfn,
+                                    #                          date = wfi.request.get('RequestDate',[]),
+                                    #                          errorcode_s = errorcode_s,
+                                    #                          task_short = task_short,
+                                    #                          from_eos = (not options.not_from_eos),# if options else True),
+                                    #                          ) )
 
         #print task
         #print json.dumps( total_count, indent=2)
