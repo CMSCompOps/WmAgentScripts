@@ -15,7 +15,6 @@
       "T2_RU_IHEP",
       "T2_UK_SGrid_RALPP",
       "T2_TR_METU",
-      "T2_US_MIT",
       "T2_FI_HIP",
       "T2_RU_INR"
     ]
@@ -36,7 +35,6 @@
       "T2_RU_IHEP",
       "T2_UK_SGrid_RALPP",
       "T2_TR_METU",
-      "T2_US_MIT",
       "T2_FI_HIP",
       "T2_RU_INR"
     ]
@@ -57,7 +55,6 @@
       "T2_RU_IHEP",
       "T2_UK_SGrid_RALPP",
       "T2_TR_METU",
-      "T2_US_MIT",
       "T2_FI_HIP",
       "T2_RU_INR"
     ]
@@ -78,7 +75,6 @@
       "T2_RU_IHEP",
       "T2_UK_SGrid_RALPP",
       "T2_TR_METU",
-      "T2_US_MIT",
       "T2_FI_HIP",
       "T2_RU_INR"
     ]
@@ -107,9 +103,7 @@
       "T2_RU_IHEP",
       "T2_UK_SGrid_RALPP",
       "T2_TR_METU",
-      "T2_US_MIT",
       "T2_FI_HIP",
-      "T2_CH_CERN_HLT",
       "T2_RU_INR"
     ]
   },
@@ -129,9 +123,7 @@
       "T2_RU_IHEP",
       "T2_UK_SGrid_RALPP",
       "T2_TR_METU",
-      "T2_US_MIT",
       "T2_FI_HIP",
-      "T2_CH_CERN_HLT",
       "T2_RU_INR"
     ]
   },
@@ -151,9 +143,7 @@
       "T2_RU_IHEP",
       "T2_UK_SGrid_RALPP",
       "T2_TR_METU",
-      "T2_US_MIT",
       "T2_FI_HIP",
-      "T2_CH_CERN_HLT",
       "T2_RU_INR"
     ],
     "secondaries": { 
@@ -177,7 +167,6 @@
       "T2_AT_Vienna",
       "T2_BE_IIHE",
       "T2_BE_UCL",
-      "T2_CH_CERN_HLT",
       "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
@@ -205,7 +194,6 @@
       "T2_UA_KIPT",
       "T2_UK_London_IC",
       "T2_UK_SGrid_RALPP",
-      "T2_US_MIT",
       "T2_US_Purdue",
       "T2_US_Vanderbilt"
     ]
@@ -221,7 +209,6 @@
       "T2_AT_Vienna",
       "T2_BE_IIHE",
       "T2_BE_UCL",
-      "T2_CH_CERN_HLT",
       "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
@@ -249,7 +236,6 @@
       "T2_UA_KIPT",
       "T2_UK_London_IC",
       "T2_UK_SGrid_RALPP",
-      "T2_US_MIT",
       "T2_US_Purdue",
       "T2_US_Vanderbilt"
     ],
@@ -273,7 +259,6 @@
       "T2_AT_Vienna",
       "T2_BE_IIHE",
       "T2_BE_UCL",
-      "T2_CH_CERN_HLT",
       "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
@@ -301,7 +286,6 @@
       "T2_UA_KIPT",
       "T2_UK_London_IC",
       "T2_UK_SGrid_RALPP",
-      "T2_US_MIT",
       "T2_US_Purdue",
       "T2_US_Vanderbilt"
     ]
@@ -322,9 +306,7 @@
       "T2_RU_IHEP",
       "T2_UK_SGrid_RALPP",
       "T2_TR_METU",
-      "T2_US_MIT",
       "T2_FI_HIP",
-      "T2_CH_CERN_HLT",
       "T2_RU_INR"
     ]
   },
@@ -1132,9 +1114,7 @@
             "T2_RU_IHEP",
             "T2_UK_SGrid_RALPP",
             "T2_TR_METU",
-            "T2_US_MIT",
             "T2_FI_HIP",
-            "T2_CH_CERN_HLT",
             "T2_RU_INR"
           ]
         }
@@ -1159,9 +1139,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
      } 
@@ -1186,9 +1164,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
     }
@@ -1213,9 +1189,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
      }
@@ -1240,9 +1214,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
      },
@@ -1275,9 +1247,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
     }
@@ -1302,9 +1272,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
      },
@@ -1401,9 +1369,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR",
         "T2_US_Caltech"
       ]
@@ -1424,9 +1390,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR",
         "T2_US_Caltech"
       ]
@@ -1447,9 +1411,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1469,9 +1431,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1500,9 +1460,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1531,9 +1489,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1562,9 +1518,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1593,9 +1547,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1615,9 +1567,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1637,9 +1587,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1659,9 +1607,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1681,9 +1627,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1703,9 +1647,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1725,9 +1667,7 @@
         "T2_RU_IHEP",
         "T2_UK_SGrid_RALPP",
         "T2_TR_METU",
-        "T2_US_MIT",
         "T2_FI_HIP",
-        "T2_CH_CERN_HLT",
         "T2_RU_INR"
       ]
   },
@@ -1763,7 +1703,6 @@
         "T2_AT_Vienna",
         "T2_BE_IIHE",
         "T2_BE_UCL",
-        "T2_CH_CERN_HLT",
         "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
@@ -1791,7 +1730,6 @@
         "T2_UA_KIPT",
         "T2_UK_London_IC",
         "T2_UK_SGrid_RALPP",
-        "T2_US_MIT",
         "T2_US_Purdue",
         "T2_US_Vanderbilt"
       ]
