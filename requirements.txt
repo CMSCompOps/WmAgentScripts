@@ -4,7 +4,7 @@ classad==0.4.0
 htcondor==8.9.5
 jira==2.0.0
 matplotlib==3.1.3
-mechanize==0.4.5
+mechanize==0.4.6
 numpy==1.18.1
 pycurl==7.43.0.5
 pymongo==3.10.1
