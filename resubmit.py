@@ -168,21 +168,21 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
     ## only once
     ####schema['CMSSWVersion'] = 'CMSSW_8_0_16'
 
-    print 'Submitting workflow'
+    print('Submitting workflow')
     # Submit cloned workflow to ReqMgr
     if testbed:
         newWorkflow = reqMgrClient.submitWorkflow(url_tb, schema)
     else:
         newWorkflow = reqMgrClient.submitWorkflow(url, schema)
     if verbose:
-        print "RESPONSE", newWorkflow
+        print("RESPONSE", newWorkflow)
 
     # find the workflow name in response
     if newWorkflow:
-        print 'Cloned workflow: ' + newWorkflow
+        print('Cloned workflow: ' + newWorkflow)
         if verbose:
-            print newWorkflow
-            print 'Approving request response:'
+            print(newWorkflow)
+            print('Approving request response:')
         # TODO only for debug
         #response = reqMgrClient.setWorkflowSplitting(url, schema)
         # print "RESPONSE", response
@@ -196,14 +196,14 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
         else:
             data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
         if verbose:
-            print data
+            print(data)
         # return the name of new workflow
         return newWorkflow
     else:
         if verbose:
-            print newWorkflow
+            print(newWorkflow)
         else:
-            print "Couldn't clone the workflow."
+            print("Couldn't clone the workflow.")
         return None
 
 def getMissingEvents(workflow):
@@ -235,26 +235,26 @@ def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=
     schema = modifySchema(cache, workflow, user, group, events, firstlumi, None)
     if verbose:
         pprint(schema)
-    print 'Submitting workflow'
+    print('Submitting workflow')
     # Submit cloned workflow to ReqMgr
     response = reqMgrClient.submitWorkflow(url,schema)
     if verbose:
-        print "RESPONSE", response
+        print("RESPONSE", response)
 
     #find the workflow name in response
     m = re.search("details\/(.*)\'",response)
     if m:
         newWorkflow = m.group(1)
-        print 'Cloned workflow: '+newWorkflow
-        print 'Extended with', events, 'events'
-        print response
+        print('Cloned workflow: '+newWorkflow)
+        print('Extended with', events, 'events')
+        print(response)
 
         # Move the request to Assignment-approved
-        print 'Approve request response:'
+        print('Approve request response:')
         data = reqMgrClient.setWorkflowApproved(url, newWorkflow)
-        print data
+        print(data)
     else:
-        print response
+        print(response)
 
 
 """

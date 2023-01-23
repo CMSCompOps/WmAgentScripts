@@ -5,7 +5,7 @@ Submits ACDCs with tasks that match a query en masse.
 e.g.
 python runner.py --query "exitCode = 50664"  --customise '{"8001": {"xrootd": "enabled"},  
 															"T2_US_MIT": {"splitting": "10x"},
-															"8001-T2_CH_CERN_HLT": {"exclude_sites": ["T2_CH_CERN", "T2_CH_CERN_HLT"],  "xrootd": "enabled"}
+															"8001-T2_CH_CERN_HLT": {"exclude_sites": ["T2_CH_CERN", "T2_CH_CERN_HLT"],  "xrootd": "enabled"},
 															"RunIISummer": {"xrootd": 1}}'
 
 Author: Luca Lavezzo
@@ -20,6 +20,7 @@ from collections import defaultdict
 sys.path.append('..')
 sys.path.append('../Unified')
 
+from rejectWorkflows import rejectWorkflow
 from utils import workflowInfo
 from autoACDC import autoACDC
 
@@ -92,11 +93,24 @@ def applySolutions(task_dict, solutions_dict):
 
 	return configs
 
+def checkType(key, item):
+	if key == 'memory': return type(item) is str
+	elif key == 'xrootd': 
+		if item.lower() == 'true' or item.lower() == 'false': return True
+		else: return type(item) is bool
+	elif key == 'include_sites': return (type(item) is str or type(item) is list)
+	elif key == 'exclude_sites': return (type(item) is str or type(item) is list)
+	elif key == 'splitting': return type(item) is str
+	else: raise Exception(key + " not accepted.")
+
 def updateConfigs(configs, solutions):
 	for skey, sitem in solutions.items():
 
 		# check that the proposed parameter to change exists
 		if skey in configs.keys():
+
+			# check type
+			if not checkType(skey, sitem): raise Exception(skey + " is wrong type.")
 
 			# we need to append to this list, not overwrite everytime
 			if skey == 'exclude_sites' or skey == 'include_sites':
@@ -134,14 +148,18 @@ def main():
 	# scipt parameters
 	parser = argparse.ArgumentParser(description='Famous Submitter')
 	parser.add_argument("-q"	, "--query",	type=str, help="Query to pass to search tool", required=True)
-	parser.add_argument("-c"	, "--customise",type=str, help="Dictionary of exitCodes and solutions.", required=True)
+	parser.add_argument("-c"	, "--customise",type=str, help="Dictionary of exitCodes and solutions, or path to .json file containing dict.", required=True)
 	parser.add_argument("-o"	, "--output" , 	type=str, default="wf_list.txt", help="Output file")
 	parser.add_argument("-t"	, "--test" , 	action="store_true", help="Doesn't submit ACDCs")
 
 	options = parser.parse_args()
 	query = options.query
 	outputFile = options.output
-	solutions_dict = json.loads(options.customise)
+
+	# load solutions
+	if '.json' in options.customise:
+		with open(options.customise, 'r') as f: solutions_dict = json.load(f)
+	else: solutions_dict = json.loads(options.customise)
 
 	# get wokrflow infos
 	result = getAMsFromQuery(query)
@@ -171,7 +189,8 @@ def main():
 				auto.go()
 				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+'\n') 
 			except Exception as e:
-				print("Failed submission with excpetion", e)
+				if auto.acdcName: rejectWorkflow(auto.acdcName, url='cmsweb.cern.ch', invalidate=True)
+				print("Failed submission with exception", e)
 				with open(outputFile, 'a') as f: f.write(task+', '+auto.acdcName+', '+str(e)+'\n') 
 			
 			print("#####################################################################\n\n")
