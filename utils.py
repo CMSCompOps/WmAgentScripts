@@ -1400,7 +1400,7 @@ class siteInfo:
 
         self.sites_auto_approve = UC.get('sites_auto_approve')
 
-        self.sites_eos = [s for s in self.sites_ready if s in ['T2_CH_CERN', 'T2_CH_CERN_HLT']]
+        self.sites_eos = [s for s in self.sites_ready if s in ['T2_CH_CERN', 'T2_CH_CERN_HLT', 'T2_CH_CERN_P5']]
         self.sites_T3s = [s for s in self.sites_ready if s.startswith('T3_')]
         self.sites_T2s = [s for s in self.sites_ready if s.startswith('T2_')]
         self.sites_T1s = [s for s in self.sites_ready if
@@ -1412,7 +1412,7 @@ class siteInfo:
         self.sites_T1s_all = [s for s in self.all_sites if s.startswith('T1_')]  # or s.startswith('T0_')]
         self.sites_T0s_all = [s for s in self.all_sites if s.startswith('T0_')]
 
-        self.sites_AAA = list(set(self.sites_ready) - set(['T2_CH_CERN_HLT']))
+        self.sites_AAA = list(set(self.sites_ready) - set(['T2_CH_CERN_HLT', 'T2_CH_CERN_P5']))
         ## good enough to read lightweight
         add_on_aaa = ['T3_CH_CERN_HelixNebula',
                       'T3_CH_CERN_HelixNebula_REHA',
