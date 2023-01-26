@@ -77,11 +77,11 @@
   },
   "Run3Summer22pLHE": {
     "fractionpass": 0.95,
-    "go": false
+    "go": true
   },
   "Run3Summer22EEpLHE": {
     "fractionpass": 0.95,
-    "go": false
+    "go": true
   },
   "Phase2Fall22wmLHEGS": {
     "go": true,
@@ -237,6 +237,7 @@
           "T1_DE_KIT_Disk",
           "T2_CH_CERN"
         ]
+      }
     }
   },
   "Commission22GS": {
@@ -297,7 +298,8 @@
       "T2_TR_METU",
       "T2_FI_HIP",
       "T2_RU_INR"
-    ]
+    ],
+    "partial_copy": 0.05
   },
   "Commissioning2021": {
     "go": true,
@@ -551,6 +553,7 @@
                      "T1_RU_JINR_Disk"
                            ]
                  }
+        }
          
    },
   "HINppWinter16wmLHEGS": {
@@ -1363,7 +1366,7 @@
   },
   "Run3Summer22EEwmLHEGS": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
@@ -1402,7 +1405,7 @@
   },
   "Run3Summer22EEGS":{
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
@@ -1449,7 +1452,7 @@
   },
   "Run3Summer22EEDR": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "secondaries": {
         "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Summer22GS-124X_mcRun3_2022_realistic_v10-v1/GEN-SIM": {
           "SiteWhitelist": [
@@ -1505,7 +1508,7 @@
   },
   "Run3Summer22EEDRPremix": {
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "secondaries": {
         "/Neutrino_E-10_gun/Run3Summer21PrePremix-Summer22_124X_mcRun3_2022_realistic_v11-v2/PREMIX": {
           "SecondaryLocation": [
@@ -1533,7 +1536,7 @@
   },
   "Run3Summer22EEMiniAODv3":{
       "fractionpass": 0.95,
-      "go": false,
+      "go": true,
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
@@ -1609,7 +1612,7 @@
   },
   "Run3Summer22EENanoAODv10": {
       "fractionpass": 0.95,
-       "go": false,
+       "go": true,
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
@@ -1982,7 +1985,8 @@
       "T2_CH_CERN", 
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5",
-      "T2_US_Caltech"
+      "T2_US_Caltech",
+      "T2_CH_CSCS"
     ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
@@ -2035,6 +2039,7 @@
   }, 
   "RunIIFall18GS": {
     "SiteBlacklist": [
+      "T2_CH_CSCS",
       "T2_US_Caltech", 
       "T2_CH_CERN", 
       "T2_CH_CERN_HLT",
@@ -4729,10 +4734,11 @@
   },
   "PhaseIISpring22pLHEGEN": {
     "fractionpass": 0.95,
-    "go": true 
+    "go": false
   },
   "PhaseIISpring22SIM": {
     "fractionpass": 0.95,
     "go": false
   }
 }
+
