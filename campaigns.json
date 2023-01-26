@@ -3363,22 +3363,6 @@
     }, 
     "resize": "auto", 
     "tune": true
-  },
-  "RunIISummer20UL17RECO":
-  {
-    "fractionpass": 0.95, 
-    "go": true, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "overflow": {
-      "PU": {
-        "force": false, 
-        "max": 0, 
-        "pending": 0
-      }
-    }, 
-    "resize": "auto", 
-    "tune": true
   }, 
   "RunIISummer20UL18DIGI": {
     "fractionpass": 0.95, 
