@@ -166,7 +166,6 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
         else:
             schema['BlockWhitelist'] = bwl.split(',')
     ## only once
-    ####schema['CMSSWVersion'] = 'CMSSW_8_0_16'
 
     print('Submitting workflow')
     # Submit cloned workflow to ReqMgr
@@ -183,12 +182,6 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
         if verbose:
             print(newWorkflow)
             print('Approving request response:')
-        # TODO only for debug
-        #response = reqMgrClient.setWorkflowSplitting(url, schema)
-        # print "RESPONSE", response
-        #schema['requestName'] = requestName
-        #schema['splittingTask'] = '/%s/%s' % (requestName, taskName)
-        #schema['splittingAlgo'] = splittingAlgo
 
         # Move the request to Assignment-approved
         if testbed:
