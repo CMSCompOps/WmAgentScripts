@@ -1975,7 +1975,8 @@
     "SiteBlacklist": [
       "T2_CH_CERN", 
       "T2_CH_CERN_HLT", 
-      "T2_US_Caltech"
+      "T2_US_Caltech",
+      "T2_CH_CSCS"
     ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
@@ -2027,6 +2028,7 @@
   }, 
   "RunIIFall18GS": {
     "SiteBlacklist": [
+      "T2_CH_CSCS",
       "T2_US_Caltech", 
       "T2_CH_CERN", 
       "T2_CH_CERN_HLT"
