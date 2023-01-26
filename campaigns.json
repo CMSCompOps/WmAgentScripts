@@ -330,7 +330,8 @@
         "T2_US_UCSD", 
         "T2_US_Wisconsin", 
         "T2_CH_CERN", 
-        "T2_CH_CERN_HLT"
+        "T2_CH_CERN_HLT",
+        "T2_CH_CERN_P5"
       ]
     }, 
     "secondaries": {
@@ -993,7 +994,8 @@
     "lumisize": -1,
     "SiteBlacklist": [
         "T2_CH_CERN",
-        "T2_CH_CERN_HLT"
+        "T2_CH_CERN_HLT",
+        "T2_CH_CERN_P5"
       ],
     "secondaries": {
         "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer21GS-120X_mcRun3_2021_realistic_v5-v1/GEN-SIM": {
@@ -1027,8 +1029,9 @@
       "go": true,
       "lumisize": -1,
       "SiteBlacklist": [
-         "T2_CH_CERN",
-         "T2_CH_CERN_HLT"
+        "T2_CH_CERN",
+        "T2_CH_CERN_HLT",
+        "T2_CH_CERN_P5"
         ],      
       "maxcopies": 1,
       "secondaries": {
@@ -1044,7 +1047,8 @@
     "fractionpass": 0.95,
     "SiteBlacklist": [
         "T2_CH_CERN",
-        "T2_CH_CERN_HLT"
+        "T2_CH_CERN_HLT",
+        "T2_CH_CERN_P5"
             ],
     "secondary_AAA": true,        
     "secondaries": {
@@ -1063,8 +1067,9 @@
     "fractionpass": 0.95,
     "go": true,
     "SiteBlacklist": [
-       "T2_CH_CERN",
-       "T2_CH_CERN_HLT"
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
         ],
     "lumisize": -1,
     "maxcopies": 1
@@ -1072,8 +1077,9 @@
   "Run3Summer21GS": {
     "fractionpass": 0.95,
     "SiteBlacklist": [
-       "T2_CH_CERN",
-       "T2_CH_CERN_HLT"
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
         ],
     "go": true,
     "lumisize": -1,
@@ -1823,7 +1829,8 @@
   "RunIIAutumn18DRPremix": {
     "SiteBlacklist": [
       "T2_CH_CERN", 
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -1845,7 +1852,8 @@
   }, 
   "RunIIAutumn18FSPremix": {
     "SiteBlacklist": [
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -1898,7 +1906,8 @@
   "RunIIFall17DRPremix": {
     "SiteBlacklist": [
       "T2_CH_CERN", 
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -1974,7 +1983,8 @@
   "RunIIFall17GS": {
     "SiteBlacklist": [
       "T2_CH_CERN", 
-      "T2_CH_CERN_HLT", 
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5",
       "T2_US_Caltech",
       "T2_CH_CSCS"
     ], 
@@ -2013,7 +2023,8 @@
   "RunIIFall17wmLHEGS": {
     "SiteBlacklist": [
       "T2_CH_CERN", 
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
@@ -2031,7 +2042,8 @@
       "T2_CH_CSCS",
       "T2_US_Caltech", 
       "T2_CH_CERN", 
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -2048,7 +2060,8 @@
   "RunIIFall18wmLHEGS": {
     "SiteBlacklist": [
       "T2_CH_CERN", 
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ], 
     "fractionpass": 0.95, 
     "go": true, 
@@ -2111,7 +2124,8 @@
     "SiteBlacklist": [
       "T2_US_Caltech", 
       "T2_CH_CERN", 
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
@@ -2131,7 +2145,8 @@
   "RunIISummer15wmLHEGS": {
     "SiteBlacklist": [
       "T2_CH_CERN", 
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ], 
     "force-complete": 0.99, 
     "fractionpass": 0.95, 
@@ -2176,7 +2191,8 @@
     }, 
     "SiteBlacklist": [
       "T2_CH_CERN", 
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ], 
     "force-complete": 0.99, 
     "force-timeout": 7, 
@@ -2210,7 +2226,8 @@
     "go": true, 
     "SiteBlacklist": [
       "T2_CH_CERN",
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
       ],
     "lumisize": -1, 
     "parameters": {
@@ -2231,7 +2248,8 @@
     "go": false,
     "SiteBlacklist": [
       "T2_CH_CERN",
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
       ],
     "lumisize": -1,
     "parameters": {
@@ -2357,7 +2375,8 @@
   "RunIISummer19UL17DIGIPremix": {
     "SiteBlacklist": [
         "T2_CH_CERN",
-        "T2_CH_CERN_HLT"
+        "T2_CH_CERN_HLT",
+        "T2_CH_CERN_P5"
     ],
     "fractionpass": 0.95, 
     "go": true, 
@@ -2380,7 +2399,8 @@
     "go": true, 
     "SiteBlacklist": [
               "T2_CH_CERN",
-              "T2_CH_CERN_HLT"
+              "T2_CH_CERN_HLT",
+              "T2_CH_CERN_P5"
                   ],
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2391,7 +2411,8 @@
     "go": true, 
     "SiteBlacklist": [
               "T2_CH_CERN",
-              "T2_CH_CERN_HLT"
+              "T2_CH_CERN_HLT",
+              "T2_CH_CERN_P5"
                 ],
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2412,7 +2433,8 @@
     "maxcopies": 1,
     "SiteBlacklist": [
              "T2_CH_CERN",
-             "T2_CH_CERN_HLT"
+             "T2_CH_CERN_HLT",
+             "T2_CH_CERN_P5"
                 ], 
     "overflow": {
       "PU": {
@@ -2475,7 +2497,8 @@
     "go": false,
     "SiteBlacklist": [
             "T2_CH_CERN",
-            "T2_CH_CERN_HLT"
+            "T2_CH_CERN_HLT",
+            "T2_CH_CERN_P5"
                   ], 
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2485,8 +2508,9 @@
     "fractionpass": 0.99, 
     "go": true, 
     "SiteBlacklist": [
-             "T2_CH_CERN",
-             "T2_CH_CERN_HLT"
+            "T2_CH_CERN",
+            "T2_CH_CERN_HLT",
+            "T2_CH_CERN_P5"
                ],
     "lumisize": -1, 
     "maxcopies": 1
@@ -2497,7 +2521,8 @@
     "lumisize": -1, 
     "SiteBlacklist": [
                   "T2_CH_CERN",
-                  "T2_CH_CERN_HLT"
+                  "T2_CH_CERN_HLT",
+                  "T2_CH_CERN_P5"
                       ],
     "maxcopies": 1, 
     "overflow": {
@@ -2514,8 +2539,9 @@
     "fractionpass": 0.99, 
     "go": true, 
     "SiteBlacklist": [
-                 "T2_CH_CERN",
-                 "T2_CH_CERN_HLT"
+                "T2_CH_CERN",
+                "T2_CH_CERN_HLT",
+                "T2_CH_CERN_P5"
                     ],    
     "lumisize": -1, 
     "maxcopies": 1
@@ -2525,7 +2551,8 @@
     "go": true, 
     "SiteBlacklist": [
                "T2_CH_CERN",
-               "T2_CH_CERN_HLT"
+               "T2_CH_CERN_HLT",
+               "T2_CH_CERN_P5"
                    ],    
     "lumisize": -1, 
     "maxcopies": 1
@@ -2535,7 +2562,8 @@
     "go": true, 
     "SiteBlacklist": [
         "T2_CH_CERN",
-        "T2_CH_CERN_HLT"
+        "T2_CH_CERN_HLT",
+        "T2_CH_CERN_P5"
             ],
     "lumisize": -1, 
     "maxcopies": 1, 
@@ -2547,7 +2575,8 @@
     "lumisize": -1, 
     "SiteBlacklist": [
         "T2_CH_CERN",
-        "T2_CH_CERN_HLT"
+        "T2_CH_CERN_HLT",
+        "T2_CH_CERN_P5"
             ],
     "maxcopies": 1, 
     "resize": "auto"
@@ -2558,7 +2587,8 @@
     "lumisize": -1,
     "SiteBlacklist": [
       "T2_CH_CERN",
-      "T2_CH_CERN_HLT"
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
          ], 
     "maxcopies": 1
   }, 
@@ -2568,7 +2598,8 @@
     "lumisize": -1, 
     "SiteBlacklist": [
         "T2_CH_CERN",
-        "T2_CH_CERN_HLT"
+        "T2_CH_CERN_HLT",
+        "T2_CH_CERN_P5"
             ],
     "maxcopies": 1
   }, 
@@ -3319,22 +3350,6 @@
     "tune": true
   }, 
   "RunIISummer20UL17wmLHEGEN": {
-    "fractionpass": 0.95, 
-    "go": true, 
-    "lumisize": -1, 
-    "maxcopies": 1, 
-    "overflow": {
-      "PU": {
-        "force": false, 
-        "max": 0, 
-        "pending": 0
-      }
-    }, 
-    "resize": "auto", 
-    "tune": true
-  },
-  "RunIISummer20UL17RECO":
-  {
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
@@ -4131,7 +4146,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
           "T2_CH_CERN",
-          "T2_CH_CERN_HLT"
+          "T2_CH_CERN_HLT",
+          "T2_CH_CERN_P5"
               ],
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO" :
@@ -4150,7 +4166,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
          "T2_CH_CERN",
-         "T2_CH_CERN_HLT"
+         "T2_CH_CERN_HLT",
+         "T2_CH_CERN_P5"
               ],
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO" : {
@@ -4168,7 +4185,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
          "T2_CH_CERN",
-         "T2_CH_CERN_HLT"
+         "T2_CH_CERN_HLT",
+         "T2_CH_CERN_P5"
               ],
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO" : {
@@ -4186,7 +4204,8 @@
     "maxcopies": 1,
     "SiteBlacklist": [
        "T2_CH_CERN",
-       "T2_CH_CERN_HLT"
+       "T2_CH_CERN_HLT",
+       "T2_CH_CERN_P5"
     ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/PREMIX": 
@@ -4213,7 +4232,8 @@
     "maxcopies": 1,
     "SiteBlacklist": [
        "T2_CH_CERN",
-       "T2_CH_CERN_HLT"
+       "T2_CH_CERN_HLT",
+       "T2_CH_CERN_P5"
     ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/PREMIX":
@@ -4240,7 +4260,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
           "T2_CH_CERN",
-          "T2_CH_CERN_HLT"
+          "T2_CH_CERN_HLT",
+          "T2_CH_CERN_P5"
        ],
        "secondaries": {
            "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX":
@@ -4260,7 +4281,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
           "T2_CH_CERN",
-          "T2_CH_CERN_HLT"
+          "T2_CH_CERN_HLT",
+          "T2_CH_CERN_P5"
       ],
       "secondaries": {
           "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX":
@@ -4280,7 +4302,8 @@
     "maxcopies": 1,
     "SiteBlacklist": [
        "T2_CH_CERN",
-       "T2_CH_CERN_HLT"
+       "T2_CH_CERN_HLT",
+       "T2_CH_CERN_P5"
     ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX":
@@ -4300,7 +4323,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
           "T2_CH_CERN",
-          "T2_CH_CERN_HLT"
+          "T2_CH_CERN_HLT",
+          "T2_CH_CERN_P5"
               ],
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
@@ -4319,7 +4343,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
           "T2_CH_CERN",
-          "T2_CH_CERN_HLT"
+          "T2_CH_CERN_HLT",
+          "T2_CH_CERN_P5"
               ],
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
@@ -4338,7 +4363,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
           "T2_CH_CERN",
-          "T2_CH_CERN_HLT"
+          "T2_CH_CERN_HLT",
+          "T2_CH_CERN_P5"
               ],
       "secondaries": {
           "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
@@ -4357,7 +4383,8 @@
     "maxcopies": 1,
      "SiteBlacklist": [
         "T2_CH_CERN",
-        "T2_CH_CERN_HLT"
+        "T2_CH_CERN_HLT",
+        "T2_CH_CERN_P5"
     ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
@@ -4377,7 +4404,8 @@
     "maxcopies": 1,
     "SiteBlacklist": [
        "T2_CH_CERN",
-       "T2_CH_CERN_HLT"
+       "T2_CH_CERN_HLT",
+       "T2_CH_CERN_P5"
      ],
     "secondaries": {
           "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
@@ -4397,7 +4425,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
           "T2_CH_CERN",
-          "T2_CH_CERN_HLT"
+          "T2_CH_CERN_HLT",
+          "T2_CH_CERN_P5"
        ],
        "secondaries": {
            "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
@@ -4417,7 +4446,8 @@
     "maxcopies": 1,
     "SiteBlacklist": [
        "T2_CH_CERN",
-       "T2_CH_CERN_HLT"
+       "T2_CH_CERN_HLT",
+       "T2_CH_CERN_P5"
      ],
      "secondaries": {
           "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
@@ -4437,7 +4467,8 @@
     "maxcopies": 1,
      "SiteBlacklist": [
         "T2_CH_CERN",
-        "T2_CH_CERN_HLT"
+        "T2_CH_CERN_HLT",
+        "T2_CH_CERN_P5"
     ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
@@ -4457,7 +4488,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
           "T2_CH_CERN",
-          "T2_CH_CERN_HLT"
+          "T2_CH_CERN_HLT",
+          "T2_CH_CERN_P5"
               ],
       "secondaries": {
         "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO" :
@@ -4475,7 +4507,8 @@
       "maxcopies": 1, 
       "SiteBlacklist": [
        "T2_CH_CERN",
-       "T2_CH_CERN_HLT"
+       "T2_CH_CERN_HLT",
+       "T2_CH_CERN_P5"
     ],
     "secondaries": {
        "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
@@ -4495,7 +4528,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
           "T2_CH_CERN",
-          "T2_CH_CERN_HLT"
+          "T2_CH_CERN_HLT",
+          "T2_CH_CERN_P5"
               ],
       "secondaries": {
         "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO" :
@@ -4513,7 +4547,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
           "T2_CH_CERN",
-          "T2_CH_CERN_HLT"
+          "T2_CH_CERN_HLT",
+          "T2_CH_CERN_P5"
               ],
       "secondaries": {
         "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO" :
@@ -4530,8 +4565,9 @@
     "lumisize": -1,
     "maxcopies": 1,
     "SiteBlacklist": [
-       "T2_CH_CERN",
-       "T2_CH_CERN_HLT"
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ],
     "secondaries": {    
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
@@ -4557,8 +4593,9 @@
     "lumisize": -1,
     "maxcopies": 1,
     "SiteBlacklist": [
-       "T2_CH_CERN",
-       "T2_CH_CERN_HLT"
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/PREMIX" : 
@@ -4585,7 +4622,8 @@
       "maxcopies": 1,
       "SiteBlacklist": [
           "T2_CH_CERN",
-          "T2_CH_CERN_HLT"
+          "T2_CH_CERN_HLT",
+          "T2_CH_CERN_P5"
       ],
       "secondaries": {
           "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
@@ -4604,8 +4642,9 @@
     "lumisize": -1,
     "maxcopies": 1,
     "SiteBlacklist": [
-       "T2_CH_CERN",
-       "T2_CH_CERN_HLT"
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ],
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
