@@ -2646,7 +2646,7 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL16SIM-106X_mcRun2_asymptotic_v13-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Florida",
+          "T1_US_FNAL_Disk",
           "T1_IT_CNAF_Disk"
         ]
       }
@@ -2670,7 +2670,7 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL16SIM-106X_mcRun2_asymptotic_v13-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Florida",
+          "T1_US_FNAL_Disk",
           "T1_IT_CNAF_Disk"
         ]
       }
@@ -3589,7 +3589,7 @@
     "secondaries": {
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL16SIM-106X_mcRun2_asymptotic_v13-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_Florida",
+          "T1_US_FNAL_Disk",
           "T1_IT_CNAF_Disk"
         ]
       }, 
