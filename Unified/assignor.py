@@ -282,6 +282,10 @@ def assignor(url, specific=None, talk=True, options=None):
                 sites_allowed.remove("T2_CH_CERN_HLT")
             if "T2_CH_CERN_HLT" not in sites_not_allowed:
                 sites_not_allowed.append("T2_CH_CERN_HLT")
+            if "T2_CH_CERN_P5" in sites_allowed:
+                sites_allowed.remove("T2_CH_CERN_P5")
+            if "T2_CH_CERN_P5" not in sites_not_allowed:
+                sites_not_allowed.append("T2_CH_CERN_P5")
 
         ## keep track of this, after secondary input location restriction : that's how you want to operate it
         initial_sites_allowed = copy.deepcopy(sites_allowed)

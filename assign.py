@@ -102,9 +102,9 @@ def assignRequest(url, **args):
 
     res = reqMgr.assignWorkflow(url, workflow, team, params)
     if res:
-        print('Assigned workflow:', workflow, 'to site:', sites, 'with processing version', procversion)
+        print(('Assigned workflow:', workflow, 'to site:', sites, 'with processing version', procversion))
     else:
-        print('Could not assign workflow:', workflow, 'to site:', sites, 'with processing version', procversion)
+        print(('Could not assign workflow:', workflow, 'to site:', sites, 'with processing version', procversion))
     if verbose:
         print(res)
 
@@ -219,7 +219,7 @@ def main():
         schema = wfi.request
 
         if 'OriginalRequestName' in schema:
-            print("Original workflow is:",schema['OriginalRequestName'])
+            print(("Original workflow is:",schema['OriginalRequestName']))
             original_wf = workflowInfo(url, schema['OriginalRequestName'])            
             ancestor_wf = workflowInfo(url, schema['OriginalRequestName'])
             ## go back as up as possible
@@ -236,7 +236,7 @@ def main():
 
         if options.sites.lower() == 'original' and original_wf:
             sites = original_wf.request['SiteWhitelist']
-            print("Using",sorted(sites),"from the original request",original_wf.request['RequestName'])
+            print(("Using",sorted(sites),"from the original request",original_wf.request['RequestName']))
 
         #print json.dumps( schema, indent=2 )
         wf_name = wfn
@@ -337,7 +337,7 @@ def main():
                     # see if any of the dataset names is a match
                     for ds in datasets:
                         if re.match(processedName, ds['processed_ds_name']):
-                            print("Existing dset:", ds['dataset'], "(%s)" % ds['dataset_access_type'])
+                            print(("Existing dset:", ds['dataset'], "(%s)" % ds['dataset_access_type']))
                             maxv = max(maxv, ds['processing_version'])
                             exist = True
                         else:
@@ -345,17 +345,17 @@ def main():
                     i += 1
             # suggest max version
             if exist and procversion <= maxv:
-                print("Some output datasets exist, its advised to assign with v ==", maxv + 1)
+                print(("Some output datasets exist, its advised to assign with v ==", maxv + 1))
                 sys.exit(0)
         else:
             ## this is a resubmission !
-            print("The taks in resubmission is:",schema['InitialTaskPath'])
+            print(("The taks in resubmission is:",schema['InitialTaskPath']))
             ## pick up the sites from acdc
             if options.sites.lower() == 'acdc':
                 where_to_run, missing_to_run, missing_to_run_at =  original_wf.getRecoveryInfo()
                 task = schema['InitialTaskPath']
                 sites = list(set([SI.SE_to_CE(site) for site in where_to_run[task]]) & set(SI.all_sites))
-                print("Found",sorted(sites),"as sites where to run the ACDC at, from the acdc doc of ",original_wf.request['RequestName'])
+                print(("Found",sorted(sites),"as sites where to run the ACDC at, from the acdc doc of ",original_wf.request['RequestName']))
 
         if options.checksite:
             ## check that the sites are all compatible and up
@@ -384,10 +384,10 @@ def main():
 
             if options.sites.lower() == 'acdc':
                 if len(sites) == 0:
-                    print("None of the necessary sites are ready:", sites)
+                    print(("None of the necessary sites are ready:", sites))
                     continue
                 elif len(not_ready) > 0: 
-                    print("Some of the necessary sites are ready:", sites)
+                    print(("Some of the necessary sites are ready:", sites))
                     xrootd = True
                 else:
                     print("All necessary sites are available")
@@ -416,7 +416,7 @@ def main():
                     if t in schema:
                         tname = schema[t]['TaskName']
                         if tasks and not tname in tasks:
-                            print(tname,"not concerned")
+                            print((tname,"not concerned"))
                             memory_dict[tname] = schema[t]['Memory']
                             continue
                         if set_to:
@@ -442,43 +442,43 @@ def main():
                         tname = schema[t]['TaskName']
                         mcore = schema[t]['Multicore']
                         if tasks and not tname in tasks:
-                            print(tname,"not concerned")
+                            print((tname,"not concerned"))
                             multicore_dict[tname] = schema[t]['Multicore']
                             timeperevent_dict[tname] = schema[t]['TimePerEvent']
                             continue
                         if memory:
                             mem = memory[tname]
-                            print(mem, memory)
+                            print((mem, memory))
                             factor = (set_to / float(mcore))
                             fraction_constant = 0.4
                             mem_per_core_c = int((1-fraction_constant) * mem / float(mcore))
-                            print("mem per core", mem_per_core_c)
-                            print("base mem", mem)
+                            print(("mem per core", mem_per_core_c))
+                            print(("base mem", mem))
                             
                             memory[tname] = mem + (set_to-mcore)*mem_per_core_c
-                            print("final mem",memory[tname])
+                            print(("final mem",memory[tname]))
                             timeperevent_dict[tname] = schema[t]['TimePerEvent']/factor
-                        print("setting mcore",set_to)
+                        print(("setting mcore",set_to))
                         multicore_dict[tname] = set_to
                     else:
                         break
                 multicore = multicore_dict
                 print(multicore)
-                print(timeperevent_dict,"cannot be used yet.")
+                print((timeperevent_dict,"cannot be used yet."))
     # If the --test argument was provided, then just print the information
     # gathered so far and abort the assignment
         print(wf_name)
-        print("Era:",era)
-        print("ProcStr:",procstring)
-        print("ProcVer:",procversion)
-        print("LFN:",lfn)
-        print("Team:",options.team)
-        print("Site:",sites)
-        print("Taskchain? ", str(taskchain))
-        print("Activity:", activity)
-        print("ACDC:", str(is_resubmission))
-        print("Xrootd:", str(xrootd))
-        print("Secondary_xrootd:", str(secondary_xrootd))
+        print(("Era:",era))
+        print(("ProcStr:",procstring))
+        print(("ProcVer:",procversion))
+        print(("LFN:",lfn))
+        print(("Team:",options.team))
+        print(("Site:",sites))
+        print(("Taskchain? ", str(taskchain)))
+        print(("Activity:", activity))
+        print(("ACDC:", str(is_resubmission)))
+        print(("Xrootd:", str(xrootd)))
+        print(("Secondary_xrootd:", str(secondary_xrootd)))
         #if options.test:            continue
         
         # Really assigning the workflow now
