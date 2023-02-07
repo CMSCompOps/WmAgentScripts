@@ -451,7 +451,7 @@
     "description" : "PnR users"
   },
   "prepIDs_to_skip": {
-    "value" : [],
+    "value" : ["task_BPH-GenericNoSmearGEN-00001"],
     "description" : "PrepIDs to skip from workflow assignment"
   },
   "acquired_threshold_per_priority_block" : {
