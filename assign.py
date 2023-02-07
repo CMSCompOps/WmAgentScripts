@@ -233,6 +233,7 @@ def main():
             ancestor_wf = None
 
         is_resubmission = (schema['RequestType'] == 'Resubmission')
+        is_relval = ((schema['SubRequestType'].lower() == 'relval') or (schema['SubRequestType'].lower() == 'hirelval'))
 
         if options.sites.lower() == 'original' and original_wf:
             sites = original_wf.request['SiteWhitelist']
@@ -323,7 +324,7 @@ def main():
         # Don't perform this check for ACDC's
         datasets = schema["OutputDatasets"]
         i = 0
-        if not is_resubmission:
+        if (not is_resubmission) and (not is_relval):
             exist = False
             maxv = 1
             for key, value in list(schema.items()):
@@ -347,7 +348,7 @@ def main():
             if exist and procversion <= maxv:
                 print(("Some output datasets exist, its advised to assign with v ==", maxv + 1))
                 sys.exit(0)
-        else:
+        elif is_resubmission:
             ## this is a resubmission !
             print(("The taks in resubmission is:",schema['InitialTaskPath']))
             ## pick up the sites from acdc
