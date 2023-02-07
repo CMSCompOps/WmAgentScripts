@@ -1,11 +1,28 @@
 {
+  "Phase2Fall22pLHEGS": {
+    "fractionpass": 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
+  },
   "Run3Winter23GS": {
     "fractionpass": 0.95,
     "go": true,
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
-      "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
       "T2_FR_IPHC",
@@ -24,7 +41,6 @@
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
-      "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
       "T2_FR_IPHC",
@@ -43,7 +59,6 @@
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
-      "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
       "T2_FR_IPHC",
@@ -54,7 +69,15 @@
       "T2_TR_METU",
       "T2_FI_HIP",
       "T2_RU_INR"
-    ]
+    ],
+    "secondaries": {
+      "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter23GS-126X_mcRun3_2023_forPU65_v1-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk", 
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "Run3Winter23DigiPremix": {
     "fractionpass": 0.95,
@@ -62,7 +85,6 @@
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
-      "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
       "T2_FR_IPHC",
@@ -89,7 +111,6 @@
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
-      "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
       "T2_FR_IPHC",
@@ -108,7 +129,6 @@
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
-      "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
       "T2_FR_IPHC",
@@ -127,7 +147,6 @@
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
-      "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
       "T2_FR_IPHC",
@@ -159,7 +178,6 @@
       "T2_AT_Vienna",
       "T2_BE_IIHE",
       "T2_BE_UCL",
-      "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
       "T2_EE_Estonia",
@@ -200,7 +218,6 @@
       "T2_AT_Vienna",
       "T2_BE_IIHE",
       "T2_BE_UCL",
-      "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
       "T2_EE_Estonia",
@@ -250,7 +267,6 @@
       "T2_AT_Vienna",
       "T2_BE_IIHE",
       "T2_BE_UCL",
-      "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
       "T2_EE_Estonia",
@@ -286,7 +302,6 @@
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
-      "T2_CH_CSCS",
       "T2_CN_Beijing",
       "T2_DE_RWTH",
       "T2_FR_IPHC",
@@ -995,7 +1010,7 @@
         "T2_CH_CERN",
         "T2_CH_CERN_HLT",
         "T2_CH_CERN_P5"
-      ],
+    ],
     "secondaries": {
         "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer21GS-120X_mcRun3_2021_realistic_v5-v1/GEN-SIM": {
            "SiteWhitelist": [
@@ -1012,6 +1027,12 @@
             "SiteWhitelist": [
                 "T2_CH_CERN",
                 "T1_US_FNAL_Disk"
+            ]
+        },
+        "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter23GS-126X_mcRun3_2023_forPU65_v1-v1/GEN-SIM": {
+            "SiteWhitelist": [
+                "T1_US_FNAL_Disk", 
+                "T2_CH_CERN"
             ]
         }
     },
@@ -1101,7 +1122,6 @@
           "SiteBlacklist": [
             "T1_ES_PIC",
             "T1_FR_CCIN2P3",
-            "T2_CH_CSCS",
             "T2_CN_Beijing",
             "T2_DE_RWTH",
             "T2_FR_IPHC",
@@ -1125,7 +1145,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1149,7 +1168,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1173,7 +1191,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1197,7 +1214,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1229,7 +1245,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1253,7 +1268,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1349,7 +1363,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1369,7 +1382,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1389,7 +1401,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1408,7 +1419,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1436,7 +1446,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1464,7 +1473,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1492,7 +1500,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1520,7 +1527,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1539,7 +1545,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1558,7 +1563,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1577,7 +1581,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1596,7 +1599,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1615,7 +1617,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
@@ -1634,7 +1635,6 @@
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
-        "T2_CH_CSCS",
         "T2_CN_Beijing",
         "T2_DE_RWTH",
         "T2_FR_IPHC",
