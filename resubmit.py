@@ -34,7 +34,7 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None):
+def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, incrementPV=None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -83,11 +83,11 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
         # prepend EXT_ to recognize as extension
         result["RequestString"] = 'EXT_' + result["RequestString"]
     else:
-        try:
-            #result["ProcessingVersion"] = int(helper.getProcessingVersion()) + 1
-            result["ProcessingVersion"] += 1
-        except ValueError:
-            result["ProcessingVersion"] = 2
+        if incrementPV:
+            try:
+                result["ProcessingVersion"] += 1
+            except ValueError:
+                result["ProcessingVersion"] = 2
 
     # modify for backfill
     if backfill:
@@ -127,35 +127,44 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
     if 'Step1' in result and 'InputDataset' in result['Step1'] and result['Step1']['InputDataset']:
         result['Step1'].pop('RequestNumEvents', None)
 
-    if filterEff:
-        if taskNumber:
-            if "RequestType" in result:
-                if result["RequestType"] == "StepChain":
-                    stepName = "Step%s" % str(taskNumber)
-                else:
-                    stepName = "Task%s" % str(taskNumber)
-                if stepName in result:
-                    if "FilterEfficiency" in result[stepName]:
-                        result[stepName]["FilterEfficiency"] = float(filterEff)
-                    else:
-                        raise Exception("There is no FilterEfficiency in %s" % stepName)
-                else:
-                    raise Exception("There is no step called %s" % stepName)
+
+    if taskNumber:
+        # Check request type and determine the key (task or step name) in which we'll do modifications
+        if "RequestType" in result:
+            if result["RequestType"] == "StepChain":
+                key = "Step%s" % str(taskNumber)
+                nTasks = result["StepChain"]
             else:
-                raise Exception("The Request Type is not identified")
+                key = "Task%s" % str(taskNumber)
+                nTasks = result["TaskChain"]
         else:
-            raise Exception("A task number should be provided for which to update filter efficiency")
+            raise Exception("The Request Type is not identified")
+
+
+        # Check if that key exists
+        if key not in result:
+            raise Exception("There is no task/step called %s" % key)
+
+        if taskMem:
+            result[key]["Memory"] = int(taskMem)
+            if nTasks == 1:
+                result["Memory"] = int(taskMem)
+
+        if taskMulticore:
+            result[key]["Multicore"] = int(taskMulticore)
+            if nTasks == 1:
+                result["Memory"] = int(taskMem)
 
     return result
 
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, incrementPV=None):
     """
     clones a workflow
     """
     # Adapt schema and add original request to it
     cache = reqMgrClient.getWorkflowInfo(url, workflow)
 
-    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber)
+    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, taskMem, taskMulticore, incrementPV)
 
     if verbose:
         pprint(schema)
@@ -285,7 +294,11 @@ def main():
     parser.add_option("--testbed", action="store_true", dest="testbed", default=False,
                       help="Clone to testbed reqmgr insted of production")
     parser.add_option('--filterEff', help='filter efficiency of given task/step', dest='filterEff', default=None)
-    parser.add_option('--taskNumber', help='taskNumber for which to change filterEff', dest='taskNumber', default=None)
+    parser.add_option('--taskNumber', help='taskNumber for which to change filterEff or memory or multicore', dest='taskNumber', default=None)
+    parser.add_option('--taskMem', help='memory to change in task level', dest='taskMem', default=None)
+    parser.add_option('--taskMulticore', help='multicore to change in task level', dest='taskMulticore', default=None)
+    parser.add_option("--incrementPV", action="store_true", dest="incrementPV", default=True,
+                      help="If True, increments PV when necessary. Else keeps it the same")
     (options, args) = parser.parse_args()
 
     # Check the arguments, get info from them
@@ -315,7 +328,21 @@ def main():
             if options.TimePerEvent:
                 timeperevent = float(options.TimePerEvent)
             cloneWorkflow(
-                wf, user, options.group, options.verbose, options.backfill, options.testbed, memory,timeperevent,bwl=options.bwl, filterEff=options.filterEff, taskNumber=options.taskNumber)
+                wf,
+                user,
+                options.group,
+                options.verbose,
+                options.backfill,
+                options.testbed,
+                memory,
+                timeperevent,
+                bwl=options.bwl,
+                filterEff=options.filterEff,
+                taskNumber=options.taskNumber,
+                taskMem=options.taskMem,
+                taskMulticore=options.taskMulticore,
+                incrementPV=options.incrementPV,
+            )
     elif options.action == 'extend':
         for wf in wfs:
             extendWorkflow(wf, user, options.group, options.verbose, options.events, options.firstlumi)
