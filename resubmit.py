@@ -34,7 +34,7 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, dontIncrementPV=None):
+def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, dontIncrementPV=None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -154,17 +154,19 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
             result[key]["Multicore"] = int(taskMulticore)
             if nTasks == 1:
                 result["Memory"] = int(taskMem)
+        if taskNumEvents:
+            result[key]["RequestNumEvents"] = int(taskNumEvents)
 
     return result
 
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, dontIncrementPV=None):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, dontIncrementPV=None):
     """
     clones a workflow
     """
     # Adapt schema and add original request to it
     cache = reqMgrClient.getWorkflowInfo(url, workflow)
 
-    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, taskMem, taskMulticore, dontIncrementPV)
+    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, taskMem, taskMulticore, taskNumEvents, dontIncrementPV)
 
     if verbose:
         pprint(schema)
@@ -297,6 +299,7 @@ def main():
     parser.add_option('--taskNumber', help='taskNumber for which to change filterEff or memory or multicore', dest='taskNumber', default=None)
     parser.add_option('--taskMem', help='memory to change in task level', dest='taskMem', default=None)
     parser.add_option('--taskMulticore', help='multicore to change in task level', dest='taskMulticore', default=None)
+    parser.add_option('--taskNumEvents', help='RequestNumEvents to change in task level', dest='taskNumEvents', default=None)
     parser.add_option("--dontIncrementPV", action="store_true", dest="dontIncrementPV", default=False,
                       help="If True, increments PV when necessary. Else keeps it the same")
     (options, args) = parser.parse_args()
@@ -341,7 +344,8 @@ def main():
                 taskNumber=options.taskNumber,
                 taskMem=options.taskMem,
                 taskMulticore=options.taskMulticore,
-                dontIncrementPV=options.dontIncrementPV,
+                taskNumEvents=options.taskNumEvents,
+                dontIncrementPV=options.dontIncrementPV
             )
     elif options.action == 'extend':
         for wf in wfs:
