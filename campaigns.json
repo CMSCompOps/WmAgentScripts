@@ -1,4 +1,61 @@
 {
+  "Run3Winter23MiniAOD": {
+    "fractionpass": 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
+  },
+
+  "Run3Winter23NanoAOD": {
+    "fractionpass": 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
+  },
+
+  "GenericNoSmearGEN": {
+    "fractionpass": 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
+  },
+
   "Run3Winter23Reco": {
     "fractionpass": 0.95,
     "go": false,
