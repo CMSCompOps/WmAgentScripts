@@ -34,7 +34,7 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, dontIncrementPV=None):
+def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, dontIncrementPV=None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -157,16 +157,35 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
         if taskNumEvents:
             result[key]["RequestNumEvents"] = int(taskNumEvents)
 
+        # ScramArch update
+        if scramArch:
+            # Question: does the global scramArch have any use for taskchains and stepchains
+            if result["RequestType"] == "TaskChain":
+                result["Task" + str(taskNumber)]["ScramArch"] = scramArch
+            elif result["RequestType"] == "StepChain":
+                result["Step" + str(taskNumber)]["ScramArch"] = scramArch
+            else:
+                print("You're trying to change the scramArch in task level while the request isn't a task or stepchain")
+                sys.exit()
+    elif scramArch:
+        requestType = result["RequestType"]
+        prefix = requestType[:4]
+        nTasks = result[requestType]
+        for i in range(nTasks):
+            result[prefix + str(i + 1)]["ScramArch"] = scramArch
+    else:
+        pass
+
     return result
 
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, dontIncrementPV=None):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, dontIncrementPV=None):
     """
     clones a workflow
     """
     # Adapt schema and add original request to it
     cache = reqMgrClient.getWorkflowInfo(url, workflow)
 
-    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, taskMem, taskMulticore, taskNumEvents, dontIncrementPV)
+    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, taskMem, taskMulticore, taskNumEvents, scramArch, dontIncrementPV)
 
     if verbose:
         pprint(schema)
@@ -300,6 +319,7 @@ def main():
     parser.add_option('--taskMem', help='memory to change in task level', dest='taskMem', default=None)
     parser.add_option('--taskMulticore', help='multicore to change in task level', dest='taskMulticore', default=None)
     parser.add_option('--taskNumEvents', help='RequestNumEvents to change in task level', dest='taskNumEvents', default=None)
+    parser.add_option('--scramArch', help='Add ScramArch on top of the existing one', dest='scramArch', default=None)
     parser.add_option("--dontIncrementPV", action="store_true", dest="dontIncrementPV", default=False,
                       help="If True, increments PV when necessary. Else keeps it the same")
     (options, args) = parser.parse_args()
@@ -345,6 +365,7 @@ def main():
                 taskMem=options.taskMem,
                 taskMulticore=options.taskMulticore,
                 taskNumEvents=options.taskNumEvents,
+                scramArch=options.scramArch,
                 dontIncrementPV=options.dontIncrementPV
             )
     elif options.action == 'extend':
