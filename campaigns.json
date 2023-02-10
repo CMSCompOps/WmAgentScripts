@@ -58,7 +58,7 @@
 
   "Run3Winter23Reco": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
