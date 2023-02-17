@@ -4321,6 +4321,7 @@ class workflowInfo:
         return dataset_blocks, all_blocks_loc, files_in_block, files_and_loc, files_and_loc_noblock
 
     def getRecoveryDoc(self, collection_name=None):
+        self.conn = make_x509_conn(self.url)
         if collection_name == None:
             collection_name = self.request['RequestName']
 
