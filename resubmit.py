@@ -34,7 +34,7 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, dontIncrementPV=None):
+def modifySchema(cache, workflow, user, group, events, firstLumiNum, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, firstEvent=None, firstLumi=None, dontIncrementPV=None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -128,6 +128,10 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
         result['Step1'].pop('RequestNumEvents', None)
 
 
+    if firstEvent and firstLumi:
+        result["FirstEvent"] = firstEvent
+        result["FirstLumi"] = firstLumi
+
     if taskNumber:
         # Check request type and determine the key (task or step name) in which we'll do modifications
         if "RequestType" in result:
@@ -181,7 +185,7 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
 
     return result
 
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, dontIncrementPV=None):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, firstEvent=None, firstLumi=None, dontIncrementPV=None):
     """
     clones a workflow
     """
@@ -324,6 +328,8 @@ def main():
     parser.add_option('--taskNumEvents', help='RequestNumEvents to change in task level', dest='taskNumEvents', default=None)
     parser.add_option('--scramArch', help='Add ScramArch on top of the existing one', dest='scramArch', default=None)
     parser.add_option('--runNumber', help='runNumber', dest='runNumber', default=1)
+    parser.add_option('--firstEvent', help='firstEvent', dest='firstEvent', default=1)
+    parser.add_option('--firstLumi', help='firstLumi', dest='firstLumi', default=1)
     parser.add_option("--dontIncrementPV", action="store_true", dest="dontIncrementPV", default=False,
                       help="If True, increments PV when necessary. Else keeps it the same")
     (options, args) = parser.parse_args()
@@ -371,6 +377,8 @@ def main():
                 taskNumEvents=options.taskNumEvents,
                 scramArch=options.scramArch,
                 runNumber=options.runNumber,
+                firstEvent=options.firstEvent,
+                firstLumi=options.firstLumi,
                 dontIncrementPV=options.dontIncrementPV
             )
     elif options.action == 'extend':
