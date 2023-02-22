@@ -228,6 +228,8 @@ def main():
     # using default or custom configurations
     for iWorkflow, (wfName, workflow) in enumerate(result.items()):
 
+        if 'task_PPS-Run3Summer22pLHE-00031' not in wfName: continue
+        
         print('-->', wfName)
 
         for task, attributes in workflow["tasks"].items():

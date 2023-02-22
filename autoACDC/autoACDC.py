@@ -55,7 +55,7 @@ class autoACDC():
             "lfn": args.get('lfn'), # Merged LFN base
             "lumisperjob": args.get('lumisperjob', None), # Set the number of lumis per job
             "maxmergeevents": args.get('maxmergeevents', None), # Set the number of event to merge at max        
-            "exceptions_dict": args.get("exceptions_dict", None)
+            "exceptions": args.get("exceptions", None)
         }
 
         # set the correct url
@@ -364,7 +364,7 @@ class autoACDC():
         Returns: the first (ancestor) and last (original) workflow infos.
         """
 
-        if 'OriginalRequestName' in self.schema:
+        if 'OriginalRequestName' in self.schema.keys():
             original_wf = workflowInfo(self.url, self.schema['OriginalRequestName'])            
             ancestor_wf = workflowInfo(self.url, self.schema['OriginalRequestName'])
             ## go back as up as possible
@@ -544,14 +544,15 @@ class autoACDC():
         based on some parameters in the schema.
         For now, exceptions means hardcore setting the site.
         """
-        is_exception = self.check_keys(params)
-        if is_exception:
-            logging.info("Found exception.")
-            sites = self.getACDCsites()
-            sites = self.checkSites(sites)
-            if len(sites) == 0:
-                raise Exception("No sites available, can't assign workflow")
-            params['SiteWhitelist'] = sites
+        if self.options['exceptions'] is not None:
+            is_exception = self.check_keys(self.schema)
+            if is_exception:
+                logging.info("Found exception.")
+                sites = self.getACDCsites()
+                sites = self.checkSites(sites)
+                if len(sites) == 0:
+                    raise Exception("No sites available, can't assign workflow")
+                params['SiteWhitelist'] = sites
 
         return params
 
@@ -559,14 +560,14 @@ class autoACDC():
     def check_keys(self, dictionary):
         """
         Recursively checks every key of a dictionary containing nested dictionaries of variable depth,
-        in this case the params dictionary, for a key existing in our exceptions_dict,
-        and if it finds it, checks if the pattern in the exceptions_dict is present in the params.
+        in this case the params dictionary, for a key existing in our exceptions,
+        and if it finds it, checks if the pattern in the exceptions is present in the params.
         Credit: chatGPT
         """
         if isinstance(dictionary, dict):
             for key in dictionary.keys():
-                if key in self.options['exceptions_dict'].keys():
-                    if self.options['exceptions_dict'][key] in dictionary[key]:
+                if key in self.options['exceptions'].keys():
+                    if self.options['exceptions'][key] in dictionary[key]:
                         return True
                 if self.check_keys(dictionary[key]):
                     return True
