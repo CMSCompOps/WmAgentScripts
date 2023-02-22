@@ -85,6 +85,7 @@ def applySolutions(task_dict, solutions_dict):
     configs = {
         "memory": None,
         "xrootd": False,
+        "secondary_xrootd": False,
         "include_sites": [],
         "exclude_sites": [],
         "splitting": ''        # Uses: '(number)x', 'Same', 'max'
@@ -127,7 +128,7 @@ def applySolutions(task_dict, solutions_dict):
 def checkType(key, item):
     if key == 'memory':
         return type(item) is str
-    elif key == 'xrootd':
+    elif key == 'xrootd' or key == 'secondary_xrootd':
         if item.lower() == 'true' or item.lower() == 'false':
             return True
         else:
@@ -189,7 +190,7 @@ def main():
 
     # scipt parameters
     parser = argparse.ArgumentParser(description='Famous Submitter')
-    parser.add_argument("-q", "--query", type=str, help="Query to pass to search tool, can be a yaml file", required=True)
+    parser.add_argument("-q", "--query", type=str, help="Query to pass to search tool, or path to .json file", required=True)
     parser.add_argument("-c", "--customise", type=str, help="Dictionary of exitCodes and solutions, or path to .json file containing dict.", required=True)
     parser.add_argument("-o", "--output", type=str, default="wf_list.txt", help="Output file")
     parser.add_argument("-t", "--test", action="store_true", help="Doesn't submit ACDCs")
