@@ -72,7 +72,7 @@ def getTasksWithError(wfDict: dict, exitCode: str):
     return affectedTasks
 
 
-def applySolutions(task_dict, solutions_dict):
+def applySolutions(configs, task_dict, solutions_dict):
     """
     Looks through the task information and matches it
     with any of the proposed solution, updating the
@@ -80,16 +80,6 @@ def applySolutions(task_dict, solutions_dict):
 
     Returns: dict of configurations
     """
-
-    # default configs
-    configs = {
-        "memory": None,
-        "xrootd": False,
-        "secondary_xrootd": False,
-        "include_sites": [],
-        "exclude_sites": [],
-        "splitting": ''        # Uses: '(number)x', 'Same', 'max'
-    }
 
     if 'errors' not in list(task_dict.keys()):
         sys.exit()
@@ -122,7 +112,7 @@ def applySolutions(task_dict, solutions_dict):
             if campaign in list(task_dict['campaigns']):
                 configs = updateConfigs(configs, solution)
 
-    return configs
+    return configs   
 
 
 def checkType(key, item):
@@ -139,11 +129,18 @@ def checkType(key, item):
         return (type(item) is str or type(item) is list)
     elif key == 'splitting':
         return type(item) is str
+    elif key == 'exceptions':
+        return type(item) is dict
     else:
         raise Exception(key + " not accepted.")
 
 
 def updateConfigs(configs, solutions):
+    """
+    Update configs dictionary. Checks type, and makes sure you are not adding
+    any keys that do not already exist, or overwriting things that don't need
+    to be overwritten.
+    """
     for skey, sitem in solutions.items():
 
         # check that the proposed parameter to change exists
@@ -192,6 +189,7 @@ def main():
     parser = argparse.ArgumentParser(description='Famous Submitter')
     parser.add_argument("-q", "--query", type=str, help="Query to pass to search tool, or path to .json file", required=True)
     parser.add_argument("-c", "--customise", type=str, help="Dictionary of exitCodes and solutions, or path to .json file containing dict.", required=True)
+    parser.add_argument("-e", "--exceptions", type=str, help="Dictionary of exceptions, or path to .json file containing dict.", required=False, default=None)
     parser.add_argument("-o", "--output", type=str, default="wf_list.txt", help="Output file")
     parser.add_argument("-t", "--test", action="store_true", help="Doesn't submit ACDCs")
 
@@ -212,6 +210,15 @@ def main():
     else:
         solutions_dict = json.loads(options.customise)
 
+    # load exceptions
+    if options.exceptions is None:
+        exceptions_dict = {}
+    elif '.json' in options.exceptions:
+        with open(options.exceptions, 'r') as f:
+            exceptions_dict = json.load(f)
+    else:
+        exceptions_dict = json.loads(options.exceptions)
+
     # get wokrflow infos
     result = getAMsFromQuery(query)
 
@@ -220,6 +227,7 @@ def main():
     # loop over workflows, tasks, for each create ACDC and assign it
     # using default or custom configurations
     for iWorkflow, (wfName, workflow) in enumerate(result.items()):
+
         print('-->', wfName)
 
         for task, attributes in workflow["tasks"].items():
@@ -227,7 +235,17 @@ def main():
             print('\t|-->', task)
 
             # based on the tasks' attributes, apply the solutions
-            configs = applySolutions(attributes, solutions_dict)
+            # default configs
+            configs = {
+                "memory": None,
+                "xrootd": False,
+                "secondary_xrootd": False,
+                "include_sites": [],
+                "exclude_sites": [],
+                "splitting": '',        # Uses: '(number)x', 'Same', 'max'
+                "exceptions": exceptions_dict
+            }
+            configs = applySolutions(configs, attributes, solutions_dict)
 
             if options.test:
                 print(configs)

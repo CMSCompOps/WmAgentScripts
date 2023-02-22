@@ -552,6 +552,7 @@ class autoACDC():
             if len(sites) == 0:
                 raise Exception("No sites available, can't assign workflow")
             params['SiteWhitelist'] = sites
+
         return params
 
 

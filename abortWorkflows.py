@@ -30,15 +30,15 @@ def main():
         sys.exit(1)
     
     for wf in wfs:
-        print "Aborting workflow: " + wf
+        print("Aborting workflow: " + wf)
         reqMgrClient.abortWorkflow(url, wf)
-        print "Aborted"
+        print("Aborted")
 
         if options.invalidate:
-            print "Invalidating datasets"
+            print("Invalidating datasets")
             datasets = reqMgrClient.outputdatasetsWorkflow(url, wf)
             for ds in datasets:
-                print ds
+                print(ds)
                 dbs3.setDatasetStatus(ds, 'INVALID', files=True)
 
     sys.exit(0);
