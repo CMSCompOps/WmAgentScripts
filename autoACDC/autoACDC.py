@@ -4,14 +4,11 @@
 # Author: Luca Lavezzo
 # Date: July 2022
 
-import http.client
-import os, sys, re
-import logging
-from typing import Optional, List, Tuple
-from random import choice
-from collections import defaultdict 
-
 import sys
+import logging
+from random import choice
+from types import DynamicClassAttribute
+
 sys.path.append('..')
 
 from dbs.apis.dbsClient import DbsApi
@@ -24,13 +21,13 @@ logging.basicConfig(level=logging.WARNING)
 
 class autoACDC():
     """
-    This class is meant to automatically submit ACDCs and assign them 
+    This class is meant to automatically submit ACDCs and assign them
     for a single task/workflow, and is based on makeACDC.py and assign.py.
     The main functions are
         makeACDC()
         assign()
-    which are called by go(). Each of these two functions depends on some set of
-    parameters, which are specified by the respective
+    which are called by go(). Each of these two functions depends on some set
+    of parameters, which are specified by the respective
         getACDCParameters()
         getAssignParameters()
 
@@ -57,9 +54,10 @@ class autoACDC():
             "activity": args.get('activity'), # Dashboard Activity (reprocessing, production or test), if empty will set reprocessing as default
             "lfn": args.get('lfn'), # Merged LFN base
             "lumisperjob": args.get('lumisperjob', None), # Set the number of lumis per job
-            "maxmergeevents": args.get('maxmergeevents', None) # Set the number of event to merge at max        
+            "maxmergeevents": args.get('maxmergeevents', None), # Set the number of event to merge at max        
+            "exceptions_dict": args.get("exceptions_dict", None)
         }
-        
+
         # set the correct url
         if self.options['testbed'] or self.options['testbed_assign']: self.url = 'cmsweb-testbed.cern.ch' 
         else: self.url = 'cmsweb.cern.ch'
@@ -73,13 +71,14 @@ class autoACDC():
         self.acdcName = None
         self.acdcInfo = None
         self.schema = None
-        
+
     def getRandomDiskSite(self, site=None):
         """
         Gets a random disk site and append _Disk
         """
-        if site == None:
-            site = getRandomDiskSite.T1s
+        SI = siteInfo()
+        if site is None:
+            site = SI.sites_T1s
         s = choice(site)
         if s.startswith("T1"):
             s += "_Disk"
@@ -406,7 +405,7 @@ class autoACDC():
         # Must use --lfn option, otherwise workflow won't be assigned
         if self.options['lfn']:
             lfn = self.options['lfn']
-        elif "MergedLFNBase" in self.schema:
+        elif "MergedLFNBase" in self.schema.keys():
             lfn = self.schema['MergedLFNBase']
         elif ancestor_wf and "MergedLFNBase" in ancestor_wf.request:
             lfn = ancestor_wf.request['MergedLFNBase']
@@ -504,6 +503,9 @@ class autoACDC():
 
         params = self.getAssignParameters()
 
+        # deal with exceptions
+        params = self.exceptions(params)
+
         # testing
         if self.options['testbed_assign']:
             logging.info(self.acdcName)
@@ -535,3 +537,36 @@ class autoACDC():
         auto.assign()
         """
         self.acdcName = acdcName
+
+    def exceptions(self, params):
+        """
+        Manage some exceptions here by re-adjusting the assign paremeters,
+        based on some parameters in the schema.
+        For now, exceptions means hardcore setting the site.
+        """
+        is_exception = self.check_keys(params)
+        if is_exception:
+            logging.info("Found exception.")
+            sites = self.getACDCsites()
+            sites = self.checkSites(sites)
+            if len(sites) == 0:
+                raise Exception("No sites available, can't assign workflow")
+            params['SiteWhitelist'] = sites
+        return params
+
+
+    def check_keys(self, dictionary):
+        """
+        Recursively checks every key of a dictionary containing nested dictionaries of variable depth,
+        in this case the params dictionary, for a key existing in our exceptions_dict,
+        and if it finds it, checks if the pattern in the exceptions_dict is present in the params.
+        Credit: chatGPT
+        """
+        if isinstance(dictionary, dict):
+            for key in dictionary.keys():
+                if key in self.options['exceptions_dict'].keys():
+                    if self.options['exceptions_dict'][key] in dictionary[key]:
+                        return True
+                if self.check_keys(dictionary[key]):
+                    return True
+        return False
