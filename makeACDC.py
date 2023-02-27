@@ -7,7 +7,6 @@
 import logging
 import os, sys
 from optparse import OptionParser
-#from reqmgr import ReqMgrClient
 logging.basicConfig(level=logging.WARNING)
 import reqMgrClient
 from utils import workflowInfo
@@ -40,7 +39,7 @@ def makeACDC(**args):
     if acdc:
         return acdc
     else:
-        print("Issue while creating the acdc for",task)
+        print(("Issue while creating the acdc for",task))
         return None
 
 def main():
@@ -116,7 +115,7 @@ def main():
         sys.exit(1)        
 
     
-    for wfname,tasks in wf_and_task.items():
+    for wfname,tasks in list(wf_and_task.items()):
         wfi = workflowInfo(url, wfname)
         if tasks == None:
             where,how_much,how_much_where = wfi.getRecoveryInfo()
@@ -125,8 +124,8 @@ def main():
             tasks = sorted(tasks)
 
         created = {}
-        print("Workflow:",wfname)
-        print("Tasks:",tasks)
+        print(("Workflow:",wfname))
+        print(("Tasks:",tasks))
 
         # FIXME: eventually, we want to be able to target each task
         # with different options
@@ -141,7 +140,7 @@ def main():
                          mcore = options.mcore,
                          xrootd = options.xrootd) 
             if not r: 
-                print("Error in creating ACDC for",task,"on",wfname)
+                print(("Error in creating ACDC for",task,"on",wfname))
                 break
             created[task] = r
 
@@ -151,7 +150,7 @@ def main():
 
         print("Created:")
         for task in created:
-            print(created[task],"for",task)
+            print((created[task],"for",task))
             with open(outACDClist, 'a') as f: f.write(str(created[task])+"\n")
 
 if __name__ == '__main__':

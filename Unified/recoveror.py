@@ -125,6 +125,11 @@ def singleRecovery(url, task , initial, actions, do=False):
                 else:
                     payload['TrustPUSitelists'] = False
 
+            if action.startswith('tpe'):
+                tpe = float(action.split("-")[1])
+                if tpe:
+                    payload['TimePerEvent'] = tpe
+
     acdc_round = 0
     initial_string = payload['RequestString']
     if initial_string.startswith('ACDC'):
