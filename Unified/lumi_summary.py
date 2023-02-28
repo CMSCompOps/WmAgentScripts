@@ -15,11 +15,11 @@ if len(sys.argv) > 1:
 fetch=False
 if len(sys.argv)>2:
     fetch = bool(int(sys.argv[2]))
-    print "setting fetch to",fetch
+    print("setting fetch to",fetch)
 
 wfs = getWorkflowById( url, pid , details=True)
 if not wfs:
-    print "no workflow for",pid
+    print("no workflow for",pid)
     sys.exit(-1)
 
 in_dataset = None
@@ -42,22 +42,22 @@ for out in outs:
     wfns = [wf['RequestName'] for wf in wfs]
     for o_wf in o_wfs:
         if not o_wf['RequestName'] in wfns:
-            print "got also",o_wf['RequestName']
+            print("got also",o_wf['RequestName'])
             wfs.append( o_wf )
 
 for wf in wfs:
     wfi = workflowInfo( url, wf['RequestName'], request=wf)
 
-    date = ''.join(map(lambda s : '%02d'%s ,wf['RequestDate']))
+    date = ''.join(['%02d'%s for s in wf['RequestDate']])
 
     if wf['RequestStatus'] not in ['completed','announced','normal-archived']: continue
-    print "Checking on",wf['RequestName']
+    print("Checking on",wf['RequestName'])
 
     ## create the input json
     if not input_json:
         in_dataset = wf['InputDataset']
         runs = wf['RunWhitelist']
-        print "runs",",".join(map(str,runs)),"were processed"
+        print("runs",",".join(map(str,runs)),"were processed")
         input_json = getDatasetLumis( in_dataset, runs=runs, with_cache=True)
         #print len(input_json)
         for r in input_json: input_rl.extend([(int(r),l) for l in input_json[r]])
@@ -76,16 +76,16 @@ for wf in wfs:
     for out in wf['OutputDatasets']:
         missing_rl[out] = list(set(input_rl) - set(output_rl[out]))
         if missing_rl[out]:
-            print out,"is missing",len( missing_rl[out]),"lumisections"
+            print(out,"is missing",len( missing_rl[out]),"lumisections")
             #print json.dumps( missing_rl[out], indent=2)
             pass
 
-    print "now getting the summary for",wf['RequestName'],wf['RequestStatus']
+    print("now getting the summary for",wf['RequestName'],wf['RequestStatus'])
     s=None
     while s==None:
         s = wfi.getSummary()
     if 'error' in s and s['error'] == 'not_found': 
-        print s
+        print(s)
         continue
 
     e=None
@@ -123,10 +123,10 @@ for wf in wfs:
                 if other_task.startswith( task ):
                     affected_outputs.update( output_per_task[other_task] )
             if not affected_outputs: continue
-            print task,"affects",','.join(affected_outputs)
+            print(task,"affects",','.join(affected_outputs))
 
             for etype in errors[task]:
-                print "\t",etype
+                print("\t",etype)
                 #if etype !='cmsRun1' : continue
                 if not etype in ['cmsRun1','cmsRun2','stageOut1']: continue
                 if type(errors[task][etype])!=dict: continue
@@ -143,14 +143,14 @@ for wf in wfs:
 
 
 
-                    for run,ls in errors[task][etype][ecode]['runs'].items():
+                    for run,ls in list(errors[task][etype][ecode]['runs'].items()):
                         #print "JRJR",ls
                         ils=[]
                         for l in ls:
                             if type(l) == list:
                                 #print l
                                 #print list(range(l[0],l[1]+1))
-                                ils.extend( range(l[0],l[1]+1) )
+                                ils.extend( list(range(l[0],l[1]+1)) )
                             else:
                                 ils.append( l ) 
                         eruns.extend( [(int(run),l) for l in ils] )
@@ -160,13 +160,13 @@ for wf in wfs:
                     #print "JRJR",eruns
                     #print "JRJR",set(eruns)
                     seruns = set(eruns)
-                    affected = filter(lambda t: t[1], [(out,set(missing_rl[out])&seruns) for out in affected_outputs])
+                    affected = [t for t in [(out,set(missing_rl[out])&seruns) for out in affected_outputs] if t[1]]
                     #print "affected",affected
                     for ds,affected_ls in affected:
                         for ls in affected_ls:
                             errors_by_lb[ds][ls].add( (date, str(task),str(etype),int(ecode),str(details),str(types)) )
     else:
-        print "no errors for",wf['RequestName']
+        print("no errors for",wf['RequestName'])
         #print s
 
 #try:
@@ -190,13 +190,13 @@ identified = {
     }
 ecode_minor = [99999,139,134,92]
 
-print len(errors_by_lb)
+print(len(errors_by_lb))
 
 for out in errors_by_lb:
-    print out
+    print(out)
     for ls in errors_by_lb[out]:
-        print '\t',ls
-        print '\t',len(errors_by_lb[out][ls]),"reasons in total"
+        print('\t',ls)
+        print('\t',len(errors_by_lb[out][ls]),"reasons in total")
         understood = False
         last = None
         last_reasons = []
@@ -227,13 +227,13 @@ for out in errors_by_lb:
 
 
         if last_reasons:
-            print "latest reasons"
+            print("latest reasons")
             rs=[]
             for reason in last_reasons:
                 date, task,etype,ecode,details,types = reason
                 #if ecode in identified
-                print '\t\t',date, ecode, types
-                print '\t\t',task
+                print('\t\t',date, ecode, types)
+                print('\t\t',task)
                 #print '---\n',details,'\n---'
                 if ecode in identified:
                     #rs.append( (identified[ecode],ecode) )

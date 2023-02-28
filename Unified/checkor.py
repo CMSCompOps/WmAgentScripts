@@ -1442,10 +1442,10 @@ class CheckBuster(threading.Thread):
         if wfi.request['RequestType'] == 'ReReco':
             try:
                 # os.system('python Unified/lumi_summary.py %s 1 > /dev/null'%(wfi.request['PrepID']))
-                os.system('python Unified/lumi_summary.py %s %d > /dev/null' % (wfi.request['PrepID'],
+                os.system('python3 Unified/lumi_summary.py %s %d > /dev/null' % (wfi.request['PrepID'],
                                                                                 0 if all(
                                                                                     fetched.values()) else 1))  ## no need for fresh fetch if that has been done for all already
-                os.system('python Unified/lumi_plot.py %s > /dev/null' % (wfi.request['PrepID']))
+                os.system('python3 Unified/lumi_plot.py %s > /dev/null' % (wfi.request['PrepID']))
                 wfi.sendLog('checkor',
                             'Lumi summary available at %s/datalumi/lumi.%s.html' % (unified_url, wfi.request['PrepID']))
             except Exception as e:
