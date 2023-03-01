@@ -1020,7 +1020,7 @@ def parse_those(url, options=None, those=[]):
     #threads = thread[:5]
     run_threads = ThreadHandler( threads = threads, n_threads = options.threads,# if options else 5,
                                  sleepy = 10,
-                                 timeout = None,
+                                 timeout = 5,
                                  verbose = True )
 
     print("running all workers")
