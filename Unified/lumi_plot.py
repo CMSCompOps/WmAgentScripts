@@ -33,13 +33,13 @@ for ds in data:
 #if all_empty: l='.COMPLETE'
 
 all_ls = set()
-for dataset,lss in data.items():
+for dataset,lss in list(data.items()):
     #if not any([dataset.endswith(tier) for tier in ['MINIAOD','AOD','DQMIO']]): continue
-    all_ls.update( lss.keys() )
+    all_ls.update( list(lss.keys()) )
 
 all_ls= list(all_ls)
-print len(all_ls)
-print "\t\tmaking HTML"
+print(len(all_ls))
+print("\t\tmaking HTML")
 html = open('%s/datalumi/lumi.%s%s.html'%(monitor_dir,pid,l),'w')
 
 html.write("""
@@ -57,7 +57,7 @@ Missing <b>%d lumisection</b> summary for <a href=https://dmytro.web.cern.ch/dmy
 all_ls.sort( key=lambda i :int(i.split(':')[1]))
 all_ls.sort( key=lambda i :int(i.split(':')[0]))
 
-datasets = data.keys()
+datasets = list(data.keys())
 datasets.sort()
 
 html.write('<td>Lumisection</td>\n')
