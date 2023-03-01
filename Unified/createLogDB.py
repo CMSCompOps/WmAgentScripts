@@ -23,7 +23,7 @@ specific = options.workflow.split(',') if options.workflow else None
 check_months = options.months.split(',') if options.months else None
 check_years= options.years.split(',') if options.years else None
 
-ml = moduleLock( component='createLogDB_%s'%options.workflow, wait=True, silent=True)
+ml = moduleLock( component='createLogDB_%s'%options.workflow, wait=False, silent=True)
 if ml():
     print("existing createLogDB",options.workflow)
     sys.exit(1)
