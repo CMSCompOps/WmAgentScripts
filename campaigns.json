@@ -4793,7 +4793,7 @@
   },
   "PhaseIISpring22pLHEGEN": {
     "fractionpass": 0.95,
-    "go": false
+    "go": true
   },
   "PhaseIISpring22SIM": {
     "fractionpass": 0.95,
