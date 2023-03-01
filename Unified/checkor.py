@@ -288,7 +288,7 @@ def checkor(url, spec=None, options=None):
     run_threads = ThreadHandler(threads=checkers,
                                 n_threads=options.threads,
                                 sleepy=10,
-                                timeout=None,
+                                timeout=5,
                                 verbose=True,
                                 label='checkor'
                                 )
