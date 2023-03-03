@@ -241,7 +241,6 @@ def checkor(url, spec=None, options=None):
         max_per_round = options.limit
     if max_per_round and not spec:
         print("limiting to", max_per_round, "this round")
-        """
         ##should be ordering by priority if you can
         ## order wfs with rank of wfname
         all_completed_plus = sorted(getWorkflows(url, 'completed' , details=True), key = lambda r : r['RequestPriority'])
@@ -250,7 +249,6 @@ def checkor(url, spec=None, options=None):
             return all_completed_plus.index( wfn ) if wfn in all_completed_plus else 0
         wfs = sorted( wfs, key = lambda wfo : rank( wfo.name ),reverse=True)
         if options.update: random.shuffle( wfs )
-        """
         wfs = wfs[:max_per_round]
 
         print("Going to process the following workflows:")
@@ -295,7 +293,7 @@ def checkor(url, spec=None, options=None):
     run_threads = ThreadHandler(threads=checkers,
                                 n_threads=options.threads,
                                 sleepy=10,
-                                timeout=20,
+                                timeout=30,
                                 verbose=True,
                                 label='checkor'
                                 )
