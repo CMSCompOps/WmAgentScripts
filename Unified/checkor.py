@@ -450,14 +450,17 @@ class CheckBuster(threading.Thread):
         acdc_rank_for_truncate = UC.get('acdc_rank_for_truncate')
         use_recoveror = UC.get('use_recoveror')
 
-        def time_point(label="", sub_lap=False, percent=None):
+        def time_point(label="", sub_lap=False, percent=None, is_end=False):
             now = time.mktime(time.gmtime())
             nows = time.asctime(time.gmtime())
 
             print("[checkor] Time check (%s) point at : %s" % (label, nows))
             if percent:
                 print("[checkor] finishing in about %.2f [s]" % ((now - time_point.start) / percent))
-            print("[checkor] Since start: %s [s]" % (now - time_point.start))
+            if is_end:
+                print("[checkor] The checkor cycle for the given workflow has finished, in total it took: %s [s]" % (now - time_point.start))
+            else:
+                print("[checkor] Since start: %s [s]" % (now - time_point.start))
             if sub_lap:
                 print("[checkor] Sub Lap : %s [s]" % (now - time_point.sub_lap))
                 time_point.sub_lap = now
