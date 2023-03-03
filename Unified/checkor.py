@@ -250,6 +250,10 @@ def checkor(url, spec=None, options=None):
         """
         wfs = wfs[:max_per_round]
 
+        print("Going to process the following workflows:")
+        for w in wfs:
+            print(w.name)
+
     total_running_time = 1. * 60.
     will_do_that_many = len(wfs)
 
