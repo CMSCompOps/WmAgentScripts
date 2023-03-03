@@ -91,14 +91,17 @@ def checkor(url, spec=None, options=None):
 
     now_s = time.mktime(time.gmtime())
 
-    def time_point(label="", sub_lap=False, percent=None):
+    def time_point(label="", sub_lap=False, percent=None, is_end=False):
         now = time.mktime(time.gmtime())
         nows = time.asctime(time.gmtime())
 
         print("[checkor] Time check (%s) point at : %s" % (label, nows))
         if percent:
             print("[checkor] finishing in about %.2f [s]" % ((now - time_point.start) / percent))
-        print("[checkor] Since start: %s [s]" % (now - time_point.start))
+        if is_end:
+            print("[checkor] The checkor cycle for the given workflow has finished, in total it took: %s [s]" % (now - time_point.start))
+        else:
+            print("[checkor] Since start: %s [s]" % (now - time_point.start))
         if sub_lap:
             print("[checkor] Sub Lap : %s [s]" % (now - time_point.sub_lap))
             time_point.sub_lap = now
@@ -1656,6 +1659,8 @@ class CheckBuster(threading.Thread):
                 print("JIRA Failure:", str(e))
                 import traceback
                 print(traceback.format_exc())
+
+        time_point("Finishing checkor with %s Progress [%d/%d]" % (wfo.name, iwfo, will_do_that_many), is_end=True)
 
 
 if __name__ == "__main__":
