@@ -7,7 +7,6 @@
 import sys
 import logging
 from random import choice
-from types import DynamicClassAttribute
 
 sys.path.append('..')
 
@@ -134,6 +133,7 @@ class autoACDC():
         elif len(not_ready) > 0: 
             logging.info("Some of the necessary sites are not ready:" + str(list(set(not_ready))))
             self.options['xrootd'] = True
+            logging.warning("Set xrootd option to " + str(self.options['xrootd']))
         else:
             logging.info("All necessary sites are available")
 
@@ -212,16 +212,16 @@ class autoACDC():
         # provide a list of site names to exclude
         if self.options['exclude_sites'] is not None: sites = self.excludeSites(sites)
 
-        xrootd_sites, secondary_xrootd_sites = False, False
-
         # if no sites are left, sets to a random T1 site
         # it makes sure to check that it's available and not excluded
         if len(sites) == 0:
+            logging.info("No sites available, setting to a random T1 site.")
             sites = [self.getRandomT1Site()]
-            xrootd_sites, secondary_xrootd_sites = True, True
-            logging.info("Set random site to " + str(sites))
+            self.options['xrootd'] = True
+            logging.warning("Set random site to " + str(sites))
+            logging.warning("Set xrootd option to " + str(self.options['xrootd']))
 
-        return sites, xrootd_sites, secondary_xrootd_sites
+        return sites
 
     def getTaskchainMemoryDict(self):
         """
@@ -428,13 +428,12 @@ class autoACDC():
         else:
             secondary_xrootd = False
 
-        # inherit xrootd settings from init
-        xrootd = bool(self.options['xrootd'])
-
         # get sites, and turn on xrootd in case we use a random site
-        sites, xrootd_sites, secondary_xrootd_sites = self.getSites()
-        xrootd = xrootd or xrootd_sites
-        secondary_xrootd = secondary_xrootd or secondary_xrootd_sites
+        sites = self.getSites()
+
+        # WARNING: this should be called after getSites(),
+        # since the function can modify the xrootd settings.
+        xrootd = bool(self.options['xrootd'])
 
         params = {
             "SiteWhitelist": sites,
@@ -481,11 +480,12 @@ class autoACDC():
         """
         
         actions = self.getACDCParameters()
+        logging.info("ACDC will be submitted with the following parameters:")
+        logging.info(actions)
 
         # testing
         if self.options['testbed']:
             logging.info(self.taskName)
-            logging.info(actions)
             sys.exit("Running with testbed on, quitting.")
             
         acdc = singleRecovery(self.url, self.taskName, self.wfInfo.request, actions, do=True)

@@ -119,10 +119,7 @@ def checkType(key, item):
     if key == 'memory':
         return type(item) is str
     elif key == 'xrootd' or key == 'secondary_xrootd':
-        if item.lower() == 'true' or item.lower() == 'false':
-            return True
-        else:
-            return type(item) is bool
+        return type(item) is bool
     elif key == 'include_sites':
         return (type(item) is str or type(item) is list)
     elif key == 'exclude_sites':
@@ -227,8 +224,6 @@ def main():
     # loop over workflows, tasks, for each create ACDC and assign it
     # using default or custom configurations
     for iWorkflow, (wfName, workflow) in enumerate(result.items()):
-
-        if 'task_PPS-Run3Summer22pLHE-00031' not in wfName: continue
         
         print('-->', wfName)
 
