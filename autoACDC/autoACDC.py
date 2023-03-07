@@ -566,9 +566,25 @@ class autoACDC():
         """
         if isinstance(dictionary, dict):
             for key in dictionary.keys():
-                if key in self.options['exceptions'].keys():
-                    if self.options['exceptions'][key] in dictionary[key]:
-                        return True
+
+                # if the key in the parameters is in our exceptions, check it
+                if key.lower() in self.options['exceptions'].keys().lower():
+
+                    # based on the type of the value of the key in our exceptions, check the parameters
+                    if type(self.options['exceptions'][key]) == str:
+                        # for strings, check if the exception string is contained in the parameter
+                        if self.options['exceptions'][key].lower() in dictionary[key].lower():
+                            return True
+                    elif type(self.options['exceptions'][key]) == bool:
+                        # for booleans, demand eaact match
+                        if self.options['exceptions'][key] == dictionary[key]:
+                            return True
+                    else:
+                        raise Exception("Type " + str(type(self.options['exceptions'][key])) + " not supported.")
+
+
+                # go one level deeper if needed
                 if self.check_keys(dictionary[key]):
                     return True
+
         return False
