@@ -4,14 +4,10 @@
 # Author: Luca Lavezzo
 # Date: July 2022
 
-import http.client
-import os, sys, re
-import logging
-from typing import Optional, List, Tuple
-from random import choice
-from collections import defaultdict 
-
 import sys
+import logging
+from random import choice
+
 sys.path.append('..')
 
 from dbs.apis.dbsClient import DbsApi
@@ -24,13 +20,13 @@ logging.basicConfig(level=logging.WARNING)
 
 class autoACDC():
     """
-    This class is meant to automatically submit ACDCs and assign them 
+    This class is meant to automatically submit ACDCs and assign them
     for a single task/workflow, and is based on makeACDC.py and assign.py.
     The main functions are
         makeACDC()
         assign()
-    which are called by go(). Each of these two functions depends on some set of
-    parameters, which are specified by the respective
+    which are called by go(). Each of these two functions depends on some set
+    of parameters, which are specified by the respective
         getACDCParameters()
         getAssignParameters()
 
@@ -57,9 +53,10 @@ class autoACDC():
             "activity": args.get('activity'), # Dashboard Activity (reprocessing, production or test), if empty will set reprocessing as default
             "lfn": args.get('lfn'), # Merged LFN base
             "lumisperjob": args.get('lumisperjob', None), # Set the number of lumis per job
-            "maxmergeevents": args.get('maxmergeevents', None) # Set the number of event to merge at max        
+            "maxmergeevents": args.get('maxmergeevents', None), # Set the number of event to merge at max        
+            "exceptions": args.get("exceptions", None)
         }
-        
+
         # set the correct url
         if self.options['testbed'] or self.options['testbed_assign']: self.url = 'cmsweb-testbed.cern.ch' 
         else: self.url = 'cmsweb.cern.ch'
@@ -73,13 +70,14 @@ class autoACDC():
         self.acdcName = None
         self.acdcInfo = None
         self.schema = None
-        
+
     def getRandomDiskSite(self, site=None):
         """
         Gets a random disk site and append _Disk
         """
-        if site == None:
-            site = getRandomDiskSite.T1s
+        SI = siteInfo()
+        if site is None:
+            site = SI.sites_T1s
         s = choice(site)
         if s.startswith("T1"):
             s += "_Disk"
@@ -135,6 +133,7 @@ class autoACDC():
         elif len(not_ready) > 0: 
             logging.info("Some of the necessary sites are not ready:" + str(list(set(not_ready))))
             self.options['xrootd'] = True
+            logging.warning("Set xrootd option to " + str(self.options['xrootd']))
         else:
             logging.info("All necessary sites are available")
 
@@ -213,16 +212,16 @@ class autoACDC():
         # provide a list of site names to exclude
         if self.options['exclude_sites'] is not None: sites = self.excludeSites(sites)
 
-        xrootd_sites, secondary_xrootd_sites = False, False
-
         # if no sites are left, sets to a random T1 site
         # it makes sure to check that it's available and not excluded
         if len(sites) == 0:
+            logging.info("No sites available, setting to a random T1 site.")
             sites = [self.getRandomT1Site()]
-            xrootd_sites, secondary_xrootd_sites = True, True
-            logging.info("Set random site to " + str(sites))
+            self.options['xrootd'] = True
+            logging.warning("Set random site to " + str(sites))
+            logging.warning("Set xrootd option to " + str(self.options['xrootd']))
 
-        return sites, xrootd_sites, secondary_xrootd_sites
+        return sites
 
     def getTaskchainMemoryDict(self):
         """
@@ -365,7 +364,7 @@ class autoACDC():
         Returns: the first (ancestor) and last (original) workflow infos.
         """
 
-        if 'OriginalRequestName' in self.schema:
+        if 'OriginalRequestName' in self.schema.keys():
             original_wf = workflowInfo(self.url, self.schema['OriginalRequestName'])            
             ancestor_wf = workflowInfo(self.url, self.schema['OriginalRequestName'])
             ## go back as up as possible
@@ -406,7 +405,7 @@ class autoACDC():
         # Must use --lfn option, otherwise workflow won't be assigned
         if self.options['lfn']:
             lfn = self.options['lfn']
-        elif "MergedLFNBase" in self.schema:
+        elif "MergedLFNBase" in self.schema.keys():
             lfn = self.schema['MergedLFNBase']
         elif ancestor_wf and "MergedLFNBase" in ancestor_wf.request:
             lfn = ancestor_wf.request['MergedLFNBase']
@@ -429,13 +428,12 @@ class autoACDC():
         else:
             secondary_xrootd = False
 
-        # inherit xrootd settings from init
-        xrootd = bool(self.options['xrootd'])
-
         # get sites, and turn on xrootd in case we use a random site
-        sites, xrootd_sites, secondary_xrootd_sites = self.getSites()
-        xrootd = xrootd or xrootd_sites
-        secondary_xrootd = secondary_xrootd or secondary_xrootd_sites
+        sites = self.getSites()
+
+        # WARNING: this should be called after getSites(),
+        # since the function can modify the xrootd settings.
+        xrootd = bool(self.options['xrootd'])
 
         params = {
             "SiteWhitelist": sites,
@@ -482,11 +480,12 @@ class autoACDC():
         """
         
         actions = self.getACDCParameters()
+        logging.info("ACDC will be submitted with the following parameters:")
+        logging.info(actions)
 
         # testing
         if self.options['testbed']:
             logging.info(self.taskName)
-            logging.info(actions)
             sys.exit("Running with testbed on, quitting.")
             
         acdc = singleRecovery(self.url, self.taskName, self.wfInfo.request, actions, do=True)
@@ -503,6 +502,9 @@ class autoACDC():
         """
 
         params = self.getAssignParameters()
+
+        # deal with exceptions
+        params = self.exceptions(params)
 
         # testing
         if self.options['testbed_assign']:
@@ -535,3 +537,54 @@ class autoACDC():
         auto.assign()
         """
         self.acdcName = acdcName
+
+    def exceptions(self, params):
+        """
+        Manage some exceptions here by re-adjusting the assign paremeters,
+        based on some parameters in the schema.
+        For now, exceptions means hardcore setting the site.
+        """
+        if self.options['exceptions'] is not None:
+            is_exception = self.check_keys(self.schema)
+            if is_exception:
+                logging.info("Found exception.")
+                sites = self.getACDCsites()
+                sites = self.checkSites(sites)
+                if len(sites) == 0:
+                    raise Exception("No sites available, can't assign workflow")
+                params['SiteWhitelist'] = sites
+
+        return params
+
+
+    def check_keys(self, dictionary):
+        """
+        Recursively checks every key of a dictionary containing nested dictionaries of variable depth,
+        in this case the params dictionary, for a key existing in our exceptions,
+        and if it finds it, checks if the pattern in the exceptions is present in the params.
+        Credit: chatGPT
+        """
+        if isinstance(dictionary, dict):
+            for key in dictionary.keys():
+
+                # if the key in the parameters is in our exceptions, check it
+                if key.lower() in self.options['exceptions'].keys().lower():
+
+                    # based on the type of the value of the key in our exceptions, check the parameters
+                    if type(self.options['exceptions'][key]) == str:
+                        # for strings, check if the exception string is contained in the parameter
+                        if self.options['exceptions'][key].lower() in dictionary[key].lower():
+                            return True
+                    elif type(self.options['exceptions'][key]) == bool:
+                        # for booleans, demand eaact match
+                        if self.options['exceptions'][key] == dictionary[key]:
+                            return True
+                    else:
+                        raise Exception("Type " + str(type(self.options['exceptions'][key])) + " not supported.")
+
+
+                # go one level deeper if needed
+                if self.check_keys(dictionary[key]):
+                    return True
+
+        return False

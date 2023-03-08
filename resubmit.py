@@ -117,6 +117,16 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
                     result[taskName]['ProcessingString'] = "BACKFILL"
                 if 'AcquisitionEra' in result[taskName]:
                     result[taskName]['AcquisitionEra'] += "Backfill"
+        new_datasets = []
+        for dataset in result['OutputDatasets']:
+            if 'backfill' not in dataset.lower():
+                new_dataset = dataset[0:dataset.rfind('/')] + '-backfill' + dataset[dataset.rfind('/'):]
+                new_datasets.append(new_dataset)
+            else:
+                new_datasets.append(dataset)
+        result["OutputDatasets"] = new_datasets
+
+
 
     # DataProcessing requests don't support RequestNumEvents argument anymore
     if 'InputDataset' in result and result['InputDataset']:
