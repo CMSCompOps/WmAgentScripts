@@ -568,7 +568,7 @@ class autoACDC():
             for key in dictionary.keys():
 
                 # if the key in the parameters is in our exceptions, check it
-                if key.lower() in self.options['exceptions'].keys().lower():
+                if key.lower() in [x.lower() for x in self.options['exceptions'].keys()]:
 
                     # based on the type of the value of the key in our exceptions, check the parameters
                     if type(self.options['exceptions'][key]) == str:
