@@ -4,17 +4,19 @@ from optparse import OptionParser
 import sys
 import getpass
 
-username = getpass.getuser()
 
-parser = OptionParser()
-parser.add_option("-w", "--workflow", dest="workflow", help="The workflow name to be inserted")
-parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
-parser.add_option("-s", "--status", dest="status", help="Unified status to set", default="away")
-
-(options, args) = parser.parse_args()
-url = reqmgr_url
 
 if __name__ == "__main__":
+
+    username = getpass.getuser()
+
+    parser = OptionParser()
+    parser.add_option("-w", "--workflow", dest="workflow", help="The workflow name to be inserted")
+    parser.add_option('-f', '--file', help='Text file with a list of workflows', dest='file')
+    parser.add_option("-s", "--status", dest="status", help="Unified status to set", default="away")
+
+    (options, args) = parser.parse_args()
+    url = reqmgr_url
 
     if not (options.w or options.file):
         sys.exit("Either workflow or file option should be given, exiting")
