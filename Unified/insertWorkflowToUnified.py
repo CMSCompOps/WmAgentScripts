@@ -18,14 +18,14 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     url = reqmgr_url
 
-    if not (options.w or options.file):
+    if not (options.workflow or options.file):
         sys.exit("Either workflow or file option should be given, exiting")
 
     wfs = []
     if options.file:
         wfs = [l.strip() for l in open(options.file) if l.strip()]
-    if options.w:
-        wfs.append(options.w)
+    if options.workflow:
+        wfs.append(options.workflow)
 
     for w in wfs:
 
