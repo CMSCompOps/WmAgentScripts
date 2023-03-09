@@ -33,7 +33,7 @@ if __name__ == "__main__":
             print ("The following workflow is already in the oracleDB, skipping", w)
         else:
             # wmstatus is dummy for now, we'll correct it later in the code
-            new_wf = Workflow(name=wf, status=options.status, wm_status="new")
+            new_wf = Workflow(name=w, status=options.status, wm_status="new")
             session.add(new_wf)
             session.commit()
 
