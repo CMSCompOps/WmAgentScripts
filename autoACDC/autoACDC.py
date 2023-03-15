@@ -184,6 +184,11 @@ class autoACDC():
         if type(self.options['exclude_sites']) is not list: 
             raise Exception("Option 'exclude_sites' must be a list of strings.")
 
+        # turn on xrootd if we exclude an inherited site, as there might be
+        # necessary inputs there
+        if len(set.intersection(set(sites), set(self.options['exclude_sites']))) > 0:
+            self.options['xrootd'] = True
+
         sites = sorted(set(sites) - set(self.options['exclude_sites']))
 
         if len(sites) == 0:
