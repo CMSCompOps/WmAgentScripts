@@ -2,7 +2,21 @@
   "GenericGSmearS": {
     "fractionpass": 0.95,
     "go": true,
-    "partial_copy": 0.05
+    "partial_copy": 0.001,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
 
   "Run3Winter23MiniAOD": {
