@@ -1,4 +1,10 @@
 {
+  "GenericGSmearS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "partial_copy": 0.05
+  },
+
   "Run3Winter23MiniAOD": {
     "fractionpass": 0.95,
     "go": true,
