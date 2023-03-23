@@ -4168,6 +4168,7 @@ class workflowInfo:
         return dataset_blocks,all_blocks_loc,files_in_block,files_and_loc,files_and_loc_noblock
 
     def getRecoveryDoc(self, collection_name=None):
+        self.conn = make_x509_conn(self.url)
         if collection_name == None:
             collection_name = self.request['RequestName']
 
@@ -4185,10 +4186,13 @@ class workflowInfo:
             r2=self.conn.getresponse()
             rows = json.loads(r2.read())['rows']
             self.recovery_doc = [r['doc'] for r in rows]
-        except:
+        except Exception as e:
             self.conn = make_x509_conn(self.url)
             print "failed to get the acdc document for",self.request['RequestName']
             self.recovery_doc = None
+            print str(e)
+            import traceback
+            print traceback.format_exc()
         return self.recovery_doc
 
     def getRecoveryInfo(self):
@@ -4475,6 +4479,7 @@ class workflowInfo:
                 rucioClient = RucioClient()
                 for sec in secondary:
                     pileup_locations = rucioClient.getDatasetLocationsByAccount(sec, "wmcore_transferor")
+                    pileup_locations += rucioClient.getDatasetLocationsByAccount(sec, "transfer_ops")
                     sites_allowed += pileup_locations
                 sites_allowed = sorted(set(sites_allowed))
                 print "Reading minbias"

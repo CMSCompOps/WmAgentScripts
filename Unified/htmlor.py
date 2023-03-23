@@ -21,7 +21,6 @@ def htmlor( caller = ""):
     #    print "copying",backup,"to old location"
     #    os.system('env EOS_MGM_URL=root://eoscms.cern.ch eos cp %s/%s /afs/cern.ch/user/c/cmst2/www/unified/.'%(monitor_pub_dir, backup))
     #    #os.system('cp %s/%s %s/.'%(monitor_dir, backup, monitor_pub_dir))
-
     try:
         boost = json.loads(eosRead('%s/equalizor.json'%monitor_pub_dir))['modifications']
     except:
@@ -1551,7 +1550,8 @@ remaining_bar_%s.draw(data_remain_%s, {title: '%s %s / %s [TB]'});
 
 
 if __name__ == "__main__":
-    htmlor()
+    #skip this function as it stucks
+    #htmlor()
     CI = closeoutInfo()
     CI.html()
 

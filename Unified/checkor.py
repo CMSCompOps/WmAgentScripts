@@ -676,7 +676,8 @@ class CheckBuster(threading.Thread):
         if event_expected == None:
             sendEmail("missing member of the request","TotalInputEvents is missing from the workload of %s"% wfo.name)
             sendLog('checkor',"TotalInputEvents is missing from the workload of %s"% wfo.name, level='critical')
-            event_expected = 0 
+            event_expected = 0
+            assistance_tags.add('missingParam')
 
         ttype = 'Task' if 'TaskChain' in wfi.request else 'Step'
         it = 1
@@ -941,7 +942,7 @@ class CheckBuster(threading.Thread):
 
         if not all(pass_stats_check.values()):
             possible_recoveries = wfi.getRecoveryDoc()
-            if possible_recoveries == []:
+            if possible_recoveries == [] or possible_recoveries == None:
                 wfi.sendLog('checkor','%s has missing statistics \n%s \n%s, but nothing is recoverable. passing through to annoucement'%( 
                         wfo.name, json.dumps(percent_completions, indent=2), json.dumps(fractions_pass, indent=2) ))
                 sendLog('checkor','%s is not completed, but has nothing to be recovered, passing along ?'%wfo.name, level='critical')
@@ -1547,38 +1548,43 @@ class CheckBuster(threading.Thread):
                     self.to_status = new_status
             else:
                 print "current status is",wfo.status,"not changing to anything"
-        
-            pop_a_jira = False
-            ## rereco and manual => jira
-            if 'manual' in self.to_status:
-                pop_a_jira = True
-            ## end of first round acdc => jira
-            if 'recovered' in self.to_status and 'manual' in self.to_status:
-                pop_a_jira = True
-            ## create a jira in certain cases
-            if pop_a_jira and JC:
-                jiras = JC.find( {'prepid' : wfi.request['PrepID']})
-                j_comment = None
-                j = None
-                if len(jiras)==0:
-                    ## then you can create one
-                    j = JC.create( 
-                        {
-                            'priority' : wfi.request['RequestPriority'],
-                            'summary' : '%s issues'% wfi.request['PrepID'],
-                            'label' : 'WorkflowTrafficController',
-                            'description' : 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s \nAutomatic JIRA from unified'%( wfi.request['PrepID'])
-                        } 
-                    )
-                    j_comment = "Appears in %s"%(self.to_status)
-                else:
-                    ## pick up the last one
-                    print "a jira already exists, taking the last one"
-                    j = sorted(jiras, key= lambda o:JC.created(o))[-1]
-                    if JC.reopen(j.key):
-                        j_comment = "Came back in %s"%(self.to_status)
-                if j and j_comment:
-                    JC.comment(j.key,j_comment)
+
+            try:
+                pop_a_jira = False
+                ## rereco and manual => jira
+                if 'manual' in self.to_status:
+                    pop_a_jira = True
+                ## end of first round acdc => jira
+                if 'recovered' in self.to_status and 'manual' in self.to_status:
+                    pop_a_jira = True
+                ## create a jira in certain cases
+                if pop_a_jira and JC:
+                    jiras = JC.find( {'prepid' : wfi.request['PrepID']})
+                    j_comment = None
+                    j = None
+                    if len(jiras)==0:
+                        ## then you can create one
+                        j = JC.create(
+                            {
+                                'priority' : wfi.request['RequestPriority'],
+                                'summary' : '%s issues'% wfi.request['PrepID'],
+                                'label' : 'WorkflowTrafficController',
+                                'description' : 'https://dmytro.web.cern.ch/dmytro/cmsprodmon/workflows.php?prep_id=%s \nAutomatic JIRA from unified'%( wfi.request['PrepID'])
+                            }
+                        )
+                        j_comment = "Appears in %s"%(self.to_status)
+                    else:
+                        ## pick up the last one
+                        print "a jira already exists, taking the last one"
+                        j = sorted(jiras, key= lambda o:JC.created(o))[-1]
+                        if JC.reopen(j.key):
+                            j_comment = "Came back in %s"%(self.to_status)
+                    if j and j_comment:
+                        JC.comment(j.key,j_comment)
+            except Exception as e:
+                print "JIRA Failure:", str(e)
+                import traceback
+                print traceback.format_exc()
 
 if __name__ == "__main__":
     url = reqmgr_url

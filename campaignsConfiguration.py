@@ -41,14 +41,21 @@ def main():
         content = json.loads( open(options.load).read())
         for k,v in content.items():
             up = {'name' : k}
-            #s = {"$set": v}
-            #db.update( up, s )
-            ## replace the db content
             v['name'] = k
             if options.type: v['type'] = options.type
             db.replace_one( up, v)
             campaigns.append(v)
             print k,v
+
+            # Create the campaign if it doesn't exist
+            found = db.find_one(v)
+
+            if not found:
+                db.insert_one(v)
+                createCampaign(v)
+                print "Following campaign couldn't be found in the database. Inserting it"
+                print v
+
         replaceCampaigns(campaigns)
         sys.exit(0)
 

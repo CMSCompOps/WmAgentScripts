@@ -168,7 +168,7 @@
    "description" : "limitation on the number of wf to process per module",
    "value" : {
     "transferor" : 500,
-    "assignor" : null,
+    "assignor" : 500,
     "actor" : 10,
     "closor" : null,
     "checkor" : 500,
@@ -232,7 +232,7 @@
    "description": "The data tiers that do not pass closeout checks. Can be overidden by custodial overide at campaign level"
  },
  "tiers_no_DDM": {
-   "value" : ["GEN-SIM","GEN","SIM","DQM","DQMIO","GEN-SIM-DIGI-RAW","RAW","GEN-SIM-DIGI"],
+   "value" : ["GEN-SIM","GEN","SIM","DQM","DQMIO","GEN-SIM-DIGI-RAW","RAW","GEN-SIM-DIGI","GEN-SIM-DIGI-RAW-HLTDEBUG"],
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {
@@ -393,7 +393,7 @@
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : ["jinfeng","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob","bbilin","kskovpen","pkalbhor","kaura","jordanm", "alcauser", "alcadb.user", "haozturk"]
+   "value" : ["jinfeng","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob","bbilin","kskovpen","pkalbhor","kaura","jordanm", "alcauser", "alcadb.user", "haozturk", "subansal"]
   },
   "user_storeresults":{
    "description" : "The users from which we expect StoreResults requests",
@@ -408,7 +408,9 @@
 	       	       	   "parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}
 			},
 	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50, "LumisPerJob" : 1000 }},
-               "M100PPC" : {"parameters" : { "SiteWhitelist" : ["T1_IT_CNAF"]}}
+               "M100PPC" : {"parameters" : { "SiteWhitelist" : ["T1_IT_CNAF"]}},
+               "UWGPU" : {"parameters" : { "SiteWhitelist" : ["T2_US_Wisconsin"]}},
+               "KITGPU" : {"parameters" : { "SiteWhitelist" : ["T1_DE_KIT"]}}
              }
   },
   "batch_goodness":{
@@ -454,5 +456,17 @@
   "prepIDs_to_skip": {
     "value" : [],
     "description" : "PrepIDs to skip from workflow assignment"
-  }
+  },
+  "acquired_threshold_per_priority_block" : {
+   "description" : "threshold per priority block above which assignment will be stalled",
+   "value" : {
+    "block1" : 20000,
+    "block2" : 16800,
+    "block3" : 3000,
+    "block4" : 0,
+    "block5" : 0,
+    "block6" : 0,
+    "block7" : 0
+   }
+ }
 }
