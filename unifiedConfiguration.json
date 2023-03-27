@@ -216,7 +216,7 @@
    "description" : "overide of the completion fraction of dataset with keyword"
  },
  "tiers_with_no_custodial": {
-   "value" : ["DQM","DQMIO","RECO","RAWAODSIM","NANOAOD","NANOAODSIM"],
+   "value" : ["DQM","DQMIO","RECO","RAWAODSIM","NANOAOD","NANOAODSIM", "FEVTDEBUGHLT"],
    "description": "The data tiers that do not go to tape. Can be overidden by custodial overide at campaign level"
  },
  "use_parent_custodial": {
@@ -236,7 +236,7 @@
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {
-   "value" : ["LHE", "GEN-SIM-DIGI-RAW-MINIAOD","AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM","NANOAOD","NANOAODSIM","FEVT","PREMIX", "GEN-SIM-DIGI-RAW-HLTDEBUG-RECO"],
+   "value" : ["LHE", "GEN-SIM-DIGI-RAW-MINIAOD","AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM","NANOAOD","NANOAODSIM","FEVT","PREMIX", "GEN-SIM-DIGI-RAW-HLTDEBUG-RECO", "FEVTDEBUGHLT"],
    "description": "The data tiers that go to AnaOps"
  },
  "tiers_to_rucio_relval": {
