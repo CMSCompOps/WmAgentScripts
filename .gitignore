@@ -18,4 +18,6 @@ Unified/jiratest.py
 Unified/locktest.py
 Unified/test.py
 Unified/mongotest.py
+Unified/secret_es.txt
+Unified/secret_opensearch.txt
 serviceConfiguration.json
