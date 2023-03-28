@@ -24,6 +24,7 @@ from email.utils import make_msgid
 
 from RucioClient import RucioClient
 
+import es_opensearch
 
 def mongo_client():
     import pymongo, ssl
@@ -114,14 +115,52 @@ def deep_update(d, u):
             d[k] = v
     return d
 
+def sendLogOpenSearch(subject, text, wfi, show, level):
+
+    opens_client = es_opensearch.get_es_client()
+
+    meta_text = "level:%s\n" % level
+    if wfi:
+        ## add a few markers automatically
+        meta_text += '\n\n' + '\n'.join(['id: %s' % i for i in wfi.getPrepIDs()])
+        _, prim, _, sec = wfi.getIO()
+        if prim:
+            meta_text += '\n\n' + '\n'.join(['in:%s' % i for i in prim])
+        if sec:
+            meta_text += '\n\n' + '\n'.join(['pu:%s' % i for i in sec])
+        out = [d for d in wfi.request['OutputDatasets'] if not any([c in d for c in ['FAKE', 'None']])]
+        if out:
+            meta_text += '\n\n' + '\n'.join(['out:%s' % i for i in out])
+        meta_text += '\n\n' + wfi.request['RequestName']
+
+    now_ = time.gmtime()
+    now = time.mktime(now_)
+    now_d = time.asctime(now_)
+    doc = {"author": os.getenv('USER'),
+           "subject": subject,
+           "text": text,
+           "meta": meta_text,
+           "timestamp": now,
+           "date": now_d}
+
+    idx = opens_client.get_index(doc['timestamp'])
+    opens_client.send_opensearch(idx, doc)
 
 def sendLog(subject, text, wfi=None, show=True, level='info'):
+    # Old Elastic Search
     try:
         try_sendLog(subject, text, wfi, show, level)
     except Exception as e:
         print("failed to send log to elastic search")
         print(str(e))
         sendEmail('failed logging', subject + text + str(e))
+    # New Open search
+    try:
+        sendLogOpenSearch(subject, text, wfi, show, level)
+    except Exception as e:
+        print("failed to send log to open search")
+        print(str(e))
+        sendEmail('failed logging in open search', subject + text + str(e))
 
 
 def new_searchLog(q, actor=None, limit=50):
