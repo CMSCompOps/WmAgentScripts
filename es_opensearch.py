@@ -17,7 +17,7 @@ _host = "es-unified1.cern.ch/es"
 # Global Elastic and Open Search connections obj
 _opensearch_client = None
 
-# Global index cache, keep tracks of daily indices that are already created with mapping for all clusters
+# Global index cache, keep tracks of monthly indices that are already created with mapping for all clusters
 _index_cache = set()
 
 
@@ -94,15 +94,15 @@ class OpenSearchInterface(object):
     @staticmethod
     def get_index(timestamp, template=_index_template):
         """
-        Returns daily index string and creates it if it does not exist.
+        Returns monthly index string and creates it if it does not exist.
 
         - It checks if index mapping is already created by checking _index_cache set.
         - And returns from _index_cache set if index exists
-        - Else, it creates the index with mapping which happens in the first batch of the day ideally.
+        - Else, it creates the index with mapping which happens in the first batch of the month ideally.
         """
         global _index_cache
         idx = time.strftime(
-            "%s-%%Y-%%m-%%d" % template,
+            "%s-%%Y-%%m" % template,
             datetime.datetime.utcfromtimestamp(timestamp).timetuple(),
         )
         if idx in _index_cache:
@@ -144,7 +144,7 @@ class OpenSearchInterface(object):
     @staticmethod
     def get_index_schema():
         """
-        Creates mapping dictionary for the unified-logs daily index
+        Creates mapping dictionary for the unified-logs monthly index
         """
         return {
             "settings": {
