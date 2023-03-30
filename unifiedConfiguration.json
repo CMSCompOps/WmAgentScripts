@@ -208,7 +208,7 @@
    "description" : "Rank of the acdc after which we truncate at the pass threshold (-1 means any order, 0 means after first round,... )"
  },
  "pattern_fraction_pass": {
-   "value" : {"GluGluToSUEP":0.995},
+   "value" : { },
    "description" : "overide of the completion fraction of dataset with keyword"
  },
  "tiers_with_no_custodial": {
