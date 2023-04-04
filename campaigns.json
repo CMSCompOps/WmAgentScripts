@@ -187,6 +187,10 @@
     "fractionpass": 0.95,
     "go": false
   },
+  "Run3Summer22EEpLHEGS": {
+    "fractionpass": 0.95,
+    "go": false
+  },
   "Run3Summer22EEpLHE": {
     "fractionpass": 0.95,
     "go": true
