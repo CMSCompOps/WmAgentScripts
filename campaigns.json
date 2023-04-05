@@ -3824,6 +3824,15 @@
     "fractionpass": 0.95, 
     "go": true, 
     "lumisize": -1, 
+    "secondaries": {
+      "/MinBias_TuneCUETP8M1_2017_5p02TeV-pythia8/RunIIpp5Spring18GS-94X_mc2017_realistic_v10For2017G_v3-v2/GEN-SIM": 
+      {
+        "SecondaryLocation": [
+          "T2_CH_CERN",
+          "T2_US_MIT"
+        ]
+      }
+    },
     "parameters": {
       "MergedLFNBase": "/store/himc", 
       "SiteBlacklist": [
