@@ -147,14 +147,6 @@ def sendLogOpenSearch(subject, text, wfi, show, level):
     opens_client.send_opensearch(idx, doc)
 
 def sendLog(subject, text, wfi=None, show=True, level='info'):
-    # Old Elastic Search
-    try:
-        try_sendLog(subject, text, wfi, show, level)
-    except Exception as e:
-        print("failed to send log to elastic search")
-        print(str(e))
-        sendEmail('failed logging', subject + text + str(e))
-    # New Open search
     try:
         sendLogOpenSearch(subject, text, wfi, show, level)
     except Exception as e:
@@ -193,104 +185,6 @@ def es_header():
     auth = base64.encodestring(('%s:%s' % (entrypointname, password)).strip().encode()).decode().strip()
     header = {"Authorization": "Basic %s" % auth, "Content-Type": "application/json"}
     return header
-
-
-def new_sendLog(subject, text, wfi=None, show=True, level='info'):
-    conn = http.client.HTTPSConnection('es-unified7.cern.ch')
-
-    conn.request("GET", "/es", headers=es_header())
-    response = conn.getresponse()
-    data = response.read()
-    print(data)
-
-    ## historical information on how the schema was created
-    """
-    schema= {
-            "date": {
-                "type": "string",
-                "index": "not_analyzed"
-            },
-            "author": {
-                "type": "string"
-            },
-            "subject": {
-                "type": "string"
-            },
-            "text": {
-                "type": "string",
-                "index": "not_analyzed"
-            },
-            "meta": {
-                "type": "string",
-                "index": "not_analyzed"
-            },
-            "timestamp": {
-                "type": "double"
-            }
-            }
-    content = {}
-    settings = {
-        "settings" : {
-            "index" : {
-                "number_of_shards" : 3,
-                "number_of_replicas" : 2
-                }}}
-    content.update( settings )
-
-    content.update({            "mappings" : {"log" : { "properties" : schema}}})
-
-    conn.request("PUT", "/es/unified-logs",  json.dumps( content ), headers = es_header())
-    response = conn.getresponse()
-    data = response.read()
-    print data
-    return
-    """
-
-    _try_sendLog(subject, text, wfi, show, level, conn=conn, prefix='/es/unified-logs', h=es_header())
-
-
-def try_sendLog(subject, text, wfi=None, show=True, level='info'):
-    re_conn = http.client.HTTPSConnection('es-unified7.cern.ch')
-    _try_sendLog(subject, text, wfi, show, level, conn=re_conn, prefix='/es/unified-logs', h=es_header())
-
-
-def _try_sendLog(subject, text, wfi=None, show=True, level='info', conn=None, prefix='/es/unified-logs', h=None):
-    meta_text = "level:%s\n" % level
-    if wfi:
-        ## add a few markers automatically
-        meta_text += '\n\n' + '\n'.join(['id: %s' % i for i in wfi.getPrepIDs()])
-        _, prim, _, sec = wfi.getIO()
-        if prim:
-            meta_text += '\n\n' + '\n'.join(['in:%s' % i for i in prim])
-        if sec:
-            meta_text += '\n\n' + '\n'.join(['pu:%s' % i for i in sec])
-        out = [d for d in wfi.request['OutputDatasets'] if not any([c in d for c in ['FAKE', 'None']])]
-        if out:
-            meta_text += '\n\n' + '\n'.join(['out:%s' % i for i in out])
-        meta_text += '\n\n' + wfi.request['RequestName']
-
-    now_ = time.gmtime()
-    now = time.mktime(now_)
-    now_d = time.asctime(now_)
-    doc = {"author": os.getenv('USER'),
-           "subject": subject,
-           "text": text,
-           "meta": meta_text,
-           "timestamp": now,
-           "date": now_d}
-
-    if show:
-        print(text)
-    encodedParams = urllib.parse.urlencode(doc)
-    conn.request("POST", prefix + '/_doc/', json.dumps(doc), headers=h if h else {})
-    response = conn.getresponse()
-    data = response.read()
-    try:
-        res = json.loads(data)
-    except Exception as e:
-        print("failed")
-        print(str(e))
-        pass
 
 
 def sendEmail(subject, text, sender=None, destination=None):
