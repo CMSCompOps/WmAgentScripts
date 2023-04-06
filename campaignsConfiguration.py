@@ -202,7 +202,7 @@ def checkPileupConsistency(content):
     for k, v in list(content.items()):
         print (k)
         if "secondaries" in v:
-            for secondaryName, locationsDict in list(v["secondaries"]):
+            for secondaryName, locationsDict in list(v["secondaries"].items()):
 
                 if "SecondaryLocation" in v["secondaries"]:
                     secondaryLocations = v["secondaries"]["SecondaryLocation"]
