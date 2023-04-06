@@ -213,7 +213,7 @@ def checkPileupConsistency(content):
                     sys.exit(2)
 
                 if secondaryName in pileupMap:
-                    if pileupMap[secondaryName] != secondaryLocations:
+                    if set(pileupMap[secondaryName]) != set(secondaryLocations):
                         print ("Inconsistent pileup location setting for ", secondaryName)
                         sys.exit(1)
 

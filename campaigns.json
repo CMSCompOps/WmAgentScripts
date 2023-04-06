@@ -1152,7 +1152,8 @@
         },
         "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter22GS-122X_mcRun3_2021_realistic_v9-v1/GEN-SIM": {
             "SiteWhitelist": [
-                "T1_US_FNAL_Disk"
+                "T1_US_FNAL_Disk",
+                "T1_ES_PIC_Disk"
                     ]
         },
         "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Summer22GS-124X_mcRun3_2022_realistic_v10-v1/GEN-SIM": {
