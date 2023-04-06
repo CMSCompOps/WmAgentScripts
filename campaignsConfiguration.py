@@ -191,11 +191,31 @@ def createCampaign(content):
         else:
             print(("Campaign '%s' successfully created in central CouchDB" % campName))
 
-def checkPileupConsistency(campaigns):
-    for k, v in list(campaigns.items()):
+def checkPileupConsistency(content):
+    """
+    Parse all the campaigns. If the locations of a given pileup are defined differently in different campaings,
+    it exits.
+    TODO: Do the same check for parameter: active
+    :param campaign content
+    """
+    pileupMap = {}
+    for k, v in list(content.items()):
         print (k)
         if "secondaries" in v:
-            print (v["secondaries"])
+            for secondaryName, locationsDict in list(v["secondaries"]):
+
+                if "SecondaryLocation" in v["secondaries"]:
+                    secondaryLocations = v["secondaries"]["SecondaryLocation"]
+                if "SiteWhitelist" in  v["secondaries"]:
+                    secondaryLocations = v["secondaries"]["SiteWhitelist"]
+
+                if secondaryName in pileupMap:
+                    if pileupMap[secondaryName] != secondaryLocations:
+                        print ("Inconsistent pileup location setting for ", secondaryName)
+                        sys.exit(1)
+
+                else:
+                    pileupMap[secondaryName] = secondaryLocations
 
 
 
