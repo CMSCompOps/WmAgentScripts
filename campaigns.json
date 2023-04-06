@@ -3731,7 +3731,8 @@
       }, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL18SIM-106X_upgrade2018_realistic_v11_L1v1-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_IT_CNAF_Disk"
+          "T1_IT_CNAF_Disk",
+          "T2_CH_CERN"
         ]
       }
     }, 
@@ -4821,13 +4822,15 @@
         "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO":
         {
             "SiteWhitelist":[
-                "T1_US_FNAL_Disk"
+                "T1_US_FNAL_Disk",
+                "T1_RU_JINR_Disk"
             ]
         },
         "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
         {
             "SiteWhitelist":[
-                "T1_DE_KIT_Disk"
+                "T1_DE_KIT_Disk",
+                "T1_RU_JINR_Disk"
              ]
         }
 
