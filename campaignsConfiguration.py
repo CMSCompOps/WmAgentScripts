@@ -204,6 +204,8 @@ def checkPileupConsistency(content):
         if "secondaries" in v:
             for secondaryName, locationsDict in list(v["secondaries"].items()):
 
+                print(v["secondaries"])
+                print(locationsDict)
                 if "SecondaryLocation" in v["secondaries"]:
                     secondaryLocations = v["secondaries"]["SecondaryLocation"]
                 elif "SiteWhitelist" in  v["secondaries"]:
