@@ -39,6 +39,10 @@ def main():
     if options.load:
         campaigns = []
         content = json.loads(open(options.load).read())
+
+        checkPileupConsistency(content)
+        sys.exit(0)
+
         for k, v in list(content.items()):
             up = {'name': k}
             v['name'] = k
@@ -186,6 +190,13 @@ def createCampaign(content):
             print(("FAILED to create campaign: %s. Full content was: %s" % (campName, rec)))
         else:
             print(("Campaign '%s' successfully created in central CouchDB" % campName))
+
+def checkPileupConsistency(campaigns):
+    for k, v in list(campaigns.items()):
+        print (k)
+        if "secondaries" in v:
+            print (v["secondaries"])
+
 
 
 if __name__ == '__main__':
