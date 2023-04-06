@@ -39,7 +39,7 @@ def main():
     if options.load:
         campaigns = []
         content = json.loads( open(options.load).read())
-        for k,v in content.items():
+        for k,v in list(content.items()):
             up = {'name' : k}
             #s = {"$set": v}
             #db.update( up, s )
@@ -48,7 +48,7 @@ def main():
             if options.type: v['type'] = options.type
             db.replace_one( up, v)
             campaigns.append(v)
-            print k,v
+            print(k,v)
         replaceCampaigns(campaigns)
         sys.exit(0)
 
@@ -59,10 +59,10 @@ def main():
             if content.get('type',None) != options.type: continue ## no relval
             if 'name' not in content:
                 db.delete_one({'_id': i})
-                print "dropping",i,content,"because it is malformated"
+                print("dropping",i,content,"because it is malformated")
                 continue
             uc[content.pop("name")] = content
-        print len(uc.keys()),"campaigns damp"
+        print(len(list(uc.keys())),"campaigns damp")
         open(options.dump,'w').write(json.dumps( uc, indent =2, sort_keys=True))
         sys.exit(0)
 
@@ -114,7 +114,7 @@ def main():
     if found:
         up = {'_id':found['_id']}
         if post:
-            print "replacing",options.name,"with values",post
+            print("replacing",options.name,"with values",post)
             if options.type: post['type'] = options.type
             db.replace_one(up, post)
             ### Alan: can I assume options.name and options.configuration
@@ -123,7 +123,7 @@ def main():
         elif update:
             ## need to update a value
             if options.type: update['type'] = options.type
-            print "updating",options.name,"with values",update
+            print("updating",options.name,"with values",update)
             db.update( up, {"$set": update} )
             ### And update it in central CouchDB as well
             thisDoc = deepcopy(found)
@@ -134,7 +134,7 @@ def main():
             # not other headers in the output, so that it can be json loadable
             found.pop('name')
             found.pop('_id')
-            print json.dumps(found, indent=2, sort_keys=True)
+            print(json.dumps(found, indent=2, sort_keys=True))
     else:
         if post:
             ## entering a new value
@@ -149,7 +149,7 @@ def main():
             createCampaign(post)
         else:
             availables = [o["name"] for o in db.find()]
-            print options.name," Not found. ",len(availables),"available campaigns \n","\n\t".join( sorted( availables))
+            print(options.name," Not found. ",len(availables),"available campaigns \n","\n\t".join( sorted( availables)))
 
 
 def replaceCampaigns(campaigns):
@@ -162,9 +162,9 @@ def replaceCampaigns(campaigns):
     for rec in data:
         campName = rec['CampaignName']
         if not updateCampaignConfig(rec):
-            print("FAILED to update campaign: %s. Full content was: %s" % (campName, rec))
+            print(("FAILED to update campaign: %s. Full content was: %s" % (campName, rec)))
         else:
-            print("Campaign '%s' successfully updated in central CouchDB" % campName)
+            print(("Campaign '%s' successfully updated in central CouchDB" % campName))
 
 
 def createCampaign(content):
@@ -177,9 +177,9 @@ def createCampaign(content):
     for rec in data:
         campName = rec['CampaignName']
         if not updateCampaignConfig(rec):
-            print("FAILED to create campaign: %s. Full content was: %s" % (campName, rec))
+            print(("FAILED to create campaign: %s. Full content was: %s" % (campName, rec)))
         else:
-            print("Campaign '%s' successfully created in central CouchDB" % campName)
+            print(("Campaign '%s' successfully created in central CouchDB" % campName))
 
 
 if __name__ == '__main__':
