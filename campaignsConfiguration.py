@@ -206,8 +206,11 @@ def checkPileupConsistency(content):
 
                 if "SecondaryLocation" in v["secondaries"]:
                     secondaryLocations = v["secondaries"]["SecondaryLocation"]
-                if "SiteWhitelist" in  v["secondaries"]:
+                elif "SiteWhitelist" in  v["secondaries"]:
                     secondaryLocations = v["secondaries"]["SiteWhitelist"]
+                else:
+                    print ("No location defined for the secondary, exiting")
+                    sys.exit(2)
 
                 if secondaryName in pileupMap:
                     if pileupMap[secondaryName] != secondaryLocations:
