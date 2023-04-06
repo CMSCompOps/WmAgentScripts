@@ -1850,7 +1850,6 @@
     "maxcopies": 1, 
     "resize": "auto", 
     "secondaries": {
-      "/MinBias_TuneCP1_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v11-v1/GEN-SIM": {}, 
       "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T2_US_MIT", 
