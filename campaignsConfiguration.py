@@ -206,6 +206,7 @@ def arePileupsConsistent(content):
     :param campaign content
     """
     pileupMap = {}
+    print (list(content.items()))
     for campaignName, v in list(content.items()):
         print (campaignName)
         if "secondaries" in v:
@@ -244,7 +245,7 @@ def updatePileupDocuments(pileupMap):
     """
     mspileupClient = MSPileupClient(url="cmsweb-testbed.cern.ch")
     for pileupName, pileupDetails in pileupMap.items():
-        print ("Getting pileup document")
+        print ("Getting pileup document for ", pileupName)
         print (mspileupClient.getByPileupName(pileupName))
 
 
