@@ -44,7 +44,6 @@ def main():
         pileupMap = arePileupsConsistent(content)
         if not pileupMap:
             sys.exit("Pileups are not consistent, exiting")
-        print (pileupMap)
         updatePileupDocuments(pileupMap)
         sys.exit(1)
 
@@ -207,8 +206,6 @@ def arePileupsConsistent(content):
     :param campaign content
     """
     pileupMap = {}
-    print (list(content.items()))
-    print (len(list(content.items())))
     for campaignName, v in list(content.items()):
         print (campaignName)
         if "secondaries" in v:
@@ -238,7 +235,7 @@ def arePileupsConsistent(content):
                         "campaigns": [campaignName]
                     }
 
-        return pileupMap
+    return pileupMap
 
 
 
