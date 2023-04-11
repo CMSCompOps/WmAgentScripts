@@ -57,16 +57,11 @@ class MSPileupClient():
 
     def httpRequest(self, verb, url, endpoint, params, headers, encode=urllib.parse.urlencode):
 
+        cert_file = os.environ['HOME'] + '/.globus/usercert.pem'
+        key_file = os.environ['HOME'] + '/.globus/userkey.pem'
         try:
-            conn = http.client.HTTPSConnection(url, cert_file=self.CERT_FILE, key_file=self.KEY_FILE)
-            print (params)
+            conn = http.client.HTTPSConnection(url, cert_file=cert_file, key_file=key_file)
             encodedParams = encode(params) if encode else params
-            print ("Encoded params:")
-            print(encodedParams)
-            print(verb)
-            print(endpoint)
-            print (self.CERT_FILE)
-            print (self.KEY_FILE)
             conn.request(verb, endpoint, encodedParams, headers)
             response = conn.getresponse()
             data = response.read()
