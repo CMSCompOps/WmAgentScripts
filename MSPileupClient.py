@@ -42,5 +42,30 @@ class MSPileupClient():
 
         return response
 
+    def createPileupDocument(self, params):
+        endpoint = "/ms-pileup/data/pileup"
+        headers = {"Accept": "application/json"}
+
+        try:
+            conn = http.client.HTTPSConnection(self.url, cert_file=self.CERT_FILE, key_file=self.KEY_FILE)
+        except Exception as e:
+            print ("Pileup document creation failed: Exception while establishing https connection")
+            print (str(e))
+            return None
+
+        try:
+            conn.request("PUT", endpoint, params, headers)
+            response = conn.getresponse()
+            data = response.read()
+            conn.close()
+            return data
+        except Exception as e:
+            print ("Pileup document creation failed: Exception while PUT request")
+            print (str(e))
+            return None
+
+
+
+
 
 
