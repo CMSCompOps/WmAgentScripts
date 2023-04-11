@@ -44,6 +44,7 @@ def main():
         pileupMap = arePileupsConsistent(content)
         if not pileupMap:
             sys.exit("Pileups are not consistent, exiting")
+        print (pileupMap)
         updatePileupDocuments(pileupMap)
         sys.exit(1)
 
