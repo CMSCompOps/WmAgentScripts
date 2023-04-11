@@ -55,6 +55,16 @@ class MSPileupClient():
             print ("Pileup document creation failed")
             return None
 
+    def updatePileupDocument(self, params):
+
+        endpoint = "/ms-pileup/data/pileup"
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
+        try:
+            data = self.httpRequest("PUT", self.url, endpoint, params, headers, encode=json.dumps)
+            return data
+        except Exception as e:
+            print ("Pileup document update failed")
+
     def httpRequest(self, verb, url, endpoint, params, headers, encode=urllib.parse.urlencode):
 
         cert_file = os.environ['HOME'] + '/.globus/usercert.pem'

@@ -255,12 +255,12 @@ def updatePileupDocuments(pileupMap):
                     "campaigns": pileupDetails["campaigns"],
                     "active": False #TODO: should be pileupDetails["active"]
                 }
-                responseToPUT = mspileupClient.createPileupDocument(pileupDocument)
-                if responseToPUT:
-                    print ("Creation successful")
-                    print (responseToPUT)
+                responseToPOST = mspileupClient.createPileupDocument(pileupDocument)
+                if responseToPOST:
+                    print ("Pileup request was posted into MSPileup. Here is the response:")
+                    print (responseToPOST)
                 else:
-                    print ("Creation failed")
+                    print ("Pileup creation failed")
             else:
                 print ("Pileup document exists, we should update it")
         except Exception as e:
