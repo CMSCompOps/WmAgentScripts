@@ -54,7 +54,7 @@ class MSPileupClient():
             return None
 
         try:
-            conn.request("PUT", endpoint, params, headers)
+            conn.request("POST", endpoint, params, headers)
             response = conn.getresponse()
             data = response.read()
             conn.close()
