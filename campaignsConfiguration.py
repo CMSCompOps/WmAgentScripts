@@ -207,7 +207,6 @@ def arePileupsConsistent(content):
     """
     pileupMap = {}
     for campaignName, v in list(content.items()):
-        print (campaignName)
         if "secondaries" in v:
             for secondaryName, locationsDict in list(v["secondaries"].items()):
 
@@ -224,12 +223,10 @@ def arePileupsConsistent(content):
                         print ("Inconsistent pileup location setting for ", secondaryName)
                         return False
                     # Add the campaign
-                    print("Existing pileup, just updating the campaign info")
                     pileupMap[secondaryName]["campaigns"].append(campaignName)
 
                 else:
                     # TODO: Add other attributes: pileup_type, active
-                    print ("New pileup, adding it to the map")
                     pileupMap[secondaryName] = {
                         "secondaryLocations": secondaryLocations,
                         "campaigns": [campaignName]
@@ -246,8 +243,29 @@ def updatePileupDocuments(pileupMap):
     """
     mspileupClient = MSPileupClient(url="cmsweb-testbed.cern.ch")
     for pileupName, pileupDetails in pileupMap.items():
-        print ("Getting pileup document for ", pileupName)
-        print (mspileupClient.getByPileupName(pileupName))
+        print ("Starting the update of ", pileupName)
+        try:
+            responseToGET = mspileupClient.getByPileupName(pileupName)["result"]
+            if not responseToGET:
+                print ("This pileup doesn't exist in MSPileup, starting the creation")
+                pileupDocument = {
+                    "pileupName": pileupName,
+                    "pileupType": "premix", #TODO: should be pileupDetails[pileupType]
+                    "expectedRSEs": pileupDetails["secondaryLocations"],
+                    "campaigns": pileupDetails["campaigns"],
+                    "active": False #TODO: should be pileupDetails["active"]
+                }
+                responseToPUT = mspileupClient.createPileupDocument(pileupDocument)
+                if responseToPUT:
+                    print ("Creation successful")
+                    print responseToPUT
+                else:
+                    print ("Creation failed")
+            else:
+                print ("Pileup document exists, we should update it")
+        except Exception as e:
+            print ("updatePileupDocuments failed")
+            print (str(e))
 
 
 
