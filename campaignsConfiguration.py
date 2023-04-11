@@ -207,6 +207,7 @@ def arePileupsConsistent(content):
     """
     pileupMap = {}
     print (list(content.items()))
+    print (len(list(content.items())))
     for campaignName, v in list(content.items()):
         print (campaignName)
         if "secondaries" in v:
@@ -225,10 +226,12 @@ def arePileupsConsistent(content):
                         print ("Inconsistent pileup location setting for ", secondaryName)
                         return False
                     # Add the campaign
+                    print("Existing pileup, just updating the campaign info")
                     pileupMap[secondaryName]["campaigns"].append(campaignName)
 
                 else:
                     # TODO: Add other attributes: pileup_type, active
+                    print ("New pileup, adding it to the map")
                     pileupMap[secondaryName] = {
                         "secondaryLocations": secondaryLocations,
                         "campaigns": [campaignName]
