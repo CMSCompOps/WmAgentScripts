@@ -246,23 +246,27 @@ def updatePileupDocuments(pileupMap):
         print ("Starting the update of ", pileupName)
         try:
             responseToGET = mspileupClient.getByPileupName(pileupName)["result"]
+            pileupDocument = {
+                "pileupName": pileupName,
+                "pileupType": "premix",  # TODO: should be pileupDetails[pileupType]
+                "expectedRSEs": pileupDetails["secondaryLocations"],
+                "campaigns": pileupDetails["campaigns"],
+                "active": False  # TODO: should be pileupDetails["active"]
+            }
             if not responseToGET:
                 print ("This pileup doesn't exist in MSPileup, starting the creation")
-                pileupDocument = {
-                    "pileupName": pileupName,
-                    "pileupType": "premix", #TODO: should be pileupDetails[pileupType]
-                    "expectedRSEs": pileupDetails["secondaryLocations"],
-                    "campaigns": pileupDetails["campaigns"],
-                    "active": False #TODO: should be pileupDetails["active"]
-                }
                 responseToPOST = mspileupClient.createPileupDocument(pileupDocument)
                 if responseToPOST:
-                    print ("Pileup request was posted into MSPileup. Here is the response:")
+                    print ("Response for the create POST call:")
                     print (responseToPOST)
                 else:
                     print ("Pileup creation failed")
             else:
-                print ("Pileup document exists, we should update it")
+                print ("Pileup document exists, updating")
+                responseToPUT = mspileupClient.updatePileupDocument(pileupDocument)
+                print ("Response for the update PUT call:")
+                print(responseToPUT)
+
         except Exception as e:
             print ("updatePileupDocuments failed")
             print (str(e))
