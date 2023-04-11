@@ -63,9 +63,7 @@ class MSPileupClient():
         except Exception as e:
             print ("Pileup document creation failed: Exception while PUT request")
             print (str(e))
-            traceback.print_stack()
-            print(repr(traceback.extract_stack()))
-            print(repr(traceback.format_stack()))
+            print(traceback.format_exc())
             return None
 
 
