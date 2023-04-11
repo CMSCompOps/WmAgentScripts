@@ -258,7 +258,7 @@ def updatePileupDocuments(pileupMap):
                 responseToPUT = mspileupClient.createPileupDocument(pileupDocument)
                 if responseToPUT:
                     print ("Creation successful")
-                    print responseToPUT
+                    print (responseToPUT)
                 else:
                     print ("Creation failed")
             else:
