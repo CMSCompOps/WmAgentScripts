@@ -1,6 +1,6 @@
 
 import json
-import httplib
+import http.client
 import os
 
 class MSPileupClient():
@@ -24,7 +24,7 @@ class MSPileupClient():
         headers = {"Accept": "application/json"}
 
         try:
-            conn = httplib.HTTPSConnection(self.url, cert_file=self.CERT_FILE, key_file=self.KEY_FILE)
+            conn = http.client.HTTPSConnection(self.url, cert_file=self.CERT_FILE, key_file=self.KEY_FILE)
         except Exception as e:
             print ("Exception while establishing https connection")
             print (str(e))
