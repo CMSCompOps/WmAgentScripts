@@ -3,6 +3,7 @@ import json
 import http.client
 import os
 import traceback
+import urllib
 
 class MSPileupClient():
 
@@ -44,27 +45,41 @@ class MSPileupClient():
         return response
 
     def createPileupDocument(self, params):
+
         endpoint = "/ms-pileup/data/pileup"
         headers = {"Accept": "application/json"}
+        try:
+            data = self.httpRequest("POST", self.url, endpoint, params, headers, urllib.parse.urlencode)
+            return data
+        except Exception as e:
+            print ("Pileup document creation failed")
+            return None
+
+
+    def httpRequest(self, verb, url, endpoint, params, headers, encode):
 
         try:
-            conn = http.client.HTTPSConnection(self.url, cert_file=self.CERT_FILE, key_file=self.KEY_FILE)
+            conn = http.client.HTTPSConnection(url, cert_file=self.CERT_FILE, key_file=self.KEY_FILE)
         except Exception as e:
-            print ("Pileup document creation failed: Exception while establishing https connection")
+            print ("Exception while establishing https connection")
             print (str(e))
             return None
 
         try:
-            conn.request("POST", endpoint, params, headers)
+            encodedParams = encode(params) if encode else params
+            conn.request(verb, endpoint, encodedParams, headers)
             response = conn.getresponse()
             data = response.read()
             conn.close()
             return data
         except Exception as e:
-            print ("Pileup document creation failed: Exception while PUT request")
+            print ("Exception while PUT request")
             print (str(e))
             print(traceback.format_exc())
             return None
+
+
+
 
 
 
