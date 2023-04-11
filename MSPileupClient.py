@@ -2,6 +2,7 @@
 import json
 import http.client
 import os
+import traceback
 
 class MSPileupClient():
 
@@ -62,6 +63,9 @@ class MSPileupClient():
         except Exception as e:
             print ("Pileup document creation failed: Exception while PUT request")
             print (str(e))
+            traceback.print_stack()
+            print(repr(traceback.extract_stack()))
+            print(repr(traceback.format_stack()))
             return None
 
 
