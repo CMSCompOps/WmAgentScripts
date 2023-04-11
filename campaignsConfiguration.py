@@ -6,6 +6,7 @@ import json
 import sys
 from copy import deepcopy
 from campaignAPI import updateCampaignConfig, deleteCampaignConfig, parseMongoCampaigns
+from MSPileupClient import MSPileupClient
 
 
 def parseArgs():
@@ -40,8 +41,11 @@ def main():
         campaigns = []
         content = json.loads(open(options.load).read())
 
-        checkPileupConsistency(content)
-        sys.exit(0)
+        pileupMap = arePileupsConsistent(content)
+        if not pileupMap:
+            sys.exit("Pileups are not consistent, exiting")
+        updatePileupDocuments(pileupMap)
+        sys.exit(1)
 
         for k, v in list(content.items()):
             up = {'name': k}
@@ -61,6 +65,9 @@ def main():
                 print(v)
 
         replaceCampaigns(campaigns)
+
+
+
         sys.exit(0)
 
     if options.dump:
@@ -191,7 +198,7 @@ def createCampaign(content):
         else:
             print(("Campaign '%s' successfully created in central CouchDB" % campName))
 
-def checkPileupConsistency(content):
+def arePileupsConsistent(content):
     """
     Parse all the campaigns. If the locations of a given pileup are defined differently in different campaings,
     it exits.
@@ -199,8 +206,8 @@ def checkPileupConsistency(content):
     :param campaign content
     """
     pileupMap = {}
-    for k, v in list(content.items()):
-        print (k)
+    for campaignName, v in list(content.items()):
+        print (campaignName)
         if "secondaries" in v:
             for secondaryName, locationsDict in list(v["secondaries"].items()):
 
@@ -210,15 +217,36 @@ def checkPileupConsistency(content):
                     secondaryLocations = locationsDict["SiteWhitelist"]
                 else:
                     print ("No location defined for the secondary, exiting")
-                    sys.exit(2)
+                    return False
 
                 if secondaryName in pileupMap:
-                    if set(pileupMap[secondaryName]) != set(secondaryLocations):
+                    if set(pileupMap[secondaryName]["secondaryLocations"]) != set(secondaryLocations):
                         print ("Inconsistent pileup location setting for ", secondaryName)
-                        sys.exit(1)
+                        return False
+                    # Add the campaign
+                    pileupMap[secondaryName]["campaigns"].append(campaignName)
 
                 else:
-                    pileupMap[secondaryName] = secondaryLocations
+                    # TODO: Add other attributes: pileup_type, active
+                    pileupMap[secondaryName] = {
+                        "secondaryLocations": secondaryLocations,
+                        "campaigns": [campaignName]
+                    }
+
+        return pileupMap
+
+
+
+def updatePileupDocuments(pileupMap):
+    """
+    Parse all the campaigns. If pileup is new, insert it into MSPileup. If not, update it.
+    :param campaign content
+    """
+    mspileupClient = MSPileupClient(url="cmsweb-testbed.cern.ch")
+    for pileupName, pileupDetails in pileupMap.items():
+        print ("Getting pileup document")
+        print (mspileupClient.getByPileupName(pileupName))
+
 
 
 
