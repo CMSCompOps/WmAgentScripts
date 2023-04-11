@@ -47,7 +47,7 @@ class MSPileupClient():
     def createPileupDocument(self, params):
 
         endpoint = "/ms-pileup/data/pileup"
-        headers = {"Accept": "application/json"}
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
         try:
             data = self.httpRequest("POST", self.url, endpoint, params, headers, encode=json.dumps)
             return data
@@ -55,18 +55,18 @@ class MSPileupClient():
             print ("Pileup document creation failed")
             return None
 
-
     def httpRequest(self, verb, url, endpoint, params, headers, encode=urllib.parse.urlencode):
 
         try:
             conn = http.client.HTTPSConnection(url, cert_file=self.CERT_FILE, key_file=self.KEY_FILE)
-        except Exception as e:
-            print ("Exception while establishing https connection")
-            print (str(e))
-            return None
-
-        try:
+            print (params)
             encodedParams = encode(params) if encode else params
+            print ("Encoded params:")
+            print(encodedParams)
+            print(verb)
+            print(endpoint)
+            print (self.CERT_FILE)
+            print (self.KEY_FILE)
             conn.request(verb, endpoint, encodedParams, headers)
             response = conn.getresponse()
             data = response.read()
