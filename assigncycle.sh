@@ -20,9 +20,6 @@ $BASE_DIR/cWrap.sh Unified/assignor.py --early
 ## assigned those that could have passed through directly
 $BASE_DIR/cWrap.sh Unified/assignor.py --from_status staged
 
-$BASE_DIR/cWrap.sh Unified/assignor.py _PR_newco
-$BASE_DIR/cWrap.sh Unified/assignor.py _PR_ref
-
 ## assign the workflow to sites
 $BASE_DIR/cWrap.sh Unified/assignor.py
 

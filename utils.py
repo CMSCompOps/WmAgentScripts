@@ -1334,7 +1334,8 @@ class siteInfo:
                 'T3_US_NERSC',
                 'T3_US_TACC',
                 'T3_US_PSC',
-                'T3_US_SDSC'
+                'T3_US_SDSC',
+                'T3_US_Lancium'
                             ]
             for aar in add_as_ready:
                 if not aar in self.sites_ready:
@@ -1376,7 +1377,8 @@ class siteInfo:
                            'T3_US_TACC',
                            'T3_US_OSG',
                            'T3_US_Colorado',
-                           'T3_US_SDSC'
+                           'T3_US_SDSC',
+                           'T3_US_Lancium'
         ]
         add_on_aaa = list(set(add_on_good_aaa + add_on_aaa))
         self.sites_AAA = list(set(self.sites_AAA + add_on_aaa ))
@@ -4166,6 +4168,7 @@ class workflowInfo:
         return dataset_blocks,all_blocks_loc,files_in_block,files_and_loc,files_and_loc_noblock
 
     def getRecoveryDoc(self, collection_name=None):
+        self.conn = make_x509_conn(self.url)
         if collection_name == None:
             collection_name = self.request['RequestName']
 
@@ -4183,10 +4186,13 @@ class workflowInfo:
             r2=self.conn.getresponse()
             rows = json.loads(r2.read())['rows']
             self.recovery_doc = [r['doc'] for r in rows]
-        except:
+        except Exception as e:
             self.conn = make_x509_conn(self.url)
             print "failed to get the acdc document for",self.request['RequestName']
             self.recovery_doc = None
+            print str(e)
+            import traceback
+            print traceback.format_exc()
         return self.recovery_doc
 
     def getRecoveryInfo(self):
@@ -4473,6 +4479,7 @@ class workflowInfo:
                 rucioClient = RucioClient()
                 for sec in secondary:
                     pileup_locations = rucioClient.getDatasetLocationsByAccount(sec, "wmcore_transferor")
+                    pileup_locations += rucioClient.getDatasetLocationsByAccount(sec, "transfer_ops")
                     sites_allowed += pileup_locations
                 sites_allowed = sorted(set(sites_allowed))
                 print "Reading minbias"

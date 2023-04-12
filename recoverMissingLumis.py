@@ -646,7 +646,7 @@ def defineRequests(workload, requestInfo,
             self.files = 0
             for run in fileInfo['runs']:
                 if run in requestObject['lumis']:
-                    for lumi in fileInfo['runs'][run][0]:
+                    for lumi in fileInfo['runs'][run]:
                         if lumi in requestObject['lumis'][run]:
                             if run not in fileRuns:
                                 fileRuns[run] = []
@@ -810,11 +810,11 @@ def main():
     val, _ = myOptParser.parse_args()
 
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    val.verbose = True
     if val.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
     else:
         logging.getLogger().setLevel(logging.INFO)
-
     # First load the request
     if val.requestName is None:
         raise RuntimeError("Request name must be specified.")

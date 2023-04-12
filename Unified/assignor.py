@@ -13,6 +13,33 @@ import json
 import copy
 import os
 
+def get_priority_block(priority):
+    if priority >= 110000:
+        return "block1"
+    elif priority >= 90000:
+        return "block2"
+    elif priority >= 85000:
+        return "block3"
+    elif priority >= 80000:
+        return "block4"
+    elif priority >= 70000:
+        return "block5"
+    elif priority >= 63000:
+        return "block6"
+    else:
+        return "block7"
+
+def get_workflow_count_by_status(status):
+    workflows = getWorkflows(reqmgr_url, status, details=False)
+    return len(workflows)
+
+def get_pending_workflow_count():
+    statuses = ['assigned', 'staging', 'staged', 'acquired']
+    count = 0
+    for status in statuses:
+        count += get_workflow_count_by_status(status)
+    return count
+
 def assignor(url ,specific = None, talk=True, options=None):
     if userLock() and not options.manual: return
     mlock = moduleLock()
@@ -64,29 +91,29 @@ def assignor(url ,specific = None, talk=True, options=None):
     max_per_round = UC.get('max_per_round').get('assignor',None)
     max_cpuh_block = UC.get('max_cpuh_block')
 
-    # Temporarily switch off prioritization
-    random.shuffle(wfos)
     ##order by priority instead of random
-    """
-    if options.early:
-        cache = sorted(getWorkflows(url, 'assignment-approved', details=True), key = lambda r : r['RequestPriority'])
-        cache = [r['RequestName'] for r in cache]
-        def rank( wfn ):
-            return cache.index( wfn ) if wfn in cache else 0
+    cache = sorted(getWorkflows(url, 'assignment-approved', details=True), key = lambda r : r['RequestPriority'])
+    cache = [r['RequestName'] for r in cache]
+    def rank( wfn ):
+        return cache.index( wfn ) if wfn in cache else 0
 
-        wfos = sorted(wfos, key = lambda wfo : rank( wfo.name ),reverse=True)
-        print "10 first",[wfo.name for wfo in wfos[:10]]
-        print "10 last",[wfo.name for wfo in wfos[-10:]]
-    else:
-        random.shuffle( wfos )
-    """
+    wfos = sorted(wfos, key = lambda wfo : rank( wfo.name ),reverse=True)
+    print "10 first",[wfo.name for wfo in wfos[:10]]
+    print "10 last",[wfo.name for wfo in wfos[-10:]]
+
+
+
+    pending_workflow_count = get_pending_workflow_count()
+    # In how many workflows are we going to update the pending_workflow_count?
+    count_update_frequency = 100
+    workflow_count = 0
+
+    max_per_round = UC.get('max_per_round').get('assignor', None)
+    wfos = wfos[:max_per_round]
 
     for wfo in wfos:
         
         if options.limit and (n_stalled+n_assigned)>options.limit:
-            break
-
-        if max_per_round and (n_stalled+n_assigned)>max_per_round:
             break
 
         if specific:
@@ -110,8 +137,29 @@ def assignor(url ,specific = None, talk=True, options=None):
             continue
 
 
-        if options.priority and int(wfh.request['RequestPriority']) < options.priority:
+        if options.priority and int(wfh.request['RequestPriority']) < int(options.priority):
+            wfh.sendLog('assignor',"Priority mode is ON: Stalling this request since its priority is below %s"%(str(options.priority)))
+            print "Priority mode is ON: Stalling " + str(wfh.request['RequestName']) + " since its priority is below " + str(options.priority)
             continue
+
+        workflow_count += 1
+        if not workflow_count % count_update_frequency:
+            print ('Pending workflow count is updated')
+            pending_workflow_count = get_pending_workflow_count()
+
+        # Control to keep the number of workflows in acquired under a limit
+        priority_block = get_priority_block( int(wfh.request['RequestPriority']) )
+        acquired_threshold = UC.get('acquired_threshold_per_priority_block').get(priority_block, None)
+        if pending_workflow_count > acquired_threshold:
+            # Stalling the assignment
+            wfh.sendLog('assignor',"Pending workflow check in ON: Stalling the assignment for " + str(wfh.request['RequestName']))
+            wfh.sendLog('assignor',"The number of pending workflows ([assigned,acquired]): " + str(pending_workflow_count))
+            wfh.sendLog('assignor',"Threshold for the priority block of this request: " + str(acquired_threshold))
+            continue
+        else:
+            # Okay to assign
+            print("Pending workflow check in ON: The following request has passed the check - okay to assign: " + str(wfh.request['RequestName']))
+            wfh.sendLog('assignor',"Pending workflow check in ON: The following request has passed the check - okay to assign: " + str(wfh.request['RequestName']))
 
         options_text=""
         if options.early: options_text+=", early option is ON"

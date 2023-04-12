@@ -101,7 +101,7 @@
     "description" : "The sites identified as having good storage bandwidth"
  },
  "sites_with_goodAAA": {
-    "value" : ["T2_CH_CSCS","T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3","T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome","T2_UK_London_Brunel", "T2_UK_London_IC","T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_BE_IIHE","T2_EE_Estonia","T2_PL_Swierk","T2_CH_CERN","T2_CH_CERN_HLT","T2_TW_NCHC","T2_IN_TIFR","T2_HU_Budapest","T2_KR_KISTI","T2_BR_SPRACE","T2_RU_JINR","T2_UK_SGrid_RALPP","T2_US_Vanderbilt","T2_BE_UCL","T2_CN_Beijing","T2_UA_KIPT","T2_AT_Vienna","T2_ES_IFCA","T3_US_Baylor","T3_US_Colorado","T3_UK_London_RHUL","T3_UK_SGrid_Oxford","T3_US_OSG"],
+    "value" : ["T2_PT_NCG_Lisbon", "T2_CH_CSCS","T2_DE_DESY","T2_DE_RWTH","T2_ES_CIEMAT","T2_FR_GRIF_LLR", "T2_FR_GRIF_IRFU", "T2_FR_IPHC","T2_FR_CCIN2P3","T2_IT_Bari", "T2_IT_Legnaro", "T2_IT_Pisa", "T2_IT_Rome","T2_UK_London_Brunel", "T2_UK_London_IC","T2_US_Caltech","T2_US_MIT","T2_US_Nebraska","T2_US_Purdue","T2_US_UCSD","T2_US_Wisconsin","T2_US_Florida","T2_BE_IIHE","T2_EE_Estonia","T2_PL_Swierk","T2_CH_CERN","T2_CH_CERN_HLT","T2_TW_NCHC","T2_IN_TIFR","T2_HU_Budapest","T2_KR_KISTI","T2_BR_SPRACE","T2_RU_JINR","T2_UK_SGrid_RALPP","T2_US_Vanderbilt","T2_BE_UCL","T2_CN_Beijing","T2_UA_KIPT","T2_AT_Vienna","T2_ES_IFCA","T3_US_Baylor","T3_US_Colorado","T3_UK_London_RHUL","T3_UK_SGrid_Oxford","T3_US_OSG"],
     "description" : "The sites identified as having good AAA bandwidth"
  },
  "blow_up_limits" : {
@@ -138,7 +138,10 @@
 	      ["wangz","wangzqe@mit.edu"],
 	      ["haozturk","h.ozturk@cern.ch"],
               ["tyjyang","tyjyang@mit.edu"],
-              ["fuyan","furong.yan@cern.ch"]
+              ["fuyan","furong.yan@cern.ch"],
+              ["llavezzo","luca.marco.lavezzo@cern.ch"],
+	      ["madamec", "matous.adamec@cern.ch"],
+              ["wjang", "woojin.jang@cern.ch"]
              ]
  },
  "max_tail_priority" : {
@@ -165,7 +168,7 @@
    "description" : "limitation on the number of wf to process per module",
    "value" : {
     "transferor" : 500,
-    "assignor" : null,
+    "assignor" : 500,
     "actor" : 10,
     "closor" : null,
     "checkor" : 500,
@@ -213,7 +216,7 @@
    "description" : "overide of the completion fraction of dataset with keyword"
  },
  "tiers_with_no_custodial": {
-   "value" : ["DQM","DQMIO","RECO","RAWAODSIM","NANOAOD","NANOAODSIM"],
+   "value" : ["DQM","DQMIO","RECO","RAWAODSIM","NANOAOD","NANOAODSIM", "FEVTDEBUGHLT"],
    "description": "The data tiers that do not go to tape. Can be overidden by custodial overide at campaign level"
  },
  "use_parent_custodial": {
@@ -229,11 +232,11 @@
    "description": "The data tiers that do not pass closeout checks. Can be overidden by custodial overide at campaign level"
  },
  "tiers_no_DDM": {
-   "value" : ["GEN-SIM","GEN","SIM","DQM","DQMIO","GEN-SIM-DIGI-RAW","RAW","GEN-SIM-DIGI"],
+   "value" : ["GEN-SIM","GEN","SIM","DQM","DQMIO","GEN-SIM-DIGI-RAW","RAW","GEN-SIM-DIGI","GEN-SIM-DIGI-RAW-HLTDEBUG"],
    "description": "The data tiers that do not go to AnaOps"
  },
  "tiers_to_DDM": {
-   "value" : ["LHE", "GEN-SIM-DIGI-RAW-MINIAOD","AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM","NANOAOD","NANOAODSIM","FEVT","PREMIX", "GEN-SIM-DIGI-RAW-HLTDEBUG-RECO"],
+   "value" : ["LHE", "GEN-SIM-DIGI-RAW-MINIAOD","AODSIM","MINIAODSIM","GEN-SIM-RAW","GEN-SIM-RECO","GEN-SIM-RECODEBUG","AOD","RECO","MINIAOD","ALCARECO","USER","RAW-RECO","RAWAODSIM","NANOAOD","NANOAODSIM","FEVT","PREMIX", "GEN-SIM-DIGI-RAW-HLTDEBUG-RECO", "FEVTDEBUGHLT"],
    "description": "The data tiers that go to AnaOps"
  },
  "tiers_to_rucio_relval": {
@@ -390,7 +393,7 @@
   },
   "user_relval":{
    "description" : "The users from which we expect relval requests",
-   "value" : ["jinfeng","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob","bbilin","kskovpen","pkalbhor","kaura","jordanm", "alcauser", "alcadb.user", "haozturk"]
+   "value" : ["jinfeng","nwickram","asikdar","asahasra","chayanit","jrumsevi","ameyer","srappocc","mmeena","pdmvserv","srimanob","bbilin","kskovpen","pkalbhor","kaura","jordanm", "alcauser", "alcadb.user", "haozturk", "subansal"]
   },
   "user_storeresults":{
    "description" : "The users from which we expect StoreResults requests",
@@ -405,7 +408,9 @@
 	       	       	   "parameters" : { "SiteWhitelist" : ["T2_CH_CERN"]}
 			},
 	 	"NANO_" : { "parameters" : { "MaxMergeSize" : 100 ,"MinMergeSize": 50, "LumisPerJob" : 1000 }},
-               "M100PPC" : {"parameters" : { "SiteWhitelist" : ["T1_IT_CNAF"]}}
+               "M100PPC" : {"parameters" : { "SiteWhitelist" : ["T1_IT_CNAF"]}},
+               "UWGPU" : {"parameters" : { "SiteWhitelist" : ["T2_US_Wisconsin"]}},
+               "KITGPU" : {"parameters" : { "SiteWhitelist" : ["T1_DE_KIT"]}}
              }
   },
   "batch_goodness":{
@@ -429,7 +434,7 @@
     "description" : "The sites to assign DQM/DMQIO harvesting workflows"
   },
   "HEPCloud_sites": {
-    "value" : ["T3_US_NERSC","T3_US_PSC","T3_US_SDSC","T3_US_TACC", "T3_US_Anvil"],
+    "value" : ["T3_US_NERSC","T3_US_PSC","T3_US_SDSC","T3_US_TACC", "T3_US_Anvil", "T3_US_Lancium"],
     "description" : "HEPCloud sites"
   },
   "acdc_console_url": {
@@ -449,16 +454,19 @@
     "description" : "PnR users"
   },
   "prepIDs_to_skip": {
-    "value" : ["task_SMP-RunIISummer20UL16wmLHEGEN-00495",
-               "task_SMP-RunIISummer20UL16wmLHEGEN-00496",
-               "task_SMP-RunIISummer20UL16wmLHEGEN-00497",
-               "task_SMP-RunIISummer20UL17wmLHEGEN-00481",
-               "task_SMP-RunIISummer20UL17wmLHEGEN-00482",
-               "task_SMP-RunIISummer20UL17wmLHEGEN-00483",
-               "task_SMP-RunIISummer20UL17wmLHEGEN-00484",
-               "task_SMP-RunIISummer20UL18wmLHEGEN-00474",
-               "task_SMP-RunIISummer20UL18wmLHEGEN-00475",
-               "task_SMP-RunIISummer20UL18wmLHEGEN-00476"],
+    "value" : [],
     "description" : "PrepIDs to skip from workflow assignment"
-  }
+  },
+  "acquired_threshold_per_priority_block" : {
+   "description" : "threshold per priority block above which assignment will be stalled",
+   "value" : {
+    "block1" : 20000,
+    "block2" : 16800,
+    "block3" : 3000,
+    "block4" : 0,
+    "block5" : 0,
+    "block6" : 0,
+    "block7" : 0
+   }
+ }
 }

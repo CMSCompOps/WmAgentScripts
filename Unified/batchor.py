@@ -20,8 +20,14 @@ def batchor( url ):
         users = ','.join(UC.get("user_relval"))
         wfs = getWorkflows(url, 'assignment-approved', details=False, user=users, rtype='TaskChain')
         if wfs:
-            # then there is likely work to be done
-            all_wfs = getWorkflowsByName(url, wfs, details=True)
+            # Following line is too costly and fails if the argument length is too long
+            #all_wfs = getWorkflowsByName(url, wfs, details=True)
+
+            # Get workflow configs one by one
+            all_wfs = []
+            for wf in wfs:
+                wf_detail = getWorkflowsByName(url, wf, details=True)
+                all_wfs.append(wf_detail[0])
 
     wfs = filter( lambda r :r['SubRequestType'] == 'RelVal' if 'SubRequestType' in r else False, all_wfs)
     ## need a special treatment for those
