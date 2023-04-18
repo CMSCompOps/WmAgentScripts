@@ -343,7 +343,7 @@ def main():
     parser.add_option('--runNumber', help='runNumber', dest='runNumber', default=1)
     parser.add_option('--firstEvent', help='firstEvent', dest='firstEvent', default=1)
     parser.add_option('--firstLumi', help='firstLumi', dest='firstLumi', default=1)
-    parser.add_option('--extend', help='extend', dest='extend', default=False)
+    parser.add_option('--extend', action="store_true", help='extend', dest='extend', default=False)
     parser.add_option("--dontIncrementPV", action="store_true", dest="dontIncrementPV", default=False,
                       help="If True, increments PV when necessary. Else keeps it the same")
     (options, args) = parser.parse_args()
