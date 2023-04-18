@@ -42,6 +42,7 @@ for campaignName, v in list(campaigns.items()):
                 print("")
 
 
+print ("Total number of inconsistencies: ", str(inconsistency_count))
 
 
 

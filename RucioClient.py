@@ -28,7 +28,7 @@ class RucioClient(Client):
             'auth_host': 'https://cms-rucio-auth.cern.ch',
             'auth_type': 'x509_proxy',
             'ca_cert': '/etc/grid-security/certificates/',
-            'account': 'unified'
+            'account': 'haozturk'
         }
 
         defaultConfig.update(kwargs)
