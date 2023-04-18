@@ -117,3 +117,21 @@ class RucioClient(Client):
             return []
         return CEs
 
+    def getDatasetLocationsByAccountAsRSEs(self, dataset, account):
+        """
+        Returns the dataset locations for the given account in terms of computing element (not RSE name).
+        This function assumes that the returned RSE expression includes only one RSE
+        """
+        try:
+            rules = self.list_did_rules(self.scope, dataset)
+            RSEs = []
+            for rule in rules:
+                if rule['account'] == account:
+                    RSEs = rule['rse_expression'].split("|")
+
+            return RSEs
+        except Exception as e:
+            print("Exception while getting the dataset location")
+            print((str(e)))
+            return []
+
