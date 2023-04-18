@@ -15,6 +15,8 @@ from xml.dom.minidom import getDOMImplementation
 from dbs.apis.dbsClient import DbsApi
 from collections import defaultdict
 
+from utils import aggregateListFileLumis
+
 #das_host='https://das.cern.ch'
 das_host='https://cmsweb.cern.ch'
 #das_host='https://cmsweb-testbed.cern.ch'
@@ -222,7 +224,7 @@ def getMaxLumi(dataset):
     reply = dbsapi.listBlocks(dataset=dataset)
     maxl = 0
     for b in reply:
-        reply2 = dbsapi.listFileLumis(block_name=b['block_name'])
+        reply2 = aggregateListFileLumis(dbsapi.listFileLumis(block_name=b['block_name']))
         #retrieve lumis for each file
         for f in reply2:
             lumis = f['lumi_section_num']
