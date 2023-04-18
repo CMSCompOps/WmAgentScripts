@@ -40,12 +40,12 @@ for campaignName, v in list(campaigns.items()):
 
                 if pileup_locations_on_rucio_wmcore_transferor == []:
                     print("ACTION: The pileup is not protected by any wmcore_transferor rules, removing it")
-                    campaigns[campaignName]["secondaries"].pop()
+                    campaigns[campaignName]["secondaries"].pop(secondaryName, None)
                 else:
                     print("ACTION: The pileup is protected by at least onE wmcore_transferor rule, but it doesn't match that of the campaign config. Updating the campaign config")
-                    campaigns[campaignName]["secondaries"].pop()
+                    campaigns[campaignName]["secondaries"].pop(secondaryName, None)
                     campaigns[campaignName]["secondaries"] = {
-                        "SecondaryLocation": pileup_locations_on_rucio_wmcore_transferor
+                        secondaryName: {"SecondaryLocation": pileup_locations_on_rucio_wmcore_transferor}
                     }
                 #if set(pileup_locations_on_rucio_wmcore_transferor) != set(pileup_locations_on_rucio_transfer_ops):
                 #    print("There is also inconsistency between wmcore_transferor and transfer_ops rules")
