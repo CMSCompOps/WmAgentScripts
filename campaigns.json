@@ -199,7 +199,7 @@
   },
   "Run3Summer22pLHEGS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
@@ -217,7 +217,7 @@
   },
   "Run3Summer22EEpLHEGS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
@@ -3803,7 +3803,8 @@
     "secondaries": {
       "/MinBias_TuneCUETP8M1_2017_5p02TeV-pythia8/RunIIpp5Spring18GS-94X_mc2017_realistic_v10For2017G_v3-v2/GEN-SIM": {
         "SiteWhitelist": [
-          "T2_US_MIT"
+          "T2_US_MIT",
+          "T2_CH_CERN"
         ]
       },
       "/MinBias_TuneCUETP8M1_5p02TeV-pythia8/HINppWinter17GS-92X_upgrade2017_realistic_v11-v1/GEN-SIM": {
@@ -3839,6 +3840,15 @@
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
+    "secondaries": {
+      "/MinBias_TuneCUETP8M1_2017_5p02TeV-pythia8/RunIIpp5Spring18GS-94X_mc2017_realistic_v10For2017G_v3-v2/GEN-SIM":
+      {
+        "SecondaryLocation": [
+          "T2_CH_CERN",
+          "T2_US_MIT"
+        ]
+      }
+    },
     "parameters": {
       "MergedLFNBase": "/store/himc",
       "SiteBlacklist": [
@@ -4857,6 +4867,60 @@
   "PhaseIISpring22SIM": {
     "fractionpass": 0.95,
     "go": true
+  },
+  "HINPbPbAutumn22GS": {
+    "fractionpass" : 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
+  },
+  "HINPbPbAutumn22DR": {
+    "fractionpass" : 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
+  },
+  "HINPbPbAutumnMiniAOD": {
+    "fractionpass" : 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   }
 }
 
