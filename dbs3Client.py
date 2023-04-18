@@ -9,7 +9,7 @@
 
 
 # import urllib.request, urllib.error, urllib.parse,urllib.request,urllib.parse,urllib.error
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import http.client, sys, re, os, json, datetime
 from xml.dom.minidom import getDOMImplementation
 from dbs.apis.dbsClient import DbsApi
@@ -26,9 +26,9 @@ dbs3_url_writer = r'https://cmsweb.cern.ch/dbs/prod/global/DBSWriter'
 def duplicateRunLumi(dataset, verbose=False, skipInvalid=False):
     r,lumisChecked = duplicateRunLumiFiles( dataset, verbose, skipInvalid)
     if verbose:
-        print("dataset :",dataset)
+        print(("dataset :",dataset))
         for rl in sorted(lumisChecked.keys()):
-            print(rl,"is in these files")
+            print((rl,"is in these files"))
             for fn in lumisChecked[rl]:
                 print(fn)
     return r
@@ -53,7 +53,7 @@ def duplicateRunLumiFiles(dataset, verbose=False, skipInvalid=False):
     #if only one run in the list
     if len(runs) == 1:
         if verbose:
-            print("only one run:",runs)
+            print(("only one run:",runs))
         return duplicateLumiFiles(dataset, verbose, skipInvalid)
 
     #if verbose:        print len(runs),"runs to look at"
@@ -83,7 +83,7 @@ def duplicateRunLumiFiles(dataset, verbose=False, skipInvalid=False):
         not_found = set(files) - set([f['logical_file_name'] for f in rreply])
         if not_found:
             print("no lumi info for")
-            print('\n'.join( sorted(not_found)))
+            print(('\n'.join( sorted(not_found))))
         #if verbose:
         #    print len(reply),"files in the run"
         #    print json.dumps(reply[0], indent=2)
@@ -100,7 +100,7 @@ def duplicateRunLumiFiles(dataset, verbose=False, skipInvalid=False):
             lumisChecked.pop( rl )
 
     #print lumisChecked
-    lumisChecked = dict([(k,list(v)) for k,v in lumisChecked.items()])
+    lumisChecked = dict([(k,list(v)) for k,v in list(lumisChecked.items())])
 
     r = len(lumisChecked)!=0
     return (r,lumisChecked)
@@ -146,10 +146,10 @@ def duplicateLumiFiles(dataset, verbose=False, skipInvalid=False):
     if verbose:
         for rl in sorted(lumisChecked.keys()):
             run,lumi = rl.split(':')
-            print('Lumi',lumi,'in run',run,'is in these files')
-            print('\n'.join( lumisChecked[rl] ))
+            print(('Lumi',lumi,'in run',run,'is in these files'))
+            print(('\n'.join( lumisChecked[rl] )))
     r = len(lumisChecked)!=0
-    lumisChecked = dict([(k,list(v)) for k,v in lumisChecked.items()])
+    lumisChecked = dict([(k,list(v)) for k,v in list(lumisChecked.items())])
     return (r,lumisChecked)
 
 
@@ -203,11 +203,11 @@ def setDatasetStatus(dataset, newStatus, files=True):
         elif newStatus in ['PRODUCTION', 'VALID']:
             file_status = 1
         else:
-            print("Sorry, I don't know this state and you cannot set files to %s" % newStatus)
+            print(("Sorry, I don't know this state and you cannot set files to %s" % newStatus))
             print("Only the dataset was changed. Quitting the program!")
             return
         
-        print("Files will be set to:",file_status,"in DBS3")
+        print(("Files will be set to:",file_status,"in DBS3"))
         files = dbsapi.listFiles(dataset=dataset)
         for this_file in files:
             dbsapi.updateFileStatus(logical_file_name=this_file['logical_file_name'], is_file_valid=file_status)
@@ -471,13 +471,13 @@ def main():
     datasets = args
     for dataset in datasets:
         print(dataset)
-        print(" Events:", getEventCountDataSet(dataset))
-        print(" Lumis:", getLumiCountDataSet(dataset))
+        print((" Events:", getEventCountDataSet(dataset)))
+        print((" Lumis:", getLumiCountDataSet(dataset)))
         info = getDatasetInfo(dataset)
-        print(" Open Blocks: ", info[0])
-        print(" Creation:", datetime.datetime.fromtimestamp(info[1]).strftime('%Y-%m-%d %H:%M:%S'))
-        print(" Last update:", datetime.datetime.fromtimestamp(info[2]).strftime('%Y-%m-%d %H:%M:%S'))
-        print(" Status (access type):", getDatasetStatus(dataset))
+        print((" Open Blocks: ", info[0]))
+        print((" Creation:", datetime.datetime.fromtimestamp(info[1]).strftime('%Y-%m-%d %H:%M:%S')))
+        print((" Last update:", datetime.datetime.fromtimestamp(info[2]).strftime('%Y-%m-%d %H:%M:%S')))
+        print((" Status (access type):", getDatasetStatus(dataset)))
         #print " Duplicated Lumis:", duplicateRunLumi(dataset)
         #print " Duplicated Lumis:", duplicateLumi(dataset)
         #print " Runs", getRunsDataset(dataset))
