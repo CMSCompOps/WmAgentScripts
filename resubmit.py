@@ -135,8 +135,13 @@ def modifySchema(cache, workflow, user, group, events, firstLumiNum, backfill=Fa
         firstlumi = int(lastLumi)
         result['FirstLumi'] = firstlumi + DELTA_LUMIS
 
-
-        RequestNumEvents = int(result['RequestNumEvents'])
+        if "RequestNumEvents" in result:
+            RequestNumEvents = int(result['RequestNumEvents'])
+        elif "RequestNumEvents" in result["Task1"]:
+            RequestNumEvents = int(result["Task1"]['RequestNumEvents'])
+        else:
+            print("Can't find RequestNumEvents, exiting")
+            sys.exit(1)
         FirstEvent = int(result['FirstEvent'])
         result['FirstEvent'] = FirstEvent + RequestNumEvents + DELTA_EVENTS
 
