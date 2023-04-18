@@ -40,7 +40,6 @@ for campaignName, v in list(campaigns.items()):
                 if set(pileup_locations_on_rucio_wmcore_transferor) != set(pileup_locations_on_rucio_transfer_ops):
                     print("There is also inconsistency between wmcore_transferor and transfer_ops rules")
                     print("On Rucio by transfer_ops:", str(pileup_locations_on_rucio_transfer_ops))
-                print("")
             elif set(pileup_locations_on_rucio_wmcore_transferor) != set(pileup_locations_on_rucio_transfer_ops):
                 inconsistency_count += 1
                 print(str(inconsistency_count+1) + ". campaigns.json and wmcore_transferor rules are consistent, but there is inconsistency between wmcore_transferor and transfer_ops rules for campaign " + campaignName)
@@ -48,6 +47,7 @@ for campaignName, v in list(campaigns.items()):
                 print("On campaign config:", str(secondaryLocations) )
                 print("On Rucio by wmcore_transferor:", str(pileup_locations_on_rucio_wmcore_transferor))
                 print("On Rucio by transfer_ops:", str(pileup_locations_on_rucio_transfer_ops))
+            print("")
 
 
 print ("Total number of inconsistencies: ", str(inconsistency_count))
