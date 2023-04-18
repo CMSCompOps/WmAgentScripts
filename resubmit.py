@@ -34,7 +34,7 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def modifySchema(cache, workflow, user, group, events, firstLumiNum, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, firstEvent=None, firstLumi=None, dontIncrementPV=None):
+def modifySchema(cache, workflow, user, group, events, firstLumiNum, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, firstEvent=None, firstLumi=None, extend = None, dontIncrementPV=None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -128,6 +128,19 @@ def modifySchema(cache, workflow, user, group, events, firstLumiNum, backfill=Fa
         result['Step1'].pop('RequestNumEvents', None)
 
 
+    if extend:
+
+        dataset = reqMgrClient.outputdatasetsWorkflow(url, workflow).pop()
+        lastLumi = dbs3Client.getMaxLumi(dataset)
+        firstlumi = int(lastLumi)
+        result['FirstLumi'] = firstlumi + DELTA_LUMIS
+
+
+        RequestNumEvents = int(result['RequestNumEvents'])
+        FirstEvent = int(result['FirstEvent'])
+        result['FirstEvent'] = FirstEvent + RequestNumEvents + DELTA_EVENTS
+
+
     if firstEvent and firstLumi:
         result["FirstEvent"] = firstEvent
         result["FirstLumi"] = firstLumi
@@ -185,14 +198,14 @@ def modifySchema(cache, workflow, user, group, events, firstLumiNum, backfill=Fa
 
     return result
 
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, firstEvent=None, firstLumi=None, dontIncrementPV=None):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, firstEvent=None, firstLumi=None, extend=None, dontIncrementPV=None):
     """
     clones a workflow
     """
     # Adapt schema and add original request to it
     cache = reqMgrClient.getWorkflowInfo(url, workflow)
 
-    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, taskMem, taskMulticore, taskNumEvents, scramArch, runNumber, firstEvent, firstLumi, dontIncrementPV)
+    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, taskMem, taskMulticore, taskNumEvents, scramArch, runNumber, firstEvent, firstLumi, extend, dontIncrementPV)
 
     if verbose:
         pprint(schema)
@@ -330,6 +343,7 @@ def main():
     parser.add_option('--runNumber', help='runNumber', dest='runNumber', default=1)
     parser.add_option('--firstEvent', help='firstEvent', dest='firstEvent', default=1)
     parser.add_option('--firstLumi', help='firstLumi', dest='firstLumi', default=1)
+    parser.add_option('--extend', help='extend', dest='extend', default=False)
     parser.add_option("--dontIncrementPV", action="store_true", dest="dontIncrementPV", default=False,
                       help="If True, increments PV when necessary. Else keeps it the same")
     (options, args) = parser.parse_args()
@@ -379,6 +393,7 @@ def main():
                 runNumber=options.runNumber,
                 firstEvent=options.firstEvent,
                 firstLumi=options.firstLumi,
+                extend=options.extend,
                 dontIncrementPV=options.dontIncrementPV
             )
     elif options.action == 'extend':
