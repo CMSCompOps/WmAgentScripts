@@ -124,12 +124,12 @@ class RucioClient(Client):
         """
         try:
             rules = self.list_did_rules(self.scope, dataset)
-            RSEs = []
+            RSEs = set()
             for rule in rules:
                 if rule['account'] == account:
-                    RSEs = rule['rse_expression'].split("|")
+                    RSEs.union(set(rule['rse_expression'].split("|")))
 
-            return RSEs
+            return list(RSEs)
         except Exception as e:
             print("Exception while getting the dataset location")
             print((str(e)))
