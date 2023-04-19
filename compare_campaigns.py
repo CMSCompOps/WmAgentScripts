@@ -53,9 +53,24 @@ for campaignName, v in list(hasan_campaigns.items()):
             }
 
 
-set1 = set(justin_map.items())
-set2 = set(hasan_map.items())
-print(set1 ^ set2)
+print ("Difference justin - hasan")
+for pileupName, locationsDict in list(justin_map.items()):
+    if pileupName not in hasan_map:
+        print ("Justin has it, Hasan doesn't", pileupName)
+    elif hasan_map[pileupName] != locationsDict:
+        print("Both has it, but locations are different", pileupName)
+        print("Justin:", str(locationsDict["SecondaryLocations"]))
+        print("Hasan:", str(hasan_map[pileupName]["SecondaryLocations"]))
+
+print("")
+print ("Difference hasan - justin")
+for pileupName, locationsDict in list(hasan_map.items()):
+    if pileupName not in justin_map:
+        print ("Hasan has it, Justin doesn't", pileupName)
+    elif justin_map[pileupName] != locationsDict:
+        print("Both has it, but locations are different", pileupName)
+        print("Hasan:", str(locationsDict["SecondaryLocations"]))
+        print("Justin:", str(justin_map[pileupName]["SecondaryLocations"]))
 
 
 
