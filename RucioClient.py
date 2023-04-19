@@ -127,7 +127,7 @@ class RucioClient(Client):
             RSEs = set()
             for rule in rules:
                 if rule['account'] == account:
-                    RSEs.union(set(rule['rse_expression'].split("|")))
+                    RSEs = RSEs.union(set(rule['rse_expression'].split("|")))
 
             return list(RSEs)
         except Exception as e:
