@@ -18,7 +18,6 @@
       "T2_RU_INR"
     ]
   },
-
   "Run3Winter23MiniAOD": {
     "fractionpass": 0.95,
     "go": true,
@@ -37,7 +36,6 @@
       "T2_RU_INR"
     ]
   },
-
   "Run3Winter23NanoAOD": {
     "fractionpass": 0.95,
     "go": true,
@@ -56,7 +54,6 @@
       "T2_RU_INR"
     ]
   },
-
   "GenericNoSmearGEN": {
     "fractionpass": 0.95,
     "go": false,
@@ -75,7 +72,6 @@
       "T2_RU_INR"
     ]
   },
-
   "Run3Winter23Reco": {
     "fractionpass": 0.95,
     "go": true,
@@ -94,7 +90,6 @@
       "T2_RU_INR"
     ]
   },
-
   "Phase2Fall22pLHEGS": {
     "fractionpass": 0.95,
     "go": true,
@@ -480,14 +475,7 @@
         "T2_CH_CERN_P5"
       ]
     },
-    "secondaries": {
-      "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_RU_JINR_Disk",
-          "T1_FR_CCIN2P3_Disk"
-        ]
-      }
-    },
+    "secondaries": {},
     "tune": true
   },
   "HINPbPbAutumn18GS": {
@@ -527,14 +515,7 @@
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
-    "secondaries": {
-      "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_RU_JINR_Disk",
-          "T1_FR_CCIN2P3_Disk"
-        ]
-      }
-    },
+    "secondaries": {},
     "tune": true
   },
   "HINPbPbAutumn18pLHE": {
@@ -595,14 +576,7 @@
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
-    "secondaries": {
-      "/MinBias_Hydjet_Drum5F_2018_5p02TeV/HINPbPbAutumn18GS-103X_upgrade2018_realistic_HI_v11-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_RU_JINR_Disk",
-          "T1_FR_CCIN2P3_Disk"
-        ]
-      }
-    },
+    "secondaries": {},
     "tune": true
   },
   "HINPbPbWinter16DR": {
@@ -621,14 +595,7 @@
         "T2_US_Wisconsin"
       ]
     },
-    "secondaries": {
-      "/Hydjet_Quenched_Cymbal5Ev8_PbPbMinBias_5020GeV/HiFall15-75X_mcRun2_HeavyIon_v14_75X_mcRun2_HeavyIon_v14-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T2_ES_CIEMAT",
-          "T1_RU_JINR_Disk"
-        ]
-      }
-    }
+    "secondaries": {}
   },
   "HINPbPbWinter16pLHE": {
     "custodial": "T1_FR_CCIN2P3_MSS",
@@ -673,75 +640,67 @@
     "tune": true
   },
   "HINPbPbWinter16wmLHEGSHIMix": {
-       "custodial": "T1_FR_CCIN2P3_MSS",
-       "fractionpass": 0.95,
-       "go": true,
-       "lumisize": -1,
-       "maxcopies": 1,
-       "parameters": {
-           "MergedLFNBase": "/store/himc",
-           "SiteBlacklist": [
-               "T1_US_FNAL",
-               "T2_US_Purdue",
-               "T2_US_Caltech",
-               "T2_US_Florida",
-               "T2_US_Nebraska",
-               "T2_US_UCSD",
-               "T2_US_Wisconsin",
-               "T2_CH_CERN"
-                           ]
-                             },
-       "tune": true,
-       "secondaries": {
-         "/Hydjet_Quenched_Cymbal5Ev8_PbPbMinBias_5020GeV/HiFall15-75X_mcRun2_HeavyIon_v14_75X_mcRun2_HeavyIon_v14-v1/GEN-SIM": {
-          "SiteWhitelist": [
-                     "T2_ES_CIEMAT",
-                     "T1_RU_JINR_Disk"
-                           ]
-                 }
-        }
-
-   },
+    "custodial": "T1_FR_CCIN2P3_MSS",
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin",
+        "T2_CH_CERN"
+      ]
+    },
+    "tune": true,
+    "secondaries": {}
+  },
   "HINppWinter16wmLHEGS": {
-      "custodial": "T1_FR_CCIN2P3_MSS",
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "parameters": {
-          "MergedLFNBase": "/store/himc",
-          "SiteBlacklist": [
-              "T1_US_FNAL",
-              "T2_US_Purdue",
-              "T2_US_Caltech",
-              "T2_US_Florida",
-              "T2_US_Nebraska",
-              "T2_US_UCSD",
-              "T2_US_Wisconsin",
-              "T2_CH_CERN"
-                      ]
-      },
-      "tune": true
+    "custodial": "T1_FR_CCIN2P3_MSS",
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin",
+        "T2_CH_CERN"
+      ]
+    },
+    "tune": true
   },
   "HINPbPbSpring21MiniAOD": {
-       "custodial": "T1_FR_CCIN2P3_MSS",
-       "fractionpass": 0.95,
-       "go": true,
-       "lumisize": -1,
-       "maxcopies": 1,
-       "parameters": {
-          "MergedLFNBase": "/store/himc",
-          "SiteBlacklist": [
-              "T1_US_FNAL",
-              "T2_US_Purdue",
-              "T2_US_Caltech",
-              "T2_US_Florida",
-              "T2_US_Nebraska",
-              "T2_US_UCSD",
-              "T2_US_Wisconsin",
-              "T3_US_NERSC"
-               ]
-       }
+    "custodial": "T1_FR_CCIN2P3_MSS",
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin",
+        "T3_US_NERSC"
+      ]
+    }
   },
   "HiFall15": {
     "custodial": "T1_FR_CCIN2P3_MSS",
@@ -781,16 +740,16 @@
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
-       "MergedLFNBase": "/store/himc",
-       "SiteBlacklist": [
-          "T1_US_FNAL",
-          "T2_US_Purdue",
-          "T2_US_Caltech",
-          "T2_US_Florida",
-          "T2_US_Nebraska",
-          "T2_US_UCSD",
-          "T2_US_Wisconsin"
-       ]
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
     }
   },
   "MiniAODHI18Data": {
@@ -907,52 +866,52 @@
     "tune": true
   },
   "NanoAODv9UL16Data": {
-     "fractionpass": 1,
-     "go": true,
-     "lumisize": -1,
-     "maxcopies": 1,
-     "resize": "auto",
-     "tune": true
-    },
+    "fractionpass": 1,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto",
+    "tune": true
+  },
   "NanoAODv9UL17Data": {
-     "fractionpass": 1,
-     "go": true,
-     "lumisize": -1,
-     "maxcopies": 1,
-     "resize": "auto",
-     "tune": true
-    },
+    "fractionpass": 1,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto",
+    "tune": true
+  },
   "NanoAODv9UL18Data": {
-     "fractionpass": 1,
-     "go": true,
-     "lumisize": -1,
-     "maxcopies": 1,
-     "resize": "auto",
-     "tune": true
-    },
+    "fractionpass": 1,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto",
+    "tune": true
+  },
   "Commissioning900wmLHEGS": {
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "fractionpass": 0.95
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "fractionpass": 0.95
   },
   "Commissioning900GS": {
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "fractionpass": 0.95
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "fractionpass": 0.95
   },
   "Commissioning900DR": {
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "fractionpass": 0.95
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "fractionpass": 0.95
   },
   "Commissioning900MiniAOD": {
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "fractionpass": 0.95
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "fractionpass": 0.95
   },
   "Phase2HLTTDRSummer20L1T": {
     "fractionpass": 0.95,
@@ -990,22 +949,10 @@
     "partial_copy": 0.95,
     "resize": "auto",
     "secondaries": {
-      "/MinBias_TuneCP5_14TeV-pythia8/Phase2HLTTDRWinter20GS-110X_mcRun4_realistic_v3_ext1-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_RU_JINR_Disk"
-        ]
-      },
       "/RelValMinBias_14TeV/CMSSW_11_1_2_patch3-110X_mcRun4_realistic_v3_2026D49noPU_BSzpz35-v1/GEN-SIM": {
         "SiteWhitelist": [
-          "T1_DE_KIT_Disk",
-          "T2_US_Florida"
+          "T1_US_FNAL_Disk"
         ]
-      },
-      "/MinBias_TuneCP5_14TeV-pythia8/Phase2HLTTDRWinter20GS-BSzpz35_110X_mcRun4_realistic_v3_ext4-v1/GEN-SIM":{
-           "SiteWhitelist": [
-                 "T1_ES_PIC_Disk",
-                 "T1_RU_JINR_Disk"
-                ]
       }
     }
   },
@@ -1089,14 +1036,7 @@
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto",
-    "secondaries": {
-      "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter20GS-110X_mcRun3_2021_realistic_v6-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_ES_PIC_Disk",
-          "T1_US_FNAL_Disk"
-        ]
-      }
-    }
+    "secondaries": {}
   },
   "Run3Winter20GS": {
     "fractionpass": 0.95,
@@ -1106,14 +1046,7 @@
     "resize": "auto"
   },
   "Run3Winter21DRMiniAOD": {
-   "secondaries": {
-    "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter21GS-112X_mcRun3_2021_realistic_v15-v1/GEN-SIM": {
-      "SiteWhitelist": [
-        "T1_US_FNAL_Disk",
-        "T1_UK_RAL_Disk"
-      ]
-     }
-    },
+    "secondaries": {},
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
@@ -1139,35 +1072,29 @@
     "go": true,
     "lumisize": -1,
     "SiteBlacklist": [
-        "T2_CH_CERN",
-        "T2_CH_CERN_HLT",
-        "T2_CH_CERN_P5"
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ],
     "secondaries": {
-        "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer21GS-120X_mcRun3_2021_realistic_v5-v1/GEN-SIM": {
-           "SiteWhitelist": [
-              "T1_US_FNAL_Disk",
-              "T1_DE_KIT_Disk"
-                ]
-        },
-        "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter22GS-122X_mcRun3_2021_realistic_v9-v1/GEN-SIM": {
-            "SiteWhitelist": [
-                "T1_US_FNAL_Disk",
-                "T1_ES_PIC_Disk"
-                    ]
-        },
-        "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Summer22GS-124X_mcRun3_2022_realistic_v10-v1/GEN-SIM": {
-            "SiteWhitelist": [
-                "T2_CH_CERN",
-                "T1_US_FNAL_Disk"
-            ]
-        },
-        "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter23GS-126X_mcRun3_2023_forPU65_v1-v1/GEN-SIM": {
-            "SiteWhitelist": [
-                "T1_US_FNAL_Disk",
-                "T2_CH_CERN"
-            ]
-        }
+      "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter22GS-122X_mcRun3_2021_realistic_v9-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T1_ES_PIC_Disk"
+        ]
+      },
+      "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Summer22GS-124X_mcRun3_2022_realistic_v10-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_CH_CERN",
+          "T1_US_FNAL_Disk"
+        ]
+      },
+      "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter23GS-126X_mcRun3_2023_forPU65_v1-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
     },
     "maxcopies": 1
   },
@@ -1178,40 +1105,26 @@
     "maxcopies": 1
   },
   "Run3Summer21DR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "SiteBlacklist": [
-        "T2_CH_CERN",
-        "T2_CH_CERN_HLT",
-        "T2_CH_CERN_P5"
-        ],
-      "maxcopies": 1,
-      "secondaries": {
-          "/MinBias_TuneCP5_14TeV-pythia8/Run3Summer21GS-120X_mcRun3_2021_realistic_v5-v1/GEN-SIM": {
-              "SiteWhitelist": [
-                  "T1_US_FNAL_Disk",
-                  "T1_DE_KIT_Disk"
-                      ]
-          }
-      }
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "maxcopies": 1,
+    "secondaries": {}
   },
   "Run3Summer21DRPremix": {
     "fractionpass": 0.95,
     "SiteBlacklist": [
-        "T2_CH_CERN",
-        "T2_CH_CERN_HLT",
-        "T2_CH_CERN_P5"
-            ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "secondary_AAA": true,
-    "secondaries": {
-          "/Neutrino_E-10_gun/Run3Summer21PrePremix-120X_mcRun3_2021_realistic_v6-v2/PREMIX": {
-              "SecondaryLocation": [
-                  "T1_US_FNAL_Disk",
-                  "T1_DE_KIT_Disk"
-                      ]
-          }
-    },
+    "secondaries": {},
     "go": true,
     "lumisize": -1,
     "maxcopies": 1
@@ -1223,7 +1136,7 @@
       "T2_CH_CERN",
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
-        ],
+    ],
     "lumisize": -1,
     "maxcopies": 1
   },
@@ -1233,69 +1146,23 @@
       "T2_CH_CERN",
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
-        ],
+    ],
     "go": true,
     "lumisize": -1,
     "maxcopies": 1
   },
   "Run3Summer21pLHE": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "tune": true
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "tune": true
   },
   "Run3Winter22PbPbpLHE": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "resize": "auto",
-      "tune": true,
-      "parameters": {
-          "MergedLFNBase": "/store/himc",
-          "SiteBlacklist": [
-            "T1_ES_PIC",
-            "T1_FR_CCIN2P3",
-            "T2_CN_Beijing",
-            "T2_DE_RWTH",
-            "T2_FR_IPHC",
-            "T2_KR_KISTI",
-            "T2_PT_NCG_Lisbon",
-            "T2_RU_IHEP",
-            "T2_UK_SGrid_RALPP",
-            "T2_TR_METU",
-            "T2_FI_HIP",
-            "T2_RU_INR"
-          ]
-        }
-  },
-  "Run3Winter22PbPbNoMixRECOMiniAOD" : {
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
     "resize": "auto",
-    "parameters": {
-      "MergedLFNBase": "/store/himc",
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
-     }
-  },
-  "Run3Winter22PbPbRECOMiniAOD" : {
-    "fractionpass": 0.95,
-    "go": false,
-    "lumisize": -1,
-    "resize": "auto",
+    "tune": true,
     "parameters": {
       "MergedLFNBase": "/store/himc",
       "SiteBlacklist": [
@@ -1314,61 +1181,7 @@
       ]
     }
   },
-  "Run3Winter22PbPbNoMixDIGI" : {
-    "fractionpass": 0.95,
-    "go": true,
-    "lumisize": -1,
-    "resize": "auto",
-    "parameters": {
-      "MergedLFNBase": "/store/himc",
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
-     }
-  },
-  "Run3Winter22PbPbDIGI" : {
-    "fractionpass": 0.95,
-    "go": false,
-    "lumisize": -1,
-    "resize": "auto",
-    "parameters": {
-      "MergedLFNBase": "/store/himc",
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
-     },
-    "secondaries": {
-         "/MinBias_Hydjet_Drum5F_5p02TeV/Run3Winter22PbPbNoMixGS-122X_mcRun3_2021_realistic_HI_v10-v1/GEN-SIM": {
-                 "SiteWhitelist": [
-                      "T1_IT_CNAF_Disk",
-                      "T2_US_Florida"
-                                  ]
-                      }
-    }
-  },
-  "Run3Winter22PbPbNoMixGS" : {
+  "Run3Winter22PbPbNoMixRECOMiniAOD": {
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
@@ -1391,13 +1204,13 @@
       ]
     }
   },
-  "Run3Winter22PbPbGS" : {
+  "Run3Winter22PbPbRECOMiniAOD": {
     "fractionpass": 0.95,
     "go": false,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
-       "MergedLFNBase": "/store/himc",
+      "MergedLFNBase": "/store/himc",
       "SiteBlacklist": [
         "T1_ES_PIC",
         "T1_FR_CCIN2P3",
@@ -1412,27 +1225,113 @@
         "T2_FI_HIP",
         "T2_RU_INR"
       ]
-     },
-    "secondaries": {
-         "/MinBias_Hydjet_Drum5F_5p02TeV/Run3Winter22PbPbNoMixGS-122X_mcRun3_2021_realistic_HI_v10-v1/GEN-SIM": {
-               "SiteWhitelist": [
-                     "T1_IT_CNAF_Disk",
-                     "T2_US_Florida"
-                              ]
-                      }
     }
+  },
+  "Run3Winter22PbPbNoMixDIGI": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_ES_PIC",
+        "T1_FR_CCIN2P3",
+        "T2_CN_Beijing",
+        "T2_DE_RWTH",
+        "T2_FR_IPHC",
+        "T2_KR_KISTI",
+        "T2_PT_NCG_Lisbon",
+        "T2_RU_IHEP",
+        "T2_UK_SGrid_RALPP",
+        "T2_TR_METU",
+        "T2_FI_HIP",
+        "T2_RU_INR"
+      ]
+    }
+  },
+  "Run3Winter22PbPbDIGI": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_ES_PIC",
+        "T1_FR_CCIN2P3",
+        "T2_CN_Beijing",
+        "T2_DE_RWTH",
+        "T2_FR_IPHC",
+        "T2_KR_KISTI",
+        "T2_PT_NCG_Lisbon",
+        "T2_RU_IHEP",
+        "T2_UK_SGrid_RALPP",
+        "T2_TR_METU",
+        "T2_FI_HIP",
+        "T2_RU_INR"
+      ]
+    },
+    "secondaries": {}
+  },
+  "Run3Winter22PbPbNoMixGS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_ES_PIC",
+        "T1_FR_CCIN2P3",
+        "T2_CN_Beijing",
+        "T2_DE_RWTH",
+        "T2_FR_IPHC",
+        "T2_KR_KISTI",
+        "T2_PT_NCG_Lisbon",
+        "T2_RU_IHEP",
+        "T2_UK_SGrid_RALPP",
+        "T2_TR_METU",
+        "T2_FI_HIP",
+        "T2_RU_INR"
+      ]
+    }
+  },
+  "Run3Winter22PbPbGS": {
+    "fractionpass": 0.95,
+    "go": false,
+    "lumisize": -1,
+    "resize": "auto",
+    "parameters": {
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_ES_PIC",
+        "T1_FR_CCIN2P3",
+        "T2_CN_Beijing",
+        "T2_DE_RWTH",
+        "T2_FR_IPHC",
+        "T2_KR_KISTI",
+        "T2_PT_NCG_Lisbon",
+        "T2_RU_IHEP",
+        "T2_UK_SGrid_RALPP",
+        "T2_TR_METU",
+        "T2_FI_HIP",
+        "T2_RU_INR"
+      ]
+    },
+    "secondaries": {}
   },
   "Run3Winter22pLHE": {
-     "fractionpass": 0.95,
-     "go": true
+    "fractionpass": 0.95,
+    "go": true
   },
   "Run3Winter22SIM": {
-      "fractionpass": 0.95,
-      "go": true
+    "fractionpass": 0.95,
+    "go": true
   },
   "Run3Winter22pLHEGEN": {
-     "fractionpass": 0.95,
-     "go": true
+    "fractionpass": 0.95,
+    "go": true
   },
   "Run3Winter22GS": {
     "fractionpass": 0.95,
@@ -1455,12 +1354,12 @@
     "maxcopies": 1,
     "resize": "auto",
     "secondaries": {
-         "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter22GS-122X_mcRun3_2021_realistic_v9-v1/GEN-SIM": {
-               "SiteWhitelist": [
-                   "T1_US_FNAL_Disk",
-                    "T1_ES_PIC_Disk"
-                     ]
-                }
+      "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter22GS-122X_mcRun3_2021_realistic_v9-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T1_ES_PIC_Disk"
+        ]
+      }
     }
   },
   "Run3Winter22DRPremix": {
@@ -1470,12 +1369,12 @@
     "maxcopies": 1,
     "resize": "auto",
     "secondaries": {
-        "/Neutrino_E-10_gun/Run3Summer21PrePremix-Winter22_122X_mcRun3_2021_realistic_v9-v1/PREMIX": {
-            "SecondaryLocation": [
-                      "T1_US_FNAL_Disk",
-                      "T2_CH_CERN"
-                                    ]
-        }
+      "/Neutrino_E-10_gun/Run3Summer21PrePremix-Winter22_122X_mcRun3_2021_realistic_v9-v1/PREMIX": {
+        "SecondaryLocation": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
     },
     "secondary_AAA": true
   },
@@ -1487,361 +1386,361 @@
     "resize": "auto"
   },
   "Run3Winter22NanoAOD": {
-      "fractionpass": 0.95,
-      "go": true
+    "fractionpass": 0.95,
+    "go": true
   },
   "Run3Summer22wmLHEGS": {
-      "fractionpass": 0.95,
-      "go": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR",
-        "T2_US_Caltech"
-      ]
+    "fractionpass": 0.95,
+    "go": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR",
+      "T2_US_Caltech"
+    ]
   },
   "Run3Summer22EEwmLHEGS": {
-      "fractionpass": 0.95,
-      "go": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR",
-        "T2_US_Caltech"
-      ]
+    "fractionpass": 0.95,
+    "go": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR",
+      "T2_US_Caltech"
+    ]
   },
-  "Run3Summer22GS":{
-      "fractionpass": 0.95,
-      "go": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+  "Run3Summer22GS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
-  "Run3Summer22EEGS":{
-      "fractionpass": 0.95,
-      "go": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+  "Run3Summer22EEGS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
   "Run3Summer22DR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "secondaries": {
-        "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Summer22GS-124X_mcRun3_2022_realistic_v10-v1/GEN-SIM": {
-          "SiteWhitelist": [
-            "T1_US_FNAL_Disk",
-            "T2_CH_CERN"
-          ]
-        }
-      },
-      "secondary AAA": false,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+    "fractionpass": 0.95,
+    "go": true,
+    "secondaries": {
+      "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Summer22GS-124X_mcRun3_2022_realistic_v10-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    },
+    "secondary AAA": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
   "Run3Summer22EEDR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "secondaries": {
-        "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Summer22GS-124X_mcRun3_2022_realistic_v10-v1/GEN-SIM": {
-          "SiteWhitelist": [
-            "T1_US_FNAL_Disk",
-            "T2_CH_CERN"
-          ]
-        }
-      },
-      "secondary AAA": false,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+    "fractionpass": 0.95,
+    "go": true,
+    "secondaries": {
+      "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Summer22GS-124X_mcRun3_2022_realistic_v10-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    },
+    "secondary AAA": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
   "Run3Summer22DRPremix": {
-      "fractionpass": 0.95,
-      "go": true,
-      "secondaries": {
-        "/Neutrino_E-10_gun/Run3Summer21PrePremix-Summer22_124X_mcRun3_2022_realistic_v11-v2/PREMIX": {
-          "SecondaryLocation": [
-            "T1_US_FNAL_Disk",
-            "T2_CH_CERN"
-          ]
-        }
-      },
-      "secondary_AAA": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+    "fractionpass": 0.95,
+    "go": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/Run3Summer21PrePremix-Summer22_124X_mcRun3_2022_realistic_v11-v2/PREMIX": {
+        "SecondaryLocation": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    },
+    "secondary_AAA": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
   "Run3Summer22EEDRPremix": {
-      "fractionpass": 0.95,
-      "go": true,
-      "secondaries": {
-        "/Neutrino_E-10_gun/Run3Summer21PrePremix-Summer22_124X_mcRun3_2022_realistic_v11-v2/PREMIX": {
-          "SecondaryLocation": [
-            "T1_US_FNAL_Disk",
-            "T2_CH_CERN"
-          ]
-        }
-      },
-      "secondary_AAA": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+    "fractionpass": 0.95,
+    "go": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/Run3Summer21PrePremix-Summer22_124X_mcRun3_2022_realistic_v11-v2/PREMIX": {
+        "SecondaryLocation": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    },
+    "secondary_AAA": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
-  "Run3Summer22EEMiniAODv3":{
-      "fractionpass": 0.95,
-      "go": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+  "Run3Summer22EEMiniAODv3": {
+    "fractionpass": 0.95,
+    "go": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
-  "Run3Summer22MiniAODv3":{
-      "fractionpass": 0.95,
-      "go": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+  "Run3Summer22MiniAODv3": {
+    "fractionpass": 0.95,
+    "go": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
   "Run3Summer22NanoAODv10": {
-      "fractionpass": 0.95,
-       "go": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+    "fractionpass": 0.95,
+    "go": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
   "Run3Summer22NanoAODv11": {
-      "fractionpass": 0.95,
-       "go": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+    "fractionpass": 0.95,
+    "go": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
   "Run3Summer22EENanoAODv10": {
-      "fractionpass": 0.95,
-       "go": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+    "fractionpass": 0.95,
+    "go": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
   "Run3Summer22EENanoAODv11": {
-      "fractionpass": 0.95,
-       "go": true,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_FR_IPHC",
-        "T2_KR_KISTI",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_UK_SGrid_RALPP",
-        "T2_TR_METU",
-        "T2_FI_HIP",
-        "T2_RU_INR"
-      ]
+    "fractionpass": 0.95,
+    "go": true,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
   },
-  "Run3Winter22CosmicGS":{
-      "fractionpass": 0.95,
-      "go": true
+  "Run3Winter22CosmicGS": {
+    "fractionpass": 0.95,
+    "go": true
   },
-  "Run3Winter22CosmicDR":{
-      "fractionpass": 0.95,
-      "go": true
+  "Run3Winter22CosmicDR": {
+    "fractionpass": 0.95,
+    "go": true
   },
   "Run3Winter22NanoAODv10": {
-      "fractionpass": 0.95,
-      "go": false
+    "fractionpass": 0.95,
+    "go": false
   },
   "Run3Winter22wmLHEGEN": {
-      "fractionpass": 0.95,
-      "go": true
+    "fractionpass": 0.95,
+    "go": true
   },
   "Run3Winter22GEN": {
-      "fractionpass": 0.95,
-      "go": true
+    "fractionpass": 0.95,
+    "go": true
   },
   "PromptNanoAODv10": {
-      "fractionpass": 1,
-      "go" : true,
-      "partial_copy": 0.01,
-      "SiteBlacklist": [
-        "T1_ES_PIC",
-        "T1_FR_CCIN2P3",
-        "T1_IT_CNAF",
-        "T1_RU_JINR",
-        "T2_AT_Vienna",
-        "T2_BE_IIHE",
-        "T2_BE_UCL",
-        "T2_CH_CSCS",
-        "T2_CN_Beijing",
-        "T2_DE_RWTH",
-        "T2_EE_Estonia",
-        "T2_ES_CIEMAT",
-        "T2_FI_HIP",
-        "T2_FR_GRIF_LLR",
-        "T2_FR_IPHC",
-        "T2_GR_Ioannina",
-        "T2_HU_Budapest",
-        "T2_IT_Bari",
-        "T2_IT_Legnaro",
-        "T2_IT_Pisa",
-        "T2_IT_Rome",
-        "T2_KR_KISTI",
-        "T2_PK_NCP",
-        "T2_PL_Swierk",
-        "T2_PT_NCG_Lisbon",
-        "T2_RU_IHEP",
-        "T2_RU_INR",
-        "T2_RU_ITEP",
-        "T2_RU_JINR",
-        "T2_RU_SINP",
-        "T2_TR_METU",
-        "T2_UA_KIPT",
-        "T2_UK_London_IC",
-        "T2_UK_SGrid_RALPP",
-        "T2_US_Purdue",
-        "T2_US_Vanderbilt"
-      ]
+    "fractionpass": 1,
+    "go": true,
+    "partial_copy": 0.01,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T1_IT_CNAF",
+      "T1_RU_JINR",
+      "T2_AT_Vienna",
+      "T2_BE_IIHE",
+      "T2_BE_UCL",
+      "T2_CH_CSCS",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_EE_Estonia",
+      "T2_ES_CIEMAT",
+      "T2_FI_HIP",
+      "T2_FR_GRIF_LLR",
+      "T2_FR_IPHC",
+      "T2_GR_Ioannina",
+      "T2_HU_Budapest",
+      "T2_IT_Bari",
+      "T2_IT_Legnaro",
+      "T2_IT_Pisa",
+      "T2_IT_Rome",
+      "T2_KR_KISTI",
+      "T2_PK_NCP",
+      "T2_PL_Swierk",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_RU_INR",
+      "T2_RU_ITEP",
+      "T2_RU_JINR",
+      "T2_RU_SINP",
+      "T2_TR_METU",
+      "T2_UA_KIPT",
+      "T2_UK_London_IC",
+      "T2_UK_SGrid_RALPP",
+      "T2_US_Purdue",
+      "T2_US_Vanderbilt"
+    ]
   },
   "RunIIAutumn18DR": {
     "fractionpass": 0.95,
@@ -1849,108 +1748,52 @@
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto",
-    "secondaries": {
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T2_US_MIT",
-          "T2_DE_DESY"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-IdealGeometry_102X_upgrade2018_design_v9-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_US_FNAL_Disk"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-newECALCrystalGeometryFor2016_102X_mcRun2_asymptotic_v5-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_US_FNAL_Disk"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-newECALCrystalGeometryFor2017_102X_mc2017_realistic_v5-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_DE_KIT_Disk"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8_Fall18/RunIIFall18GS-102X_upgrade2018_realistic_v11-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_IT_CNAF_Disk"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV_NeutronHP-pythia8/RunIIFall18GS-SNB_102X_upgrade2018_realistic_v17-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T2_US_Nebraska"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV_NeutronXS-pythia8/RunIIFall18GS-SNB_102X_upgrade2018_realistic_v17-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_ES_PIC_Disk"
-        ]
-      }
-    },
+    "secondaries": {},
     "tune": true
   },
-  "Phase2Spring21DRMiniAOD":{
+  "Phase2Spring21DRMiniAOD": {
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto",
-    "secondaries": {
-        "/MinBias_TuneCP5_14TeV-pythia8/Phase2D76Spring21GS-113X_mcRun4_realistic_v7-v1/GEN-SIM": {
-            "SiteWhitelist": [
-                "T1_US_FNAL_Disk",
-                "T1_DE_KIT_Disk"
-                ]
-        },
-        "/MinBias_TuneCP5_14TeV-pythia8/Phase2D80Spring21GS-113X_mcRun4_realistic_T25_v1-v1/GEN-SIM": {
-            "SiteWhitelist": [
-                "T2_US_Nebraska",
-                "T2_IT_Pisa"
-                    ]
-        },
-        "/MinBias_TuneCP5_14TeV-pythia8/Phase2D81Spring21GS-113X_mcRun4_realistic_T26_v1-v1/GEN-SIM": {
-            "SiteWhitelist": [
-                "T1_DE_KIT_Disk",
-                "T2_US_Wisconsin"
-                    ]
-        }
-    }
+    "secondaries": {}
   },
-  "PhaseIISpring22GS" :{
-      "fractionpass": 0.95,
-      "go": true
+  "PhaseIISpring22GS": {
+    "fractionpass": 0.95,
+    "go": true
   },
   "PhaseIISpring22wmLHEGS": {
-      "fractionpass": 0.95,
-      "go": true
+    "fractionpass": 0.95,
+    "go": true
   },
-  "PhaseIISpring22DRMiniAOD" : {
-      "fractionpass": 0.95,
-      "go": true,
-      "secondaries": {
-         "/MinBias_TuneCP5_14TeV-pythia8/PhaseIISpring22GS-123X_mcRun4_realistic_v11-v1/GEN-SIM": {
-                 "SiteWhitelist": [
-                     "T1_US_FNAL_Disk",
-                     "T2_CH_CERN"
-                       ]
-              }
+  "PhaseIISpring22DRMiniAOD": {
+    "fractionpass": 0.95,
+    "go": true,
+    "secondaries": {
+      "/MinBias_TuneCP5_14TeV-pythia8/PhaseIISpring22GS-123X_mcRun4_realistic_v11-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
       }
+    }
   },
-  "Phase2D81Spring21GS":{
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "resize": "auto"
-  },
-  "Phase2D80Spring21GS":{
+  "Phase2D81Spring21GS": {
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
   },
-  "Phase2D76Spring21GS":{
+  "Phase2D80Spring21GS": {
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "resize": "auto"
+  },
+  "Phase2D76Spring21GS": {
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
@@ -1973,9 +1816,9 @@
     "resize": "auto",
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer17PrePremix-PUAutumn18_102X_upgrade2018_realistic_v15-v1/GEN-SIM-DIGI-RAW": {
-          "SecondaryLocation": [
-                    "T1_US_FNAL_Disk"
-                        ]
+        "SecondaryLocation": [
+          "T1_US_FNAL_Disk"
+        ]
       }
     },
     "secondary_AAA": true,
@@ -1996,12 +1839,12 @@
     "resize": "auto",
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUMoriond18_102X_upgrade2018_realistic_v15-v2/GEN-SIM-DIGI-RAW": {
-          "SecondaryLocation": [
-                    "T1_US_FNAL_Disk",
-                    "T2_US_Nebraska",
-                    "T1_DE_KIT_Disk",
-                    "T1_RU_JINR_Disk"
-                                            ]
+        "SecondaryLocation": [
+          "T1_US_FNAL_Disk",
+          "T2_US_Nebraska",
+          "T1_DE_KIT_Disk",
+          "T1_RU_JINR_Disk"
+        ]
       }
     },
     "secondary_AAA": true,
@@ -2050,9 +1893,9 @@
     "resize": "auto",
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv2_correctPU_94X_mc2017_realistic_v9-v1/GEN-SIM-DIGI-RAW": {
-          "SecondaryLocation": [
-                    "T1_US_FNAL_Disk"
-                        ]
+        "SecondaryLocation": [
+          "T1_US_FNAL_Disk"
+        ]
       }
     },
     "secondary_AAA": true,
@@ -2070,26 +1913,7 @@
       }
     },
     "resize": "auto",
-    "secondaries": {
-      "/MinBias_TuneCP1_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_DE_KIT_Disk",
-          "T1_IT_CNAF_Disk"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8_Fall17/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_IT_CNAF_Disk",
-          "T1_DE_KIT_Disk"
-        ]
-      },
-      "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_DE_KIT_Disk",
-          "T1_FR_CCIN2P3_Disk"
-        ]
-      }
-    },
+    "secondaries": {},
     "tune": false
   },
   "RunIIFall17FSPremix": {
@@ -2103,9 +1927,9 @@
     "resize": "auto",
     "secondaries": {
       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUMoriond17_94X_mc2017_realistic_v15-v1/GEN-SIM-DIGI-RAW": {
-          "SecondaryLocation": [
-                    "T2_CH_CERN"
-                        ]
+        "SecondaryLocation": [
+          "T2_CH_CERN"
+        ]
       }
     },
     "secondary_AAA": true,
@@ -2230,7 +2054,7 @@
     "resize": "auto",
     "fractionpass": 0.95,
     "SiteBlacklist": [
-       "T3_US_NERSC"
+      "T3_US_NERSC"
     ],
     "go": true,
     "tune": true
@@ -2241,14 +2065,7 @@
     "fractionpass": 0.95,
     "go": true,
     "tune": true,
-    "secondaries": {
-      "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_FR_CCIN2P3_Disk",
-          "T1_DE_KIT_Disk"
-        ]
-      }
-    },
+    "secondaries": {},
     "resize": "auto"
   },
   "RunIISummer15GS": {
@@ -2307,14 +2124,7 @@
       }
     },
     "partial_copy": 0.95,
-    "secondaries": {
-      "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_US_FNAL_Disk",
-          "T2_US_Nebraska"
-        ]
-      }
-    }
+    "secondaries": {}
   },
   "RunIISummer16DR80Premix": {
     "NO_NO_fractionpass": {
@@ -2342,10 +2152,10 @@
     },
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISpring15PrePremix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v2-v2/GEN-SIM-DIGI-RAW": {
-          "SecondaryLocation": [
-                    "T1_US_FNAL_Disk",
-                    "T1_RU_JINR_Disk"
-                                  ]
+        "SecondaryLocation": [
+          "T1_US_FNAL_Disk",
+          "T1_RU_JINR_Disk"
+        ]
       }
     },
     "secondary_AAA": true,
@@ -2359,7 +2169,7 @@
       "T2_CH_CERN",
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
-      ],
+    ],
     "lumisize": -1,
     "parameters": {
       "EventsPerLumi": "x2"
@@ -2381,7 +2191,7 @@
       "T2_CH_CERN",
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
-      ],
+    ],
     "lumisize": -1,
     "parameters": {
       "EventsPerLumi": "x2"
@@ -2426,65 +2236,7 @@
       ]
     },
     "partial_copy": 0.95,
-    "secondaries": {
-      "/MinBias_TuneCP2_13TeV-pythia8/RunIIFall17FSPremix-PUMoriond17_94X_mc2017_realistic_v11-v1/GEN-SIM-RECO": {
-        "SiteWhitelist": [
-          "T2_US_MIT",
-          "T2_DE_DESY"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIFall18GS-102X_upgrade2018_realistic_v9-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T2_US_MIT",
-          "T2_DE_DESY"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring18GS-100X_upgrade2018_realistic_v9-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T2_DE_RWTH"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib16GS-105X_mcRun2_asymptotic_v2-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_FR_CCIN2P3_Disk",
-          "T2_IT_Legnaro"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib17GS-105X_mc2017_realistic_v5_ext1-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_FR_CCIN2P3_Disk",
-          "T1_IT_CNAF_Disk"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIIWinter19PFCalib18GS-105X_upgrade2018_realistic_v4-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T2_US_Florida"
-        ]
-      },
-      "/MinBias_TuneCP5_14TeV-pythia8/PhaseIITDRSpring19GS-106X_upgrade2023_realistic_v2_ext1-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T2_US_Florida"
-        ]
-      },
-      "/MinBias_TuneCP5_14TeV-pythia8/Run3Winter20GS-110X_mcRun3_2021_realistic_v6-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_ES_PIC_Disk",
-          "T1_US_FNAL_Disk"
-        ]
-      },
-      "/MinBias_TuneCP5_inelasticON_13TeV-pythia8/RunIIFall17GS-93X_mc2017_realistic_v3-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_FR_CCIN2P3_Disk",
-          "T1_DE_KIT_Disk"
-        ]
-      },
-      "/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer17GS-92X_upgrade2017_realistic_v2-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_IT_CNAF_Disk",
-          "T2_US_MIT"
-        ]
-      }
-    },
+    "secondaries": {},
     "tune": true
   },
   "RunIISummer19CosmicDR": {
@@ -2505,9 +2257,9 @@
   },
   "RunIISummer19UL17DIGIPremix": {
     "SiteBlacklist": [
-        "T2_CH_CERN",
-        "T2_CH_CERN_HLT",
-        "T2_CH_CERN_P5"
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ],
     "fractionpass": 0.95,
     "go": true,
@@ -2515,13 +2267,7 @@
     "maxcopies": 1,
     "partial_copy": 0.95,
     "resize": "auto",
-    "secondaries": {
-      "/Neutrino_E-10_gun/RunIISummer19ULPrePremix-UL17_106X_mc2017_realistic_v6-v1/PREMIX": {
-          "SecondaryLocation": [
-                    "T1_US_FNAL_Disk"
-                        ]
-      }
-    },
+    "secondaries": {},
     "secondary_AAA": true,
     "tune": true
   },
@@ -2529,10 +2275,10 @@
     "fractionpass": 0.95,
     "go": true,
     "SiteBlacklist": [
-              "T2_CH_CERN",
-              "T2_CH_CERN_HLT",
-              "T2_CH_CERN_P5"
-                  ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
@@ -2541,10 +2287,10 @@
     "fractionpass": 0.95,
     "go": true,
     "SiteBlacklist": [
-              "T2_CH_CERN",
-              "T2_CH_CERN_HLT",
-              "T2_CH_CERN_P5"
-                ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "lumisize": -1,
     "maxcopies": 1,
     "overflow": {
@@ -2563,10 +2309,10 @@
     "lumisize": -1,
     "maxcopies": 1,
     "SiteBlacklist": [
-             "T2_CH_CERN",
-             "T2_CH_CERN_HLT",
-             "T2_CH_CERN_P5"
-                ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "overflow": {
       "PU": {
         "force": false,
@@ -2577,16 +2323,14 @@
     "resize": "auto",
     "tune": true
   },
-  "RunIISummer19UL16SIM":
-  {
+  "RunIISummer19UL16SIM": {
     "fractionpass": 0.95,
-    "go":true,
+    "go": true,
     "lumisize": -1,
     "resize": "auto",
     "tune": true
   },
-  "RunIISummer19UL16RECO":
-  {
+  "RunIISummer19UL16RECO": {
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
@@ -2595,8 +2339,7 @@
     "secondary_AAA": true,
     "tune": true
   },
-  "RunIISummer19UL16DIGI":
-  {
+  "RunIISummer19UL16DIGI": {
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
@@ -2609,28 +2352,17 @@
       }
     },
     "resize": "auto",
-    "secondaries": {
-      "/MinBias_TuneCP1_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v10-v2/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_FR_CCIN2P3_Disk"
-        ]
-      },
-      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer19UL16SIM-106X_mcRun2_asymptotic_v3-v1/GEN-SIM": {
-       "SiteWhitelist": [
-         "T1_US_FNAL_Disk"
-        ]
-      }
-    },
+    "secondaries": {},
     "tune": true
   },
   "RunIISummer19UL16MiniAODv2": {
     "fractionpass": 0.95,
     "go": false,
     "SiteBlacklist": [
-            "T2_CH_CERN",
-            "T2_CH_CERN_HLT",
-            "T2_CH_CERN_P5"
-                  ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
@@ -2639,10 +2371,10 @@
     "fractionpass": 0.99,
     "go": true,
     "SiteBlacklist": [
-            "T2_CH_CERN",
-            "T2_CH_CERN_HLT",
-            "T2_CH_CERN_P5"
-               ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "lumisize": -1,
     "maxcopies": 1
   },
@@ -2651,10 +2383,10 @@
     "go": true,
     "lumisize": -1,
     "SiteBlacklist": [
-                  "T2_CH_CERN",
-                  "T2_CH_CERN_HLT",
-                  "T2_CH_CERN_P5"
-                      ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "maxcopies": 1,
     "overflow": {
       "PU": {
@@ -2670,10 +2402,10 @@
     "fractionpass": 0.99,
     "go": true,
     "SiteBlacklist": [
-                "T2_CH_CERN",
-                "T2_CH_CERN_HLT",
-                "T2_CH_CERN_P5"
-                    ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "lumisize": -1,
     "maxcopies": 1
   },
@@ -2681,10 +2413,10 @@
     "fractionpass": 0.99,
     "go": true,
     "SiteBlacklist": [
-               "T2_CH_CERN",
-               "T2_CH_CERN_HLT",
-               "T2_CH_CERN_P5"
-                   ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "lumisize": -1,
     "maxcopies": 1
   },
@@ -2692,10 +2424,10 @@
     "fractionpass": 0.95,
     "go": true,
     "SiteBlacklist": [
-        "T2_CH_CERN",
-        "T2_CH_CERN_HLT",
-        "T2_CH_CERN_P5"
-            ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "lumisize": -1,
     "maxcopies": 1,
     "resize": "auto"
@@ -2705,10 +2437,10 @@
     "go": true,
     "lumisize": -1,
     "SiteBlacklist": [
-        "T2_CH_CERN",
-        "T2_CH_CERN_HLT",
-        "T2_CH_CERN_P5"
-            ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "maxcopies": 1,
     "resize": "auto"
   },
@@ -2720,7 +2452,7 @@
       "T2_CH_CERN",
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
-         ],
+    ],
     "maxcopies": 1
   },
   "RunIISummer19UL17NanoAODv2": {
@@ -2728,10 +2460,10 @@
     "go": true,
     "lumisize": -1,
     "SiteBlacklist": [
-        "T2_CH_CERN",
-        "T2_CH_CERN_HLT",
-        "T2_CH_CERN_P5"
-            ],
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
     "maxcopies": 1
   },
   "RunIISummer19UL18MiniAOD": {
@@ -2833,8 +2565,7 @@
     "secondary_AAA": true,
     "tune": true
   },
-  "RunIISummer19UL16GEN":
-  {
+  "RunIISummer19UL16GEN": {
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
@@ -2866,8 +2597,7 @@
     "secondary_AAA": true,
     "tune": true
   },
-  "RunIISummer19UL16HLT":
-  {
+  "RunIISummer19UL16HLT": {
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
@@ -2884,10 +2614,10 @@
     "tune": true
   },
   "RunIISummer20UL16GENSIM": {
-     "fractionpass": 0.95,
-     "go": true,
-     "lumisize": -1,
-     "maxcopies": 1
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
   },
   "RunIISummer20UL16GEN": {
     "fractionpass": 0.95,
@@ -2905,10 +2635,10 @@
     "tune": true
   },
   "RunIISummer20UL16GENSIMAPV": {
-     "fractionpass": 0.95,
-     "go": true,
-     "lumisize": -1,
-     "maxcopies": 1
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
   },
   "RunIISummer20UL16GENAPV": {
     "fractionpass": 0.95,
@@ -3256,10 +2986,10 @@
     "tune": true
   },
   "RunIISummer20UL18GENSIM": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1
   },
   "RunIISummer20UL18wmLHENanoGEN": {
     "fractionpass": 0.95,
@@ -3315,10 +3045,10 @@
     "resize": "auto",
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer20ULPrePremix-UL17_106X_mc2017_realistic_v6-v3/PREMIX": {
-                  "SecondaryLocation": [
-                            "T2_CH_CERN",
-                            "T1_US_FNAL_Disk"
-                                          ]
+        "SecondaryLocation": [
+          "T2_CH_CERN",
+          "T1_US_FNAL_Disk"
+        ]
       }
     },
     "secondary_AAA": true,
@@ -3535,11 +3265,10 @@
     "resize": "auto",
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer20ULPrePremix-UL18_106X_upgrade2018_realistic_v11_L1v1-v2/PREMIX": {
-          "SecondaryLocation": [
-                    "T1_IT_CNAF_Disk",
-                    "T1_US_FNAL_Disk",
-                    "T2_CH_CERN"
-                                  ]
+        "SecondaryLocation": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
       }
     },
     "secondary_AAA": true,
@@ -3738,40 +3467,40 @@
     },
     "tune": true
   },
-  "RunIILowPUSummer20UL17GEN":{
-      "fractionpass": 0.95,
-      "go": true
+  "RunIILowPUSummer20UL17GEN": {
+    "fractionpass": 0.95,
+    "go": true
   },
   "RunIILowPUSummer20UL17GS": {
-     "fractionpass": 0.95,
-     "go": true
+    "fractionpass": 0.95,
+    "go": true
   },
   "RunIILowPUSummer20UL17wmLHEGS": {
-     "fractionpass": 0.95,
-     "go": true
+    "fractionpass": 0.95,
+    "go": true
   },
   "RunIILowPUSummer20UL17DR": {
-     "fractionpass": 0.95,
-     "go": false,
-     "secondaries": {
-               "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL17SIM-106X_mc2017_realistic_v6-v2/GEN-SIM": {
-                        "SiteWhitelist": [
-                               "T1_IT_CNAF_Disk"
-                                         ]
-                        }
-                   }
+    "fractionpass": 0.95,
+    "go": false,
+    "secondaries": {
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISummer20UL17SIM-106X_mc2017_realistic_v6-v2/GEN-SIM": {
+        "SiteWhitelist": [
+          "T1_IT_CNAF_Disk"
+        ]
+      }
+    }
   },
   "RunIILowPUSummer20UL17SIM": {
-      "fractionpass": 0.95,
-      "go": false
+    "fractionpass": 0.95,
+    "go": false
   },
   "RunIILowPUSummer20UL17MiniAODv2": {
-     "fractionpass": 0.95,
-     "go": false
+    "fractionpass": 0.95,
+    "go": false
   },
   "RunIILowPUSummer20UL17NanoAODv9": {
-     "fractionpass": 0.95,
-     "go": false
+    "fractionpass": 0.95,
+    "go": false
   },
   "RunIIWinter15pLHE": {
     "fractionpass": 0.95,
@@ -3806,11 +3535,6 @@
           "T2_US_MIT",
           "T2_CH_CERN"
         ]
-      },
-      "/MinBias_TuneCUETP8M1_5p02TeV-pythia8/HINppWinter17GS-92X_upgrade2017_realistic_v11-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T2_US_MIT"
-        ]
       }
     },
     "tune": true
@@ -3841,8 +3565,7 @@
     "go": true,
     "lumisize": -1,
     "secondaries": {
-      "/MinBias_TuneCUETP8M1_2017_5p02TeV-pythia8/RunIIpp5Spring18GS-94X_mc2017_realistic_v10For2017G_v3-v2/GEN-SIM":
-      {
+      "/MinBias_TuneCUETP8M1_2017_5p02TeV-pythia8/RunIIpp5Spring18GS-94X_mc2017_realistic_v10For2017G_v3-v2/GEN-SIM": {
         "SecondaryLocation": [
           "T2_CH_CERN",
           "T2_US_MIT"
@@ -3925,17 +3648,17 @@
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
-       "MergedLFNBase": "/store/himc",
-       "SiteBlacklist": [
-          "T1_US_FNAL",
-          "T2_US_Purdue",
-          "T2_US_Caltech",
-          "T2_US_Florida",
-          "T2_US_Nebraska",
-          "T2_US_UCSD",
-          "T2_US_Wisconsin"
-        ]
-     }
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
+    }
   },
   "RunIISummer20UL17pp5TeVMiniAOD": {
     "fractionpass": 0.95,
@@ -3943,17 +3666,17 @@
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
-       "MergedLFNBase": "/store/himc",
-       "SiteBlacklist": [
-          "T1_US_FNAL",
-          "T2_US_Purdue",
-          "T2_US_Caltech",
-          "T2_US_Florida",
-          "T2_US_Nebraska",
-          "T2_US_UCSD",
-          "T2_US_Wisconsin"
-        ]
-     }
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
+    }
   },
   "RunIISummer20UL17pp5TeVMiniAODv2": {
     "fractionpass": 0.95,
@@ -3961,17 +3684,17 @@
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
-       "MergedLFNBase": "/store/himc",
-       "SiteBlacklist": [
-          "T1_US_FNAL",
-          "T2_US_Purdue",
-          "T2_US_Caltech",
-          "T2_US_Florida",
-          "T2_US_Nebraska",
-          "T2_US_UCSD",
-          "T2_US_Wisconsin"
-        ]
-     }
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
+    }
   },
   "RunIISummer20UL17pp5TeVNanoAODv9": {
     "fractionpass": 0.95,
@@ -3979,17 +3702,17 @@
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
-       "MergedLFNBase": "/store/himc",
-       "SiteBlacklist": [
-          "T1_US_FNAL",
-          "T2_US_Purdue",
-          "T2_US_Caltech",
-          "T2_US_Florida",
-          "T2_US_Nebraska",
-          "T2_US_UCSD",
-          "T2_US_Wisconsin"
-        ]
-     }
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
+    }
   },
   "RunIISummer20UL17pp5TeVDR": {
     "fractionpass": 0.95,
@@ -3997,44 +3720,42 @@
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
-       "MergedLFNBase": "/store/himc",
-       "SiteBlacklist": [
-          "T1_US_FNAL",
-          "T2_US_Purdue",
-          "T2_US_Caltech",
-          "T2_US_Florida",
-          "T2_US_Nebraska",
-          "T2_US_UCSD",
-          "T2_US_Wisconsin"
-        ]
-     },
-    "secondaries": {
-       "/MinBias_TuneCP5_5TeV-pythia8/RunIISummer20UL17pp5TeVGS-106X_mc2017_realistic_forppRef5TeV_v3-v1/GEN-SIM": {
-          "SiteWhitelist": [
-             "T2_CH_CERN",
-             "T2_DE_DESY",
-             "T2_US_Nebraska"
-                      ]
-              }
-       }
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
     },
+    "secondaries": {
+      "/MinBias_TuneCP5_5TeV-pythia8/RunIISummer20UL17pp5TeVGS-106X_mc2017_realistic_forppRef5TeV_v3-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_DE_DESY"
+        ]
+      }
+    }
+  },
   "RunIISummer20UL17pp5TeVGS": {
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
-       "MergedLFNBase": "/store/himc",
-       "SiteBlacklist": [
-          "T1_US_FNAL",
-          "T2_US_Purdue",
-          "T2_US_Caltech",
-          "T2_US_Florida",
-          "T2_US_Nebraska",
-          "T2_US_UCSD",
-          "T2_US_Wisconsin"
-        ]
-     }
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
+    }
   },
   "RunIISummer20UL17pp5TeVwmLHEGS": {
     "fractionpass": 0.95,
@@ -4114,27 +3835,25 @@
     "lumisize": -1,
     "resize": "auto",
     "parameters": {
-       "MergedLFNBase": "/store/himc",
-       "SiteBlacklist": [
-          "T1_US_FNAL",
-          "T2_US_Purdue",
-          "T2_US_Caltech",
-          "T2_US_Florida",
-          "T2_US_Nebraska",
-          "T2_US_UCSD",
-          "T2_US_Wisconsin"
-        ]
-     },
-    "secondaries": {
-       "/MinBias_TuneCP5_5TeV-pythia8/RunIISummer20UL17pp5TeVGS-106X_mc2017_realistic_forppRef5TeV_v3-v1/GEN-SIM": {
-          "SiteWhitelist": [
-             "T2_CH_CERN",
-             "T2_DE_DESY",
-             "T2_US_Nebraska"
-                      ]
-              }
-       }
+      "MergedLFNBase": "/store/himc",
+      "SiteBlacklist": [
+        "T1_US_FNAL",
+        "T2_US_Purdue",
+        "T2_US_Caltech",
+        "T2_US_Florida",
+        "T2_US_Nebraska",
+        "T2_US_UCSD",
+        "T2_US_Wisconsin"
+      ]
     },
+    "secondaries": {
+      "/MinBias_TuneCP5_5TeV-pythia8/RunIISummer20UL17pp5TeVGS-106X_mc2017_realistic_forppRef5TeV_v3-v1/GEN-SIM": {
+        "SiteWhitelist": [
+          "T2_DE_DESY"
+        ]
+      }
+    }
+  },
   "SnowmassWinter21GEN": {
     "fractionpass": 0.95,
     "go": true,
@@ -4203,25 +3922,7 @@
         "T3_US_NERSC"
       ]
     },
-    "secondaries": {
-      "/ReggeGribovPartonMC_EposLHC_pPb_4080_4080/pPb816Spring16GS-80X_mcRun2_asymptotic_v17-v1/GEN-SIM": {
-        "SiteWhitelist": [
-          "T2_IT_Pisa",
-          "T1_IT_CNAF_Disk"
-        ]
-      },
-      "/ReggeGribovPartonMC_EposLHC_PbP_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_IT_CNAF_Disk"
-        ]
-      },
-      "/ReggeGribovPartonMC_EposLHC_pPb_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_FR_CCIN2P3_Disk",
-          "T2_US_MIT"
-        ]
-      }
-    }
+    "secondaries": {}
   },
   "pPb816Spring16pLHE": {
     "custodial": "T1_FR_CCIN2P3_MSS",
@@ -4249,19 +3950,7 @@
         "T2_US_Wisconsin"
       ]
     },
-    "secondaries": {
-      "/ReggeGribovPartonMC_EposLHC_PbP_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_IT_CNAF_Disk"
-        ]
-      },
-      "/ReggeGribovPartonMC_EposLHC_pPb_4080_4080_DataBS/pPb816Spring16GS-MB_80X_mcRun2_pA_v4-v2/GEN-SIM": {
-        "SiteWhitelist": [
-          "T1_FR_CCIN2P3_Disk",
-          "T2_US_MIT"
-        ]
-      }
-    }
+    "secondaries": {}
   },
   "pp502Fall15": {
     "custodial": "T1_FR_CCIN2P3_MSS",
@@ -4282,62 +3971,58 @@
     }
   },
   "RunIISpring21UL18FSGSDR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-          "T2_CH_CERN",
-          "T2_CH_CERN_HLT",
-          "T2_CH_CERN_P5"
-              ],
-      "secondaries": {
-          "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO" :
-          {
-              "SiteWhitelist": [
-                  "T1_RU_JINR_Disk",
-                  "T1_US_FNAL_Disk"
-                      ]
-          }
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO": {
+        "SiteWhitelist": [
+          "T1_RU_JINR_Disk"
+        ]
       }
+    }
   },
   "RunIISpring21UL18FSwmLHEGSDR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-         "T2_CH_CERN",
-         "T2_CH_CERN_HLT",
-         "T2_CH_CERN_P5"
-              ],
-      "secondaries": {
-          "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO" : {
-               "SiteWhitelist": [
-                                "T1_RU_JINR_Disk",
-                                "T1_US_FNAL_Disk"
-               ]
-            }
-        }
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO": {
+        "SiteWhitelist": [
+          "T1_RU_JINR_Disk"
+        ]
+      }
+    }
   },
   "RunIISpring21UL18FSSIMDR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-         "T2_CH_CERN",
-         "T2_CH_CERN_HLT",
-         "T2_CH_CERN_P5"
-              ],
-      "secondaries": {
-          "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO" : {
-               "SiteWhitelist": [
-                                "T1_RU_JINR_Disk",
-                                "T1_US_FNAL_Disk"
-               ]
-            }
-        }
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO": {
+        "SiteWhitelist": [
+          "T1_RU_JINR_Disk"
+        ]
+      }
+    }
   },
   "RunIISpring21UL18FSGSPremix": {
     "fractionpass": 0.95,
@@ -4345,26 +4030,11 @@
     "lumisize": -1,
     "maxcopies": 1,
     "SiteBlacklist": [
-       "T2_CH_CERN",
-       "T2_CH_CERN_HLT",
-       "T2_CH_CERN_P5"
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ],
-    "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/PREMIX":
-      {
-              "SecondaryLocation": [
-                 "T1_IT_CNAF_Disk",
-                 "T1_US_FNAL_Disk"
-               ]
-      },
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX":
-      {
-          "SecondaryLocation": [
-              "T1_US_FNAL_Disk",
-              "T1_FR_CCIN2P3_Disk"
-           ]
-      }
-    },
+    "secondaries": {},
     "secondary_AAA": true
   },
   "RunIISpring21UL18FSwmLHEGSPremix": {
@@ -4373,69 +4043,38 @@
     "lumisize": -1,
     "maxcopies": 1,
     "SiteBlacklist": [
-       "T2_CH_CERN",
-       "T2_CH_CERN_HLT",
-       "T2_CH_CERN_P5"
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ],
-    "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/PREMIX":
-      {
-             "SecondaryLocation": [
-                "T1_IT_CNAF_Disk",
-                "T1_US_FNAL_Disk"
-             ]
-      },
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX":
-      {
-             "SecondaryLocation": [
-                 "T1_US_FNAL_Disk",
-                 "T1_FR_CCIN2P3_Disk"
-              ]
-      }
-    },
+    "secondaries": {},
     "secondary_AAA": true
   },
   "RunIISpring22UL18FSwmLHEGSPremix": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-          "T2_CH_CERN",
-          "T2_CH_CERN_HLT",
-          "T2_CH_CERN_P5"
-       ],
-       "secondaries": {
-           "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX":
-           {
-               "SecondaryLocation": [
-                   "T1_US_FNAL_Disk",
-                   "T1_FR_CCIN2P3_Disk"
-               ]
-           }
-       },
-       "secondary_AAA": true
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {},
+    "secondary_AAA": true
   },
   "RunIISpring21UL18FSGSPremixLLPBugFix": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-          "T2_CH_CERN",
-          "T2_CH_CERN_HLT",
-          "T2_CH_CERN_P5"
-      ],
-      "secondaries": {
-          "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX":
-          {
-              "SecondaryLocation": [
-                  "T1_US_FNAL_Disk",
-                  "T1_FR_CCIN2P3_Disk"
-              ]
-          }
-      },
-      "secondary_AAA": true
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {},
+    "secondary_AAA": true
   },
   "RunIISpring21UL18FSSIMDRPremix": {
     "fractionpass": 0.95,
@@ -4443,100 +4082,60 @@
     "lumisize": -1,
     "maxcopies": 1,
     "SiteBlacklist": [
-       "T2_CH_CERN",
-       "T2_CH_CERN_HLT",
-       "T2_CH_CERN_P5"
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ],
-    "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX":
-      {
-             "SecondaryLocation": [
-                 "T1_US_FNAL_Disk",
-                 "T1_FR_CCIN2P3_Disk"
-              ]
-      }
-    },
+    "secondaries": {},
     "secondary_AAA": true
   },
   "RunIISpring21UL17FSGSDR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-          "T2_CH_CERN",
-          "T2_CH_CERN_HLT",
-          "T2_CH_CERN_P5"
-              ],
-      "secondaries": {
-          "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
-          {
-              "SiteWhitelist": [
-                  "T1_DE_KIT_Disk",
-                  "T1_RU_JINR_Disk"
-                      ]
-          }
-      }
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {}
   },
   "RunIISpring21UL17FSwmLHEGSDR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-          "T2_CH_CERN",
-          "T2_CH_CERN_HLT",
-          "T2_CH_CERN_P5"
-              ],
-      "secondaries": {
-          "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
-          {
-              "SiteWhitelist": [
-                  "T1_DE_KIT_Disk",
-                  "T1_RU_JINR_Disk"
-                      ]
-          }
-      }
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {}
   },
   "RunIISpring21UL17FSSIMDR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-          "T2_CH_CERN",
-          "T2_CH_CERN_HLT",
-          "T2_CH_CERN_P5"
-              ],
-      "secondaries": {
-          "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
-          {
-              "SiteWhitelist": [
-                  "T1_DE_KIT_Disk",
-                  "T1_RU_JINR_Disk"
-                      ]
-          }
-      }
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {}
   },
   "RunIISpring21UL17FSGSPremix": {
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
-     "SiteBlacklist": [
-        "T2_CH_CERN",
-        "T2_CH_CERN_HLT",
-        "T2_CH_CERN_P5"
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ],
-    "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
-      {
-              "SecondaryLocation": [
-                 "T1_DE_KIT_Disk",
-                 "T1_US_FNAL_Disk"
-                  ]
-      }
-    },
+    "secondaries": {},
     "secondary_AAA": true
   },
   "RunIISpring21UL17FSwmLHEGSPremix": {
@@ -4545,41 +4144,25 @@
     "lumisize": -1,
     "maxcopies": 1,
     "SiteBlacklist": [
-       "T2_CH_CERN",
-       "T2_CH_CERN_HLT",
-       "T2_CH_CERN_P5"
-     ],
-    "secondaries": {
-          "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
-          {
-                 "SecondaryLocation": [
-                    "T1_US_FNAL_Disk",
-                    "T1_DE_KIT_Disk"
-                     ]
-         }
-    },
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {},
     "secondary_AAA": true
   },
   "RunIISpring22UL17FSwmLHEGSPremix": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-          "T2_CH_CERN",
-          "T2_CH_CERN_HLT",
-          "T2_CH_CERN_P5"
-       ],
-       "secondaries": {
-           "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
-           {
-               "SecondaryLocation": [
-                   "T1_US_FNAL_Disk",
-                   "T1_DE_KIT_Disk"
-                    ]
-           }
-       },
-       "secondary_AAA": true
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {},
+    "secondary_AAA": true
   },
   "RunIISpring21UL17FSGSPremixLLPBugFix": {
     "fractionpass": 0.95,
@@ -4587,19 +4170,11 @@
     "lumisize": -1,
     "maxcopies": 1,
     "SiteBlacklist": [
-       "T2_CH_CERN",
-       "T2_CH_CERN_HLT",
-       "T2_CH_CERN_P5"
-     ],
-     "secondaries": {
-          "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
-          {
-                 "SecondaryLocation": [
-                    "T1_US_FNAL_Disk",
-                    "T1_DE_KIT_Disk"
-                     ]
-          }
-    },
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {},
     "secondary_AAA": true
   },
   "RunIISpring21UL17FSSIMDRPremix": {
@@ -4607,99 +4182,62 @@
     "go": true,
     "lumisize": -1,
     "maxcopies": 1,
-     "SiteBlacklist": [
-        "T2_CH_CERN",
-        "T2_CH_CERN_HLT",
-        "T2_CH_CERN_P5"
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ],
-    "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX" :
-      {
-              "SecondaryLocation": [
-                 "T1_DE_KIT_Disk",
-                 "T1_US_FNAL_Disk"
-                  ]
-      }
-    },
+    "secondaries": {},
     "secondary_AAA": true
   },
   "RunIISpring21UL16FSSIMDR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-          "T2_CH_CERN",
-          "T2_CH_CERN_HLT",
-          "T2_CH_CERN_P5"
-              ],
-      "secondaries": {
-        "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO" :
-        {
-            "SiteWhitelist": [
-                "T1_RU_JINR_Disk"
-                ]
-        }
-      }
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {}
   },
   "RunIISpring21UL16FSSIMDRPremix": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-       "T2_CH_CERN",
-       "T2_CH_CERN_HLT",
-       "T2_CH_CERN_P5"
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
     ],
-    "secondaries": {
-       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
-                {
-                  "SecondaryLocation": [
-                     "T1_RU_JINR_Disk",
-                     "T1_US_FNAL_Disk"
-                       ]
-                 }
-    },
+    "secondaries": {},
     "secondary_AAA": true
   },
   "RunIISpring21UL16FSGSDR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-          "T2_CH_CERN",
-          "T2_CH_CERN_HLT",
-          "T2_CH_CERN_P5"
-              ],
-      "secondaries": {
-        "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO" :
-        {
-            "SiteWhitelist": [
-                "T1_RU_JINR_Disk"
-                ]
-        }
-      }
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {}
   },
   "RunIISpring21UL16FSwmLHEGSDR": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-          "T2_CH_CERN",
-          "T2_CH_CERN_HLT",
-          "T2_CH_CERN_P5"
-              ],
-      "secondaries": {
-        "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO" :
-        {
-            "SiteWhitelist": [
-                "T1_RU_JINR_Disk"
-                ]
-        }
-      }
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {}
   },
   "RunIISpring21UL16FSGSPremix": {
     "fractionpass": 0.95,
@@ -4711,22 +4249,7 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
-                {
-                  "SecondaryLocation": [
-                     "T1_ES_PIC_Disk",
-                     "T1_US_FNAL_Disk"
-                       ]
-                 },
-       "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
-                {
-                  "SecondaryLocation": [
-                     "T1_RU_JINR_Disk",
-                     "T1_US_FNAL_Disk"
-                       ]
-                 }
-    },
+    "secondaries": {},
     "secondary_AAA": true
   },
   "RunIISpring21UL16FSwmLHEGSPremix": {
@@ -4739,44 +4262,21 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
-      {
-              "SecondaryLocation": [
-                 "T1_ES_PIC_Disk",
-                 "T1_US_FNAL_Disk"
-                   ]
-      },
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
-      {
-              "SecondaryLocation": [
-                 "T1_RU_JINR_Disk",
-                 "T1_US_FNAL_Disk"
-                   ]
-      }
-    },
+    "secondaries": {},
     "secondary_AAA": true
   },
   "RunIISpring22UL16FSwmLHEGSPremix": {
-      "fractionpass": 0.95,
-      "go": true,
-      "lumisize": -1,
-      "maxcopies": 1,
-      "SiteBlacklist": [
-          "T2_CH_CERN",
-          "T2_CH_CERN_HLT",
-          "T2_CH_CERN_P5"
-      ],
-      "secondaries": {
-          "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
-          {
-              "SecondaryLocation": [
-                   "T1_RU_JINR_Disk",
-                   "T1_US_FNAL_Disk"
-                       ]
-          }
-      },
-      "secondary_AAA": true
+    "fractionpass": 0.95,
+    "go": true,
+    "lumisize": -1,
+    "maxcopies": 1,
+    "SiteBlacklist": [
+      "T2_CH_CERN",
+      "T2_CH_CERN_HLT",
+      "T2_CH_CERN_P5"
+    ],
+    "secondaries": {},
+    "secondary_AAA": true
   },
   "RunIISpring21UL16FSGSPremixLLPBugFix": {
     "fractionpass": 0.95,
@@ -4788,15 +4288,7 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondaries": {
-      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX" :
-      {
-              "SecondaryLocation": [
-                 "T1_RU_JINR_Disk",
-                 "T1_US_FNAL_Disk"
-                   ]
-      }
-    },
+    "secondaries": {},
     "secondary_AAA": true
   },
   "RunIIFall17FSPrePremix": {
@@ -4805,46 +4297,12 @@
     "lumisize": -1,
     "maxcopies": 1,
     "secondaries": {
-        "/MinBias_TuneCP2_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO":
-        {
-            "SiteWhitelist": [
-                "T1_FR_CCIN2P3_Disk"
-            ]
-        },
-        "/MinBias_TuneCP2_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO":
-        {
-            "SiteWhitelist":[
-                "T2_US_Purdue"
-            ]
-        },
-        "/MinBias_TuneCP2_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
-        {
-            "SiteWhitelist":[
-                "T1_ES_PIC_Disk"
-                ]
-        },
-        "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL16FSGSPremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/GEN-SIM-RECO":
-        {
-            "SiteWhitelist":[
-                "T1_RU_JINR_Disk"
-            ]
-        },
-        "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO":
-        {
-            "SiteWhitelist":[
-                "T1_US_FNAL_Disk",
-                "T1_RU_JINR_Disk"
-            ]
-        },
-        "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL17FSGSPremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v1/GEN-SIM-RECO":
-        {
-            "SiteWhitelist":[
-                "T1_DE_KIT_Disk",
-                "T1_RU_JINR_Disk"
-             ]
-        }
-
-     }
+      "/MinBias_TuneCP5_13TeV-pythia8/RunIISpring21UL18FSGSPremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/GEN-SIM-RECO": {
+        "SiteWhitelist": [
+          "T1_RU_JINR_Disk"
+        ]
+      }
+    }
   },
   "Run3DataHLTGPU": {
     "SiteWhitelist": [
@@ -4869,7 +4327,7 @@
     "go": true
   },
   "HINPbPbAutumn22GS": {
-    "fractionpass" : 0.95,
+    "fractionpass": 0.95,
     "go": false,
     "SiteBlacklist": [
       "T1_ES_PIC",
@@ -4887,7 +4345,7 @@
     ]
   },
   "HINPbPbAutumn22DR": {
-    "fractionpass" : 0.95,
+    "fractionpass": 0.95,
     "go": false,
     "SiteBlacklist": [
       "T1_ES_PIC",
@@ -4905,7 +4363,7 @@
     ]
   },
   "HINPbPbAutumnMiniAOD": {
-    "fractionpass" : 0.95,
+    "fractionpass": 0.95,
     "go": false,
     "SiteBlacklist": [
       "T1_ES_PIC",
@@ -4923,4 +4381,3 @@
     ]
   }
 }
-
