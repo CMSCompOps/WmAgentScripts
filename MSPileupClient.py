@@ -75,7 +75,7 @@ class MSPileupClient():
             encodedParams = encode(params) if encode else params
             conn.request(verb, endpoint, encodedParams, headers)
             response = conn.getresponse()
-            print ("HTTP STATUS:", str(conn.status))
+            print ("HTTP STATUS:", str(response.status))
             data = response.read() if conn.status == 200 else None
             conn.close()
             return data
