@@ -45,6 +45,7 @@ def main():
         if not pileupMap:
             sys.exit("Pileups are not consistent, exiting")
         updatePileupDocuments(pileupMap)
+        checkOrphanPileups(pileupMap)
         sys.exit(1)
 
         for k, v in list(content.items()):
@@ -298,6 +299,16 @@ def updatePileupDocuments(pileupMap):
             print ("ERROR: updatePileupDocuments failed")
             print (str(e))
 
+
+def checkOrphanPileups(pileupMap):
+    mspileupClient = MSPileupClient(url="cmsweb-testbed.cern.ch")
+    allPileups = mspileupClient.getAllPileups()["result"]
+    if not allPileups:
+        print("ERROR: Couldn't get all the pileups. Cannot perform orphan pileup check")
+    else:
+        for pileup in allPileups:
+            if pileup not in pileupMap:
+                print ("ORPHAN PILEUP: This pileup exists in MSPileup, but not in WmAgentScripts/campaigns.json. Please check and consider deleting it:", pileup)
 
 
 
