@@ -260,7 +260,7 @@ def updatePileupDocuments(pileupMap):
                     print ("Response for the create POST call:")
                     print (responseToPOST)
                 else:
-                    print ("Pileup creation failed")
+                    print ("ERROR: Pileup creation failed")
             else:
                 print ("Pileup document exists, updating")
                 responseToPUT = mspileupClient.updatePileupDocument(pileupDocument)
@@ -268,7 +268,7 @@ def updatePileupDocuments(pileupMap):
                 print(responseToPUT)
 
         except Exception as e:
-            print ("updatePileupDocuments failed")
+            print ("ERROR: updatePileupDocuments failed")
             print (str(e))
 
 
