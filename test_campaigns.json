@@ -90,7 +90,7 @@
 	        "SiteWhitelist": [
 	          "T1_US_FNAL_Disk"
 	        ],
-			"keepOnDisk": false,
+			"keepOnDisk": true,
 			"fractionOnDisk": 0.5
 	      }
 	    }
