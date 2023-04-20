@@ -40,7 +40,7 @@ def uploadRelValPileup(workflow):
 
             pileupDocument = {
                 "pileupName": pileup,
-                "pileupType": "premix",  # TODO: should be pileupDetails[pileupType]
+                "pileupType": "premix",
                 "expectedRSEs": ["T2_CH_CERN"],  # TODO: make it generic
                 "campaigns": [],
                 "active": True

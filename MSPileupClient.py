@@ -36,7 +36,6 @@ class MSPileupClient():
 
             r1 = conn.request("GET", endpoint + pileupName, headers=headers)
             r2 = conn.getresponse()
-            print ("HTTP STATUS:", str(r2.status))
             response = json.loads(r2.read()) if r2.status == 200 else None
         except Exception as e:
             print ("Exception while getting response from MSPileup")
@@ -75,7 +74,6 @@ class MSPileupClient():
             encodedParams = encode(params) if encode else params
             conn.request(verb, endpoint, encodedParams, headers)
             response = conn.getresponse()
-            print ("HTTP STATUS:", str(response.status))
             data = response.read() if response.status == 200 else None
             conn.close()
             return data
