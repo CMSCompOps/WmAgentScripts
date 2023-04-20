@@ -454,15 +454,15 @@ def assignor(url, specific=None, talk=True, options=None):
                 parameters['TrustPUSitelists'] = True
                 wfh.sendLog('assignor', "Reading secondary through xrootd at %s" % sorted(sites_allowed))
 
-        if wfh.isRelval():
-            result = uploadRelValPileup(wfh)
-            if not result:
-                print("Couldn't upload pileup document to MSPileup for " + str(wfh.request['RequestName']))
-                wfh.sendLog('assignor',"Couldn't upload pileup document to MSPileup for " + str(wfh.request['RequestName']))
-                wfh.sendLog('assignor',"Stalling the assignment")
-                continue
-            wfh.sendLog('assignor', "Successfully uploaded pileup document to MSPileup for " + str(wfh.request['RequestName']))
-            print("Successfully uploaded pileup document to MSPileup for " + str(wfh.request['RequestName']))
+        #if wfh.isRelval():
+        #    result = uploadRelValPileup(wfh)
+        #    if not result:
+        #        print("Couldn't upload pileup document to MSPileup for " + str(wfh.request['RequestName']))
+        #        wfh.sendLog('assignor',"Couldn't upload pileup document to MSPileup for " + str(wfh.request['RequestName']))
+        #        wfh.sendLog('assignor',"Stalling the assignment")
+        #        continue
+        #    wfh.sendLog('assignor', "Successfully uploaded pileup document to MSPileup for " + str(wfh.request['RequestName']))
+        #    print("Successfully uploaded pileup document to MSPileup for " + str(wfh.request['RequestName']))
 
         ## plain assignment here
         team = 'production'
