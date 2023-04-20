@@ -198,30 +198,56 @@ def createCampaign(content):
         else:
             print(("Campaign '%s' successfully created in central CouchDB" % campName))
 
+
 def arePileupsConsistent(content):
     """
     Parse all the campaigns. If the locations of a given pileup are defined differently in different campaings,
     it exits.
-    TODO: Do the same check for parameter: active
+    TODO: Make this function modular, there is too many duplicate code
     :param campaign content
     """
     pileupMap = {}
     for campaignName, v in list(content.items()):
         if "secondaries" in v:
-            for secondaryName, locationsDict in list(v["secondaries"].items()):
+            for secondaryName, pileupDetails in list(v["secondaries"].items()):
 
-                if "SecondaryLocation" in locationsDict:
-                    secondaryLocations = locationsDict["SecondaryLocation"]
-                elif "SiteWhitelist" in locationsDict:
-                    secondaryLocations = locationsDict["SiteWhitelist"]
+                if "SecondaryLocation" in pileupDetails:
+                    secondaryLocations = pileupDetails["SecondaryLocation"]
+                elif "SiteWhitelist" in pileupDetails:
+                    secondaryLocations = pileupDetails["SiteWhitelist"]
                 else:
                     print ("No location defined for the secondary, exiting")
                     return False
 
+                if "keepOnDisk" in pileupDetails:
+                    keepOnDisk = pileupDetails["keepOnDisk"]
+                else:
+                    print ("No keepOnDisk defined for the secondary, exiting")
+                    return False
+
+                if "fractionOnDisk" in pileupDetails:
+                    fractionOnDisk = pileupDetails["fractionOnDisk"]
+                else:
+                    print ("No keepOnDisk defined for the secondary, exiting")
+                    return False
+
+
                 if secondaryName in pileupMap:
+                    # Check location consistency
                     if set(pileupMap[secondaryName]["secondaryLocations"]) != set(secondaryLocations):
                         print ("Inconsistent pileup location setting for ", secondaryName)
                         return False
+
+                    # Check keepOnDisk consistency
+                    if pileupMap[secondaryName]["keepOnDisk"] != keepOnDisk:
+                        print ("Inconsistent keepOnDisk setting for ", secondaryName)
+                        return False
+
+                    # Check fractionOnDisk consistency
+                    if pileupMap[secondaryName]["fractionOnDisk"] != fractionOnDisk:
+                        print ("Inconsistent fractionOnDisk setting for ", secondaryName)
+                        return False
+
                     # Add the campaign
                     pileupMap[secondaryName]["campaigns"].append(campaignName)
 
@@ -229,12 +255,12 @@ def arePileupsConsistent(content):
                     # TODO: Add other attributes: pileup_type, active
                     pileupMap[secondaryName] = {
                         "secondaryLocations": secondaryLocations,
-                        "campaigns": [campaignName]
+                        "campaigns": [campaignName],
+                        "keepOnDisk": keepOnDisk,
+                        "fractionOnDisk": fractionOnDisk
                     }
 
     return pileupMap
-
-
 
 def updatePileupDocuments(pileupMap):
     """
@@ -251,7 +277,8 @@ def updatePileupDocuments(pileupMap):
                 "pileupType": "premix",  # TODO: should be pileupDetails[pileupType]
                 "expectedRSEs": pileupDetails["secondaryLocations"],
                 "campaigns": pileupDetails["campaigns"],
-                "active": False  # TODO: should be pileupDetails["active"]
+                "active": pileupDetails["keepOnDisk"],
+                "containerFraction": pileupDetails["fractionOnDisk"]
             }
             if not responseToGET:
                 print ("This pileup doesn't exist in MSPileup, starting the creation")
