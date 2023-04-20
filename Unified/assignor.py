@@ -15,7 +15,6 @@ import os
 import sys
 import traceback
 
-sys.path.append('..')
 from MSPileupClient import MSPileupClient
 
 
@@ -47,13 +46,16 @@ def uploadRelValPileup(workflow):
                 "active": True
             }
 
-            responseToGET = MSPileupClient.getByPileupName(pileup)["result"]
+            responseToGET = mspileupClient.getByPileupName(pileup)["result"]
             if not responseToGET:
                 print ("This pileup doesn't exist in MSPileup, starting the creation")
                 responseToPOST = mspileupClient.createPileupDocument(pileupDocument)
                 if responseToPOST:
                     print ("Response for the create POST call:")
                     print (responseToPOST)
+                    if not responseToPOST:
+                        print ("POST request failed")
+                        return False
                 else:
                     print ("Pileup creation failed")
             else:
@@ -64,7 +66,7 @@ def uploadRelValPileup(workflow):
         return True
 
     except Exception as e:
-        print ("Exception while PUT request")
+        print ("Exception while contacting MSPileup")
         print (str(e))
         print(traceback.format_exc())
         return False
@@ -459,6 +461,8 @@ def assignor(url, specific=None, talk=True, options=None):
                 wfh.sendLog('assignor',"Couldn't upload pileup document to MSPileup for " + str(wfh.request['RequestName']))
                 wfh.sendLog('assignor',"Stalling the assignment")
                 continue
+            wfh.sendLog('assignor', "Successfully uploaded pileup document to MSPileup for " + str(wfh.request['RequestName']))
+            print("Successfully uploaded pileup document to MSPileup for " + str(wfh.request['RequestName']))
 
         ## plain assignment here
         team = 'production'
