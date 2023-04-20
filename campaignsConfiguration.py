@@ -270,7 +270,7 @@ def updatePileupDocuments(pileupMap):
     """
     mspileupClient = MSPileupClient(url="cmsweb-testbed.cern.ch")
     for pileupName, pileupDetails in pileupMap.items():
-        print ("Starting the update of ", pileupName)
+        print ("Starting checking the following pileup ", pileupName)
         try:
             responseToGET = mspileupClient.getByPileupName(pileupName)["result"]
             pileupDocument = {
@@ -282,7 +282,7 @@ def updatePileupDocuments(pileupMap):
                 "containerFraction": pileupDetails["fractionOnDisk"]
             }
             if not responseToGET:
-                print ("This pileup doesn't exist in MSPileup, starting the creation")
+                print ("PILEUP CREATION NEEDED: Will make a POST call to MSPileup")
                 responseToPOST = mspileupClient.createPileupDocument(pileupDocument)
                 if responseToPOST:
                     print ("Response for the create POST call:")
@@ -290,7 +290,7 @@ def updatePileupDocuments(pileupMap):
                 else:
                     print ("ERROR: Pileup creation failed")
             else:
-                print ("Pileup document exists, updating")
+                print ("PILEUP UPDATE NEEDED: Will make a PUT call to MSPileup")
                 responseToPUT = mspileupClient.updatePileupDocument(pileupDocument)
                 print ("Response for the update PUT call:")
                 print(responseToPUT)
@@ -306,9 +306,9 @@ def checkOrphanPileups(pileupMap):
     if not allPileups:
         print("ERROR: Couldn't get all the pileups. Cannot perform orphan pileup check")
     else:
-        for pileup in allPileups:
-            if pileup not in pileupMap:
-                print ("ORPHAN PILEUP: This pileup exists in MSPileup, but not in WmAgentScripts/campaigns.json. Please check and consider deleting it:", pileup)
+        for pileupObj in allPileups:
+            if pileupObj["pileupName"] not in pileupMap:
+                print ("ORPHAN PILEUP: This pileup exists in MSPileup, but not in WmAgentScripts/campaigns.json. Please check and consider deleting it:", pileupObj["pileupName"])
 
 
 
