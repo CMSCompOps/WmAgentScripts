@@ -282,7 +282,8 @@ def updatePileupDocuments(pileupMap):
                 "containerFraction": pileupDetails["fractionOnDisk"]
             }
             if not responseToGET:
-                print ("PILEUP CREATION NEEDED: Will make a POST call to MSPileup")
+                print ("PILEUP CREATION NEEDED: Will make a POST call to MSPileup with the following data:")
+                print (pileupDocument)
                 responseToPOST = mspileupClient.createPileupDocument(pileupDocument)
                 if responseToPOST:
                     print ("Response for the create POST call:")
@@ -290,7 +291,8 @@ def updatePileupDocuments(pileupMap):
                 else:
                     print ("ERROR: Pileup creation failed")
             else:
-                print ("PILEUP UPDATE NEEDED: Will make a PUT call to MSPileup")
+                print ("PILEUP UPDATE NEEDED: Will make a PUT call to MSPileup with the following data:")
+                print (pileupDocument)
                 responseToPUT = mspileupClient.updatePileupDocument(pileupDocument)
                 print ("Response for the update PUT call:")
                 print(responseToPUT)
