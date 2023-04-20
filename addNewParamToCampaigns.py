@@ -10,7 +10,7 @@ for campaignName, v in list(campaigns.items()):
 
         # If there is no secondary, pop the key
         if campaigns[campaignName]["secondaries"] == {}:
-            campaigns[campaignName].pop(("secondaries", None))
+            campaigns[campaignName].pop("secondaries", None)
         else:
             for secondaryName, locationsDict in list(v["secondaries"].items()):
                 campaigns[campaignName]["secondaries"][secondaryName]["keepOnDisk"] = True
