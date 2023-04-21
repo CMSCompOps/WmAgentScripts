@@ -12,6 +12,64 @@ import random
 import json
 import copy
 import os
+import sys
+import traceback
+
+from MSPileupClient import MSPileupClient
+
+
+def findKeys(key, dictionary):
+    values = set()
+    for k, v in dictionary.items():
+        if type(v) is dict:
+            for k2, v2 in v.items():
+                if k2 == key:
+                    values.add(v2)
+        elif k == key:
+            values.add(v)
+    return list(values)
+
+
+def uploadRelValPileup(workflow):
+
+    try:
+        mspileupClient = MSPileupClient(url="cmsweb.cern.ch")
+        pileups = findKeys("MCPileup", workflow.request)
+
+        for pileup in pileups:
+
+            pileupDocument = {
+                "pileupName": pileup,
+                "pileupType": "premix",
+                "expectedRSEs": ["T2_CH_CERN"],  # TODO: make it generic
+                "campaigns": [],
+                "active": True
+            }
+
+            responseToGET = mspileupClient.getByPileupName(pileup)["result"]
+            if not responseToGET:
+                print ("This pileup doesn't exist in MSPileup, starting the creation")
+                responseToPOST = mspileupClient.createPileupDocument(pileupDocument)
+                if responseToPOST:
+                    print ("Response for the create POST call:")
+                    print (responseToPOST)
+                    if not responseToPOST:
+                        print ("POST request failed")
+                        return False
+                else:
+                    print ("Pileup creation failed")
+            else:
+                print ("Pileup document exists, updating")
+                responseToPUT = mspileupClient.updatePileupDocument(pileupDocument)
+                print ("Response for the update PUT call:")
+                print(responseToPUT)
+        return True
+
+    except Exception as e:
+        print ("Exception while contacting MSPileup")
+        print (str(e))
+        print(traceback.format_exc())
+        return False
 
 
 def get_priority_block(priority):
@@ -395,6 +453,16 @@ def assignor(url, specific=None, talk=True, options=None):
             if secondary:
                 parameters['TrustPUSitelists'] = True
                 wfh.sendLog('assignor', "Reading secondary through xrootd at %s" % sorted(sites_allowed))
+
+        #if wfh.isRelval():
+        #    result = uploadRelValPileup(wfh)
+        #    if not result:
+        #        print("Couldn't upload pileup document to MSPileup for " + str(wfh.request['RequestName']))
+        #        wfh.sendLog('assignor',"Couldn't upload pileup document to MSPileup for " + str(wfh.request['RequestName']))
+        #        wfh.sendLog('assignor',"Stalling the assignment")
+        #        continue
+        #    wfh.sendLog('assignor', "Successfully uploaded pileup document to MSPileup for " + str(wfh.request['RequestName']))
+        #    print("Successfully uploaded pileup document to MSPileup for " + str(wfh.request['RequestName']))
 
         ## plain assignment here
         team = 'production'

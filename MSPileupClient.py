@@ -60,6 +60,7 @@ class MSPileupClient():
 
         return response
 
+
     def createPileupDocument(self, params):
 
         endpoint = "/ms-pileup/data/pileup"
@@ -101,3 +102,4 @@ class MSPileupClient():
             print (str(e))
             print(traceback.format_exc())
             return None
+
