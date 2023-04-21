@@ -48,8 +48,6 @@ def main():
         else:
             print("Pileup upload is successful, moving forward with campaign update")
 
-        sys.exit(1)
-
         for k, v in list(content.items()):
             up = {'name': k}
             v['name'] = k
