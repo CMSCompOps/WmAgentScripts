@@ -6,8 +6,8 @@ class PileupConfiguration():
 
     def __init__(self):
 
-        #self.url = reqmgr_url
-        self.url = "cmsweb-testbed.cern.ch"
+        self.url = reqmgr_url
+        #self.url = "cmsweb-testbed.cern.ch"
         self.mspileupClient = MSPileupClient(url=self.url)
 
     def uploadPileups(self, content):
@@ -125,13 +125,14 @@ class PileupConfiguration():
             print("ERROR: Couldn't get all the pileups. Cannot perform orphan pileup check")
         else:
             for pileupObj in allPileups:
-                if pileupObj["pileupName"] not in pileupMap:
-                    print (
-                    "ORPHAN PILEUP: This pileup exists in MSPileup, but not in the given json file. Please check and consider deleting it:",
-                    pileupObj["pileupName"])
+                if pileupObj["active"]:
+                    if pileupObj["pileupName"] not in pileupMap:
+                        print (
+                        "ORPHAN PILEUP: This pileup is active and exists in MSPileup, but not in the given json file. Please check and consider deactivating (thus deleting) it, unless it's relval (relval pileup deletion is performed automatically):",
+                        pileupObj["pileupName"])
 
     def getPileupType(self, pileupName):
-        if any(['minbias' in c.lower() for c in pileupName]):
+        if "minbias" in pileupName.lower():
             return "classic"
         else:
             return "premix"

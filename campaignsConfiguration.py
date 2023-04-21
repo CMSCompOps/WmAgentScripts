@@ -45,6 +45,8 @@ def main():
         isSuccess = pileupConfiguration.uploadPileups(content)
         if not isSuccess:
             sys.exit ("ERROR: pileup upload failed, exiting")
+        else:
+            print("Pileup upload is successful, moving forward with campaign update")
 
         sys.exit(1)
 
