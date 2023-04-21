@@ -1,9 +1,4 @@
-import json
-import http.client
-import os
-import traceback
-import urllib
-from utils import make_x509_conn, reqmgr_url
+from utils import reqmgr_url
 from MSPileupClient import MSPileupClient
 
 class PileupConfiguration():
@@ -132,7 +127,7 @@ class PileupConfiguration():
             for pileupObj in allPileups:
                 if pileupObj["pileupName"] not in pileupMap:
                     print (
-                    "ORPHAN PILEUP: This pileup exists in MSPileup, but not in WmAgentScripts/campaigns.json. Please check and consider deleting it:",
+                    "ORPHAN PILEUP: This pileup exists in MSPileup, but not in the given json file. Please check and consider deleting it:",
                     pileupObj["pileupName"])
 
     def getPileupType(self, pileupName):
