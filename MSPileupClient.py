@@ -91,10 +91,13 @@ class MSPileupClient():
             conn.request(verb, endpoint, encodedParams, headers)
             response = conn.getresponse()
             data = response.read() if response.status == 200 else None
+            if not data:
+                print("HTTP request failed:")
+                print (response)
             conn.close()
             return data
         except Exception as e:
-            print ("Exception while PUT request")
+            print ("Exception while POST/PUT request")
             print (str(e))
             print(traceback.format_exc())
             return None

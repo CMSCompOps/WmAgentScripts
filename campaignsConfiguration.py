@@ -285,8 +285,11 @@ def updatePileupDocuments(pileupMap):
                 print ("PILEUP CREATION NEEDED: Will make a POST call to MSPileup with the following data:")
                 print (pileupDocument)
                 responseToPOST = mspileupClient.createPileupDocument(pileupDocument)
-                print ("Response for the create POST call:")
-                print (responseToPOST)
+                if responseToPOST:
+                    print ("Response for the create POST call:")
+                    print (responseToPOST)
+                else:
+                    print ("ERROR: Pileup creation failed")
             else:
                 print ("PILEUP UPDATE NEEDED: Will make a PUT call to MSPileup with the following data:")
                 print (pileupDocument)
