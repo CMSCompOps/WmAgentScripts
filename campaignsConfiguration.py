@@ -275,7 +275,7 @@ def updatePileupDocuments(pileupMap):
             responseToGET = mspileupClient.getByPileupName(pileupName)["result"]
             pileupDocument = {
                 "pileupName": pileupName,
-                "pileupType": "premix",  # TODO: should be pileupDetails[pileupType]
+                #"pileupType": "premix",  # TODO: should be pileupDetails[pileupType]
                 "expectedRSEs": pileupDetails["secondaryLocations"],
                 "campaigns": pileupDetails["campaigns"],
                 "active": pileupDetails["keepOnDisk"],

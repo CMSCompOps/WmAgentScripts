@@ -94,5 +94,18 @@
 			"fractionOnDisk": 0.5
 	      }
 	    }
+	},
+	"hasanTest-campaign8": {
+	    "fractionpass": 0.95,
+	    "go": true,
+	    "secondaries": {
+	      "/hasan-test8-Neutrino_E-10_gun/Run3Summer21PrePremix-120X_mcRun3_2021_realistic_v6-v2/PREMIX": {
+	        "SiteWhitelist": [
+	          "T1_US_FNAL_Disk"
+	        ],
+			"keepOnDisk": true,
+			"fractionOnDisk": 0.5
+	      }
+	    }
 	}
 }
