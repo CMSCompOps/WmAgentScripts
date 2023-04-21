@@ -6,7 +6,7 @@ import json
 import sys
 from copy import deepcopy
 from campaignAPI import updateCampaignConfig, deleteCampaignConfig, parseMongoCampaigns
-from MSPileupClient import MSPileupClient
+from pileupConfiguration import PileupConfiguration
 
 
 def parseArgs():
@@ -36,16 +36,16 @@ def main():
 
     client = mongo_client()
     db = client.unified.campaignsConfiguration
+    pileupConfiguration = PileupConfiguration()
 
     if options.load:
         campaigns = []
         content = json.loads(open(options.load).read())
 
-        pileupMap = arePileupsConsistent(content)
-        if not pileupMap:
-            sys.exit("Pileups are not consistent, exiting")
-        updatePileupDocuments(pileupMap)
-        checkOrphanPileups(pileupMap)
+        isSuccess = pileupConfiguration.uploadPileups(content)
+        if not isSuccess:
+            sys.exit ("ERROR: pileup upload failed, exiting")
+
         sys.exit(1)
 
         for k, v in list(content.items()):
@@ -198,119 +198,6 @@ def createCampaign(content):
             print(("FAILED to create campaign: %s. Full content was: %s" % (campName, rec)))
         else:
             print(("Campaign '%s' successfully created in central CouchDB" % campName))
-
-
-def arePileupsConsistent(content):
-    """
-    Parse all the campaigns. If the locations of a given pileup are defined differently in different campaings,
-    it exits.
-    TODO: Make this function modular, there is too many duplicate code
-    :param campaign content
-    """
-    pileupMap = {}
-    for campaignName, v in list(content.items()):
-        if "secondaries" in v:
-            for secondaryName, pileupDetails in list(v["secondaries"].items()):
-
-                if "SecondaryLocation" in pileupDetails:
-                    secondaryLocations = pileupDetails["SecondaryLocation"]
-                elif "SiteWhitelist" in pileupDetails:
-                    secondaryLocations = pileupDetails["SiteWhitelist"]
-                else:
-                    print ("No location defined for the secondary, exiting")
-                    return False
-
-                if "keepOnDisk" in pileupDetails:
-                    keepOnDisk = pileupDetails["keepOnDisk"]
-                else:
-                    print ("No keepOnDisk defined for the secondary, exiting")
-                    return False
-
-                if "fractionOnDisk" in pileupDetails:
-                    fractionOnDisk = pileupDetails["fractionOnDisk"]
-                else:
-                    print ("No keepOnDisk defined for the secondary, exiting")
-                    return False
-
-
-                if secondaryName in pileupMap:
-                    # Check location consistency
-                    if set(pileupMap[secondaryName]["secondaryLocations"]) != set(secondaryLocations):
-                        print ("Inconsistent pileup location setting for ", secondaryName)
-                        return False
-
-                    # Check keepOnDisk consistency
-                    if pileupMap[secondaryName]["keepOnDisk"] != keepOnDisk:
-                        print ("Inconsistent keepOnDisk setting for ", secondaryName)
-                        return False
-
-                    # Check fractionOnDisk consistency
-                    if pileupMap[secondaryName]["fractionOnDisk"] != fractionOnDisk:
-                        print ("Inconsistent fractionOnDisk setting for ", secondaryName)
-                        return False
-
-                    # Add the campaign
-                    pileupMap[secondaryName]["campaigns"].append(campaignName)
-
-                else:
-                    # TODO: Add other attributes: pileup_type, active
-                    pileupMap[secondaryName] = {
-                        "secondaryLocations": secondaryLocations,
-                        "campaigns": [campaignName],
-                        "keepOnDisk": keepOnDisk,
-                        "fractionOnDisk": fractionOnDisk
-                    }
-
-    return pileupMap
-
-def updatePileupDocuments(pileupMap):
-    """
-    Parse all the campaigns. If pileup is new, insert it into MSPileup. If not, update it.
-    :param campaign content
-    """
-    mspileupClient = MSPileupClient(url="cmsweb-testbed.cern.ch")
-    for pileupName, pileupDetails in pileupMap.items():
-        print ("Starting checking the following pileup ", pileupName)
-        try:
-            responseToGET = mspileupClient.getByPileupName(pileupName)["result"]
-            pileupDocument = {
-                "pileupName": pileupName,
-                #"pileupType": "premix",  # TODO: should be pileupDetails[pileupType]
-                "expectedRSEs": pileupDetails["secondaryLocations"],
-                "campaigns": pileupDetails["campaigns"],
-                "active": pileupDetails["keepOnDisk"],
-                "containerFraction": pileupDetails["fractionOnDisk"]
-            }
-            if not responseToGET:
-                print ("PILEUP CREATION NEEDED: Will make a POST call to MSPileup with the following data:")
-                print (pileupDocument)
-                responseToPOST = mspileupClient.createPileupDocument(pileupDocument)
-                if responseToPOST:
-                    print ("Response for the create POST call:")
-                    print (responseToPOST)
-                else:
-                    print ("ERROR: Pileup creation failed")
-            else:
-                print ("PILEUP UPDATE NEEDED: Will make a PUT call to MSPileup with the following data:")
-                print (pileupDocument)
-                responseToPUT = mspileupClient.updatePileupDocument(pileupDocument)
-                print ("Response for the update PUT call:")
-                print(responseToPUT)
-
-        except Exception as e:
-            print ("ERROR: updatePileupDocuments failed")
-            print (str(e))
-
-
-def checkOrphanPileups(pileupMap):
-    mspileupClient = MSPileupClient(url="cmsweb-testbed.cern.ch")
-    allPileups = mspileupClient.getAllPileups()["result"]
-    if not allPileups:
-        print("ERROR: Couldn't get all the pileups. Cannot perform orphan pileup check")
-    else:
-        for pileupObj in allPileups:
-            if pileupObj["pileupName"] not in pileupMap:
-                print ("ORPHAN PILEUP: This pileup exists in MSPileup, but not in WmAgentScripts/campaigns.json. Please check and consider deleting it:", pileupObj["pileupName"])
 
 
 

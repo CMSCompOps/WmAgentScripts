@@ -92,8 +92,8 @@ class MSPileupClient():
             response = conn.getresponse()
             data = response.read() if response.status == 200 else None
             if not data:
-                print("HTTP request failed:")
-                print (response)
+                print("HTTP request failed. Status:", str(response.status))
+                print (response.read())
             conn.close()
             return data
         except Exception as e:
