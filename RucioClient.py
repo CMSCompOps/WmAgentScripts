@@ -28,7 +28,7 @@ class RucioClient(Client):
             'auth_host': 'https://cms-rucio-auth.cern.ch',
             'auth_type': 'x509_proxy',
             'ca_cert': '/etc/grid-security/certificates/',
-            'account': 'unified'
+            'account': 'haozturk'
         }
 
         defaultConfig.update(kwargs)
@@ -116,4 +116,22 @@ class RucioClient(Client):
             print((str(e)))
             return []
         return CEs
+
+    def getDatasetLocationsByAccountAsRSEs(self, dataset, account):
+        """
+        Returns the dataset locations for the given account in terms of computing element (not RSE name).
+        This function assumes that the returned RSE expression includes only one RSE
+        """
+        try:
+            rules = self.list_did_rules(self.scope, dataset)
+            RSEs = set()
+            for rule in rules:
+                if rule['account'] == account:
+                    RSEs = RSEs.union(set(rule['rse_expression'].split("|")))
+
+            return list(RSEs)
+        except Exception as e:
+            print("Exception while getting the dataset location")
+            print((str(e)))
+            return []
 
