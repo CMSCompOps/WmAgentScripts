@@ -83,7 +83,8 @@
    "value" : ["T2_CH_CERN_AI",
 	      "T2_TH_CUNSTDA",
 	      "T0_CH_CERN",
-	      "T0_CH_CSCS_HPC"
+	      "T0_CH_CSCS_HPC",
+          "T2_CN_Beijing"
  	      ],
    "description" : "The sites that are banned from production"
  },
