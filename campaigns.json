@@ -1,4 +1,58 @@
 {
+  "HINPbPbSpring23GS": {
+    "fractionpass": 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
+  },
+  "HINPbPbSpring23DR": {
+    "fractionpass": 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
+  },
+  "HINPbPbSpring23MiniAOD": {
+    "fractionpass": 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
+  },
   "GenericGSmearS": {
     "fractionpass": 0.95,
     "go": true,
@@ -4093,7 +4147,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring21UL18FSwmLHEGSPremix": {
     "fractionpass": 0.95,
@@ -4105,7 +4167,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring22UL18FSwmLHEGSPremix": {
     "fractionpass": 0.95,
@@ -4117,7 +4187,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring21UL18FSGSPremixLLPBugFix": {
     "fractionpass": 0.95,
@@ -4129,7 +4207,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring21UL18FSSIMDRPremix": {
     "fractionpass": 0.95,
@@ -4141,7 +4227,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL18CP5_106X_upgrade2018_realistic_v16-v1/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring21UL17FSGSDR": {
     "fractionpass": 0.95,
@@ -4186,7 +4280,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring21UL17FSwmLHEGSPremix": {
     "fractionpass": 0.95,
@@ -4198,7 +4300,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring22UL17FSwmLHEGSPremix": {
     "fractionpass": 0.95,
@@ -4210,7 +4320,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring21UL17FSGSPremixLLPBugFix": {
     "fractionpass": 0.95,
@@ -4222,7 +4340,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring21UL17FSSIMDRPremix": {
     "fractionpass": 0.95,
@@ -4234,7 +4360,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL17CP5_106X_mc2017_realistic_v9-v2/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring21UL16FSSIMDR": {
     "fractionpass": 0.95,
@@ -4257,7 +4391,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring21UL16FSGSDR": {
     "fractionpass": 0.95,
@@ -4291,7 +4433,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring21UL16FSwmLHEGSPremix": {
     "fractionpass": 0.95,
@@ -4303,7 +4453,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring22UL16FSwmLHEGSPremix": {
     "fractionpass": 0.95,
@@ -4315,7 +4473,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIISpring21UL16FSGSPremixLLPBugFix": {
     "fractionpass": 0.95,
@@ -4327,7 +4493,15 @@
       "T2_CH_CERN_HLT",
       "T2_CH_CERN_P5"
     ],
-    "secondary_AAA": true
+    "secondary_AAA": true,
+    "secondaries": {
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX": {
+        "SiteWhitelist": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ]
+      }
+    }
   },
   "RunIIFall17FSPrePremix": {
     "fractionpass": 0.95,
