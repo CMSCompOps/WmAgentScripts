@@ -4153,7 +4153,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4173,7 +4175,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4193,7 +4197,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4213,7 +4219,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4233,7 +4241,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4286,7 +4296,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4306,7 +4318,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4326,7 +4340,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4346,7 +4362,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4366,7 +4384,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4397,7 +4417,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4439,7 +4461,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4459,7 +4483,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4479,7 +4505,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
@@ -4499,7 +4527,9 @@
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
-        ]
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
       }
     }
   },
