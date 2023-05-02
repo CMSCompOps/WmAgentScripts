@@ -4606,7 +4606,7 @@
       "T2_RU_INR"
     ]
   },
-  "HINPbPbAutumnMiniAOD": {
+  "HINPbPbAutumn22MiniAOD": {
     "fractionpass": 0.95,
     "go": false,
     "SiteBlacklist": [
