@@ -165,6 +165,27 @@ def updateConfigs(configs, solutions):
 
     return configs
 
+def isException(task, attributes):
+    skip = False
+
+    # skip tasks that have been ACDCs more than 3 times
+    if 'ACDC' in task:
+        try:
+            taskName = task[task.find('ACDC')+4:]
+            taskName = taskName[:taskName.find("_")]
+            ACDCnum = int(taskName)
+            if ACDCnum >= 3: 
+                skip = True
+                print("\t|--> This task has been ACDC'd {} times already, leaving it for manual work...".format(ACDCnum))
+        except:
+            skip = True
+            print("\t|--> String manipulation failed, skipping...")
+
+    # skip recovery ACDCs
+    if 'r-' in task and (not skip):
+        skip = True
+
+    return skip
 
 def readInSubmittedTasks(file):
     with open(file, 'r') as f:
@@ -231,6 +252,8 @@ def main():
 
             print('\t|-->', task)
 
+            if isException(task, attributes): continue
+               
             # based on the tasks' attributes, apply the solutions
             # default configs
             configs = {
