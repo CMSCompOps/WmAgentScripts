@@ -165,7 +165,7 @@ def updateConfigs(configs, solutions):
 
     return configs
 
-def isException(task):
+def isException(task, attributes):
     skip = False
 
     # skip tasks that have been ACDCs more than 3 times
@@ -174,11 +174,12 @@ def isException(task):
             taskName = task[task.find('ACDC')+4:]
             taskName = taskName[:taskName.find("_")]
             ACDCnum = int(taskName)
-            if ACDCnum >= 3: skip = True
-            print("\t--> This task has been ACDC'd {} times already, leaving it for manual work...".format(ACDCnum))
+            if ACDCnum >= 3: 
+                skip = True
+                print("\t|--> This task has been ACDC'd {} times already, leaving it for manual work...".format(ACDCnum))
         except:
             skip = True
-            print("\t--> String manipulation failed, skipping...")
+            print("\t|--> String manipulation failed, skipping...")
 
     # skip recovery ACDCs
     if 'r-' in task and (not skip):
