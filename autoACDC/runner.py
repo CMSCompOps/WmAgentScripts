@@ -165,6 +165,27 @@ def updateConfigs(configs, solutions):
 
     return configs
 
+def isProblematicWf(task, attributes):
+    skip = False
+
+    # skip tasks that have been ACDCs more than 3 times
+    if 'ACDC' in task:
+        try:
+            taskName = task[task.find('ACDC')+4:]
+            taskName = taskName[:taskName.find("_")]
+            ACDCnum = int(taskName)
+            if ACDCnum >= 3: 
+                skip = True
+                print("\t|--> This task has been ACDC'd {} times already, leaving it for manual work...".format(ACDCnum))
+        except:
+            skip = True
+            print("\t|--> String manipulation failed, skipping...")
+
+    # skip recovery ACDCs
+    if 'r-' in task and (not skip):
+        skip = True
+
+    return skip
 
 def readInSubmittedTasks(file):
     with open(file, 'r') as f:
@@ -187,6 +208,7 @@ def main():
     parser.add_argument("-q", "--query", type=str, help="Query to pass to search tool, or path to .json file", required=True)
     parser.add_argument("-c", "--customise", type=str, help="Dictionary of exitCodes and solutions, or path to .json file containing dict.", required=True)
     parser.add_argument("-e", "--exceptions", type=str, help="Dictionary of exceptions, or path to .json file containing dict.", required=False, default=None)
+    parser.add_argument("-p", "--doProblematic", help="Submit ACDCs for problematic wfs (default = False)", required=False, default=False, action='store_true')
     parser.add_argument("-o", "--output", type=str, default="wf_list.txt", help="Output file")
     parser.add_argument("-t", "--test", action="store_true", help="Doesn't submit ACDCs")
 
@@ -231,6 +253,10 @@ def main():
 
             print('\t|-->', task)
 
+            # skip problematic workflows, unless flag --doProblematic is True
+            if not options.doProblematic:
+                if isProblematicWf(task, attributes): continue
+               
             # based on the tasks' attributes, apply the solutions
             # default configs
             configs = {

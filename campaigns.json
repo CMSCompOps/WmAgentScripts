@@ -486,6 +486,18 @@
   "Run3ReReco": {
     "fractionpass": 1,
     "go": true,
+    "SiteWhitelist": [
+      "T1_US_FNAL",
+      "T2_US_Nebraska",
+      "T2_US_MIT",
+      "T2_US_Caltech",
+      "T1_DE_KIT",
+      "T1_IT_CNAF",
+      "T2_DE_DESY",
+      "T2_IT_Bari",
+      "T2_BE_IIHE",
+      "T2_IT_Legnaro"
+    ],
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
@@ -500,7 +512,8 @@
       "T2_FI_HIP",
       "T2_RU_INR"
     ],
-    "partial_copy": 0.05
+    "partial_copy": 0.05,
+    "primary_AAA": true
   },
   "Commissioning2021": {
     "go": true,
