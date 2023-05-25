@@ -15,7 +15,6 @@ import copy
 import random
 import optparse
 import sqlalchemy 
-from JIRAClient import JIRAClient
 from campaignAPI import deleteCampaignConfig
 
 
