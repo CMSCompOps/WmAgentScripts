@@ -561,7 +561,6 @@
         "T2_US_Nebraska",
         "T2_US_UCSD",
         "T2_US_Wisconsin",
-        "T2_CH_CERN",
         "T2_CH_CERN_HLT",
         "T2_CH_CERN_P5"
       ]
@@ -597,8 +596,7 @@
       "T2_US_Florida",
       "T2_US_Nebraska",
       "T2_US_UCSD",
-      "T2_US_Wisconsin",
-      "T2_CH_CERN"
+      "T2_US_Wisconsin"
     ],
     "custodial": "T1_FR_CCIN2P3_MSS",
     "fractionpass": 0.95,
@@ -642,8 +640,7 @@
         "T2_US_Florida",
         "T2_US_Nebraska",
         "T2_US_UCSD",
-        "T2_US_Wisconsin",
-        "T2_CH_CERN"
+        "T2_US_Wisconsin"
       ]
     },
     "tune": true
@@ -657,8 +654,7 @@
       "T2_US_Florida",
       "T2_US_Nebraska",
       "T2_US_UCSD",
-      "T2_US_Wisconsin",
-      "T2_CH_CERN"
+      "T2_US_Wisconsin"
     ],
     "custodial": "T1_FR_CCIN2P3_MSS",
     "fractionpass": 0.95,
@@ -699,8 +695,7 @@
         "T2_US_Florida",
         "T2_US_Nebraska",
         "T2_US_UCSD",
-        "T2_US_Wisconsin",
-        "T2_CH_CERN"
+        "T2_US_Wisconsin"
       ]
     },
     "tune": true
@@ -720,8 +715,7 @@
         "T2_US_Florida",
         "T2_US_Nebraska",
         "T2_US_UCSD",
-        "T2_US_Wisconsin",
-        "T2_CH_CERN"
+        "T2_US_Wisconsin"
       ]
     },
     "tune": true
@@ -741,8 +735,7 @@
         "T2_US_Florida",
         "T2_US_Nebraska",
         "T2_US_UCSD",
-        "T2_US_Wisconsin",
-        "T2_CH_CERN"
+        "T2_US_Wisconsin"
       ]
     },
     "tune": true
@@ -762,8 +755,7 @@
         "T2_US_Florida",
         "T2_US_Nebraska",
         "T2_US_UCSD",
-        "T2_US_Wisconsin",
-        "T2_CH_CERN"
+        "T2_US_Wisconsin"
       ]
     },
     "tune": true
