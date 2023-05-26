@@ -1,4 +1,22 @@
 {
+  "Run3Summer22EEwmLHENanoGEN": {
+    "fractionpass": 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ]
+  },
   "HINPbPbSpring23GS": {
     "fractionpass": 0.95,
     "go": false,
@@ -543,7 +561,6 @@
         "T2_US_Nebraska",
         "T2_US_UCSD",
         "T2_US_Wisconsin",
-        "T2_CH_CERN",
         "T2_CH_CERN_HLT",
         "T2_CH_CERN_P5"
       ]
@@ -579,8 +596,7 @@
       "T2_US_Florida",
       "T2_US_Nebraska",
       "T2_US_UCSD",
-      "T2_US_Wisconsin",
-      "T2_CH_CERN"
+      "T2_US_Wisconsin"
     ],
     "custodial": "T1_FR_CCIN2P3_MSS",
     "fractionpass": 0.95,
@@ -624,8 +640,7 @@
         "T2_US_Florida",
         "T2_US_Nebraska",
         "T2_US_UCSD",
-        "T2_US_Wisconsin",
-        "T2_CH_CERN"
+        "T2_US_Wisconsin"
       ]
     },
     "tune": true
@@ -639,8 +654,7 @@
       "T2_US_Florida",
       "T2_US_Nebraska",
       "T2_US_UCSD",
-      "T2_US_Wisconsin",
-      "T2_CH_CERN"
+      "T2_US_Wisconsin"
     ],
     "custodial": "T1_FR_CCIN2P3_MSS",
     "fractionpass": 0.95,
@@ -681,8 +695,7 @@
         "T2_US_Florida",
         "T2_US_Nebraska",
         "T2_US_UCSD",
-        "T2_US_Wisconsin",
-        "T2_CH_CERN"
+        "T2_US_Wisconsin"
       ]
     },
     "tune": true
@@ -702,8 +715,7 @@
         "T2_US_Florida",
         "T2_US_Nebraska",
         "T2_US_UCSD",
-        "T2_US_Wisconsin",
-        "T2_CH_CERN"
+        "T2_US_Wisconsin"
       ]
     },
     "tune": true
@@ -723,8 +735,7 @@
         "T2_US_Florida",
         "T2_US_Nebraska",
         "T2_US_UCSD",
-        "T2_US_Wisconsin",
-        "T2_CH_CERN"
+        "T2_US_Wisconsin"
       ]
     },
     "tune": true
@@ -744,8 +755,7 @@
         "T2_US_Florida",
         "T2_US_Nebraska",
         "T2_US_UCSD",
-        "T2_US_Wisconsin",
-        "T2_CH_CERN"
+        "T2_US_Wisconsin"
       ]
     },
     "tune": true
@@ -2650,6 +2660,14 @@
     "resize": "auto",
     "secondaries": {
       "/Neutrino_E-10_gun/RunIISummer20ULPrePremix-UL16_106X_mcRun2_asymptotic_v13-v1/PREMIX": {
+        "SecondaryLocation": [
+          "T1_US_FNAL_Disk",
+          "T2_CH_CERN"
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
+      },
+      "/Neutrino_E-10_gun/RunIIFall17FSPrePremix-PUFSUL16CP5_106X_mcRun2_asymptotic_v16-v1/PREMIX": {
         "SecondaryLocation": [
           "T1_US_FNAL_Disk",
           "T2_CH_CERN"
@@ -4585,7 +4603,7 @@
   },
   "HINPbPbAutumn22GS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
@@ -4603,7 +4621,7 @@
   },
   "HINPbPbAutumn22DR": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
@@ -4621,7 +4639,7 @@
   },
   "HINPbPbAutumn22MiniAOD": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
