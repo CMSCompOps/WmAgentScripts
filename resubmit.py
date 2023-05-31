@@ -213,7 +213,7 @@ def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=F
     # Adapt schema and add original request to it
     cache = reqMgrClient.getWorkflowInfo(url, workflow)
 
-    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, taskMem, taskMulticore, taskNumEvents, scramArch, runNumber, firstEvent, firstLumi, extend, blockBlacklist dontIncrementPV)
+    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, taskMem, taskMulticore, taskNumEvents, scramArch, runNumber, firstEvent, firstLumi, extend, blockBlacklist, dontIncrementPV)
 
     if verbose:
         pprint(schema)
