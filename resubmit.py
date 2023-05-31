@@ -202,7 +202,7 @@ def modifySchema(cache, workflow, user, group, events, firstLumiNum, backfill=Fa
         result["RunNumber"] = runNumber
 
     if blockBlacklist:
-        result['BlockBlacklist'] = blockBlacklist
+        result["BlockBlacklist"] = blockBlacklist
 
     return result
 
