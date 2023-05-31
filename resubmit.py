@@ -34,7 +34,7 @@ reqmgrCouchURL = "https://cmsweb.cern.ch/couchdb/reqmgr_workload_cache"
 DELTA_EVENTS = 1000
 DELTA_LUMIS = 200
 
-def modifySchema(cache, workflow, user, group, events, firstLumiNum, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, firstEvent=None, firstLumi=None, extend = None, dontIncrementPV=None):
+def modifySchema(cache, workflow, user, group, events, firstLumiNum, backfill=False, memory=None, timeperevent=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, firstEvent=None, firstLumi=None, extend = None, blockBlacklist=None, dontIncrementPV=None):
     """
     Adapts schema to right parameters.
     If the original workflow points to DBS2, DBS3 URL is fixed instead.
@@ -201,16 +201,19 @@ def modifySchema(cache, workflow, user, group, events, firstLumiNum, backfill=Fa
     if runNumber:
         result["RunNumber"] = runNumber
 
+    if blockBlacklist:
+        result['BlockBlacklist'] = blockBlacklist
+
     return result
 
-def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, firstEvent=None, firstLumi=None, extend=None, dontIncrementPV=None):
+def cloneWorkflow(workflow, user, group, verbose=True, backfill=False, testbed=False, memory=None, timeperevent=None, bwl=None, filterEff=None, taskNumber=None, taskMem=None, taskMulticore=None, taskNumEvents=None, scramArch=None, runNumber=None, firstEvent=None, firstLumi=None, extend=None, blockBlacklist=None, dontIncrementPV=None):
     """
     clones a workflow
     """
     # Adapt schema and add original request to it
     cache = reqMgrClient.getWorkflowInfo(url, workflow)
 
-    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, taskMem, taskMulticore, taskNumEvents, scramArch, runNumber, firstEvent, firstLumi, extend, dontIncrementPV)
+    schema = modifySchema(cache, workflow, user, group, None, None, backfill, memory, timeperevent, filterEff, taskNumber, taskMem, taskMulticore, taskNumEvents, scramArch, runNumber, firstEvent, firstLumi, extend, blockBlacklist dontIncrementPV)
 
     if verbose:
         pprint(schema)
@@ -349,6 +352,7 @@ def main():
     parser.add_option('--firstEvent', help='firstEvent', dest='firstEvent', default=1)
     parser.add_option('--firstLumi', help='firstLumi', dest='firstLumi', default=1)
     parser.add_option('--extend', action="store_true", help='extend', dest='extend', default=False)
+    parser.add_option('--blockBlacklist', help='blockBlacklist', dest='blockBlacklist', default=None)
     parser.add_option("--dontIncrementPV", action="store_true", dest="dontIncrementPV", default=False,
                       help="If True, increments PV when necessary. Else keeps it the same")
     (options, args) = parser.parse_args()
@@ -369,6 +373,9 @@ def main():
         user = uinfo.pw_name
     else:
         user = options.user
+
+    if options.blockBlacklist:
+        blockBlacklist = [block.strip() for block in open(options.blockBlacklist) if block.strip()]
 
     if options.action == 'clone':
         for wf in wfs:
@@ -399,6 +406,7 @@ def main():
                 firstEvent=options.firstEvent,
                 firstLumi=options.firstLumi,
                 extend=options.extend,
+                blockBlacklist=blockBlacklist,
                 dontIncrementPV=options.dontIncrementPV
             )
     elif options.action == 'extend':
