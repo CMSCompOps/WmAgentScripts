@@ -9,7 +9,7 @@ import reqMgrClient as reqMgrClient
 """
 
 
-def getOverviewRequestsWMStats(url):
+def getOverviewRequestsWMStats(url, requestStatus):
     """
     Retrieves workflows overview from WMStats
     by querying couch db JSON direcly
@@ -18,16 +18,14 @@ def getOverviewRequestsWMStats(url):
     conn = http.client.HTTPSConnection(url, cert_file=os.getenv('X509_USER_PROXY'),
                                        key_file=os.getenv('X509_USER_PROXY'))
 
-    active_statuses = ['new', 'assignment-approved', 'assigned', 'staging', 'staged', 'acquired', 'running-open', 'running-closed', 'closed-out', 'failed']
 
-    workflows = []
-    for status in active_statuses:
-        conn.request("GET", '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="{}"'.format(status))
-        response = conn.getresponse()
-        data = response.read()
-        conn.close()
-        myString = data.decode('utf-8')
-        workflows = workflows + json.loads(myString)['rows']
+
+    conn.request("GET", '/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/bystatus?key="{}"'.format(requestStatus))
+    response = conn.getresponse()
+    data = response.read()
+    conn.close()
+    myString = data.decode('utf-8')
+    workflows = json.loads(myString)['rows']
     return workflows
 
 
@@ -79,15 +77,21 @@ def filterOrphanResubmissions(url, resubmissions):
 
 def main():
     url = 'cmsweb.cern.ch'
-    print("Gathering Requests")
-    requests = getOverviewRequestsWMStats(url)
-    print("Only resubmissions")
-    resubmissions = getResubmissions(url, requests)
-    print(len(resubmissions))
-    print("Filtering orphan resubmissions")
-    orphan = filterOrphanResubmissions(url, resubmissions)
-    for o in orphan:
-        print('\t'.join(o))
+
+    active_statuses = ['new', 'assignment-approved', 'assigned', 'staging', 'staged', 'acquired', 'running-open',
+                       'running-closed', 'closed-out', 'failed']
+
+
+    for status in active_statuses:
+        print("Gathering Requests that are in status {}".format(status))
+        requests = getOverviewRequestsWMStats(url, status)
+        print("Only resubmissions")
+        resubmissions = getResubmissions(url, requests)
+        print(len(resubmissions))
+        print("Filtering orphan resubmissions")
+        orphan = filterOrphanResubmissions(url, resubmissions)
+        for o in orphan:
+            print('\t'.join(o))
 
 
 if __name__ == "__main__":
