@@ -4,8 +4,8 @@ import http.client, os
 import reqMgrClient as reqMgrClient
 
 """
-    Filters through the list of ACDC's that are in "completed" which ones
-    have it's original workflow in a status beyond (archived, closed-out, rejected, etc)
+    Iterates through the list of resubmissions that are in 'active' statuses and filters the ones whose 
+    OriginalRequest is not in 'completed' or 'closed-out' status
 """
 
 
