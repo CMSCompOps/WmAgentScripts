@@ -92,7 +92,7 @@ def main():
         orphan = filterOrphanResubmissions(url, resubmissions)
         for o in orphan:
             print('\t'.join(o))
-            print("")
+        print("")
 
 
 if __name__ == "__main__":
