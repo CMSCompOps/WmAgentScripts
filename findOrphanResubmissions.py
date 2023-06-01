@@ -85,13 +85,14 @@ def main():
     for status in active_statuses:
         print("Gathering Requests that are in status {}".format(status))
         requests = getOverviewRequestsWMStats(url, status)
-        print("Only resubmissions")
+        print("Filtering only resubmissions")
         resubmissions = getResubmissions(url, requests)
-        print(len(resubmissions))
+        print("Number of resubmissions in this status: {}".format(str(len(resubmissions))))
         print("Filtering orphan resubmissions")
         orphan = filterOrphanResubmissions(url, resubmissions)
         for o in orphan:
             print('\t'.join(o))
+            print("")
 
 
 if __name__ == "__main__":
