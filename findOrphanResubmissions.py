@@ -70,7 +70,7 @@ def filterOrphanResubmissions(url, resubmissions):
             origwf = resubmission.cache['OriginalRequestName']
         if origwf:
             origwf = reqMgrClient.Workflow(origwf)
-            if origwf.status != 'completed':
+            if origwf.status not in ['completed', 'closed-out']:
                 orphans.append((origwf.name, origwf.status, resubmission.name))
     return orphans
 
@@ -79,7 +79,7 @@ def main():
     url = 'cmsweb.cern.ch'
 
     active_statuses = ['new', 'assignment-approved', 'assigned', 'staging', 'staged', 'acquired', 'running-open',
-                       'running-closed', 'closed-out', 'failed']
+                       'running-closed', 'completed', 'closed-out', 'failed']
 
 
     for status in active_statuses:
