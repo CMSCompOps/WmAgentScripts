@@ -37,7 +37,7 @@ class Workflow:
     To avoid querying the same stuff multiple times
     This is useful for closeout script
     """
-    def __init__(self, name, url='cmsweb.cern.ch', workflow=None):
+    def __init__(self, name, url='cmsweb-testbed.cern.ch', workflow=None):
         """
         Initialization
         """

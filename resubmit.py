@@ -60,8 +60,8 @@ def modifySchema(cache, workflow, user, group, events, firstLumi, backfill=False
     if group:
         result['Group'] = group
     # and required for cross-cloning between prod and testbed
-    if result.get('CouchURL'):
-        result['ConfigCacheUrl'] = result.pop('CouchURL')
+    #if result.get('CouchURL'):
+    #    result['ConfigCacheUrl'] = result.pop('CouchURL')
 
     #if we are extending the workflow
     if events:
@@ -279,7 +279,7 @@ def extendWorkflow(workflow, user, group, verbose=False, events=None, firstlumi=
 """
 __Main__
 """
-url = 'cmsweb.cern.ch'
+url = 'cmsweb-testbed.cern.ch'
 url_tb = 'cmsweb-testbed.cern.ch'
 reqmgrCouchURL = "https://" + url + "/couchdb/reqmgr_workload_cache"
 
