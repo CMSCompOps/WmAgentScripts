@@ -1,0 +1,3 @@
+[submodule "CampaignManager"]
+	path = CampaignManager
+	url = https://github.com/tyjyang/CampaignManager.git
