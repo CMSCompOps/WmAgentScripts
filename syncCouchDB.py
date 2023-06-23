@@ -9,8 +9,9 @@ parser.add_argument("--infoOnly", action='store_true', help = "print out command
 
 args = parser.parse_args()
 
-for camp in args.campsToAdd:
-    execute_command(f"python3 {args.dirWmAgentScripts}/campaignsConfiguration.py --name {camp} --configuration {args.campConfig}", args)
+if args.campsToAdd:
+    for camp in args.campsToAdd:
+        execute_command(f"python3 {args.dirWmAgentScripts}/campaignsConfiguration.py --name {camp} --configuration {args.campConfig}", args)
 
 execute_command(f"python3 {args.dirWmAgentScripts}/campaignsConfiguration.py --load {args.campConfig}", args)
 
