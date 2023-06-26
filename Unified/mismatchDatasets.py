@@ -30,7 +30,9 @@ def main():
         wfi = workflowInfo(url, wf_name)
         output_dataset_list = output_dataset_list + wfi.request['OutputDatasets']
         
-    print(output_dataset_list)
+    #print(output_dataset_list)
+    for element in output_dataset_list:
+        print(element)
 
 if __name__ == "__main__":
     main()
