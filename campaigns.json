@@ -4864,6 +4864,11 @@
         ],
         "keepOnDisk": true,
         "fractionOnDisk": 1.0
+      },
+      "/MinBias_TuneCP2_13TeV-pythia8/RunIIFall17FSPremix-MinBiasFor2016_94X_mcRun2_asymptotic_v3-v1/GEN-SIM-RECO": {
+        "SiteWhitelist": [
+          "T1_FR_CCIN2P3_Tape"
+        ]
       }
     }
   },
