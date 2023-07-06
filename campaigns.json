@@ -312,7 +312,16 @@
       "T2_TR_METU",
       "T2_FI_HIP",
       "T2_RU_INR"
-    ]
+    ],
+    "secondaries": {
+      "/MinBias_Drum5F_5p36TeV_hydjet/HINPbPbSpring23GS-130X_mcRun3_2023_realistic_HI_v14-v2/GEN-SIM": {
+        "SecondaryLocation": [
+          "T2_CH_CERN"
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
+      }
+    }
   },
   "Run3Summer23GS": {
     "fractionpass": 0.95,
@@ -384,16 +393,7 @@
       "T2_TR_METU",
       "T2_FI_HIP",
       "T2_RU_INR"
-    ],
-    "secondaries": {
-      "/MinBias_Drum5F_5p36TeV_hydjet/HINPbPbSpring23GS-130X_mcRun3_2023_realistic_HI_v14-v2/GEN-SIM": {
-        "SecondaryLocation": [
-          "T2_CH_CERN"
-        ],
-        "keepOnDisk": true,
-        "fractionOnDisk": 1.0
-      }
-    }
+    ]
   },
   "HINPbPbSpring23MiniAOD": {
     "fractionpass": 0.95,
