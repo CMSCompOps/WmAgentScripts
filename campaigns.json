@@ -812,14 +812,11 @@
     "go": true,
     "SiteWhitelist": [
       "T1_US_FNAL",
-      "T2_US_Nebraska",
       "T2_US_MIT",
-      "T2_US_Caltech",
       "T1_DE_KIT",
       "T1_IT_CNAF",
       "T2_DE_DESY",
       "T2_IT_Bari",
-      "T2_BE_IIHE",
       "T2_IT_Legnaro"
     ],
     "SiteBlacklist": [
