@@ -1,4 +1,31 @@
 {
+  "HINPbPbSpring23GSHIMix": {
+    "fractionpass": 0.95,
+    "go": false,
+    "SiteBlacklist": [
+      "T1_ES_PIC",
+      "T1_FR_CCIN2P3",
+      "T2_CN_Beijing",
+      "T2_DE_RWTH",
+      "T2_FR_IPHC",
+      "T2_KR_KISTI",
+      "T2_PT_NCG_Lisbon",
+      "T2_RU_IHEP",
+      "T2_UK_SGrid_RALPP",
+      "T2_TR_METU",
+      "T2_FI_HIP",
+      "T2_RU_INR"
+    ],
+    "secondaries": {
+      "/MinBias_Drum5F_5p36TeV_hydjet/HINPbPbSpring23GS-130X_mcRun3_2023_realistic_HI_v14-v2/GEN-SIM": {
+        "SecondaryLocation": [
+          "T2_CH_CERN"
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
+      }
+    }
+  },
   "HINPbPbAutumn22wmLHEGS": {
     "fractionpass": 0.95,
     "go": false,
@@ -51,7 +78,16 @@
       "T2_TR_METU",
       "T2_FI_HIP",
       "T2_RU_INR"
-    ]
+    ],
+    "secondaries": {
+      "/MinBias_TuneCP5_14TeV-pythia8/Phase2Spring23GS-131X_mcRun4_realistic_v5-v1/GEN-SIM": {
+        "SecondaryLocation": [
+          "T2_CH_CERN"
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
+      }
+    }
   },
   "Run3Summer23NanoAODv12": {
     "fractionpass": 0.95,
@@ -285,7 +321,16 @@
       "T2_TR_METU",
       "T2_FI_HIP",
       "T2_RU_INR"
-    ]
+    ],
+    "secondaries": {
+      "/MinBias_Drum5F_5p36TeV_hydjet/HINPbPbSpring23GS-130X_mcRun3_2023_realistic_HI_v14-v2/GEN-SIM": {
+        "SecondaryLocation": [
+          "T2_CH_CERN"
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
+      }
+    }
   },
   "Run3Summer23GS": {
     "fractionpass": 0.95,
@@ -812,14 +857,11 @@
     "go": true,
     "SiteWhitelist": [
       "T1_US_FNAL",
-      "T2_US_Nebraska",
       "T2_US_MIT",
-      "T2_US_Caltech",
       "T1_DE_KIT",
       "T1_IT_CNAF",
       "T2_DE_DESY",
       "T2_IT_Bari",
-      "T2_BE_IIHE",
       "T2_IT_Legnaro"
     ],
     "SiteBlacklist": [
@@ -1461,6 +1503,13 @@
       "T2_CH_CERN_P5"
     ],
     "secondaries": {
+      "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Summer22FSGenPremix-PUlib_124X_mcRun3_2022_realistic_v12-v1/GEN-SIM-RECO": {
+        "SiteWhitelist": [
+          "T2_CH_CERN"
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0     
+      },
       "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Winter22GS-122X_mcRun3_2021_realistic_v9-v1/GEN-SIM": {
         "SiteWhitelist": [
           "T1_US_FNAL_Disk",
