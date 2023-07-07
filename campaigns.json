@@ -78,7 +78,16 @@
       "T2_TR_METU",
       "T2_FI_HIP",
       "T2_RU_INR"
-    ]
+    ],
+    "secondaries": {
+      "/MinBias_TuneCP5_14TeV-pythia8/Phase2Spring23GS-131X_mcRun4_realistic_v5-v1/GEN-SIM": {
+        "SecondaryLocation": [
+          "T2_CH_CERN"
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
+      }
+    }
   },
   "Run3Summer23NanoAODv12": {
     "fractionpass": 0.95,
