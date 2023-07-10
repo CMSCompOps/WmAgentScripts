@@ -1,4 +1,20 @@
 {
+  "RunIISummer20UL18SUSwmLHEGS": {
+    "fractionpass": 0.95,
+    "go": false
+  },
+  "RunIISummer20UL17SUSwmLHEGS": {
+    "fractionpass": 0.95,
+    "go": false
+  },
+  "RunIISummer20UL16SUSwmLHEGSAPV": {
+    "fractionpass": 0.95,
+    "go": false
+  },
+  "RunIISummer20UL16SUSwmLHEGS": {
+    "fractionpass": 0.95,
+    "go": false
+  },
   "HINPbPbSpring23GSHIMix": {
     "fractionpass": 0.95,
     "go": false,
