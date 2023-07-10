@@ -1,4 +1,20 @@
 {
+  "RunIISummer20UL18SUSwmLHEGS": {
+    "fractionpass": 0.95,
+    "go": false
+  },
+  "RunIISummer20UL17SUSwmLHEGS": {
+    "fractionpass": 0.95,
+    "go": false
+  },
+  "RunIISummer20UL16SUSwmLHEGSAPV": {
+    "fractionpass": 0.95,
+    "go": false
+  },
+  "RunIISummer20UL16SUSwmLHEGS": {
+    "fractionpass": 0.95,
+    "go": false
+  },
   "HINPbPbSpring23GSHIMix": {
     "fractionpass": 0.95,
     "go": false,
@@ -28,7 +44,7 @@
   },
   "HINPbPbAutumn22wmLHEGS": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
@@ -64,7 +80,7 @@
   },
   "Phase2Spring23DIGIRECOMiniAOD": {
     "fractionpass": 0.95,
-    "go": false,
+    "go": true,
     "SiteBlacklist": [
       "T1_ES_PIC",
       "T1_FR_CCIN2P3",
@@ -1497,11 +1513,6 @@
     "fractionpass": 0.95,
     "go": true,
     "lumisize": -1,
-    "SiteBlacklist": [
-      "T2_CH_CERN",
-      "T2_CH_CERN_HLT",
-      "T2_CH_CERN_P5"
-    ],
     "secondaries": {
       "/MinBias_TuneCP5_13p6TeV-pythia8/Run3Summer22FSGenPremix-PUlib_124X_mcRun3_2022_realistic_v12-v1/GEN-SIM-RECO": {
         "SiteWhitelist": [
