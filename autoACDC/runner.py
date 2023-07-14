@@ -283,7 +283,7 @@ def main():
                     f.write(task+', '+auto.acdcName+'\n')
             except Exception as e:
                 if auto.acdcName:
-                    rejectWorkflow(auto.acdcName, url='cmsweb.cern.ch', invalidate=True)
+                    rejectWorkflow(auto.acdcName, url='cmsweb.cern.ch', invalidate=False)
                 print("Failed submission with exception", e)
                 with open(outputFile, 'a') as f:
                     f.write(task+', '+auto.acdcName+', '+str(e)+'\n')
