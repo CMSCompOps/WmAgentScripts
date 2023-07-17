@@ -364,6 +364,10 @@ class autoACDC():
         if (self.schema["RequestStatus"] != "assignment-approved") and not self.options['testbed_assign']:
             raise Exception("RequestType is not 'assignment-approved'")
 
+        # a ReReco DataProcessingMergeDQMoutputEndOfRunDQMHarvestMerged task will get stuck on the server side
+        if (self.schema['RequestType'] == 'ReReco') and 'DataProcessingMergeDQMoutputEndOfRunDQMHarvestMerged' in self.taskName: 
+            raise Exception("ReReco DataProcessingMergeDQMoutputEndOfRunDQMHarvestMerged  will get stuck on server side.")
+
     def getPreviousWfs(self):
         """
         Returns: the first (ancestor) and last (original) workflow infos.
