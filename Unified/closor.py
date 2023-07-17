@@ -527,7 +527,7 @@ class CloseBuster(threading.Thread):
                         results.append( res )
                                 
             print(results)
-            if all([result in ['None',None,True] for result in results]):
+            if all([result in ['None',None,True, 'No ParentageResolved'] for result in results]):
                 if jump_the_line:
                     if not 'announced' in wfo.status:
                         self.to_status = wfo.status.replace('announce','announced')
