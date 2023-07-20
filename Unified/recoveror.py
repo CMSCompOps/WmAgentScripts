@@ -117,6 +117,10 @@ def singleRecovery(url, task , initial, actions, do=False):
                 else:
                     payload['Multicore'] = increase
 
+            if action.startswith('tpe'):
+                arg = action.split('-',1)[-1]
+                payload['TimePerEvent']=float(arg)
+
     acdc_round = 0
     initial_string = payload['RequestString']
     if initial_string.startswith('ACDC'):
