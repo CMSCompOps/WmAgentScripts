@@ -197,7 +197,7 @@ def checkor(url, spec=None, options=None):
                         print(user, "is force-completing", keyword, "from JIRA")
                         bypasses.append(keyword)
                         overrides[user].append(keyword)
-                    break
+                        break
         bypass_jira_string = "cmsunified please do bypass"
         to_check = JC.find({'text': bypass_jira_string, "status": "!CLOSED"})
         for j in to_check:
@@ -210,7 +210,7 @@ def checkor(url, spec=None, options=None):
                     if keyword and user in actors:
                         print(user, "is bypassing", keyword, "from JIRA")
                         bypasses.append(keyword)
-                    break
+                        break
 
     if use_mcm:
         ## this is a list of prepids that are good to complete
