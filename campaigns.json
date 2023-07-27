@@ -5031,6 +5031,15 @@
       "T2_TR_METU",
       "T2_FI_HIP",
       "T2_RU_INR"
-    ]
+    ],
+    "secondaries": {
+      "/MinBias_Drum5F_5p36TeV_hydjet/HINPbPbAutumn22GS-125X_mcRun3_2022_realistic_HI_v13-v2/GEN-SIM": {
+        "SecondaryLocation": [
+          "T2_CH_CERN"
+        ],
+        "keepOnDisk": true,
+        "fractionOnDisk": 1.0
+      }
+    }
   }
 }
