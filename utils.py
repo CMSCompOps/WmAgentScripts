@@ -482,7 +482,21 @@ class componentInfo:
                 alarm = "Timeout in checking the sanity of components %d > %d , while checking on %s" % (
                 now - check_start, self.check_timeout, self.checks.checking)
                 sendLog('componentInfo', alarm, level='critical')
-                return False
+            
+                # handle the edge case in which e.g. the console is reachable, but extremely slow
+                # at responding, AND it is considered 'soft', i.e. not necessary
+                try:
+                    self.status = self.checks.status
+                    for comp in self.status.keys():
+                        # if any necessary component is down, fail out
+                        if not self.status[comp] and comp not in soft:
+                            return False
+                # handle weird failures
+                except:
+                    return False
+
+                return True
+
             print("componentInfo, ping", now, check_start, now - check_start)
             time.sleep(ping)
 
