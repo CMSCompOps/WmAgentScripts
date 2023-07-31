@@ -1,7 +1,7 @@
 {
   "RunIISummer20UL16wmLHENanoGENpruned": {
     "fractionpass": 0.95,
-    "go": false
+    "go": true
   },
   "RunIISummer20UL18SUSwmLHEGS": {
     "fractionpass": 0.95,
