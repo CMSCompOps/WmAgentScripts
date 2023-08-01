@@ -84,10 +84,11 @@ def checkor(url, spec=None, options=None):
     UC = unifiedConfiguration()
 
     use_mcm = True
-    up = componentInfo(soft=['mcm', 'wtc'])
+    up = componentInfo(ignore=['mcm', 'wtc'])
     if not up.check(): return
 
-    use_mcm = up.status['mcm']
+    up_mcm = componentInfo(ignore=['wtc'])
+    use_mcm = up_mcm.status['mcm']
 
     now_s = time.mktime(time.gmtime())
 
@@ -192,7 +193,7 @@ def checkor(url, spec=None, options=None):
                     user = c.author.name
                     prepid = jira.fields.summary.split()[0]
                     keyword = \
-                    c.body[(c.body.find(force_complete_jira_string) + len(force_complete_jira_string)):].split()[0]
+                    c.body[(c.body.find(force_complete_jira_string) + len(force_complete_jira_string)):].split()[0] 
                     if keyword and user in actors:
                         print(user, "is force-completing", keyword, "from JIRA")
                         bypasses.append(keyword)

@@ -16,9 +16,11 @@ def injector(url, options, specific):
     if mlock() and not options.manual: return
 
     use_mcm = True
-    up = componentInfo(soft=['mcm','wtc','jira'] )
+    up = componentInfo(ignore=['mcm','wtc','jira'] )
     if not up.check(): return
-    use_mcm = up.status['mcm']
+
+    up_mcm = componentInfo(ignore=['wtc','jira'] )
+    use_mcm = up_mcm.status['mcm']
 
     UC = unifiedConfiguration()
 

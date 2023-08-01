@@ -14,7 +14,7 @@ def htmlor( caller = ""):
     mlock = moduleLock(silent=True)
     if mlock(): return
 
-    up = componentInfo(soft=['mcm','wtc','jira'])
+    up = componentInfo(ignore=['mcm','wtc','jira'])
     if not up.check(): return  
 
     #for backup in ['statuses.json','siteInfo.json','equalizor.json']:

@@ -124,7 +124,7 @@ def closor(url, specific=None, options=None):
     if userLock(): return
     mlock  = moduleLock()
     if mlock() and not options.manual: return
-    up = componentInfo(soft=['mcm','wtc'])
+    up = componentInfo(ignore=['mcm','wtc'])
     if not up.check(): return
 
 
@@ -511,7 +511,7 @@ class CloseBuster(threading.Thread):
                         wfi.sendLog('closor',"Delayed announcement of %s due to unresolved Parentage dependencies" % wfi.request['RequestName'])
                         results.append('No ParentageResolved')
 
-                if all([result in ['None',None,True] for result in results]):
+                if all([result in ['None',None,True,'No ParentageResolved'] for result in results]):
                     if not jump_the_line:
                         ## only announce if all previous are fine
                         res = reqMgrClient.announceWorkflowCascade(url, wfo.name)
@@ -527,7 +527,7 @@ class CloseBuster(threading.Thread):
                         results.append( res )
                                 
             print(results)
-            if all([result in ['None',None,True, 'No ParentageResolved'] for result in results]):
+            if all([result in ['None',None,True,'No ParentageResolved'] for result in results]):
                 if jump_the_line:
                     if not 'announced' in wfo.status:
                         self.to_status = wfo.status.replace('announce','announced')

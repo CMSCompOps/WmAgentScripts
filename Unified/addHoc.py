@@ -1,4 +1,4 @@
-#!/usr/bin/env python  
+!/usr/bin/env python  
 from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, agentInfo, unifiedConfiguration, monitor_eos_dir, base_eos_dir, batchInfo, reportInfo
 
 from assignSession import *
@@ -10,7 +10,7 @@ import time
 import random
 from JIRAClient import JIRAClient
 
-up = componentInfo(soft=['mcm','wtc','jira'])
+up = componentInfo(ignore=['mcm','wtc','jira'])
 if not up.check(): sys.exit(0)
 
 JC = JIRAClient() if up.status.get('jira',False) else None
