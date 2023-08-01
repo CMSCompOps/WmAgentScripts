@@ -1,4 +1,4 @@
-!/usr/bin/env python  
+#!/usr/bin/env python  
 from utils import workflowInfo, getWorkflows, sendEmail, componentInfo, monitor_dir, reqmgr_url, siteInfo, sendLog, getWorkflowById, agentInfo, unifiedConfiguration, monitor_eos_dir, base_eos_dir, batchInfo, reportInfo
 
 from assignSession import *
