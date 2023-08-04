@@ -20,6 +20,7 @@ def injector(url, options, specific):
     if not up.check(): return
 
     up_mcm = componentInfo(ignore=['wtc','jira'] )
+    up_mcm.check()
     use_mcm = up_mcm.status['mcm']
 
     UC = unifiedConfiguration()

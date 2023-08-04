@@ -21,6 +21,7 @@ def completor(url, specific):
     up = componentInfo(ignore=['mcm','wtc','jira'])
     if not up.check(): return
     up_mcm = componentInfo(ignore=['wtc','jira']) 
+    up_mcm.check()
     use_mcm = up_mcm.status['mcm']
     if use_mcm:
         mcm = McMClient(dev=False)

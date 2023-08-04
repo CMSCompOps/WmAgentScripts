@@ -88,6 +88,7 @@ def checkor(url, spec=None, options=None):
     if not up.check(): return
 
     up_mcm = componentInfo(ignore=['wtc'])
+    up_mcm.check()
     use_mcm = up_mcm.status['mcm']
 
     now_s = time.mktime(time.gmtime())
