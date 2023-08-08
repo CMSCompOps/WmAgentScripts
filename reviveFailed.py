@@ -85,9 +85,15 @@ def resubmitFailed(list_revive_dicts):
     group = 'DATAOPS'
 
     list_revive_dicts = [d for d in list_revive_dicts if d['key'] == "failed"]
+    file_name = "failedWFs.txt" # Write to external txt file
+    flist = open(file_name,"w+")
+
     for revive_dict in list_revive_dicts:
         revive_name = revive_dict['id']
         clone = resubmit.cloneWorkflow(revive_name, user, group, verbose=False)
+        flist.write(clone+"\n")
+
+    print("List of the resubmitted WFs has been writen to {}. Run \"python setReqMgrStatus.py -s staged -f {}\" later to stage those WFs in Unified.".format(file_name, file_name))
 
 
 def rejectFailed(url, list_request_dicts):
@@ -114,5 +120,6 @@ if __name__ == "__main__":
     reviveWFs = findReviveList(failedWFs)
 
     resubmitFailed(reviveWFs)
+    
     if options.reject:
         rejectFailed(failedWFs)
