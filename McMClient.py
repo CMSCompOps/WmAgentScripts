@@ -43,7 +43,7 @@ class McMClient:
 
             if not os.path.isfile(self.cookieFilename):
                 print "The required sso cookie file is absent. Trying to make one for you"
-                os.system('auth-get-sso-cookie -u https://%s -o %s'%( self.server, self.cookieFilename))
+                os.system('export REQUESTS_CA_BUNDLE="/etc/pki/tls/certs/ca-bundle.trust.crt"; auth-get-sso-cookie -u https://%s -o %s'%( self.server, self.cookieFilename))
                 if not os.path.isfile(self.cookieFilename):
                     print "The required sso cookie file cannot be made."
                     sys.exit(1)
