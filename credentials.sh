@@ -11,7 +11,8 @@ fi
 export MCM_SSO_COOKIE=/tmp/$USER-$HOSTNAME-vfsvdka573t
 if [ "$1" == "create" ] ; then
     echo "creating mcm cookie" $MCM_SSO_COOKIE
-    cern-get-sso-cookie -u https://cms-pdmv.cern.ch/mcm/ -o $MCM_SSO_COOKIE --krb
+    export REQUESTS_CA_BUNDLE="/etc/pki/tls/certs/ca-bundle.trust.crt"
+    auth-get-sso-cookie -u https://cms-pdmv.cern.ch/mcm/ -o $MCM_SSO_COOKIE
 else
     echo "using mcm cookie" $MCM_SSO_COOKIE
 fi
