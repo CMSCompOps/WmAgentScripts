@@ -466,8 +466,8 @@ def checkMemory():
 
 
 class componentInfo:
-    def __init__(self, block=True, mcm=None, soft=None, keep_trying=False, check_timeout=120):
-        self.checks = componentCheck(block, mcm, soft, keep_trying)
+    def __init__(self, block=True, mcm=None, ignore=None, keep_trying=False, check_timeout=120):
+        self.checks = componentCheck(block, mcm, ignore, keep_trying)
         self.check_timeout = check_timeout
         # start the checking
         self.checks.start()
@@ -483,6 +483,7 @@ class componentInfo:
                 now - check_start, self.check_timeout, self.checks.checking)
                 sendLog('componentInfo', alarm, level='critical')
                 return False
+
             print("componentInfo, ping", now, check_start, now - check_start)
             time.sleep(ping)
 
@@ -493,13 +494,13 @@ class componentInfo:
 
 
 class componentCheck(threading.Thread):
-    def __init__(self, block=True, mcm=None, soft=None, keep_trying=False):
+    def __init__(self, block=True, mcm=None, ignore=None, keep_trying=False):
         threading.Thread.__init__(self)
         self.daemon = True
-        if soft is None:
-            self.soft = ['mcm', 'wtc', 'mongo', 'jira']  ##components that are not mandatory
+        if ignore is None:
+            self.ignore = ['mcm', 'wtc', 'mongo', 'jira']  ##components that are not necessary
         else:
-            self.soft = soft
+            self.ignore = ignore
         self.block = block
         self.status = {
             'reqmgr': False,
@@ -581,6 +582,9 @@ class componentCheck(threading.Thread):
         for component in sorted(self.status):
             ecode += 1
             self.checking = component
+            if component in self.ignore and self.ignore is not None: 
+                print("Skipping", component)
+                continue
             while True:
                 try:
                     print("checking on", component)
@@ -598,8 +602,8 @@ class componentCheck(threading.Thread):
                     print(traceback.format_exc())
                     print(component, "is unreachable")
                     print(str(e))
-                    if self.block and not (self.soft and component in self.soft):
-                        self.code = ecode
+                    if self.block:
+                        self.ecode = ecode
                         return False
                     break
 

@@ -359,7 +359,7 @@ def actor(url,options=None):
     if mlock(): return
     if userLock('actor'): return
     
-    up = componentInfo(soft=['mcm'])
+    up = componentInfo(ignore=['mcm'])
     if not up.check(): return
     
    # CI = campaignInfo()

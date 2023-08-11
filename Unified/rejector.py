@@ -19,7 +19,7 @@ def rejector(url, specific, options=None):
     if options.test:
         print "Test mode - no changes propagate to the production system"
 
-    if not componentInfo(soft=['wtc','jira']).check() and not options.manual: return
+    if not componentInfo(ignore=['wtc','jira']).check() and not options.manual: return
 
     if specific and specific.startswith('/'):
         ## this is for a dataset

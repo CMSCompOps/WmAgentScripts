@@ -16,7 +16,7 @@ import math
 
 def mappor(url , options=None):
 
-    up = componentInfo(soft=['mcm','wtc','jira']) 
+    up = componentInfo(ignore=['mcm','wtc','jira']) 
 
     ## define regionality site => fallback allowed. feed on an ssb metric ??
     mapping = defaultdict(list)
