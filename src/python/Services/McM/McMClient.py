@@ -51,6 +51,7 @@ class McMClient(object):
         self.connection.setopt(pycurl.SSL_VERIFYHOST, 2)
         self.connection.setopt(pycurl.CAPATH, "/etc/pki/tls/certs")
         self.connection.setopt(pycurl.WRITEFUNCTION, self.response.write)
+        self.connection.setopt(pycurl.FOLLOWLOCATION, 1)
 
     def _getResponse(self) -> dict:
         """
