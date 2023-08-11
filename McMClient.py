@@ -58,6 +58,7 @@ class McMClient:
             self.curl.setopt(pycurl.SSL_VERIFYHOST, 2)
             self.curl.setopt(pycurl.CAPATH, '/etc/pki/tls/certs')  
             self.curl.setopt(pycurl.WRITEFUNCTION, self.output.write)
+            self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
         else:
             self.__http = http.client.HTTPConnection(self.server)
 
