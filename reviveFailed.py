@@ -8,7 +8,7 @@ import optparse
 import resubmit, reqMgrClient
 import dbs3Client as dbs3
 from optparse import OptionParser
-from assignSession import *
+from Unified.assignSession import *
 from utils import *
 
 
@@ -34,6 +34,29 @@ def getRequestsFailed(url):
 
     print("{} failed WFs in ReqMgr.".format(len(workflows)))
     return workflows
+
+def cleanFailed(list_request_dicts):
+    revived_names = []
+    list_request_dicts = [d for d in list_request_dicts if d['key'] == "failed"]
+
+    for request_dict in list_request_dicts:
+        request_name = request_dict['id']
+        wf = workflowInfo(url, request_name)
+        wf_family = wf.getFamilly()
+        if (len(wf_family)):
+            for wf_scion in wf_family:
+                scion_name = wf_scion['RequestName']
+                scion_Rstatus = wf_scion['RequestStatus'] # Request status
+
+                all_info = session.query(Workflow).filter(Workflow.name == scion_name).all()
+                if len(all_info):
+                    revived_names.append(request_name)
+                    print("{} has already been revived.".format(request_name))
+                    continue
+
+    for failed_name in revived_names:
+        print("Rejcting {}...".format(failed_name))
+        reqMgrClient.rejectWorkflow(url, failed_name)
 
 
 def findReviveList(list_request_dicts):
@@ -113,13 +136,19 @@ def rejectFailed(url, list_request_dicts):
 if __name__ == "__main__":
     parser = optparse.OptionParser()
     parser.add_option('-r', '--reject', default=False, action = 'store_true', help='Reject all the failed WFs in RegMgr')
+    parser.add_option('-a', '--revive', default=False, action = 'store_true', help='revive all the failed WFs in RegMgr')
+    parser.add_option('-c', '--clean', default=False, action = 'store_true', help='clean up the failed WFs in RegMgr')
+
     (options, args) = parser.parse_args()
 
     url='cmsweb.cern.ch'
     failedWFs = getRequestsFailed(url)
-    reviveWFs = findReviveList(failedWFs)
+    if options.revive:
+        reviveWFs = findReviveList(failedWFs)
+        resubmitFailed(reviveWFs)
 
-    resubmitFailed(reviveWFs)
-    
+    if options.clean:
+        cleanFailed(failedWFs)
+
     if options.reject:
         rejectFailed(failedWFs)
