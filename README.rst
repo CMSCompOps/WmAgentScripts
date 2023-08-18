@@ -1,3 +1,5 @@
+**This repo has been archived. The current working repo is here: https://gitlab.cern.ch/CMSProductionReprocessing/WmAgentScripts**
+
 WMAgent Scripts
 ===============
 
