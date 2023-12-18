@@ -1448,7 +1448,7 @@ class siteInfo:
                     self.sites_veto_transfer.append(dse)
 
         ## and glidein info
-        self.fetch_glidein_info(talk=False)
+        #self.fetch_glidein_info(talk=False)
 
     def total_disk(self, what='disk'):
         s = 0
