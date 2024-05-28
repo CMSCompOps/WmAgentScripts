@@ -459,6 +459,25 @@ class WorkflowController(object):
         """
         return self.request.getOutputDatasetsPerTask(self.getWorkTasks())
 
+    def getCampaignsFromOutputDatasets(self) -> dict:
+        """
+        The function to get the campaigns based on the output datasets
+        :return: a dict of campaigns by dataset names
+        """
+        campaigns = {}
+        for dataset in self.request.get("OutputDatasets", []):
+            campaign = self.request.get("Campaign")
+            if not self.isRelVal():
+                try:
+                    era = dataset.split('/')[2].split('-')[0]
+                except:
+                    era = None
+                campaign = era if era else campaign
+            
+            campaigns[dataset] = campaign
+        
+        return campaigns
+
     def getCampaignByTask(self, task: str) -> str:
         """
         The function to get the campaign for a given task

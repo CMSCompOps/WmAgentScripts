@@ -69,7 +69,9 @@ class ReqMgrWriter(object):
         :return: True if succeeded, False o/w
         """
         try:
-            result = sendResponse(method="PUT", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"] + wf, param=param)
+            result = sendResponse(
+                method="PUT", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"] + wf, param=param
+            )
             return any(item.get(wf) == "OK" for item in result["result"])
 
         except Exception as error:
@@ -87,7 +89,7 @@ class ReqMgrWriter(object):
         """
         try:
             result = sendResponse(
-                method= "PUT", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["agentConfig"] + agent, param=config
+                method="PUT", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["agentConfig"] + agent, param=config
             )
             return result["result"][0]["ok"]
 
@@ -102,8 +104,10 @@ class ReqMgrWriter(object):
         :return: True if succeeded, False o/w
         """
         try:
-            result = sendResponse(method= "POST", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"], param=wfSchema)
-            return result['result'][0]['request']
+            result = sendResponse(
+                method="POST", url=self.reqmgrUrl, endpoint=self.reqmgrEndpoint["request"], param=wfSchema
+            )
+            return result["result"][0]["request"]
 
         except Exception as error:
             self.logger.error("Failed to submit workflow in reqmgr")
@@ -118,10 +122,32 @@ class ReqMgrWriter(object):
         """
         try:
             result = sendResponse(
-                method="PUT", url=self.reqmgrUrl, endpoint=f"{self.reqmgrEndpoint['request']}/{wf}", param={"RequestStatus": "assignment-approved"}
+                method="PUT",
+                url=self.reqmgrUrl,
+                endpoint=f"{self.reqmgrEndpoint['request']}/{wf}",
+                param={"RequestStatus": "assignment-approved"},
             )
             return result
 
         except Exception as error:
             self.logger.error("Failed to approve workflow in reqmgr")
+            self.logger.error(str(error))
+
+    def closeoutWorkflow(self, wf: str, cascade: bool = False) -> bool:
+        """
+        The function to close out a given workflow
+        :param wf: workflow name
+        :param cascade: if cascade or not
+        :return: True if succeeded, False o/w
+        """
+        try:
+            result = sendResponse(
+                url=self.reqmgrUrl,
+                endpoint=f"{self.reqmgrEndpoint['request']}/{wf}",
+                param={"RequestStatus": "closed-out", "cascade": cascade},
+            )
+            return result["result"][0][wf] == "OK"
+
+        except Exception as error:
+            self.logger.error("Failed to close out workflow in reqmgr")
             self.logger.error(str(error))

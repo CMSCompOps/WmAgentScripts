@@ -240,7 +240,7 @@ def getLogger(name: str, level: str = "INFO", flushEveryLog: bool = True, **kwar
     :return: a logger
     """
     logger = logging.getLogger(name)
-    
+
     if not len(logger.handlers):
         logger.setLevel(level)
 

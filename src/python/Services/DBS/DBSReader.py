@@ -93,7 +93,48 @@ class DBSReader(object):
         This function runs by default with multithreading on the param blocks, which is a
         list of block names.
         """
-        return self.dbs.listFileLumis(block_name=blocks, validFileOnly=int(validFileOnly))
+        response = self.dbs.listFileLumis(block_name=blocks, validFileOnly=int(validFileOnly))
+
+        if isinstance(response[0]["lumi_section_num"], list):
+            self.logger.debug("Handling dbsapi.listFileLumis response from NEW DBS server")
+            return self._aggregateListFileLumis(response)
+
+        self.logger.debug("Handling dbsapi.listFileLumis response from OLD DBS server")
+        return response
+
+    def _aggregateListFileLumis(self, response: dict) -> List[dict]:
+        """
+        The function to aggregate the list of file lumis
+        :param response: raw response of listFileLumis
+        :return: lumi section files
+        """
+        aggregatedResponse = []
+        tmpDict = {}
+
+        for entry in response:
+            runNum = entry["run_num"]
+            lumiSectionNum = entry["lumi_section_num"]
+            logicalFileName = entry["logical_file_name"]
+            eventCount = entry["event_count"]
+
+            key = (runNum, logicalFileName)
+
+        if key in tmpDict:
+            tmpDict[key]["event_count"].append(eventCount)
+        else:
+            tmpDict[key] = {"event_count": [eventCount], "lumi_section_num": [lumiSectionNum]}
+
+        for key, value in tmpDict.iteritems():
+            aggregatedResponse.append(
+                {
+                    "run_num": key[0],
+                    "lumi_section_num": value["lumi_section_num"],
+                    "logical_file_name": key[1],
+                    "event_count": value["event_count"],
+                }
+            )
+
+        return aggregatedResponse
 
     def getDBSStatus(self, dataset: str) -> str:
         """
@@ -476,4 +517,30 @@ class DBSReader(object):
 
         except Exception as error:
             self.logger.error("Failed to get lumi sections and files from DBS for given blocks")
+            self.logger.error(str(error))
+
+    def countDatasetFiles(self, dataset: str, skipInvalid: bool = False, onlyInvalid: bool = False) -> int:
+        """
+        The function to count the number of files in a given dataset
+        :param dataset: dataset name
+        :param skipInvalid: if True skip invalid files, o/w include them
+        :param onlyInvalid: if True include only invalid files, o/w include all
+        :return: number of files
+        """
+        try:
+            files = self.dbs.listFiles(dataset=dataset, detail=(skipInvalid or onlyInvalid))
+
+            mainLFN = "/".join(files[0]["logical_file_name"].split("/")[:3]) if files else ""
+
+            if skipInvalid:
+                files = [*filter(lambda file: file["is_file_valid"] == 1, files)]
+            elif onlyInvalid:
+                files = [*filter(lambda file: file["is_file_valid"] == 0, files)]
+
+            if (skipInvalid or onlyInvalid) and mainLFN:
+                return [*filter(lambda file: file["logical_file_name"].startswith(mainLFN), files)]
+            return files
+
+        except Exception as error:
+            self.logger.error("Failed to count files in dataset")
             self.logger.error(str(error))
