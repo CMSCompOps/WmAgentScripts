@@ -21,7 +21,7 @@ jobs:
         python2 -m pip install pylint
     - name: Generate error reports
       run: |
-        pylint --msg-template='{path}:{line:3d}:{column}: [{msg_id}] {msg} ({symbol})' --suggestion-mode=y --reports=y --disable=RP0101,RP0401,RP0402,RP0701,RP0801  ${{ env.GIT_DIFF }} | tee temp.txt
+        pylint --rcfile=./.config/.pylintrc  ${{ env.GIT_DIFF }} | tee temp.txt
       if: env.GIT_DIFF
     - name: Parse output
       if: env.GIT_DIFF && github.event_name == 'pull_request'
@@ -39,6 +39,6 @@ jobs:
           --data '{ "body": "<pre>'"$(head -n 1 report.txt)"'</pre>" }'
     - name: Check warnings and errors
       run: |
-         pylint --msg-template='{path}:{line:3d}:{column}: [{msg_id}] {msg} ({symbol})' --suggestion-mode=y --disable=all --enable=E,W  ${{ env.GIT_DIFF }}
+         pylint --rcfile=./.config/.pylintrc --disable=all --enable=E,W  ${{ env.GIT_DIFF }}
       if: env.GIT_DIFF
       
